@@ -6,6 +6,8 @@
 export interface NavItem {
   label: string;
   href: string;
+  /** Lucide icon name for sidebar (optional). */
+  icon?: string;
 }
 
 /** Público: landing, login, registro */
@@ -17,12 +19,12 @@ export const PUBLIC_NAV: NavItem[] = [
 
 /** App autenticada: mis diseños, editor, líneas, guía, recursos, soporte */
 export const APP_NAV: NavItem[] = [
-  { label: "Mis diseños", href: "/mis-disenos" },
-  { label: "Editor", href: "/editor" },
-  { label: "Líneas de ropa", href: "/lineas" },
-  { label: "Guía", href: "/guia" },
-  { label: "Recursos", href: "/recursos" },
-  { label: "Soporte", href: "/soporte" },
+  { label: "Mis diseños", href: "/mis-disenos", icon: "LayoutGrid" },
+  { label: "Editor", href: "/editor", icon: "PenSquare" },
+  { label: "Líneas de ropa", href: "/lineas", icon: "Shirt" },
+  { label: "Guía", href: "/guia", icon: "BookOpen" },
+  { label: "Recursos", href: "/recursos", icon: "FolderOpen" },
+  { label: "Soporte", href: "/soporte", icon: "HelpCircle" },
 ];
 
 /** Admin: dashboard, pedidos, configuración */

@@ -21,19 +21,19 @@
 }
 
 .dark {
-  --background: #000000;
-  --foreground: #f9fafb;
+  --background: #0a0a0a;
+  --foreground: #fafafa;
   --primary: #0d8ae6;
   --primary-foreground: #ffffff;
-  --secondary: #9ca3af;
-  --secondary-foreground: #111827;
+  --secondary: #737373;
+  --secondary-foreground: #fafafa;
   --accent: #38bdf8;
-  --accent-foreground: #0f172a;
-  --muted: #1f2937;
-  --muted-foreground: #9ca3af;
-  --border: #374151;
-  --card: #1f2937;
-  --card-foreground: #f9fafb;
+  --accent-foreground: #0a0a0a;
+  --muted: #171717;
+  --muted-foreground: #a3a3a3;
+  --border: #262626;
+  --card: #141414;
+  --card-foreground: #fafafa;
   --ring: #0d8ae6;
   --destructive: #ef4444;
   --destructive-foreground: #ffffff;
@@ -71,8 +71,8 @@ body {
   font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
 }
 
-/* Fondo negro entero en modo oscuro */
+/* Un solo negro en modo oscuro: fondo y sidebar iguales */
 html.dark,
 html.dark body {
-  background: #000000;
+  background: #0a0a0a;
 }

@@ -1,5 +1,6 @@
 import { PageLayout } from "@/components/layout";
 import { MOCK_LINEAS } from "@/config/mock-data";
+import { parseSlugId } from "@/lib/slug";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -9,7 +10,12 @@ interface PageProps {
 
 export default async function LineaDetailPage({ params }: PageProps) {
   const { slug } = await params;
-  const linea = MOCK_LINEAS.find((l) => l.slug === slug);
+  const linea =
+    MOCK_LINEAS.find((l) => l.slug === slug) ??
+    (() => {
+      const id = parseSlugId(slug);
+      return id ? MOCK_LINEAS.find((l) => l.id === id) ?? null : null;
+    })();
 
   if (!linea) {
     notFound();

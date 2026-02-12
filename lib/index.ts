@@ -1,3 +1,3 @@
 // lib: tokens, utils, Supabase client
 
-export {};
+export { buildSlug, parseSlugId, slugify } from "./slug";
