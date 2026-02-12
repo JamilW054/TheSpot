@@ -21,10 +21,25 @@ const DEFAULT_TEXT_ELEMENT = {
   content: "Texto",
 };
 
+const DEFAULT_IMAGE_ELEMENT = {
+  width: 160,
+  height: 120,
+  type: "image" as const,
+};
+
 function createTextElement(x: number, y: number): CanvasElement {
   return {
     id: crypto.randomUUID(),
     ...DEFAULT_TEXT_ELEMENT,
+    x,
+    y,
+  };
+}
+
+function createImageElement(x: number, y: number): CanvasElement {
+  return {
+    id: crypto.randomUUID(),
+    ...DEFAULT_IMAGE_ELEMENT,
     x,
     y,
   };
@@ -44,7 +59,12 @@ export function EditorLayout() {
     const x = translated.left - overRect.left;
     const y = translated.top - overRect.top;
 
-    setElements((prev) => [...prev, createTextElement(x, y)]);
+    const dragType = active.data.current?.type as "text" | "image" | undefined;
+    if (dragType === "image") {
+      setElements((prev) => [...prev, createImageElement(x, y)]);
+    } else {
+      setElements((prev) => [...prev, createTextElement(x, y)]);
+    }
   }, []);
 
   const sensors = useSensors(

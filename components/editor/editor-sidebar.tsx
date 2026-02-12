@@ -5,14 +5,21 @@ import { EDITOR_TOOLS } from "@/config/editor-tools";
 import { Button } from "@/components/ui/button";
 
 const TOOL_TEXT_ID = "tool-text";
+const TOOL_IMAGE_ID = "tool-image";
 
-function DraggableToolText() {
+function DraggableTool({
+  toolId,
+  type,
+}: {
+  toolId: string;
+  type: "text" | "image";
+}) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
-    id: TOOL_TEXT_ID,
-    data: { type: "text" },
+    id: toolId,
+    data: { type },
   });
 
-  const tool = EDITOR_TOOLS.find((t) => t.type === "text");
+  const tool = EDITOR_TOOLS.find((t) => t.type === type);
 
   return (
     <div ref={setNodeRef} {...listeners} {...attributes}>
@@ -23,7 +30,7 @@ function DraggableToolText() {
         className="w-full justify-start"
         aria-pressed={isDragging}
       >
-        {tool?.label ?? "Texto"}
+        {tool?.label ?? type === "text" ? "Texto" : "Imagen"}
       </Button>
     </div>
   );
@@ -43,9 +50,10 @@ export function EditorSidebar() {
         Herramientas
       </h2>
       <div className="mt-3 flex flex-col gap-2">
-        <DraggableToolText />
+        <DraggableTool toolId={TOOL_TEXT_ID} type="text" />
+        <DraggableTool toolId={TOOL_IMAGE_ID} type="image" />
         <p className="text-xs text-muted-foreground">
-          Arrastra «Texto» al canvas para añadir un cuadro de texto.
+          Arrastra «Texto» o «Imagen» al canvas para añadir elementos.
         </p>
       </div>
     </aside>
