@@ -1,6 +1,8 @@
 import { PageLayout } from "@/components/layout";
 import { MOCK_DESIGNS } from "@/config/mock-data";
+import Image from "next/image";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -11,18 +13,31 @@ export default async function DesignDetailPage({ params }: PageProps) {
   const design = MOCK_DESIGNS.find((d) => d.slug === slug);
 
   if (!design) {
-    return (
-      <PageLayout title="Diseño no encontrado">
-        <p className="text-muted-foreground">No existe un diseño con ese enlace.</p>
-        <Link href="/mis-disenos" className="text-primary hover:underline">
-          Volver a Mis diseños
-        </Link>
-      </PageLayout>
-    );
+    notFound();
   }
+
+  const galleryImages = [design.coverImage, ...design.gallery];
 
   return (
     <PageLayout title={design.name}>
+      <section aria-label="Galería del diseño" className="space-y-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {galleryImages.map((src, i) => (
+            <div
+              key={i}
+              className="relative aspect-video w-full overflow-hidden rounded-lg border border-border bg-muted"
+            >
+              <Image
+                src={src}
+                alt={`Imagen ${i + 1} de la galería`}
+                fill
+                className="object-cover"
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              />
+            </div>
+          ))}
+        </div>
+      </section>
       <p className="text-muted-foreground">{design.description}</p>
       <p className="text-sm text-muted-foreground">Actualizado: {design.updated}</p>
       <Link href="/mis-disenos" className="text-primary hover:underline">
