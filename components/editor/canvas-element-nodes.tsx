@@ -65,8 +65,12 @@ export function CanvasElementNodes({
             aria-label={`Elemento ${el.type}, seleccionado: ${isSelected}`}
           >
           {el.type === "text" ? (
-            <span className="flex min-h-0 min-w-0 flex-1 items-center px-2 py-1 wrap-break-word">
-              {el.content ?? ""}
+            <span className="flex min-h-0 min-w-0 flex-1 items-center px-2 py-1 break-words">
+              {el.content != null && el.content !== "" ? (
+                el.content
+              ) : (
+                <span className="text-muted-foreground">Texto</span>
+              )}
             </span>
           ) : el.type === "shape" ? (
             <div

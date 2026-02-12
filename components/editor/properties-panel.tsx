@@ -69,7 +69,7 @@ export function PropertiesPanel({
     onUpdateElement(element.id, {
       height: clampNum(element.height + delta, 1, 2000),
     });
-  const handleContent = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleContent = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     onUpdateElement(element.id, { content: e.target.value });
   };
 
@@ -207,12 +207,13 @@ export function PropertiesPanel({
           <label htmlFor="prop-content" className="text-muted-foreground block">
             Texto
           </label>
-          <input
+          <textarea
             id="prop-content"
-            type="text"
+            rows={3}
             value={element.content ?? ""}
             onChange={handleContent}
-            className="rounded border border-border bg-background px-2 py-1 text-foreground w-full"
+            placeholder="Texto"
+            className="rounded border border-border bg-background px-2 py-1 text-foreground w-full resize-y min-h-16"
           />
         </div>
       )}
