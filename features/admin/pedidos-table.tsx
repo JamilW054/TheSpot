@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import type { Pedido, PedidoEstado } from "@/types";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 const ESTADO_LABEL: Record<PedidoEstado, string> = {
   pendiente: "Pendiente",
@@ -50,9 +50,17 @@ export interface PedidosTableProps {
   withFilters?: boolean;
 }
 
+function toggleSet<T>(set: Set<T>, value: T): Set<T> {
+  const next = new Set(set);
+  if (next.has(value)) next.delete(value);
+  else next.add(value);
+  return next;
+}
+
 export function PedidosTable({ pedidos, withFilters = false }: PedidosTableProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterEstado, setFilterEstado] = useState<FilterEstado>("todos");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const filtered = useMemo(
     () =>
@@ -61,6 +69,14 @@ export function PedidosTable({ pedidos, withFilters = false }: PedidosTableProps
         : pedidos,
     [pedidos, searchQuery, filterEstado, withFilters]
   );
+
+  const handleToggleRow = (id: string) => {
+    setSelectedIds((prev) => toggleSet(prev, id));
+  };
+
+  const handleSelectAll = (checked: boolean) => {
+    setSelectedIds(checked ? new Set(filtered.map((p) => p.id)) : new Set());
+  };
 
   return (
     <div className="space-y-4">
@@ -89,12 +105,20 @@ export function PedidosTable({ pedidos, withFilters = false }: PedidosTableProps
               ))}
             </select>
           </div>
-          {filtered.length > 0 && (
-            <p className="text-sm text-muted-foreground">
-              {filtered.length}{" "}
-              {filtered.length === 1 ? "resultado" : "resultados"}
-            </p>
-          )}
+          <div className="flex flex-wrap items-center gap-3 text-sm">
+            {filtered.length > 0 && (
+              <p className="text-muted-foreground">
+                {filtered.length}{" "}
+                {filtered.length === 1 ? "resultado" : "resultados"}
+              </p>
+            )}
+            {selectedIds.size > 0 && (
+              <p className="font-medium text-foreground" role="status">
+                {selectedIds.size}{" "}
+                {selectedIds.size === 1 ? "seleccionado" : "seleccionados"}
+              </p>
+            )}
+          </div>
         </>
       )}
       {filtered.length === 0 && withFilters ? (
@@ -102,13 +126,40 @@ export function PedidosTable({ pedidos, withFilters = false }: PedidosTableProps
           No hay resultados con estos filtros.
         </p>
       ) : (
-        <PedidosTableBody pedidos={filtered} />
+        <PedidosTableBody
+          pedidos={filtered}
+          selectedIds={selectedIds}
+          onToggleRow={handleToggleRow}
+          onSelectAll={handleSelectAll}
+        />
       )}
     </div>
   );
 }
 
-function PedidosTableBody({ pedidos }: { pedidos: Pedido[] }) {
+interface PedidosTableBodyProps {
+  pedidos: Pedido[];
+  selectedIds: Set<string>;
+  onToggleRow: (id: string) => void;
+  onSelectAll: (checked: boolean) => void;
+}
+
+function PedidosTableBody({
+  pedidos,
+  selectedIds,
+  onToggleRow,
+  onSelectAll,
+}: PedidosTableBodyProps) {
+  const selectAllRef = useRef<HTMLInputElement>(null);
+  const allChecked =
+    pedidos.length > 0 && pedidos.every((p) => selectedIds.has(p.id));
+  const someChecked = selectedIds.size > 0;
+
+  useEffect(() => {
+    const el = selectAllRef.current;
+    if (el) el.indeterminate = someChecked && !allChecked;
+  }, [someChecked, allChecked]);
+
   if (pedidos.length === 0) {
     return (
       <p className="rounded-lg border border-border bg-muted/30 px-4 py-8 text-center text-sm text-muted-foreground">
@@ -124,6 +175,16 @@ function PedidosTableBody({ pedidos }: { pedidos: Pedido[] }) {
         <table className="w-full min-w-[600px] border-collapse text-left text-sm">
           <thead>
             <tr className="border-b border-border bg-muted/50">
+              <th scope="col" className="w-10 px-2 py-3">
+                <input
+                  ref={selectAllRef}
+                  type="checkbox"
+                  checked={allChecked}
+                  onChange={(e) => onSelectAll(e.target.checked)}
+                  aria-label="Seleccionar todos los pedidos visibles"
+                  className="size-4 rounded border-border"
+                />
+              </th>
               <th scope="col" className="px-4 py-3 font-medium text-foreground">
                 ID
               </th>
@@ -147,6 +208,15 @@ function PedidosTableBody({ pedidos }: { pedidos: Pedido[] }) {
                 key={p.id}
                 className="border-b border-border transition-colors hover:bg-muted/30"
               >
+                <td className="w-10 px-2 py-3">
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.has(p.id)}
+                    onChange={() => onToggleRow(p.id)}
+                    aria-label={`Seleccionar pedido ${p.id}`}
+                    className="size-4 rounded border-border"
+                  />
+                </td>
                 <td className="px-4 py-3 font-mono text-foreground">{p.id}</td>
                 <td className="px-4 py-3 text-foreground">{p.cliente}</td>
                 <td className="px-4 py-3 tabular-nums text-foreground">
@@ -171,18 +241,29 @@ function PedidosTableBody({ pedidos }: { pedidos: Pedido[] }) {
         {pedidos.map((p) => (
           <Card key={p.id} className="border-border">
             <CardContent className="p-4">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className="font-mono text-sm font-medium text-foreground">
-                  {p.id}
-                </span>
-                <Badge variant={ESTADO_BADGE_VARIANT[p.estado]}>
-                  {ESTADO_LABEL[p.estado]}
-                </Badge>
-              </div>
-              <p className="mt-1 font-medium text-foreground">{p.cliente}</p>
-              <div className="mt-2 flex gap-4 text-sm text-muted-foreground">
-                <span>{p.items} items</span>
-                <span className="tabular-nums">{p.total}</span>
+              <div className="flex items-start gap-3">
+                <input
+                  type="checkbox"
+                  checked={selectedIds.has(p.id)}
+                  onChange={() => onToggleRow(p.id)}
+                  aria-label={`Seleccionar pedido ${p.id}`}
+                  className="mt-0.5 size-4 shrink-0 rounded border-border"
+                />
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="font-mono text-sm font-medium text-foreground">
+                      {p.id}
+                    </span>
+                    <Badge variant={ESTADO_BADGE_VARIANT[p.estado]}>
+                      {ESTADO_LABEL[p.estado]}
+                    </Badge>
+                  </div>
+                  <p className="mt-1 font-medium text-foreground">{p.cliente}</p>
+                  <div className="mt-2 flex gap-4 text-sm text-muted-foreground">
+                    <span>{p.items} items</span>
+                    <span className="tabular-nums">{p.total}</span>
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
