@@ -79,7 +79,7 @@ export default function AdminPage() {
 
       <section aria-label="Listado de pedidos" className="space-y-2">
         <h2 className="text-lg font-medium text-foreground">Pedidos</h2>
-        <PedidosTable pedidos={MOCK_PEDIDOS} />
+        <PedidosTable pedidos={MOCK_PEDIDOS} withFilters />
       </section>
     </PageLayout>
   );
