@@ -8,7 +8,7 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import type { CanvasElement } from "@/types";
+import type { CanvasElement, CanvasElementType } from "@/types";
 import { useCallback, useState } from "react";
 import { CanvasEditor, CANVAS_DROPPABLE_ID } from "./canvas-editor";
 import { EditorRightPanel } from "./editor-right-panel";
@@ -18,13 +18,20 @@ const DEFAULT_TEXT_ELEMENT = {
   width: 120,
   height: 40,
   type: "text" as const,
-  content: "Texto",
+  content: "Nuevo texto",
 };
 
 const DEFAULT_IMAGE_ELEMENT = {
   width: 160,
   height: 120,
   type: "image" as const,
+};
+
+const DEFAULT_SHAPE_ELEMENT = {
+  width: 100,
+  height: 80,
+  type: "shape" as const,
+  content: "rect" as const,
 };
 
 function createTextElement(x: number, y: number): CanvasElement {
@@ -45,6 +52,15 @@ function createImageElement(x: number, y: number): CanvasElement {
   };
 }
 
+function createShapeElement(x: number, y: number): CanvasElement {
+  return {
+    id: crypto.randomUUID(),
+    ...DEFAULT_SHAPE_ELEMENT,
+    x,
+    y,
+  };
+}
+
 export function EditorLayout() {
   const [elements, setElements] = useState<CanvasElement[]>([]);
 
@@ -59,10 +75,12 @@ export function EditorLayout() {
     const x = translated.left - overRect.left;
     const y = translated.top - overRect.top;
 
-    const dragType = active.data.current?.type as "text" | "image" | undefined;
+    const dragType = active.data.current?.type as CanvasElementType | undefined;
     if (dragType === "image") {
       setElements((prev) => [...prev, createImageElement(x, y)]);
-    } else {
+    } else if (dragType === "shape") {
+      setElements((prev) => [...prev, createShapeElement(x, y)]);
+    } else if (dragType === "text") {
       setElements((prev) => [...prev, createTextElement(x, y)]);
     }
   }, []);

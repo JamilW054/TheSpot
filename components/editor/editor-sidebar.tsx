@@ -1,18 +1,26 @@
 "use client";
 
 import { useDraggable } from "@dnd-kit/core";
+import type { CanvasElementType } from "@/types";
 import { EDITOR_TOOLS } from "@/config/editor-tools";
 import { Button } from "@/components/ui/button";
 
 const TOOL_TEXT_ID = "tool-text";
 const TOOL_IMAGE_ID = "tool-image";
+const TOOL_SHAPE_ID = "tool-shape";
+
+const TOOL_LABELS: Record<CanvasElementType, string> = {
+  text: "Texto",
+  image: "Imagen",
+  shape: "Forma",
+};
 
 function DraggableTool({
   toolId,
   type,
 }: {
   toolId: string;
-  type: "text" | "image";
+  type: CanvasElementType;
 }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: toolId,
@@ -30,7 +38,7 @@ function DraggableTool({
         className="w-full justify-start"
         aria-pressed={isDragging}
       >
-        {tool?.label ?? type === "text" ? "Texto" : "Imagen"}
+        {tool?.label ?? TOOL_LABELS[type]}
       </Button>
     </div>
   );
@@ -52,8 +60,9 @@ export function EditorSidebar() {
       <div className="mt-3 flex flex-col gap-2">
         <DraggableTool toolId={TOOL_TEXT_ID} type="text" />
         <DraggableTool toolId={TOOL_IMAGE_ID} type="image" />
+        <DraggableTool toolId={TOOL_SHAPE_ID} type="shape" />
         <p className="text-xs text-muted-foreground">
-          Arrastra «Texto» o «Imagen» al canvas para añadir elementos.
+          Arrastra «Texto», «Imagen» o «Forma» al canvas para añadir elementos.
         </p>
       </div>
     </aside>

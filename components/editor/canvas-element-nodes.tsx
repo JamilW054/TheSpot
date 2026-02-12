@@ -34,7 +34,7 @@ export function CanvasElementNodes({ elements }: CanvasElementNodesProps) {
       {elements.map((el) => (
         <div
           key={el.id}
-          className="absolute flex items-center justify-center overflow-hidden rounded border border-border bg-background px-2 py-1 text-sm text-foreground shadow-sm"
+          className="absolute flex overflow-hidden rounded border border-border bg-background text-sm text-foreground shadow-sm"
           style={{
             left: el.x,
             top: el.y,
@@ -42,11 +42,15 @@ export function CanvasElementNodes({ elements }: CanvasElementNodesProps) {
             height: el.height,
           }}
         >
-          {el.type === "text" && (el.content ?? "").trim() !== ""
-            ? el.content
-            : null}
-          {el.type === "shape" ? "◇" : null}
-          {el.type === "image" ? (
+          {el.type === "text" ? (
+            <span className="flex min-h-0 min-w-0 flex-1 items-center px-2 py-1 break-words">
+              {el.content ?? ""}
+            </span>
+          ) : el.type === "shape" ? (
+            <div
+              className={`h-full w-full border-2 border-primary bg-primary/20 ${el.content === "circle" ? "rounded-full" : "rounded"}`}
+            />
+          ) : el.type === "image" ? (
             <div className="flex h-full w-full items-center justify-center bg-muted">
               <ImagePlaceholderIcon className="text-muted-foreground" />
             </div>
