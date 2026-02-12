@@ -1,33 +1,24 @@
 "use client";
 
 import { useDraggable } from "@dnd-kit/core";
-import type { CanvasElementType } from "@/types";
+import { Image, Square, Type } from "lucide-react";
+import type { EditorTool } from "@/config/editor-tools";
 import { EDITOR_TOOLS } from "@/config/editor-tools";
 import { Button } from "@/components/ui/button";
 
-const TOOL_TEXT_ID = "tool-text";
-const TOOL_IMAGE_ID = "tool-image";
-const TOOL_SHAPE_ID = "tool-shape";
-
-const TOOL_LABELS: Record<CanvasElementType, string> = {
-  text: "Texto",
-  image: "Imagen",
-  shape: "Forma",
+const ICON_BY_NAME: Record<string, React.ComponentType<{ className?: string }>> = {
+  Image,
+  Type,
+  Square,
 };
 
-function DraggableTool({
-  toolId,
-  type,
-}: {
-  toolId: string;
-  type: CanvasElementType;
-}) {
+function DraggableTool({ tool }: { tool: EditorTool }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
-    id: toolId,
-    data: { type },
+    id: tool.id,
+    data: { type: tool.type },
   });
 
-  const tool = EDITOR_TOOLS.find((t) => t.type === type);
+  const Icon = tool.iconName ? ICON_BY_NAME[tool.iconName] : null;
 
   return (
     <div ref={setNodeRef} {...listeners} {...attributes}>
@@ -35,10 +26,11 @@ function DraggableTool({
         type="button"
         variant="outline"
         size="sm"
-        className="w-full justify-start"
+        className="w-full justify-start gap-2"
         aria-pressed={isDragging}
       >
-        {tool?.label ?? TOOL_LABELS[type]}
+        {Icon != null ? <Icon className="size-4 shrink-0" aria-hidden /> : null}
+        <span>{tool.label}</span>
       </Button>
     </div>
   );
@@ -58,11 +50,11 @@ export function EditorSidebar() {
         Herramientas
       </h2>
       <div className="mt-3 flex flex-col gap-2">
-        <DraggableTool toolId={TOOL_TEXT_ID} type="text" />
-        <DraggableTool toolId={TOOL_IMAGE_ID} type="image" />
-        <DraggableTool toolId={TOOL_SHAPE_ID} type="shape" />
+        {EDITOR_TOOLS.map((tool) => (
+          <DraggableTool key={tool.id} tool={tool} />
+        ))}
         <p className="text-xs text-muted-foreground">
-          Arrastra «Texto», «Imagen» o «Forma» al canvas para añadir elementos.
+          Arrastra una herramienta al canvas para añadir elementos.
         </p>
       </div>
     </aside>
