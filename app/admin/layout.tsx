@@ -1,7 +1,12 @@
 import { AppShell } from "@/components/layout";
+import { RequireAuth } from "@/components/auth";
 
 export default function AdminLayout({
   children,
 }: { children: React.ReactNode }) {
-  return <AppShell variant="admin">{children}</AppShell>;
+  return (
+    <RequireAuth requireAdmin>
+      <AppShell variant="admin">{children}</AppShell>
+    </RequireAuth>
+  );
 }
