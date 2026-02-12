@@ -1,3 +1,4 @@
+import { PedidosTable } from "@/features/admin";
 import { PageLayout } from "@/components/layout";
 import { Card, CardContent } from "@/components/ui/card";
 import { MOCK_PEDIDOS } from "@/config/mock-data";
@@ -74,6 +75,11 @@ export default function AdminPage() {
             </p>
           </CardContent>
         </Card>
+      </section>
+
+      <section aria-label="Listado de pedidos" className="space-y-2">
+        <h2 className="text-lg font-medium text-foreground">Pedidos</h2>
+        <PedidosTable pedidos={MOCK_PEDIDOS} />
       </section>
     </PageLayout>
   );

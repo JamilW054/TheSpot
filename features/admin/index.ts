@@ -1,3 +1,3 @@
 // features/admin: admin domain
 
-export {};
+export { PedidosTable, type PedidosTableProps } from "./pedidos-table";
