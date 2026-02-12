@@ -2,15 +2,29 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { APP_NAV } from "@/config/navigation";
+import { APP_NAV, ADMIN_NAV } from "@/config/navigation";
+import type { NavItem } from "@/config/navigation";
+
+export type SidebarVariant = "app" | "admin";
+
+const NAV_BY_VARIANT: Record<SidebarVariant, NavItem[]> = {
+  app: APP_NAV,
+  admin: ADMIN_NAV,
+};
 
 export interface AppSidebarProps {
+  variant?: SidebarVariant;
   open?: boolean;
   onClose?: () => void;
 }
 
-export function AppSidebar({ open = false, onClose }: AppSidebarProps) {
+export function AppSidebar({
+  variant = "app",
+  open = false,
+  onClose,
+}: AppSidebarProps) {
   const pathname = usePathname();
+  const items = NAV_BY_VARIANT[variant];
 
   return (
     <>
@@ -24,7 +38,11 @@ export function AppSidebar({ open = false, onClose }: AppSidebarProps) {
         }`}
       />
       <aside
-        aria-label="Navegación de la aplicación"
+        aria-label={
+          variant === "admin"
+            ? "Navegación de administración"
+            : "Navegación de la aplicación"
+        }
         className={`
           fixed md:sticky top-0 left-0 z-50 h-full w-64 shrink-0
           flex flex-col border-r border-border bg-card
@@ -33,7 +51,7 @@ export function AppSidebar({ open = false, onClose }: AppSidebarProps) {
         `}
       >
         <nav className="flex flex-col gap-1 p-3">
-          {APP_NAV.map((item) => {
+          {items.map((item) => {
             const isActive =
               pathname === item.href ||
               (item.href !== "/" && pathname.startsWith(item.href));

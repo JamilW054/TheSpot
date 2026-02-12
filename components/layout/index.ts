@@ -1,3 +1,11 @@
 export { PublicNavbar } from "./public-navbar";
-export { AppSidebar, type AppSidebarProps } from "./app-sidebar";
-export { AppShell, type AppShellProps } from "./app-shell";
+export {
+  AppSidebar,
+  type AppSidebarProps,
+  type SidebarVariant,
+} from "./app-sidebar";
+export {
+  AppShell,
+  type AppShellProps,
+  type AppShellVariant,
+} from "./app-shell";

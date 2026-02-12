@@ -26,16 +26,26 @@ function MenuIcon({ className }: { className?: string }) {
   );
 }
 
+export type AppShellVariant = "app" | "admin";
+
 export interface AppShellProps {
   children: React.ReactNode;
+  variant?: AppShellVariant;
 }
 
-export function AppShell({ children }: AppShellProps) {
+const SHELL_HOME_HREF: Record<AppShellVariant, string> = {
+  app: "/mis-disenos",
+  admin: "/admin",
+};
+
+export function AppShell({ children, variant = "app" }: AppShellProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const homeHref = SHELL_HOME_HREF[variant];
 
   return (
     <div className="flex min-h-screen bg-background text-foreground">
       <AppSidebar
+        variant={variant}
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
       />
@@ -50,10 +60,10 @@ export function AppShell({ children }: AppShellProps) {
             <MenuIcon />
           </button>
           <Link
-            href="/mis-disenos"
+            href={homeHref}
             className="font-semibold text-foreground hover:opacity-90"
           >
-            Buxxep
+            Buxxep {variant === "admin" ? "Admin" : ""}
           </Link>
         </header>
         <main className="flex-1 p-4 sm:p-6">{children}</main>
