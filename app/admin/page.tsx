@@ -60,6 +60,14 @@ export default function AdminPage() {
     );
   };
 
+  const handleMarkCompletado = (ids: string[]) => {
+    setPedidos((prev) =>
+      prev.map((p) =>
+        ids.includes(p.id) ? { ...p, estado: "completado" as const } : p
+      )
+    );
+  };
+
   return (
     <PageLayout title="Panel de administración">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -95,6 +103,7 @@ export default function AdminPage() {
           pedidos={pedidos}
           withFilters
           onMarkEnProceso={handleMarkEnProceso}
+          onMarkCompletado={handleMarkCompletado}
         />
       </section>
     </PageLayout>

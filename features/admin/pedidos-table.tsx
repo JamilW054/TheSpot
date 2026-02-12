@@ -50,6 +50,8 @@ export interface PedidosTableProps {
   withFilters?: boolean;
   /** Llamado al ejecutar "Marcar en proceso" en lote; recibe los ids seleccionados. */
   onMarkEnProceso?: (ids: string[]) => void;
+  /** Llamado al ejecutar "Marcar completado" en lote; recibe los ids seleccionados. */
+  onMarkCompletado?: (ids: string[]) => void;
 }
 
 function toggleSet<T>(set: Set<T>, value: T): Set<T> {
@@ -63,6 +65,7 @@ export function PedidosTable({
   pedidos,
   withFilters = false,
   onMarkEnProceso,
+  onMarkCompletado,
 }: PedidosTableProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterEstado, setFilterEstado] = useState<FilterEstado>("todos");
@@ -87,6 +90,18 @@ export function PedidosTable({
   const handleMarkEnProceso = () => {
     const ids = Array.from(selectedIds);
     onMarkEnProceso?.(ids);
+    setSelectedIds(new Set());
+  };
+
+  const handleMarkCompletado = () => {
+    const ids = Array.from(selectedIds);
+    const n = ids.length;
+    const message =
+      n === 1
+        ? "¿Marcar 1 pedido como completado?"
+        : `¿Marcar ${n} pedidos como completados?`;
+    if (!confirm(message)) return;
+    onMarkCompletado?.(ids);
     setSelectedIds(new Set());
   };
 
@@ -139,6 +154,13 @@ export function PedidosTable({
                 className="inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               >
                 Marcar en proceso
+              </button>
+              <button
+                type="button"
+                onClick={handleMarkCompletado}
+                className="inline-flex h-9 items-center justify-center rounded-md border-2 border-border bg-transparent px-4 text-sm font-medium hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
+                Marcar completado
               </button>
             </div>
           )}
