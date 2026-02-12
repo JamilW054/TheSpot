@@ -48,6 +48,8 @@ export interface PedidosTableProps {
   pedidos: Pedido[];
   /** Si true, muestra barra de búsqueda y filtro por estado (requiere client). */
   withFilters?: boolean;
+  /** Llamado al ejecutar "Marcar en proceso" en lote; recibe los ids seleccionados. */
+  onMarkEnProceso?: (ids: string[]) => void;
 }
 
 function toggleSet<T>(set: Set<T>, value: T): Set<T> {
@@ -57,7 +59,11 @@ function toggleSet<T>(set: Set<T>, value: T): Set<T> {
   return next;
 }
 
-export function PedidosTable({ pedidos, withFilters = false }: PedidosTableProps) {
+export function PedidosTable({
+  pedidos,
+  withFilters = false,
+  onMarkEnProceso,
+}: PedidosTableProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterEstado, setFilterEstado] = useState<FilterEstado>("todos");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -76,6 +82,12 @@ export function PedidosTable({ pedidos, withFilters = false }: PedidosTableProps
 
   const handleSelectAll = (checked: boolean) => {
     setSelectedIds(checked ? new Set(filtered.map((p) => p.id)) : new Set());
+  };
+
+  const handleMarkEnProceso = () => {
+    const ids = Array.from(selectedIds);
+    onMarkEnProceso?.(ids);
+    setSelectedIds(new Set());
   };
 
   return (
@@ -119,6 +131,17 @@ export function PedidosTable({ pedidos, withFilters = false }: PedidosTableProps
               </p>
             )}
           </div>
+          {selectedIds.size > 0 && (
+            <div className="flex flex-wrap items-center gap-3 rounded-lg border border-border bg-muted/30 px-4 py-3">
+              <button
+                type="button"
+                onClick={handleMarkEnProceso}
+                className="inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
+                Marcar en proceso
+              </button>
+            </div>
+          )}
         </>
       )}
       {filtered.length === 0 && withFilters ? (

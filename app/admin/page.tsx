@@ -1,8 +1,11 @@
+"use client";
+
 import { PedidosTable } from "@/features/admin";
 import { PageLayout } from "@/components/layout";
 import { Card, CardContent } from "@/components/ui/card";
 import { MOCK_PEDIDOS } from "@/config/mock-data";
 import type { Pedido } from "@/types";
+import { useState } from "react";
 
 function kpis(pedidos: Pedido[]) {
   return {
@@ -45,8 +48,17 @@ const KPI_LABELS = [
 ] as const;
 
 export default function AdminPage() {
-  const metrics = kpis(MOCK_PEDIDOS);
-  const ingresos = ingresosCompletados(MOCK_PEDIDOS);
+  const [pedidos, setPedidos] = useState<Pedido[]>(MOCK_PEDIDOS);
+  const metrics = kpis(pedidos);
+  const ingresos = ingresosCompletados(pedidos);
+
+  const handleMarkEnProceso = (ids: string[]) => {
+    setPedidos((prev) =>
+      prev.map((p) =>
+        ids.includes(p.id) ? { ...p, estado: "en_proceso" as const } : p
+      )
+    );
+  };
 
   return (
     <PageLayout title="Panel de administración">
@@ -79,7 +91,11 @@ export default function AdminPage() {
 
       <section aria-label="Listado de pedidos" className="space-y-2">
         <h2 className="text-lg font-medium text-foreground">Pedidos</h2>
-        <PedidosTable pedidos={MOCK_PEDIDOS} withFilters />
+        <PedidosTable
+          pedidos={pedidos}
+          withFilters
+          onMarkEnProceso={handleMarkEnProceso}
+        />
       </section>
     </PageLayout>
   );
