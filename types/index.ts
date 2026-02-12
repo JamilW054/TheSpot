@@ -24,6 +24,8 @@ export interface Linea {
   published: boolean;
   coverImage: string;
   gallery: string[];
+  /** Optional product names for "Productos de esta línea". If absent, UI shows placeholders. */
+  products?: string[];
 }
 
 export type PedidoEstado = "pendiente" | "en_proceso" | "completado";

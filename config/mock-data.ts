@@ -83,21 +83,38 @@ const lineaNames = [
   "Limited edition",
 ];
 
+/** Product names per line for "Productos de esta línea". Some lineas have none to show placeholders. */
+const lineaProducts: (string[] | undefined)[] = [
+  ["Sudadera oversize", "Pantalón cargo", "Gorro básico", "Zapatillas urban"],
+  ["Camiseta minimal", "Pantalón lino", "Cardigan corto", "Tote bag", "Zapatos blancos"],
+  ["Top deportivo", "Shorts running", "Leggings", "Sujetador sport", "Mochila"],
+  ["Camisa oxford", "Pantalón vestir", "Chaqueta blazer", "Zapatos negros"],
+  ["Camiseta kids", "Pantalón corto niño", "Vestido niña"],
+  undefined, // Unisex basics: sin products → placeholders
+  ["Vestido noche", "Bolso clutch", "Tacones"],
+  ["Chaqueta lluvia", "Pantalón trekking", "Botas", "Mochila 20L"],
+  ["Pijama set", "Bata", "Zapatillas casa"],
+  undefined, // Limited edition: placeholders
+];
+
 export const MOCK_LINEAS: Linea[] = lineaNames.map((name, i) => {
   const id = `l${String(i + 1).padStart(2, "0")}`;
   const slug = buildSlug(name, id);
+  const productList = lineaProducts[i];
+  const items = productList ? productList.length : 4 + (i % 7);
   return {
     id,
     slug,
     name,
     description: `Línea de ropa: ${name}. Piezas coordinadas para tu estilo.`,
-    items: 4 + (i % 7),
+    items,
     published: i % 2 === 0,
     coverImage: placeholder(500, 350, slug),
     gallery: [
       placeholder(600, 400, `${slug}-a`),
       placeholder(600, 400, `${slug}-b`),
     ],
+    ...(productList && { products: productList }),
   };
 });
 
