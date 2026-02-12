@@ -1,3 +1,3 @@
-// Editor: canvas-editor, sidebar, properties-panel, mockup-panel, right-panel
-
-export {};
+export { EditorCanvas } from "./editor-canvas";
+export { EditorRightPanel } from "./editor-right-panel";
+export { EditorSidebar } from "./editor-sidebar";
