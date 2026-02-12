@@ -1,3 +1,1 @@
-// Layout: PublicNavbar, AppSidebar, AppShell, Navbar, PageLayout
-
-export {};
+export { PublicNavbar } from "./public-navbar";
