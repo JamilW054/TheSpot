@@ -138,6 +138,30 @@ export default function PublicPage() {
         ))}
       </section>
 
+      {/* CTA final */}
+      <section
+        className="py-16 sm:py-20 px-4 text-center bg-muted/50 dark:bg-muted/30"
+        aria-labelledby="cta-final-title"
+      >
+        <div className="max-w-2xl mx-auto flex flex-col items-center gap-4">
+          <h2
+            id="cta-final-title"
+            className="text-2xl sm:text-3xl font-bold text-foreground"
+          >
+            ¿Listo para diseñar?
+          </h2>
+          <p className="text-muted-foreground text-lg">
+            Crea tu cuenta y empieza a personalizar tu ropa en minutos.
+          </p>
+          <Link
+            href="/registro"
+            className="inline-flex items-center justify-center font-medium h-12 px-8 text-lg rounded-full bg-primary text-primary-foreground hover:opacity-90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background transition-opacity"
+          >
+            Crear mi diseño
+          </Link>
+        </div>
+      </section>
+
       {/* Franja inferior tipo partners */}
       <footer className="mt-auto pt-8 pb-6 border-t border-border">
         <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-10 text-sm text-muted-foreground">
