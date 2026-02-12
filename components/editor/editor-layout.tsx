@@ -65,6 +65,12 @@ export function EditorLayout() {
   const [elements, setElements] = useState<CanvasElement[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
+  const handleUpdateElement = useCallback((id: string, partial: CanvasElementPatch) => {
+    setElements((prev) =>
+      prev.map((el) => (el.id === id ? { ...el, ...partial } : el))
+    );
+  }, []);
+
   const handleDragEnd = useCallback((event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || over.id !== CANVAS_DROPPABLE_ID) return;
@@ -108,6 +114,7 @@ export function EditorLayout() {
         <EditorRightPanel
           selectedId={selectedId}
           elements={elements}
+          onUpdateElement={handleUpdateElement}
           onClearSelection={() => setSelectedId(null)}
         />
       </div>
