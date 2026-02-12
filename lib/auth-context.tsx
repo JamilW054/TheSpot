@@ -73,7 +73,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setUser({
         id: mockId(),
         email,
-        name: name.trim() || email.split("@")[0] ?? "Usuario",
+        name: (name.trim() || email.split("@")[0]) ?? "Usuario",
         role: mockRoleFromEmail(email),
       });
       setIsLoading(false);
