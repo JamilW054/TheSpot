@@ -115,6 +115,7 @@ export function EditorLayout() {
         <EditorRightPanel
           selectedId={selectedId}
           elements={elements}
+          onSelectElement={setSelectedId}
           onUpdateElement={handleUpdateElement}
           onClearSelection={() => setSelectedId(null)}
         />

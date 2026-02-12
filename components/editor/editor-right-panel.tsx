@@ -1,12 +1,14 @@
 "use client";
 
 import type { CanvasElement } from "@/types";
+import { LayersPanel } from "./layers-panel";
 import type { CanvasElementPatch } from "./properties-panel";
 import { PropertiesPanel } from "./properties-panel";
 
 export interface EditorRightPanelProps {
   selectedId: string | null;
   elements: CanvasElement[];
+  onSelectElement: (id: string) => void;
   onUpdateElement: (id: string, partial: CanvasElementPatch) => void;
   onClearSelection: () => void;
 }
@@ -17,6 +19,7 @@ export interface EditorRightPanelProps {
 export function EditorRightPanel({
   selectedId,
   elements,
+  onSelectElement,
   onUpdateElement,
   onClearSelection,
 }: EditorRightPanelProps) {
@@ -47,9 +50,11 @@ export function EditorRightPanel({
       <h2 className="mt-6 text-xs font-medium uppercase tracking-wider text-muted-foreground">
         Capas
       </h2>
-      <p className="mt-2 text-sm text-muted-foreground">
-        (Placeholder: lista de capas / orden z)
-      </p>
+      <LayersPanel
+        elements={elements}
+        selectedId={selectedId}
+        onSelectElement={onSelectElement}
+      />
     </aside>
   );
 }
