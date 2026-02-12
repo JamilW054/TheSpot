@@ -8,3 +8,6 @@ export {
   CardFooter,
 } from "./card";
 export { Input, type InputProps } from "./input";
+export { Badge, type BadgeProps, type BadgeVariant } from "./badge";
+export { Skeleton, type SkeletonProps } from "./skeleton";
+export { LineShadowText, type LineShadowTextProps } from "./line-shadow-text";
