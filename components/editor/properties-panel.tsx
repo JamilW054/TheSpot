@@ -33,85 +33,174 @@ export function PropertiesPanel({
     );
   }
 
+  const STEP_POS = 1;
+  const STEP_SIZE = 10;
+
   const handleX = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = Number.parseFloat(e.target.value);
-    if (!Number.isNaN(value)) {
-      onUpdateElement(element.id, { x: clampNum(value, 0, 10000) });
-    }
+    const value = Number(e.target.value);
+    const safe = Number.isNaN(value) ? 0 : clampNum(value, 0, 10000);
+    onUpdateElement(element.id, { x: safe });
   };
   const handleY = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = Number.parseFloat(e.target.value);
-    if (!Number.isNaN(value)) {
-      onUpdateElement(element.id, { y: clampNum(value, 0, 10000) });
-    }
+    const value = Number(e.target.value);
+    const safe = Number.isNaN(value) ? 0 : clampNum(value, 0, 10000);
+    onUpdateElement(element.id, { y: safe });
   };
   const handleWidth = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = Number.parseFloat(e.target.value);
-    if (!Number.isNaN(value) && value > 0) {
-      onUpdateElement(element.id, { width: clampNum(value, 1, 2000) });
-    }
+    const value = Number(e.target.value);
+    const safe = Number.isNaN(value) || value < 1 ? 1 : clampNum(value, 1, 2000);
+    onUpdateElement(element.id, { width: safe });
   };
   const handleHeight = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = Number.parseFloat(e.target.value);
-    if (!Number.isNaN(value) && value > 0) {
-      onUpdateElement(element.id, { height: clampNum(value, 1, 2000) });
-    }
+    const value = Number(e.target.value);
+    const safe = Number.isNaN(value) || value < 1 ? 1 : clampNum(value, 1, 2000);
+    onUpdateElement(element.id, { height: safe });
   };
+
+  const stepX = (delta: number) =>
+    onUpdateElement(element.id, { x: clampNum(element.x + delta, 0, 10000) });
+  const stepY = (delta: number) =>
+    onUpdateElement(element.id, { y: clampNum(element.y + delta, 0, 10000) });
+  const stepWidth = (delta: number) =>
+    onUpdateElement(element.id, {
+      width: clampNum(element.width + delta, 1, 2000),
+    });
+  const stepHeight = (delta: number) =>
+    onUpdateElement(element.id, {
+      height: clampNum(element.height + delta, 1, 2000),
+    });
   const handleContent = (e: React.ChangeEvent<HTMLInputElement>) => {
     onUpdateElement(element.id, { content: e.target.value });
   };
+
+  const inputCn =
+    "rounded border border-border bg-background px-2 py-1 text-foreground w-full min-w-0";
+  const btnCn =
+    "shrink-0 rounded border border-border bg-muted/50 hover:bg-muted text-foreground w-7 h-7 flex items-center justify-center text-sm font-medium";
 
   return (
     <div className="mt-2 space-y-3 text-sm">
       <div className="grid grid-cols-[auto_1fr] gap-x-2 gap-y-1 items-center">
         <label htmlFor="prop-x" className="text-muted-foreground">
-          X
+          Posición X (px)
         </label>
-        <input
-          id="prop-x"
-          type="number"
-          min={0}
-          step={1}
-          value={element.x}
-          onChange={handleX}
-          className="rounded border border-border bg-background px-2 py-1 text-foreground w-full"
-        />
+        <div className="flex gap-1 items-center">
+          <input
+            id="prop-x"
+            type="number"
+            min={0}
+            step={STEP_POS}
+            value={element.x}
+            onChange={handleX}
+            className={inputCn}
+          />
+          <button
+            type="button"
+            aria-label="Decrementar X"
+            className={btnCn}
+            onClick={() => stepX(-STEP_POS)}
+          >
+            −
+          </button>
+          <button
+            type="button"
+            aria-label="Incrementar X"
+            className={btnCn}
+            onClick={() => stepX(STEP_POS)}
+          >
+            +
+          </button>
+        </div>
         <label htmlFor="prop-y" className="text-muted-foreground">
-          Y
+          Posición Y (px)
         </label>
-        <input
-          id="prop-y"
-          type="number"
-          min={0}
-          step={1}
-          value={element.y}
-          onChange={handleY}
-          className="rounded border border-border bg-background px-2 py-1 text-foreground w-full"
-        />
+        <div className="flex gap-1 items-center">
+          <input
+            id="prop-y"
+            type="number"
+            min={0}
+            step={STEP_POS}
+            value={element.y}
+            onChange={handleY}
+            className={inputCn}
+          />
+          <button
+            type="button"
+            aria-label="Decrementar Y"
+            className={btnCn}
+            onClick={() => stepY(-STEP_POS)}
+          >
+            −
+          </button>
+          <button
+            type="button"
+            aria-label="Incrementar Y"
+            className={btnCn}
+            onClick={() => stepY(STEP_POS)}
+          >
+            +
+          </button>
+        </div>
         <label htmlFor="prop-width" className="text-muted-foreground">
-          Ancho
+          Ancho (px)
         </label>
-        <input
-          id="prop-width"
-          type="number"
-          min={1}
-          step={1}
-          value={element.width}
-          onChange={handleWidth}
-          className="rounded border border-border bg-background px-2 py-1 text-foreground w-full"
-        />
+        <div className="flex gap-1 items-center">
+          <input
+            id="prop-width"
+            type="number"
+            min={1}
+            step={STEP_SIZE}
+            value={element.width}
+            onChange={handleWidth}
+            className={inputCn}
+          />
+          <button
+            type="button"
+            aria-label="Decrementar ancho"
+            className={btnCn}
+            onClick={() => stepWidth(-STEP_SIZE)}
+          >
+            −
+          </button>
+          <button
+            type="button"
+            aria-label="Incrementar ancho"
+            className={btnCn}
+            onClick={() => stepWidth(STEP_SIZE)}
+          >
+            +
+          </button>
+        </div>
         <label htmlFor="prop-height" className="text-muted-foreground">
-          Alto
+          Alto (px)
         </label>
-        <input
-          id="prop-height"
-          type="number"
-          min={1}
-          step={1}
-          value={element.height}
-          onChange={handleHeight}
-          className="rounded border border-border bg-background px-2 py-1 text-foreground w-full"
-        />
+        <div className="flex gap-1 items-center">
+          <input
+            id="prop-height"
+            type="number"
+            min={1}
+            step={STEP_SIZE}
+            value={element.height}
+            onChange={handleHeight}
+            className={inputCn}
+          />
+          <button
+            type="button"
+            aria-label="Decrementar alto"
+            className={btnCn}
+            onClick={() => stepHeight(-STEP_SIZE)}
+          >
+            −
+          </button>
+          <button
+            type="button"
+            aria-label="Incrementar alto"
+            className={btnCn}
+            onClick={() => stepHeight(STEP_SIZE)}
+          >
+            +
+          </button>
+        </div>
       </div>
       {element.type === "text" && (
         <div className="space-y-1">
