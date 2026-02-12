@@ -26,24 +26,46 @@ function ImagePlaceholderIcon({ className }: { className?: string }) {
 
 export interface CanvasElementNodesProps {
   elements: CanvasElement[];
+  selectedId: string | null;
+  onSelectElement: (id: string) => void;
 }
 
-export function CanvasElementNodes({ elements }: CanvasElementNodesProps) {
+export function CanvasElementNodes({
+  elements,
+  selectedId,
+  onSelectElement,
+}: CanvasElementNodesProps) {
   return (
     <>
-      {elements.map((el) => (
-        <div
-          key={el.id}
-          className="absolute flex overflow-hidden rounded border border-border bg-background text-sm text-foreground shadow-sm"
-          style={{
-            left: el.x,
-            top: el.y,
-            width: el.width,
-            height: el.height,
-          }}
-        >
+      {elements.map((el) => {
+        const isSelected = el.id === selectedId;
+        return (
+          <div
+            key={el.id}
+            role="button"
+            tabIndex={0}
+            className={`absolute flex cursor-pointer overflow-hidden rounded border bg-background text-sm text-foreground shadow-sm outline-none transition-shadow ${isSelected ? "ring-2 ring-primary ring-offset-2 border-primary" : "border-border"}`}
+            style={{
+              left: el.x,
+              top: el.y,
+              width: el.width,
+              height: el.height,
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+              onSelectElement(el.id);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                e.stopPropagation();
+                onSelectElement(el.id);
+              }
+            }}
+            aria-label={`Elemento ${el.type}, seleccionado: ${isSelected}`}
+          >
           {el.type === "text" ? (
-            <span className="flex min-h-0 min-w-0 flex-1 items-center px-2 py-1 break-words">
+            <span className="flex min-h-0 min-w-0 flex-1 items-center px-2 py-1 wrap-break-word">
               {el.content ?? ""}
             </span>
           ) : el.type === "shape" ? (
@@ -55,8 +77,9 @@ export function CanvasElementNodes({ elements }: CanvasElementNodesProps) {
               <ImagePlaceholderIcon className="text-muted-foreground" />
             </div>
           ) : null}
-        </div>
-      ))}
+          </div>
+        );
+      })}
     </>
   );
 }

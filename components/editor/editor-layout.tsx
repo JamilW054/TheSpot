@@ -63,6 +63,7 @@ function createShapeElement(x: number, y: number): CanvasElement {
 
 export function EditorLayout() {
   const [elements, setElements] = useState<CanvasElement[]>([]);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const handleDragEnd = useCallback((event: DragEndEvent) => {
     const { active, over } = event;
@@ -98,8 +99,17 @@ export function EditorLayout() {
         aria-label="Editor de diseños"
       >
         <EditorSidebar />
-        <CanvasEditor elements={elements} />
-        <EditorRightPanel />
+        <CanvasEditor
+          elements={elements}
+          selectedId={selectedId}
+          onSelectElement={setSelectedId}
+          onClearSelection={() => setSelectedId(null)}
+        />
+        <EditorRightPanel
+          selectedId={selectedId}
+          elements={elements}
+          onClearSelection={() => setSelectedId(null)}
+        />
       </div>
     </DndContext>
   );
