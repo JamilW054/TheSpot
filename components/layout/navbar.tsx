@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui";
 
 function MenuIcon({ className }: { className?: string }) {
@@ -35,21 +37,31 @@ export interface NavbarProps {
   homeHref: string;
   /** Texto del logo/título */
   homeLabel: string;
-  /** Usuario actual (opcional; si no hay, no se muestra zona usuario) */
+  /** Usuario (opcional; si no se pasa, se usa AuthContext) */
   user?: NavbarUser | null;
-  /** Callback al cerrar sesión */
+  /** Callback cerrar sesión (opcional; si no se pasa, se usa AuthContext.logout + redirect) */
   onLogout?: () => void;
-  /** Si está definido, se muestra el botón de menú (móvil) que llama a este callback */
+  /** Si está definido, se muestra el botón de menú (móvil) */
   onMenuClick?: () => void;
 }
 
 export function Navbar({
   homeHref,
   homeLabel,
-  user,
-  onLogout,
+  user: userProp,
+  onLogout: onLogoutProp,
   onMenuClick,
 }: NavbarProps) {
+  const router = useRouter();
+  const auth = useAuth();
+  const user = userProp ?? auth.user;
+  const onLogout =
+    onLogoutProp ??
+    (() => {
+      auth.logout();
+      router.push("/login");
+    });
+
   const displayName = user?.name ?? user?.email ?? null;
 
   return (
@@ -76,21 +88,29 @@ export function Navbar({
         </Link>
       </div>
       <div className="flex items-center gap-3">
-        {displayName ? (
-          <span className="text-sm text-muted-foreground truncate max-w-[180px]">
-            {displayName}
-          </span>
-        ) : null}
-        {onLogout ? (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={onLogout}
-          >
-            Cerrar sesión
-          </Button>
-        ) : null}
+        {user ? (
+          <>
+            {displayName ? (
+              <span className="text-sm text-muted-foreground truncate max-w-[180px]">
+                Hola, {displayName}
+              </span>
+            ) : null}
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={onLogout}
+            >
+              Cerrar sesión
+            </Button>
+          </>
+        ) : (
+          <Link href="/login">
+            <Button type="button" variant="outline" size="sm">
+              Iniciar sesión
+            </Button>
+          </Link>
+        )}
       </div>
     </header>
   );
