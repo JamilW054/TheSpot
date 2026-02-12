@@ -38,6 +38,7 @@ export function CanvasElementNodes({
   return (
     <>
       {elements.map((el) => {
+        if (el.visible === false) return null;
         const isSelected = el.id === selectedId;
         return (
           <div

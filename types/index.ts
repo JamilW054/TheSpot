@@ -44,6 +44,8 @@ export interface CanvasElement {
   width: number;
   height: number;
   content?: string;
+  /** Default true when undefined. When false, element is not drawn on canvas. */
+  visible?: boolean;
 }
 
 export type MockupCategory = "2d" | "3d";

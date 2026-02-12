@@ -9,6 +9,7 @@ export interface EditorRightPanelProps {
   selectedId: string | null;
   elements: CanvasElement[];
   onSelectElement: (id: string) => void;
+  onMoveLayer: (id: string, direction: "up" | "down") => void;
   onUpdateElement: (id: string, partial: CanvasElementPatch) => void;
   onClearSelection: () => void;
 }
@@ -20,6 +21,7 @@ export function EditorRightPanel({
   selectedId,
   elements,
   onSelectElement,
+  onMoveLayer,
   onUpdateElement,
   onClearSelection,
 }: EditorRightPanelProps) {
@@ -54,6 +56,8 @@ export function EditorRightPanel({
         elements={elements}
         selectedId={selectedId}
         onSelectElement={onSelectElement}
+        onMoveLayer={onMoveLayer}
+        onUpdateElement={onUpdateElement}
       />
     </aside>
   );

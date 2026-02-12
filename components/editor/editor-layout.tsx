@@ -72,6 +72,24 @@ export function EditorLayout() {
     );
   }, []);
 
+  const handleMoveLayer = useCallback((id: string, direction: "up" | "down") => {
+    setElements((prev) => {
+      const i = prev.findIndex((el) => el.id === id);
+      if (i === -1) return prev;
+      if (direction === "up" && i < prev.length - 1) {
+        const next = [...prev];
+        [next[i], next[i + 1]] = [next[i + 1]!, next[i]!];
+        return next;
+      }
+      if (direction === "down" && i > 0) {
+        const next = [...prev];
+        [next[i - 1], next[i]] = [next[i]!, next[i - 1]!];
+        return next;
+      }
+      return prev;
+    });
+  }, []);
+
   const handleDragEnd = useCallback((event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || over.id !== CANVAS_DROPPABLE_ID) return;
@@ -116,6 +134,7 @@ export function EditorLayout() {
           selectedId={selectedId}
           elements={elements}
           onSelectElement={setSelectedId}
+          onMoveLayer={handleMoveLayer}
           onUpdateElement={handleUpdateElement}
           onClearSelection={() => setSelectedId(null)}
         />

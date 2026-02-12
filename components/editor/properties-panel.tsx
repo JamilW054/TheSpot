@@ -3,7 +3,7 @@
 import type { CanvasElement } from "@/types";
 
 export type CanvasElementPatch = Partial<
-  Pick<CanvasElement, "x" | "y" | "width" | "height" | "content">
+  Pick<CanvasElement, "x" | "y" | "width" | "height" | "content" | "visible">
 >;
 
 export interface PropertiesPanelProps {
