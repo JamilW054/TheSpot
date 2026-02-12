@@ -1,18 +1,102 @@
 "use client";
 
 import { useState } from "react";
-import type { Mockup } from "@/types";
+import type { CanvasElement, Mockup } from "@/types";
 
 const ROTATION_STEP = 15;
 const ZOOM_STEP = 0.25;
 const MIN_SCALE = 0.25;
 const MAX_SCALE = 2;
 
+/** Logical canvas size used for mapping element coords to design zone. */
+const CANVAS_LOGICAL_WIDTH = 400;
+const CANVAS_LOGICAL_HEIGHT = 300;
+const DESIGN_ZONE_WIDTH = 160;
+const DESIGN_ZONE_HEIGHT = 120;
+
 export interface MockupPanelProps {
   mockups: Mockup[];
+  elements: CanvasElement[];
 }
 
-export function MockupPanel({ mockups }: MockupPanelProps) {
+function ImagePlaceholderIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      className={className}
+      aria-hidden
+    >
+      <rect width="18" height="18" x="3" y="3" rx="2" />
+      <circle cx="9" cy="9" r="2" />
+      <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
+    </svg>
+  );
+}
+
+function DesignZoneContent({
+  elements,
+  scaleX,
+  scaleY,
+}: {
+  elements: CanvasElement[];
+  scaleX: number;
+  scaleY: number;
+}) {
+  return (
+    <>
+      {elements.map((el) => {
+        if (el.visible === false) return null;
+        return (
+          <div
+            key={el.id}
+            className="absolute flex overflow-hidden rounded border border-border bg-background text-foreground"
+            style={{
+              left: el.x * scaleX,
+              top: el.y * scaleY,
+              width: el.width * scaleX,
+              height: el.height * scaleY,
+            }}
+          >
+            {el.type === "text" ? (
+              <span className="flex min-h-0 min-w-0 flex-1 items-center px-1 py-0.5 wrap-break-word text-[10px] leading-tight">
+                {el.content != null && el.content !== "" ? (
+                  el.content
+                ) : (
+                  <span className="text-muted-foreground">Texto</span>
+                )}
+              </span>
+            ) : el.type === "shape" ? (
+              <div
+                className={`h-full w-full border border-primary bg-primary/20 ${el.content === "circle" ? "rounded-full" : "rounded"}`}
+              />
+            ) : el.type === "image" ? (
+              el.content ? (
+                <img
+                  src={el.content}
+                  alt=""
+                  className="h-full w-full object-cover"
+                  draggable={false}
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center bg-muted">
+                  <ImagePlaceholderIcon className="text-muted-foreground" />
+                </div>
+              )
+            ) : null}
+          </div>
+        );
+      })}
+    </>
+  );
+}
+
+export function MockupPanel({ mockups, elements }: MockupPanelProps) {
   const [selectedMockupId, setSelectedMockupId] = useState<string | null>(null);
   const [rotationY, setRotationY] = useState(0);
   const [scale, setScale] = useState(1);
@@ -75,23 +159,58 @@ export function MockupPanel({ mockups }: MockupPanelProps) {
               style={{ perspective: "400px" }}
             >
               <div
-                className="flex items-center justify-center origin-center"
+                className="flex items-center justify-center origin-center relative"
                 style={{
                   transform: `rotateY(${rotationY}deg) scale(${scale})`,
                   transformStyle: "preserve-3d",
                 }}
               >
                 {selectedMockup.imageUrl ? (
-                  <img
-                    src={selectedMockup.imageUrl}
-                    alt={selectedMockup.name}
-                    className="max-h-48 w-auto max-w-full object-contain select-none"
-                    draggable={false}
-                  />
+                  <div className="relative inline-block">
+                    <img
+                      src={selectedMockup.imageUrl}
+                      alt={selectedMockup.name}
+                      className="max-h-48 w-auto max-w-full object-contain select-none block"
+                      draggable={false}
+                    />
+                    <div
+                      className="absolute inset-0 flex items-center justify-center pointer-events-none"
+                      aria-hidden
+                    >
+                      <div
+                        className="relative overflow-hidden bg-transparent rounded"
+                        style={{
+                          width: DESIGN_ZONE_WIDTH,
+                          height: DESIGN_ZONE_HEIGHT,
+                        }}
+                      >
+                        <DesignZoneContent
+                          elements={elements}
+                          scaleX={DESIGN_ZONE_WIDTH / CANVAS_LOGICAL_WIDTH}
+                          scaleY={DESIGN_ZONE_HEIGHT / CANVAS_LOGICAL_HEIGHT}
+                        />
+                      </div>
+                    </div>
+                  </div>
                 ) : (
                   <div className="flex flex-col items-center justify-center gap-1 p-4 text-muted-foreground text-sm">
                     <span>{selectedMockup.name}</span>
                     <span className="text-xs">Sin imagen</span>
+                    {elements.length > 0 && (
+                      <div
+                        className="relative mt-2 overflow-hidden rounded border border-border bg-background/80"
+                        style={{
+                          width: DESIGN_ZONE_WIDTH,
+                          height: DESIGN_ZONE_HEIGHT,
+                        }}
+                      >
+                        <DesignZoneContent
+                          elements={elements}
+                          scaleX={DESIGN_ZONE_WIDTH / CANVAS_LOGICAL_WIDTH}
+                          scaleY={DESIGN_ZONE_HEIGHT / CANVAS_LOGICAL_HEIGHT}
+                        />
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

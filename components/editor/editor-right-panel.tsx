@@ -108,7 +108,7 @@ export function EditorRightPanel({
           <h2 className="mt-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
             Mockups
           </h2>
-          <MockupPanel mockups={MOCK_MOCKUPS} />
+          <MockupPanel mockups={MOCK_MOCKUPS} elements={elements} />
         </div>
       )}
     </aside>
