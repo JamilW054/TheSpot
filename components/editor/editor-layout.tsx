@@ -9,7 +9,7 @@ import {
   useSensors,
 } from "@dnd-kit/core";
 import type { CanvasElement, CanvasElementType } from "@/types";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { CanvasEditor, CANVAS_DROPPABLE_ID } from "./canvas-editor";
 import { EditorRightPanel } from "./editor-right-panel";
 import { EditorSidebar } from "./editor-sidebar";
@@ -44,12 +44,13 @@ function createTextElement(x: number, y: number): CanvasElement {
   };
 }
 
-function createImageElement(x: number, y: number): CanvasElement {
+function createImageElement(x: number, y: number, content?: string): CanvasElement {
   return {
     id: crypto.randomUUID(),
     ...DEFAULT_IMAGE_ELEMENT,
     x,
     y,
+    ...(content != null && { content }),
   };
 }
 
@@ -62,9 +63,39 @@ function createShapeElement(x: number, y: number): CanvasElement {
   };
 }
 
+const DEFAULT_IMAGE_POS = { x: 50, y: 50 };
+
 export function EditorLayout() {
   const [elements, setElements] = useState<CanvasElement[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const objectUrlsByElementId = useRef<Map<string, string>>(new Map());
+
+  const handleAddImageFromFile = useCallback((file: File) => {
+    const url = URL.createObjectURL(file);
+    const el = createImageElement(DEFAULT_IMAGE_POS.x, DEFAULT_IMAGE_POS.y, url);
+    objectUrlsByElementId.current.set(el.id, url);
+    setElements((prev) => [...prev, el]);
+  }, []);
+
+  useEffect(() => {
+    const ids = new Set(elements.map((el) => el.id));
+    const ref = objectUrlsByElementId.current;
+    for (const [id, url] of ref.entries()) {
+      if (!ids.has(id)) {
+        URL.revokeObjectURL(url);
+        ref.delete(id);
+      }
+    }
+  }, [elements]);
+
+  useEffect(() => {
+    return () => {
+      for (const url of objectUrlsByElementId.current.values()) {
+        URL.revokeObjectURL(url);
+      }
+      objectUrlsByElementId.current.clear();
+    };
+  }, []);
 
   const handleUpdateElement = useCallback((id: string, partial: CanvasElementPatch) => {
     setElements((prev) =>
@@ -123,7 +154,7 @@ export function EditorLayout() {
         role="application"
         aria-label="Editor de diseños"
       >
-        <EditorSidebar />
+        <EditorSidebar onAddImageFromFile={handleAddImageFromFile} />
         <CanvasEditor
           elements={elements}
           selectedId={selectedId}

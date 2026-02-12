@@ -78,9 +78,20 @@ export function CanvasElementNodes({
               className={`h-full w-full border-2 border-primary bg-primary/20 ${el.content === "circle" ? "rounded-full" : "rounded"}`}
             />
           ) : el.type === "image" ? (
-            <div className="flex h-full w-full items-center justify-center bg-muted">
-              <ImagePlaceholderIcon className="text-muted-foreground" />
-            </div>
+            el.content ? (
+              <img
+                src={el.content}
+                alt=""
+                className="h-full w-full object-cover"
+                width={el.width}
+                height={el.height}
+                draggable={false}
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center bg-muted">
+                <ImagePlaceholderIcon className="text-muted-foreground" />
+              </div>
+            )
           ) : null}
           </div>
         );
