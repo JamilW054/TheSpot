@@ -13,6 +13,7 @@ import { useCallback, useState } from "react";
 import { CanvasEditor, CANVAS_DROPPABLE_ID } from "./canvas-editor";
 import { EditorRightPanel } from "./editor-right-panel";
 import { EditorSidebar } from "./editor-sidebar";
+import type { CanvasElementPatch } from "./properties-panel";
 
 const DEFAULT_TEXT_ELEMENT = {
   width: 120,
