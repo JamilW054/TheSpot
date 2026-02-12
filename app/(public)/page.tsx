@@ -1,6 +1,5 @@
 import Image from "next/image";
 import Link from "next/link";
-import { LineShadowText } from "@/components/ui";
 
 function HeroTag() {
   return (
@@ -13,23 +12,40 @@ function HeroTag() {
   );
 }
 
-function TitleScribble({ className }: { className?: string }) {
+function HeroTitleWithHighlight() {
   return (
-    <span className={className} aria-hidden>
-      <svg
-        width="32"
-        height="32"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        className="text-foreground/60"
+    <>
+      <span className="text-foreground">DISEÑA Y COMPRA TU </span>
+      <span
+        className="inline-block font-[inherit] text-primary dark:text-white"
+        style={{ lineHeight: 1 }}
       >
-        <path d="M8 5c-2 1-3 3-2 5s2 3 4 2" />
-        <path d="M16 19c2-1 3-3 2-5s-2-3-4-2" />
-      </svg>
-    </span>
+        <svg
+          viewBox="0 0 280 60"
+          className="h-[1em] w-auto align-middle"
+          style={{ fontSize: "inherit" }}
+          aria-hidden
+        >
+          <text
+            x="2"
+            y="52"
+            fill="currentColor"
+            stroke="currentColor"
+            strokeWidth="2.2"
+            strokeDasharray="6 5"
+            strokeLinecap="round"
+            style={{
+              fontFamily: "var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif",
+              fontSize: "60px",
+              fontWeight: 700,
+              letterSpacing: "0.02em",
+            }}
+          >
+            ESTILO
+          </text>
+        </svg>
+      </span>
+    </>
   );
 }
 
@@ -78,23 +94,12 @@ export default function PublicPage() {
           <HeroTag />
           <h1
             id="hero-title"
-            className="text-4xl sm:text-5xl md:text-6xl font-bold leading-tight tracking-tight px-2"
+            className="text-4xl sm:text-5xl md:text-6xl font-bold leading-tight tracking-tight px-2 uppercase"
           >
-            <span className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2">
-              <TitleScribble className="hidden sm:block shrink-0" />
-              <LineShadowText className="block text-balance">
-                Diseña y compra
-                <br />
-                tu estilo
-              </LineShadowText>
-              <TitleScribble className="hidden sm:block shrink-0 scale-x-[-1]" />
+            <span className="inline-block text-balance">
+              <HeroTitleWithHighlight />
             </span>
           </h1>
-          <p className="text-muted-foreground text-lg sm:text-xl max-w-xl">
-            Crea tus diseños en el editor, previsualízalos en mockups y compra
-            o encarga tu ropa con Buxxep. Calidad y personalización en un solo
-            lugar.
-          </p>
           <div className="flex flex-wrap items-center justify-center gap-3">
             <Link
               href="#comprar"
