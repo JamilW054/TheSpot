@@ -49,7 +49,8 @@ export default function RegistroPage() {
   }
 
   return (
-    <div className="mx-auto max-w-md w-full py-12">
+    <div className="flex flex-1 flex-col items-center justify-center">
+      <div className="mx-auto max-w-md w-full py-8">
       <h1 className="text-2xl font-semibold text-foreground mb-2">
         Crear cuenta
       </h1>
@@ -117,6 +118,7 @@ export default function RegistroPage() {
           Inicia sesión
         </Link>
       </p>
+      </div>
     </div>
   );
 }

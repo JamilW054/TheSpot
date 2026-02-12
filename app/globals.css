@@ -21,7 +21,7 @@
 }
 
 .dark {
-  --background: #111827;
+  --background: #000000;
   --foreground: #f9fafb;
   --primary: #0d8ae6;
   --primary-foreground: #ffffff;
@@ -69,4 +69,10 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Fondo negro entero en modo oscuro */
+html.dark,
+html.dark body {
+  background: #000000;
 }

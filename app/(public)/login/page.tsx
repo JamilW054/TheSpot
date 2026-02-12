@@ -39,7 +39,8 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="mx-auto max-w-md w-full py-12">
+    <div className="flex flex-1 flex-col items-center justify-center">
+      <div className="mx-auto max-w-md w-full py-8">
       <h1 className="text-2xl font-semibold text-foreground mb-2">
         Iniciar sesión
       </h1>
@@ -89,6 +90,7 @@ export default function LoginPage() {
           Regístrate
         </Link>
       </p>
+      </div>
     </div>
   );
 }
