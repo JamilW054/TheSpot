@@ -1,10 +1,27 @@
 import { EditorLayout } from "@/components/editor";
+import { MOCK_DESIGNS } from "@/config/mock-data";
 
 /**
  * Página del editor de diseños.
- * Layout: tres columnas — sidebar (herramientas) | canvas (DnD) | panel (propiedades y capas).
- * El AppShell ya proporciona el sidebar de navegación de la app; este sidebar es el de herramientas del editor.
+ * - Sin query: canvas vacío (nuevo diseño).
+ * - ?design=id: carga el diseño por id (MOCK_DESIGNS por ahora; luego Supabase).
+ *   Si el diseño tiene canvasElements, inicializa el canvas con ellos.
  */
-export default function EditorPage() {
-  return <EditorLayout />;
+interface EditorPageProps {
+  searchParams: Promise<{ design?: string }> | { design?: string };
+}
+
+export default async function EditorPage({ searchParams }: EditorPageProps) {
+  const resolved = await Promise.resolve(searchParams);
+  const designId = resolved?.design ?? null;
+  const design = designId != null ? MOCK_DESIGNS.find((d) => d.id === designId) : null;
+  const initialElements = design?.canvasElements ?? [];
+
+  return (
+    <EditorLayout
+      key={designId ?? "new"}
+      initialElements={initialElements}
+      designId={designId}
+    />
+  );
 }

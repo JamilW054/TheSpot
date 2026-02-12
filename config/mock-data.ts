@@ -1,4 +1,4 @@
-import type { Design, Linea, Mockup, Pedido } from "@/types";
+import type { CanvasElement, Design, Linea, Mockup, Pedido } from "@/types";
 
 const placeholder = (w: number, h: number, seed: string) =>
   `https://picsum.photos/seed/${seed}/${w}/${h}`;
@@ -27,7 +27,7 @@ const designNames = [
   "Cardigan punto",
 ];
 
-export const MOCK_DESIGNS: Design[] = designNames.map((name, i) => {
+const baseDesigns: Design[] = designNames.map((name, i) => {
   const id = `d${String(i + 1).padStart(2, "0")}`;
   const slug = designSlug(name, id);
   return {
@@ -44,6 +44,32 @@ export const MOCK_DESIGNS: Design[] = designNames.map((name, i) => {
     ],
   };
 });
+
+/** Sample canvas payload for demo (first design). Replace with Supabase/fetch when backend exists. */
+const sampleCanvasElements: CanvasElement[] = [
+  {
+    id: "sample-text-1",
+    type: "text",
+    x: 40,
+    y: 30,
+    width: 120,
+    height: 40,
+    content: "Mi diseño",
+  },
+  {
+    id: "sample-shape-1",
+    type: "shape",
+    x: 180,
+    y: 50,
+    width: 80,
+    height: 60,
+    content: "rect",
+  },
+];
+
+export const MOCK_DESIGNS: Design[] = baseDesigns.map((d, i) =>
+  i === 0 ? { ...d, canvasElements: sampleCanvasElements } : d
+);
 
 // --- MOCK_LINEAS (10 items) ---
 const lineaNames = [

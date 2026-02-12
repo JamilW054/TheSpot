@@ -40,9 +40,20 @@ export default async function DesignDetailPage({ params }: PageProps) {
       </section>
       <p className="text-muted-foreground">{design.description}</p>
       <p className="text-sm text-muted-foreground">Actualizado: {design.updated}</p>
-      <Link href="/mis-disenos" className="text-primary hover:underline">
-        Volver a Mis diseños
-      </Link>
+      <div className="flex flex-wrap gap-2">
+        <Link
+          href={`/editor?design=${design.id}`}
+          className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 font-medium text-primary-foreground hover:opacity-90"
+        >
+          Editar diseño
+        </Link>
+        <Link
+          href="/mis-disenos"
+          className="inline-flex h-10 items-center justify-center rounded-md border-2 border-border bg-transparent px-4 font-medium hover:bg-muted"
+        >
+          Volver a Mis diseños
+        </Link>
+      </div>
     </PageLayout>
   );
 }

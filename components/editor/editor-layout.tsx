@@ -65,8 +65,18 @@ function createShapeElement(x: number, y: number): CanvasElement {
 
 const DEFAULT_IMAGE_POS = { x: 50, y: 50 };
 
-export function EditorLayout() {
-  const [elements, setElements] = useState<CanvasElement[]>([]);
+export interface EditorLayoutProps {
+  /** Initial canvas elements when editing an existing design (e.g. from ?design=id). */
+  initialElements?: CanvasElement[];
+  /** Design id when editing; used for future save. */
+  designId?: string | null;
+}
+
+export function EditorLayout({
+  initialElements = [],
+  designId = null,
+}: EditorLayoutProps) {
+  const [elements, setElements] = useState<CanvasElement[]>(initialElements);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const objectUrlsByElementId = useRef<Map<string, string>>(new Map());
 

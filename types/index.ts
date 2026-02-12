@@ -11,6 +11,8 @@ export interface Design {
   updated: string;
   coverImage: string;
   gallery: string[];
+  /** Canvas state for the editor; when present, editor loads with these elements. */
+  canvasElements?: CanvasElement[];
 }
 
 export interface Linea {
