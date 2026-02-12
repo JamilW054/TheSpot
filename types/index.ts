@@ -54,4 +54,6 @@ export interface Mockup {
   id: string;
   name: string;
   category: MockupCategory;
+  /** Optional image URL or path for preview (e.g. /mockups/shirt.svg or external URL). */
+  imageUrl?: string;
 }

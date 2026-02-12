@@ -1,4 +1,4 @@
-import type { Design, Linea, Pedido } from "@/types";
+import type { Design, Linea, Mockup, Pedido } from "@/types";
 
 const placeholder = (w: number, h: number, seed: string) =>
   `https://picsum.photos/seed/${seed}/${w}/${h}`;
@@ -76,6 +76,15 @@ export const MOCK_LINEAS: Linea[] = lineaNames.map((name, i) => {
     ],
   };
 });
+
+// --- MOCK_MOCKUPS (2D / 3D preview templates) ---
+export const MOCK_MOCKUPS: Mockup[] = [
+  { id: "mock-2d-1", name: "Camiseta frontal", category: "2d", imageUrl: placeholder(400, 480, "mock-2d-1") },
+  { id: "mock-2d-2", name: "Camiseta espalda", category: "2d", imageUrl: placeholder(400, 480, "mock-2d-2") },
+  { id: "mock-2d-3", name: "Tote bag", category: "2d", imageUrl: placeholder(400, 400, "mock-2d-3") },
+  { id: "mock-3d-1", name: "Camiseta 3D", category: "3d", imageUrl: placeholder(400, 400, "mock-3d-1") },
+  { id: "mock-3d-2", name: "Sudadera 3D", category: "3d", imageUrl: placeholder(400, 400, "mock-3d-2") },
+];
 
 // --- MOCK_PEDIDOS (18 items) ---
 const clientes = [
