@@ -119,12 +119,14 @@ export const MOCK_LINEAS: Linea[] = lineaNames.map((name, i) => {
 });
 
 // --- MOCK_MOCKUPS (2D / 3D preview templates) ---
+// Thumbnails con imágenes de ropa real para coherencia visual
 export const MOCK_MOCKUPS: Mockup[] = [
-  { id: "mock-2d-1", name: "Camiseta frontal", category: "2d", imageUrl: placeholder(400, 480, "mock-2d-1") },
-  { id: "mock-2d-2", name: "Camiseta espalda", category: "2d", imageUrl: placeholder(400, 480, "mock-2d-2") },
-  { id: "mock-2d-3", name: "Tote bag", category: "2d", imageUrl: placeholder(400, 400, "mock-2d-3") },
-  { id: "mock-3d-1", name: "Camiseta 3D", category: "3d", imageUrl: placeholder(400, 400, "mock-3d-1") },
-  { id: "mock-3d-2", name: "Sudadera 3D", category: "3d", imageUrl: placeholder(400, 400, "mock-3d-2") },
+  { id: "mock-2d-1", name: "Camiseta frontal", category: "2d", imageUrl: unsplash("1521572163474-6864f9cf17ab", 400, 480) },
+  { id: "mock-2d-2", name: "Camiseta espalda", category: "2d", imageUrl: unsplash("1586790170083-2f9ceadc732d", 400, 480) },
+  { id: "mock-2d-3", name: "Tote bag", category: "2d", imageUrl: unsplash("1562157873-818bc0726f68", 400, 400) },
+  { id: "mock-3d-tshirt-male", name: "Camiseta hombre", category: "3d", modelPath: "/models/male_tshirt.glb", imageUrl: unsplash("1521572163474-6864f9cf17ab", 400, 500) },
+  { id: "mock-3d-1", name: "Camiseta", category: "3d", imageUrl: unsplash("1562157873-818bc0726f68", 400, 500) },
+  { id: "mock-3d-2", name: "Sudadera", category: "3d", imageUrl: unsplash("1556821840-3a63f95609a7", 400, 500) },
 ];
 
 // --- MOCK_PEDIDOS (18 items) ---

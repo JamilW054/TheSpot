@@ -18,10 +18,12 @@ export default async function EditorPage({ searchParams }: EditorPageProps) {
   const initialElements = design?.canvasElements ?? [];
 
   return (
-    <EditorLayout
-      key={designId ?? "new"}
-      initialElements={initialElements}
-      designId={designId}
-    />
+    <div className="-m-4 flex h-[calc(100vh-3.5rem)] flex-col sm:-m-6">
+      <EditorLayout
+        key={designId ?? "new"}
+        initialElements={initialElements}
+        designId={designId}
+      />
+    </div>
   );
 }

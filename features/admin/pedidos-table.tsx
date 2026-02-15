@@ -1,9 +1,16 @@
+
 "use client";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import type { Pedido, PedidoEstado } from "@/types";
+import type {
+  FilterEstado,
+  Pedido,
+  PedidoEstado,
+  PedidosTableBodyProps,
+  PedidosTableProps,
+} from "@/types";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 const ESTADO_LABEL: Record<PedidoEstado, string> = {
@@ -17,8 +24,6 @@ const ESTADO_BADGE_VARIANT: Record<PedidoEstado, "default" | "warning" | "succes
   en_proceso: "default",
   completado: "success",
 };
-
-export type FilterEstado = "todos" | PedidoEstado;
 
 const FILTER_ESTADO_OPTIONS: { value: FilterEstado; label: string }[] = [
   { value: "todos", label: "Todos" },
@@ -42,16 +47,6 @@ function filterPedidos(
       filterEstado === "todos" || p.estado === filterEstado;
     return matchSearch && matchEstado;
   });
-}
-
-export interface PedidosTableProps {
-  pedidos: Pedido[];
-  /** Si true, muestra barra de búsqueda y filtro por estado (requiere client). */
-  withFilters?: boolean;
-  /** Llamado al ejecutar "Marcar en proceso" en lote; recibe los ids seleccionados. */
-  onMarkEnProceso?: (ids: string[]) => void;
-  /** Llamado al ejecutar "Marcar completado" en lote; recibe los ids seleccionados. */
-  onMarkCompletado?: (ids: string[]) => void;
 }
 
 function toggleSet<T>(set: Set<T>, value: T): Set<T> {
@@ -180,13 +175,6 @@ export function PedidosTable({
       )}
     </div>
   );
-}
-
-interface PedidosTableBodyProps {
-  pedidos: Pedido[];
-  selectedIds: Set<string>;
-  onToggleRow: (id: string) => void;
-  onSelectAll: (checked: boolean) => void;
 }
 
 function PedidosTableBody({

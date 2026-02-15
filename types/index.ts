@@ -28,15 +28,7 @@ export interface Linea {
   products?: string[];
 }
 
-export type PedidoEstado = "pendiente" | "en_proceso" | "completado";
-
-export interface Pedido {
-  id: string;
-  cliente: string;
-  items: number;
-  total: string;
-  estado: PedidoEstado;
-}
+export type { Pedido, PedidoEstado } from "./pedido";
 
 export type CanvasElementType = "image" | "text" | "shape";
 
@@ -60,4 +52,13 @@ export interface Mockup {
   category: MockupCategory;
   /** Optional image URL or path for preview (e.g. /mockups/shirt.svg or external URL). */
   imageUrl?: string;
+  /** Path to 3D model (GLB) for 3d category, e.g. /models/male_tshirt.glb */
+  modelPath?: string;
 }
+
+// Re-export domain-specific types
+export type {
+  FilterEstado,
+  PedidosTableProps,
+  PedidosTableBodyProps,
+} from "./admin";

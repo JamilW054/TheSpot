@@ -83,7 +83,7 @@ export default async function LineaDetailPage({ params }: PageProps) {
           Productos de esta línea
         </h2>
         <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {productNames.map((name, i) => (
+          {(productNames ?? []).map((name, i) => (
             <li key={i}>
               <Card className="overflow-hidden border border-border transition-shadow hover:shadow-md">
                 <div className="relative aspect-4/3 w-full overflow-hidden bg-muted">

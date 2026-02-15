@@ -1,5 +1,7 @@
 "use client";
 
+import { useDraggable } from "@dnd-kit/core";
+import { GripVertical } from "lucide-react";
 import type { CanvasElement } from "@/types";
 
 function ImagePlaceholderIcon({ className }: { className?: string }) {
@@ -24,6 +26,93 @@ function ImagePlaceholderIcon({ className }: { className?: string }) {
   );
 }
 
+/** Exported for use in DragOverlay preview */
+export function ElementContent({ el }: { el: CanvasElement }) {
+  return el.type === "text" ? (
+    <span className="flex min-h-0 min-w-0 flex-1 items-center px-2 py-1 break-words">
+      {el.content != null && el.content !== "" ? (
+        el.content
+      ) : (
+        <span className="text-muted-foreground">Texto</span>
+      )}
+    </span>
+  ) : el.type === "shape" ? (
+    <div
+      className={`h-full w-full border-2 border-primary bg-primary/20 ${el.content === "circle" ? "rounded-full" : "rounded"}`}
+    />
+  ) : el.type === "image" ? (
+    el.content ? (
+      <img
+        src={el.content}
+        alt=""
+        className="h-full w-full object-cover"
+        width={el.width}
+        height={el.height}
+        draggable={false}
+      />
+    ) : (
+      <div className="flex h-full w-full items-center justify-center bg-muted">
+        <ImagePlaceholderIcon className="text-muted-foreground" />
+      </div>
+    )
+  ) : null;
+}
+
+interface DraggableElementProps {
+  element: CanvasElement;
+  isSelected: boolean;
+  onSelect: (id: string) => void;
+}
+
+function DraggableElement({ element, isSelected, onSelect }: DraggableElementProps) {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+    id: element.id,
+    data: { kind: "element" as const },
+  });
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    onSelect(element.id);
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      role="button"
+      tabIndex={0}
+      className={`absolute flex overflow-hidden rounded border bg-background text-sm text-foreground shadow-sm outline-none transition-shadow ${isDragging ? "z-50 opacity-90 ring-2 ring-primary" : ""} ${isSelected ? "ring-2 ring-primary ring-offset-2 border-primary" : "border-border"}`}
+      style={{
+        left: element.x,
+        top: element.y,
+        width: element.width,
+        height: element.height,
+      }}
+      onClick={handleClick}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          e.stopPropagation();
+          onSelect(element.id);
+        }
+      }}
+      aria-label={`Elemento ${element.type}, clic para seleccionar. Seleccionado: ${isSelected}`}
+    >
+      <div
+        className="flex shrink-0 cursor-grab touch-none items-center justify-center self-start rounded-bl bg-muted/50 p-0.5 text-muted-foreground hover:bg-muted active:cursor-grabbing"
+        title="Arrastra para mover"
+        {...listeners}
+        {...attributes}
+      >
+        <GripVertical className="size-3.5" />
+      </div>
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col" onClick={handleClick}>
+        <ElementContent el={element} />
+      </div>
+    </div>
+  );
+}
+
 export interface CanvasElementNodesProps {
   elements: CanvasElement[];
   selectedId: string | null;
@@ -39,61 +128,13 @@ export function CanvasElementNodes({
     <>
       {elements.map((el) => {
         if (el.visible === false) return null;
-        const isSelected = el.id === selectedId;
         return (
-          <div
+          <DraggableElement
             key={el.id}
-            role="button"
-            tabIndex={0}
-            className={`absolute flex cursor-pointer overflow-hidden rounded border bg-background text-sm text-foreground shadow-sm outline-none transition-shadow ${isSelected ? "ring-2 ring-primary ring-offset-2 border-primary" : "border-border"}`}
-            style={{
-              left: el.x,
-              top: el.y,
-              width: el.width,
-              height: el.height,
-            }}
-            onClick={(e) => {
-              e.stopPropagation();
-              onSelectElement(el.id);
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                e.stopPropagation();
-                onSelectElement(el.id);
-              }
-            }}
-            aria-label={`Elemento ${el.type}, seleccionado: ${isSelected}`}
-          >
-          {el.type === "text" ? (
-            <span className="flex min-h-0 min-w-0 flex-1 items-center px-2 py-1 break-words">
-              {el.content != null && el.content !== "" ? (
-                el.content
-              ) : (
-                <span className="text-muted-foreground">Texto</span>
-              )}
-            </span>
-          ) : el.type === "shape" ? (
-            <div
-              className={`h-full w-full border-2 border-primary bg-primary/20 ${el.content === "circle" ? "rounded-full" : "rounded"}`}
-            />
-          ) : el.type === "image" ? (
-            el.content ? (
-              <img
-                src={el.content}
-                alt=""
-                className="h-full w-full object-cover"
-                width={el.width}
-                height={el.height}
-                draggable={false}
-              />
-            ) : (
-              <div className="flex h-full w-full items-center justify-center bg-muted">
-                <ImagePlaceholderIcon className="text-muted-foreground" />
-              </div>
-            )
-          ) : null}
-          </div>
+            element={el}
+            isSelected={el.id === selectedId}
+            onSelect={onSelectElement}
+          />
         );
       })}
     </>

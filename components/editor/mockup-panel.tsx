@@ -1,7 +1,14 @@
 "use client";
 
-import { useState } from "react";
-import type { CanvasElement, Mockup } from "@/types";
+import { useState, useMemo } from "react";
+import type { CanvasElement, Mockup, MockupCategory } from "@/types";
+import {
+  MAX_ZOOM_3D,
+  MIN_ZOOM_3D,
+  ROTATION_STEP_3D,
+  ZOOM_STEP_3D,
+} from "./MockupViewer3D";
+import { TextureUploadPanel } from "./TextureUploadPanel";
 
 const ROTATION_STEP = 15;
 const ZOOM_STEP = 0.25;
@@ -17,6 +24,19 @@ const DESIGN_ZONE_HEIGHT = 120;
 export interface MockupPanelProps {
   mockups: Mockup[];
   elements: CanvasElement[];
+  /** Project/design name for 3D texture storage (textura_<projectName>.<ext>) */
+  projectName?: string;
+  /** Mockup 3D seleccionado (se muestra en el centro del editor) */
+  selected3DMockup?: { modelPath: string } | null;
+  onSelect3DMockup?: (mockup: { modelPath: string } | null) => void;
+  texture3dUrl?: string | null;
+  onTexture3dChange?: (url: string | null) => void;
+  rotation3d?: number;
+  zoom3d?: number;
+  onRotation3dChange?: (v: number) => void;
+  onZoom3dChange?: (v: number) => void;
+  getCanvasAsBlob?: () => Promise<Blob | null>;
+  getEffectiveTextureBlob?: () => Promise<Blob | null>;
 }
 
 function ImagePlaceholderIcon({ className }: { className?: string }) {
@@ -96,7 +116,21 @@ function DesignZoneContent({
   );
 }
 
-export function MockupPanel({ mockups, elements }: MockupPanelProps) {
+export function MockupPanel({
+  mockups,
+  elements,
+  projectName = "proyecto",
+  selected3DMockup = null,
+  onSelect3DMockup,
+  texture3dUrl = null,
+  onTexture3dChange,
+  rotation3d = 0,
+  zoom3d = 1,
+  onRotation3dChange,
+  onZoom3dChange,
+  getCanvasAsBlob,
+  getEffectiveTextureBlob,
+}: MockupPanelProps) {
   const [selectedMockupId, setSelectedMockupId] = useState<string | null>(null);
   const [rotationY, setRotationY] = useState(0);
   const [scale, setScale] = useState(1);
@@ -113,6 +147,13 @@ export function MockupPanel({ mockups, elements }: MockupPanelProps) {
     setScale(1);
   };
 
+  const [filterCategory, setFilterCategory] = useState<MockupCategory | "all">("all");
+
+  const filteredMockups = useMemo(() => {
+    if (filterCategory === "all") return mockups;
+    return mockups.filter((m) => m.category === filterCategory);
+  }, [mockups, filterCategory]);
+
   if (mockups.length === 0) {
     return (
       <p className="mt-2 text-sm text-muted-foreground">
@@ -122,25 +163,68 @@ export function MockupPanel({ mockups, elements }: MockupPanelProps) {
   }
 
   return (
-    <div className="mt-2 flex flex-col gap-3">
-      <ul className="grid gap-1.5" role="list" aria-label="Lista de mockups">
-        {mockups.map((mockup) => {
+    <div className="mt-1 flex flex-col gap-4">
+      <div
+        className="flex rounded-lg bg-muted/40 p-0.5"
+        role="group"
+        aria-label="Filtrar por tipo"
+      >
+        {(["all", "2d", "3d"] as const).map((key) => (
+          <button
+            key={key}
+            type="button"
+            onClick={() => setFilterCategory(key)}
+            className={`flex-1 rounded-md px-2.5 py-1.5 text-xs font-medium transition-all duration-150 ${
+              filterCategory === key
+                ? "bg-background text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {key === "all" ? "Todos" : key.toUpperCase()}
+          </button>
+        ))}
+      </div>
+
+      <ul className="grid grid-cols-2 gap-2.5" role="list" aria-label="Lista de mockups">
+        {filteredMockups.map((mockup) => {
           const isSelected = mockup.id === selectedMockupId;
+          const previewUrl = mockup.imageUrl;
           return (
             <li key={mockup.id}>
               <button
                 type="button"
-                onClick={() => setSelectedMockupId(mockup.id)}
-                className={`w-full rounded border px-2 py-2 text-left text-sm transition-colors ${
+                onClick={() => {
+                  setSelectedMockupId(mockup.id);
+                  onSelect3DMockup?.(mockup.modelPath ? { modelPath: mockup.modelPath } : null);
+                }}
+                className={`flex w-full flex-col overflow-hidden rounded-xl border text-left transition-all duration-150 ${
                   isSelected
-                    ? "border-primary bg-primary/15 text-foreground"
-                    : "border-border bg-background hover:bg-muted/50 text-foreground"
+                    ? "border-primary bg-primary/10 ring-2 ring-primary/30"
+                    : "border-border bg-card hover:border-border hover:bg-muted/20"
                 }`}
-                aria-pressed={isSelected}
+                aria-pressed={isSelected ? "true" : "false"}
               >
-                <span className="font-medium">{mockup.name}</span>
-                <span className="ml-1.5 text-muted-foreground text-xs uppercase">
-                  {mockup.category}
+                <div className="relative aspect-[4/5] w-full overflow-hidden rounded-t-xl bg-muted/60">
+                  {previewUrl ? (
+                    <img
+                      src={previewUrl}
+                      alt=""
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center text-muted-foreground">
+                      <ImagePlaceholderIcon className="size-8" />
+                    </div>
+                  )}
+                  <span
+                    className="absolute top-1.5 right-1.5 rounded-md bg-background/90 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground backdrop-blur-sm"
+                    aria-hidden
+                  >
+                    {mockup.category}
+                  </span>
+                </div>
+                <span className="truncate px-2.5 py-2 text-xs font-medium text-foreground">
+                  {mockup.name}
                 </span>
               </button>
             </li>
@@ -148,12 +232,91 @@ export function MockupPanel({ mockups, elements }: MockupPanelProps) {
         })}
       </ul>
 
-      <section aria-label="Vista previa del mockup" className="flex flex-col gap-2">
-        <h3 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-          Vista previa
-        </h3>
+      <section aria-label="Vista previa del mockup" className="flex flex-col gap-3">
+        <h3 className="editor-section-title">Vista previa</h3>
         {selectedMockup != null ? (
-          <>
+          selectedMockup.modelPath ? (
+            <>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                El modelo 3D se muestra en el centro. Arrastra para rotar.
+              </p>
+              <div className="flex flex-col gap-3" role="group" aria-label="Controles del modelo 3D">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-muted-foreground text-xs font-medium">Zoom</span>
+                  <div className="flex items-center rounded-full border border-border bg-muted/30 px-1 py-0.5">
+                    <button
+                      type="button"
+                      className="flex size-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                      aria-label="Alejar"
+                      onClick={() => onZoom3dChange?.(Math.max((zoom3d ?? 1) - ZOOM_STEP_3D, MIN_ZOOM_3D))}
+                    >
+                      −
+                    </button>
+                    <button
+                      type="button"
+                      className="flex size-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                      aria-label="Acercar"
+                      onClick={() => onZoom3dChange?.(Math.min((zoom3d ?? 1) + ZOOM_STEP_3D, MAX_ZOOM_3D))}
+                    >
+                      +
+                    </button>
+                  </div>
+                  <button
+                    type="button"
+                    className="rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs font-medium transition-colors hover:bg-muted"
+                    onClick={() => onRotation3dChange?.(((rotation3d ?? 0) + ROTATION_STEP_3D) % 360)}
+                  >
+                    Rotar
+                  </button>
+                  <button
+                    type="button"
+                    className="rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs font-medium transition-colors hover:bg-muted"
+                    onClick={() => {
+                      onRotation3dChange?.(0);
+                      onZoom3dChange?.(1);
+                    }}
+                  >
+                    Reset
+                  </button>
+                </div>
+                <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-2 items-center text-xs">
+                  <label htmlFor="3d-rotation" className="text-muted-foreground min-w-0">
+                    Rotación
+                  </label>
+                  <input
+                    id="3d-rotation"
+                    type="range"
+                    min={0}
+                    max={360}
+                    step={5}
+                    value={((rotation3d ?? 0) % 360 + 360) % 360}
+                    onChange={(e) => onRotation3dChange?.(Number(e.target.value))}
+                    className="editor-range w-full"
+                  />
+                  <label htmlFor="3d-zoom" className="text-muted-foreground min-w-0">
+                    Zoom
+                  </label>
+                  <input
+                    id="3d-zoom"
+                    type="range"
+                    min={MIN_ZOOM_3D * 100}
+                    max={MAX_ZOOM_3D * 100}
+                    step={1}
+                    value={(zoom3d ?? 1) * 100}
+                    onChange={(e) => onZoom3dChange?.(Number(e.target.value) / 100)}
+                    className="editor-range w-full"
+                  />
+                </div>
+              </div>
+              <TextureUploadPanel
+                projectName={projectName}
+                onTextureChange={(url) => onTexture3dChange?.(url)}
+                getCanvasAsBlob={getCanvasAsBlob}
+                getEffectiveTextureBlob={getEffectiveTextureBlob}
+              />
+            </>
+          ) : (
+            <>
             <div
               className="rounded border border-border bg-muted/20 overflow-hidden min-h-[140px] flex items-center justify-center"
               style={{ perspective: "400px" }}
@@ -215,11 +378,11 @@ export function MockupPanel({ mockups, elements }: MockupPanelProps) {
                 )}
               </div>
             </div>
-            <div className="flex flex-col gap-2" role="group" aria-label="Controles de vista previa">
-              <div className="flex flex-wrap items-center gap-1.5">
+            <div className="flex flex-col gap-3" role="group" aria-label="Controles de vista previa">
+              <div className="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
-                  className="rounded border border-border bg-background px-2 py-1 text-xs hover:bg-muted"
+                  className="rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs font-medium transition-colors hover:bg-muted"
                   aria-label="Menos zoom"
                   title="Menos zoom"
                   onClick={handleZoomOut}
@@ -228,19 +391,19 @@ export function MockupPanel({ mockups, elements }: MockupPanelProps) {
                 </button>
                 <button
                   type="button"
-                  className="rounded border border-border bg-background px-2 py-1 text-xs hover:bg-muted"
+                  className="rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs font-medium transition-colors hover:bg-muted"
                   aria-label="Más zoom"
                   title="Más zoom"
                   onClick={handleZoomIn}
                 >
                   +
                 </button>
-                <span className="text-muted-foreground text-xs px-1" aria-hidden>
+                <span className="text-muted-foreground text-xs" aria-hidden>
                   Zoom
                 </span>
                 <button
                   type="button"
-                  className="rounded border border-border bg-background px-2 py-1 text-xs hover:bg-muted"
+                  className="rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs font-medium transition-colors hover:bg-muted"
                   title="Rotar"
                   onClick={handleRotate}
                 >
@@ -248,15 +411,15 @@ export function MockupPanel({ mockups, elements }: MockupPanelProps) {
                 </button>
                 <button
                   type="button"
-                  className="rounded border border-border bg-background px-2 py-1 text-xs hover:bg-muted"
+                  className="rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs font-medium transition-colors hover:bg-muted"
                   title="Restablecer vista"
                   onClick={handleReset}
                 >
                   Reset
                 </button>
               </div>
-              <div className="grid grid-cols-[auto_1fr] gap-x-2 gap-y-1 items-center text-xs">
-                <label htmlFor="mockup-rotation" className="text-muted-foreground">
+              <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-2 items-center text-xs">
+                <label htmlFor="mockup-rotation" className="text-muted-foreground min-w-0">
                   Rotación
                 </label>
                 <input
@@ -267,12 +430,13 @@ export function MockupPanel({ mockups, elements }: MockupPanelProps) {
                   step={5}
                   value={((rotationY % 360) + 360) % 360}
                   onChange={(e) => setRotationY(Number(e.target.value))}
-                  className="w-full accent-primary"
+                  className="editor-range w-full"
                   aria-valuemin={0}
                   aria-valuemax={360}
                   aria-valuenow={((rotationY % 360) + 360) % 360}
+                  aria-valuetext={`${((rotationY % 360) + 360) % 360} grados`}
                 />
-                <label htmlFor="mockup-zoom" className="text-muted-foreground">
+                <label htmlFor="mockup-zoom" className="text-muted-foreground min-w-0">
                   Zoom
                 </label>
                 <input
@@ -283,16 +447,18 @@ export function MockupPanel({ mockups, elements }: MockupPanelProps) {
                   step={ZOOM_STEP * 100}
                   value={scale * 100}
                   onChange={(e) => setScale(Number(e.target.value) / 100)}
-                  className="w-full accent-primary"
+                  className="editor-range w-full"
                   aria-valuemin={MIN_SCALE * 100}
                   aria-valuemax={MAX_SCALE * 100}
                   aria-valuenow={scale * 100}
+                  aria-valuetext={`${Math.round(scale * 100)}%`}
                 />
               </div>
             </div>
-          </>
+            </>
+          )
         ) : (
-          <div className="rounded border border-dashed border-border bg-muted/10 flex min-h-[120px] items-center justify-center text-muted-foreground text-sm">
+          <div className="flex min-h-[120px] items-center justify-center rounded-xl border border-dashed border-border bg-muted/10 text-center text-sm text-muted-foreground">
             Selecciona un mockup para ver la vista previa
           </div>
         )}

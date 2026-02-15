@@ -5,6 +5,7 @@ import {
   FolderOpen,
   HelpCircle,
   LayoutGrid,
+  PanelLeftClose,
   PenSquare,
   Shirt,
 } from "lucide-react";
@@ -34,16 +35,22 @@ export interface AppSidebarProps {
   variant?: SidebarVariant;
   open?: boolean;
   onClose?: () => void;
+  collapsed?: boolean;
+  onCollapsedChange?: (collapsed: boolean) => void;
 }
 
 export function AppSidebar({
   variant = "app",
   open = false,
   onClose,
+  collapsed = false,
+  onCollapsedChange,
 }: AppSidebarProps) {
   const pathname = usePathname();
   const { user } = useAuth();
   const items = NAV_BY_VARIANT[variant];
+
+  const hiddenOnDesktop = collapsed;
 
   return (
     <>
@@ -64,14 +71,28 @@ export function AppSidebar({
         className={`
           fixed md:sticky top-0 left-0 z-50 h-full w-72 shrink-0
           flex flex-col border-r border-border bg-background
-          transition-transform duration-200 ease-out md:translate-x-0
-          ${open ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
+          transition-transform duration-200 ease-out
+          ${open ? "translate-x-0" : "-translate-x-full"}
+          md:transition-transform
+          ${hiddenOnDesktop ? "md:-translate-x-full md:w-0 md:overflow-hidden md:border-r-0" : "md:translate-x-0"}
         `}
       >
         <div className="flex flex-1 flex-col p-4">
-          <p className="mb-4 px-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-            {variant === "admin" ? "Administración" : "Menú"}
-          </p>
+          <div className="mb-4 flex items-center justify-between gap-2">
+            <p className="px-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+              {variant === "admin" ? "Administración" : "Menú"}
+            </p>
+            {onCollapsedChange && (
+              <button
+                type="button"
+                onClick={() => onCollapsedChange(true)}
+                className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground md:flex"
+                aria-label="Ocultar menú"
+              >
+                <PanelLeftClose className="size-4" />
+              </button>
+            )}
+          </div>
           <nav className="flex flex-col gap-0.5">
             {items.map((item) => {
               const isActive =

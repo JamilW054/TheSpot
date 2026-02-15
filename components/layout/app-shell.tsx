@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { PanelLeft } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import { AppSidebar } from "./app-sidebar";
 import { Navbar } from "./navbar";
 import type { NavbarUser } from "./navbar";
@@ -10,9 +12,7 @@ export type AppShellVariant = "app" | "admin";
 export interface AppShellProps {
   children: React.ReactNode;
   variant?: AppShellVariant;
-  /** Usuario para la barra superior (opcional; puede venir de AuthContext más adelante) */
   user?: NavbarUser | null;
-  /** Callback cerrar sesión (opcional) */
   onLogout?: () => void;
 }
 
@@ -30,7 +30,15 @@ export function AppShell({
   user,
   onLogout,
 }: AppShellProps) {
+  const pathname = usePathname();
+  const isEditor = pathname?.startsWith("/editor") ?? false;
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(isEditor);
+
+  useEffect(() => {
+    if (isEditor) setSidebarCollapsed(true);
+  }, [isEditor]);
+
   const { href: homeHref, label: homeLabel } = SHELL_HOME[variant];
 
   return (
@@ -39,7 +47,19 @@ export function AppShell({
         variant={variant}
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
+        collapsed={sidebarCollapsed}
+        onCollapsedChange={setSidebarCollapsed}
       />
+      {sidebarCollapsed && (
+        <button
+          type="button"
+          onClick={() => setSidebarCollapsed(false)}
+          className="fixed left-0 top-1/2 z-40 hidden -translate-y-1/2 rounded-r-lg border border-l-0 border-border bg-background/95 px-2 py-4 shadow-md hover:bg-muted md:flex md:items-center md:justify-center"
+          aria-label="Mostrar menú"
+        >
+          <PanelLeft className="size-5 text-muted-foreground" />
+        </button>
+      )}
       <div className="flex flex-1 flex-col min-w-0">
         <Navbar
           homeHref={homeHref}

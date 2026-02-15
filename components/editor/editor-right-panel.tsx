@@ -1,5 +1,6 @@
 "use client";
 
+import { ChevronDown, ChevronRight, Plus } from "lucide-react";
 import { useState } from "react";
 import type { CanvasElement } from "@/types";
 import { MOCK_MOCKUPS } from "@/config/mock-data";
@@ -15,12 +16,64 @@ export interface EditorRightPanelProps {
   onMoveLayer: (id: string, direction: "up" | "down") => void;
   onUpdateElement: (id: string, partial: CanvasElementPatch) => void;
   onClearSelection: () => void;
+  projectName?: string;
+  selected3DMockup?: { modelPath: string } | null;
+  onSelect3DMockup?: (mockup: { modelPath: string } | null) => void;
+  texture3dUrl?: string | null;
+  onTexture3dChange?: (url: string | null) => void;
+  rotation3d?: number;
+  zoom3d?: number;
+  onRotation3dChange?: (v: number) => void;
+  onZoom3dChange?: (v: number) => void;
+  /** Used for ZIP export: capture current 3D canvas as image */
+  getCanvasAsBlob?: () => Promise<Blob | null>;
+  /** Current texture with design in correct UV zone (for export) */
+  getEffectiveTextureBlob?: () => Promise<Blob | null>;
 }
 
-/**
- * Panel derecho del editor: propiedades del elemento seleccionado y lista de capas.
- */
-type RightPanelTab = "properties" | "mockups";
+function CollapsibleSection({
+  title,
+  open,
+  onToggle,
+  onAdd,
+  children,
+}: {
+  title: string;
+  open: boolean;
+  onToggle: () => void;
+  onAdd?: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="border-b border-border/80 last:border-b-0">
+      <div className="flex items-center justify-between gap-1 py-3">
+        <button
+          type="button"
+          onClick={onToggle}
+          className="flex flex-1 items-center gap-2 text-left text-sm font-medium text-foreground transition-colors hover:text-foreground/90"
+        >
+          {open ? (
+            <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
+          ) : (
+            <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+          )}
+          <span>{title}</span>
+        </button>
+        {onAdd && (
+          <button
+            type="button"
+            onClick={onAdd}
+            className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            aria-label={`Añadir ${title}`}
+          >
+            <Plus className="size-4" />
+          </button>
+        )}
+      </div>
+      {open && <div className="pb-5">{children}</div>}
+    </section>
+  );
+}
 
 export function EditorRightPanel({
   selectedId,
@@ -29,88 +82,95 @@ export function EditorRightPanel({
   onMoveLayer,
   onUpdateElement,
   onClearSelection,
+  projectName = "proyecto",
+  selected3DMockup = null,
+  onSelect3DMockup,
+  texture3dUrl = null,
+  onTexture3dChange,
+  rotation3d = 0,
+  zoom3d = 1,
+  onRotation3dChange,
+  onZoom3dChange,
+  getCanvasAsBlob,
+  getEffectiveTextureBlob,
 }: EditorRightPanelProps) {
-  const [activeTab, setActiveTab] = useState<RightPanelTab>("properties");
+  const [prendasOpen, setPrendasOpen] = useState(true);
+  const [elementosOpen, setElementosOpen] = useState(true);
   const hasSelection = selectedId != null;
 
   return (
     <aside
-      className="flex w-72 shrink-0 flex-col border-l border-border bg-muted/30 p-3"
-      aria-label="Propiedades, capas y mockups"
+      className="editor-panel flex w-80 shrink-0 flex-col overflow-auto border-l border-border px-5 py-4"
+      aria-label="Prendas y elementos"
     >
-      <div className="flex gap-1 border-b border-border pb-2" role="tablist" aria-label="Secciones del panel">
+      <CollapsibleSection
+        title="Prendas"
+        open={prendasOpen}
+        onToggle={() => setPrendasOpen(!prendasOpen)}
+      >
+        <MockupPanel
+          mockups={MOCK_MOCKUPS}
+          elements={elements}
+          projectName={projectName}
+          selected3DMockup={selected3DMockup}
+          onSelect3DMockup={onSelect3DMockup}
+          texture3dUrl={texture3dUrl}
+          onTexture3dChange={onTexture3dChange}
+          rotation3d={rotation3d}
+          zoom3d={zoom3d}
+          onRotation3dChange={onRotation3dChange}
+          onZoom3dChange={onZoom3dChange}
+          getCanvasAsBlob={getCanvasAsBlob}
+          getEffectiveTextureBlob={getEffectiveTextureBlob}
+        />
+      </CollapsibleSection>
+
+      <CollapsibleSection
+        title="Elementos"
+        open={elementosOpen}
+        onToggle={() => setElementosOpen(!elementosOpen)}
+        onAdd={() => {}}
+      >
+        <div className="flex flex-col gap-5">
+          <div>
+            <h3 className="editor-section-title mb-2.5">Propiedades</h3>
+            <PropertiesPanel
+              elements={elements}
+              selectedId={selectedId}
+              onUpdateElement={onUpdateElement}
+            />
+            {hasSelection && (
+              <button
+                type="button"
+                className="mt-2.5 rounded-lg border border-border bg-transparent px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                onClick={onClearSelection}
+              >
+                Deseleccionar
+              </button>
+            )}
+          </div>
+          <div>
+            <h3 className="editor-section-title mb-2.5">Capas</h3>
+            <LayersPanel
+              elements={elements}
+              selectedId={selectedId}
+              onSelectElement={onSelectElement}
+              onMoveLayer={onMoveLayer}
+              onUpdateElement={onUpdateElement}
+            />
+          </div>
+        </div>
+      </CollapsibleSection>
+
+      <div className="mt-4">
         <button
           type="button"
-          role="tab"
-          aria-selected={activeTab === "properties"}
-          aria-controls="right-panel-properties"
-          id="tab-properties"
-          className={`rounded px-2 py-1 text-xs font-medium transition-colors ${
-            activeTab === "properties"
-              ? "bg-primary/15 text-foreground"
-              : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
-          }`}
-          onClick={() => setActiveTab("properties")}
+          className="flex w-full items-center justify-center gap-2 rounded-xl border border-primary/40 bg-primary/10 py-2.5 text-sm font-medium text-primary transition-colors hover:bg-primary/20 hover:border-primary/60"
         >
-          Propiedades
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={activeTab === "mockups"}
-          aria-controls="right-panel-mockups"
-          id="tab-mockups"
-          className={`rounded px-2 py-1 text-xs font-medium transition-colors ${
-            activeTab === "mockups"
-              ? "bg-primary/15 text-foreground"
-              : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
-          }`}
-          onClick={() => setActiveTab("mockups")}
-        >
-          Mockups
+          Explorar
+          <ChevronRight className="size-4" />
         </button>
       </div>
-
-      {activeTab === "properties" && (
-        <div id="right-panel-properties" role="tabpanel" aria-labelledby="tab-properties" className="flex flex-1 min-h-0 flex-col overflow-auto">
-          <h2 className="mt-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-            Propiedades
-          </h2>
-          <PropertiesPanel
-            elements={elements}
-            selectedId={selectedId}
-            onUpdateElement={onUpdateElement}
-          />
-          {hasSelection && (
-            <button
-              type="button"
-              className="mt-3 rounded border border-border bg-background px-2 py-1 text-xs hover:bg-muted"
-              onClick={onClearSelection}
-            >
-              Deseleccionar
-            </button>
-          )}
-          <h2 className="mt-6 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-            Capas
-          </h2>
-          <LayersPanel
-            elements={elements}
-            selectedId={selectedId}
-            onSelectElement={onSelectElement}
-            onMoveLayer={onMoveLayer}
-            onUpdateElement={onUpdateElement}
-          />
-        </div>
-      )}
-
-      {activeTab === "mockups" && (
-        <div id="right-panel-mockups" role="tabpanel" aria-labelledby="tab-mockups" className="flex flex-1 min-h-0 flex-col overflow-auto">
-          <h2 className="mt-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-            Mockups
-          </h2>
-          <MockupPanel mockups={MOCK_MOCKUPS} elements={elements} />
-        </div>
-      )}
     </aside>
   );
 }
