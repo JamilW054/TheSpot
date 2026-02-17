@@ -27,9 +27,11 @@ export const APP_NAV: NavItem[] = [
   { label: "Soporte", href: "/soporte", icon: "HelpCircle" },
 ];
 
-/** Admin: dashboard, pedidos, configuración */
+/** Admin: dashboard, pedidos, líneas, reportes, configuración */
 export const ADMIN_NAV: NavItem[] = [
-  { label: "Dashboard", href: "/admin" },
-  { label: "Pedidos", href: "/admin/pedidos" },
-  { label: "Configuración", href: "/admin/config" },
+  { label: "Dashboard", href: "/admin", icon: "LayoutDashboard" },
+  { label: "Pedidos", href: "/admin/pedidos", icon: "ShoppingCart" },
+  { label: "Líneas", href: "/lineas", icon: "Shirt" },
+  { label: "Reportes", href: "/admin/reportes", icon: "BarChart2" },
+  { label: "Configuración", href: "/admin/config", icon: "Settings" },
 ];

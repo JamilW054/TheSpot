@@ -2,23 +2,71 @@
 
 import { Center, OrbitControls, useGLTF } from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
-import { Suspense, useEffect } from "react";
-import { ClampToEdgeWrapping, TextureLoader } from "three";
+import { Component, Suspense, useEffect } from "react";
+import { Color, ClampToEdgeWrapping, TextureLoader } from "three";
 import type { BufferAttribute, Object3D } from "three";
 import type { Mesh, MeshStandardMaterial, Texture } from "three";
 import type { DesignZoneUV } from "@/config/texture-uv";
 import { clampUVBounds } from "@/config/texture-uv";
 
+/** Offset Y por modelo: más negativo = más abajo en pantalla (bata y camiseta quedan centrados). */
+const MODEL_OFFSET_Y: Record<string, number> = {
+  "/models/male_tshirt.glb": -0.32,
+  "/models/robe_cloth_for_iclone_and_character_creator.glb": -0.32,
+};
+const DEFAULT_OFFSET_Y = -0.08;
+
 interface TShirtModelProps {
   modelPath: string;
   textureUrl: string | null;
+  garmentColorHex?: string;
 }
 
-function TShirtModel({ modelPath, textureUrl }: TShirtModelProps) {
+function TShirtModel({ modelPath, textureUrl, garmentColorHex }: TShirtModelProps) {
   const { scene } = useGLTF(modelPath);
 
   useEffect(() => {
-    if (!textureUrl) return;
+    const safeHex = garmentColorHex && /^#[0-9A-Fa-f]{6}$/.test(garmentColorHex) ? garmentColorHex : "#ffffff";
+    const color = new Color(safeHex);
+    scene.traverse((child) => {
+      if (child.type !== "Mesh") return;
+      const mesh = child as Mesh;
+      const mat = mesh.material;
+      if (!mat) return;
+      const materials = Array.isArray(mat) ? mat : [mat];
+      for (const m of materials) {
+        const std = m as MeshStandardMaterial;
+        if (std && typeof std.color !== "undefined") {
+          std.color.copy(color);
+          std.needsUpdate = true;
+        }
+      }
+    });
+  }, [scene, garmentColorHex]);
+
+  useEffect(() => {
+    const applyToMaterials = (tex: Texture | null) => {
+      scene.traverse((child) => {
+        if (child.type !== "Mesh") return;
+        const mesh = child as Mesh;
+        const mat = mesh.material;
+        if (!mat) return;
+        const materials = Array.isArray(mat) ? mat : [mat];
+        for (const m of materials) {
+          const std = m as MeshStandardMaterial;
+          if (std && typeof std.map !== "undefined") {
+            if (std.map) std.map.dispose();
+            std.map = tex;
+            std.needsUpdate = true;
+          }
+        }
+      });
+    };
+
+    if (!textureUrl) {
+      applyToMaterials(null);
+      return;
+    }
 
     const loader = new TextureLoader();
     loader.load(
@@ -27,21 +75,7 @@ function TShirtModel({ modelPath, textureUrl }: TShirtModelProps) {
         tex.wrapS = tex.wrapT = ClampToEdgeWrapping;
         tex.anisotropy = 4;
         tex.flipY = true;
-        scene.traverse((child) => {
-          if (child.type === "Mesh") {
-            const mesh = child as Mesh;
-            const mat = mesh.material;
-            const materials = Array.isArray(mat) ? mat : [mat];
-            for (const m of materials) {
-              const std = m as MeshStandardMaterial;
-              if (std.map !== undefined) {
-                if (std.map) std.map.dispose();
-                std.map = tex;
-                std.needsUpdate = true;
-              }
-            }
-          }
-        });
+        applyToMaterials(tex);
       },
       undefined,
       () => {}
@@ -53,6 +87,18 @@ function TShirtModel({ modelPath, textureUrl }: TShirtModelProps) {
       <primitive object={scene} scale={1} />
     </Center>
   );
+}
+
+class ViewerErrorBoundary extends Component<
+  { children: React.ReactNode; fallback: React.ReactNode },
+  { hasError: boolean }
+> {
+  state = { hasError: false };
+  static getDerivedStateFromError = () => ({ hasError: true });
+  render() {
+    if (this.state.hasError) return this.props.fallback;
+    return this.props.children;
+  }
 }
 
 /**
@@ -86,7 +132,13 @@ function readUVBoundsFromScene(scene: Object3D): DesignZoneUV | null {
   });
 
   if (!found || minU >= maxU || minV >= maxV) return null;
-  return clampUVBounds({ u0: minU, v0: minV, u1: maxU, v1: maxV });
+  const bounds = { u0: minU, v0: minV, u1: maxU, v1: maxV };
+  // Si el modelo usa todo el cuadrado UV (0-1), el bbox no ayuda: devolver null
+  // para que el layout use la zona configurada por modelo (pecho, etc.).
+  const spanU = maxU - minU;
+  const spanV = maxV - minV;
+  if (spanU > 0.98 && spanV > 0.98) return null;
+  return clampUVBounds(bounds);
 }
 
 function UVBoundsReader({
@@ -116,6 +168,8 @@ export interface MockupViewer3DProps {
   /** Controles externos (cuando fullSize, se muestran en el panel derecho) */
   rotation?: number;
   zoom?: number;
+  /** Color base de la prenda (hex, ej. #ffffff). Tinta el material. */
+  garmentColorHex?: string;
   /** Llamado cuando el modelo carga: bounds UV leídos de geometry.attributes.uv */
   onUVBoundsDetected?: (bounds: DesignZoneUV) => void;
 }
@@ -126,9 +180,11 @@ export function MockupViewer3D({
   fullSize = false,
   rotation = 0,
   zoom = 1,
+  garmentColorHex,
   onUVBoundsDetected,
 }: MockupViewer3DProps) {
   const rotationNorm = ((rotation % 360) + 360) % 360;
+  const offsetY = MODEL_OFFSET_Y[modelPath] ?? DEFAULT_OFFSET_Y;
 
   return (
     <div
@@ -136,6 +192,14 @@ export function MockupViewer3D({
         fullSize ? "h-full min-h-[300px]" : "h-[280px]"
       }`}
     >
+      <ViewerErrorBoundary
+        fallback={
+          <div className="flex size-full min-h-[200px] flex-col items-center justify-center gap-2 rounded-lg bg-muted/50 p-4 text-center text-sm text-muted-foreground">
+            <p>No se pudo cargar el modelo 3D.</p>
+            <p className="text-xs">Prueba con otra prenda.</p>
+          </div>
+        }
+      >
       <div className="relative size-full min-h-0 flex-1 overflow-hidden">
         <Canvas
           camera={{ position: [0, 0, 2.5], fov: 50 }}
@@ -157,11 +221,15 @@ export function MockupViewer3D({
               <UVBoundsReader modelPath={modelPath} onBounds={onUVBoundsDetected} />
             )}
             <group
-              position={[0, -0.08, 0]}
+              position={[0, offsetY, 0]}
               rotation={[0, (rotationNorm * Math.PI) / 180, 0]}
               scale={zoom}
             >
-              <TShirtModel modelPath={modelPath} textureUrl={textureUrl} />
+              <TShirtModel
+                modelPath={modelPath}
+                textureUrl={textureUrl}
+                garmentColorHex={garmentColorHex}
+              />
             </group>
           </Suspense>
           <OrbitControls
@@ -178,6 +246,7 @@ export function MockupViewer3D({
           Arrastra para rotar · Rueda para zoom
         </p>
       )}
+      </ViewerErrorBoundary>
     </div>
   );
 }

@@ -4,6 +4,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
 } from "react";
@@ -28,6 +29,7 @@ export interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 const MOCK_DELAY_MS = 400;
+const SESSION_STORAGE_KEY = "buxxep_user";
 
 function mockRoleFromEmail(email: string): UserRole {
   return email.toLowerCase().includes("admin") ? "admin" : "client";
@@ -35,6 +37,39 @@ function mockRoleFromEmail(email: string): UserRole {
 
 function mockId(): string {
   return `user_${Math.random().toString(36).slice(2, 11)}`;
+}
+
+function loadUserFromStorage(): User | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(SESSION_STORAGE_KEY);
+    if (!raw) return null;
+    const data = JSON.parse(raw) as User;
+    if (data?.email && data?.name && data?.role) {
+      return {
+        id: data.id ?? mockId(),
+        email: data.email,
+        name: data.name,
+        role: data.role === "admin" ? "admin" : "client",
+      };
+    }
+  } catch {
+    // ignore
+  }
+  return null;
+}
+
+function saveUserToStorage(user: User | null): void {
+  if (typeof window === "undefined") return;
+  try {
+    if (user) {
+      localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(user));
+    } else {
+      localStorage.removeItem(SESSION_STORAGE_KEY);
+    }
+  } catch {
+    // ignore
+  }
 }
 
 export function useAuth(): AuthContextValue {
@@ -49,18 +84,26 @@ interface AuthProviderProps {
 
 export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const stored = loadUserFromStorage();
+    setUser(stored);
+    setIsLoading(false);
+  }, []);
 
   const login = useCallback(
     async (email: string, password: string) => {
       setIsLoading(true);
       await new Promise((resolve) => setTimeout(resolve, MOCK_DELAY_MS));
-      setUser({
+      const newUser: User = {
         id: mockId(),
         email,
         name: email.split("@")[0] ?? "Usuario",
         role: mockRoleFromEmail(email),
-      });
+      };
+      setUser(newUser);
+      saveUserToStorage(newUser);
       setIsLoading(false);
     },
     []
@@ -70,12 +113,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
     async (email: string, password: string, name: string) => {
       setIsLoading(true);
       await new Promise((resolve) => setTimeout(resolve, MOCK_DELAY_MS));
-      setUser({
+      const newUser: User = {
         id: mockId(),
         email,
         name: (name.trim() || email.split("@")[0]) ?? "Usuario",
         role: mockRoleFromEmail(email),
-      });
+      };
+      setUser(newUser);
+      saveUserToStorage(newUser);
       setIsLoading(false);
     },
     []
@@ -83,6 +128,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const logout = useCallback(() => {
     setUser(null);
+    saveUserToStorage(null);
   }, []);
 
   const value = useMemo<AuthContextValue>(

@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useState, useMemo } from "react";
 import type { CanvasElement, Mockup, MockupCategory } from "@/types";
 import {
@@ -8,7 +9,13 @@ import {
   ROTATION_STEP_3D,
   ZOOM_STEP_3D,
 } from "./MockupViewer3D";
+import { GarmentColorPicker } from "./GarmentColorPicker";
 import { TextureUploadPanel } from "./TextureUploadPanel";
+
+const ModelPreviewThumb = dynamic(
+  () => import("./ModelPreviewThumb").then((m) => ({ default: m.ModelPreviewThumb })),
+  { ssr: false, loading: () => <div className="flex aspect-[4/5] w-full items-center justify-center bg-muted/60 rounded-t-xl"><ImagePlaceholderIcon className="size-8 text-muted-foreground" /></div> }
+);
 
 const ROTATION_STEP = 15;
 const ZOOM_STEP = 0.25;
@@ -31,6 +38,8 @@ export interface MockupPanelProps {
   onSelect3DMockup?: (mockup: { modelPath: string } | null) => void;
   texture3dUrl?: string | null;
   onTexture3dChange?: (url: string | null) => void;
+  garmentColor?: string;
+  onGarmentColorChange?: (hex: string) => void;
   rotation3d?: number;
   zoom3d?: number;
   onRotation3dChange?: (v: number) => void;
@@ -124,6 +133,8 @@ export function MockupPanel({
   onSelect3DMockup,
   texture3dUrl = null,
   onTexture3dChange,
+  garmentColor = "#ffffff",
+  onGarmentColorChange,
   rotation3d = 0,
   zoom3d = 1,
   onRotation3dChange,
@@ -185,10 +196,9 @@ export function MockupPanel({
         ))}
       </div>
 
-      <ul className="grid grid-cols-2 gap-2.5" role="list" aria-label="Lista de mockups">
+      <ul className="grid grid-cols-2 gap-2.5" role="list" aria-label="Lista de prendas">
         {filteredMockups.map((mockup) => {
           const isSelected = mockup.id === selectedMockupId;
-          const previewUrl = mockup.imageUrl;
           return (
             <li key={mockup.id}>
               <button
@@ -204,15 +214,11 @@ export function MockupPanel({
                 }`}
                 aria-pressed={isSelected ? "true" : "false"}
               >
-                <div className="relative aspect-[4/5] w-full overflow-hidden rounded-t-xl bg-muted/60">
-                  {previewUrl ? (
-                    <img
-                      src={previewUrl}
-                      alt=""
-                      className="h-full w-full object-cover"
-                    />
+                <div className="relative aspect-[4/5] w-full overflow-hidden rounded-t-xl">
+                  {mockup.modelPath ? (
+                    <ModelPreviewThumb modelPath={mockup.modelPath} className="rounded-t-xl" />
                   ) : (
-                    <div className="flex h-full w-full items-center justify-center text-muted-foreground">
+                    <div className="flex h-full w-full items-center justify-center bg-muted/60 text-muted-foreground rounded-t-xl">
                       <ImagePlaceholderIcon className="size-8" />
                     </div>
                   )}
@@ -306,6 +312,26 @@ export function MockupPanel({
                     onChange={(e) => onZoom3dChange?.(Number(e.target.value) / 100)}
                     className="editor-range w-full"
                   />
+                </div>
+                <div className="rounded-xl border border-border/80 bg-gradient-to-br from-muted/30 to-muted/10 p-3">
+                  <label className="mb-2 block text-xs font-medium text-foreground">
+                    Color de la prenda
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <GarmentColorPicker
+                      value={garmentColor}
+                      onChange={(hex) => onGarmentColorChange?.(hex)}
+                      label="Elegir color de la prenda"
+                    />
+                    <input
+                      type="text"
+                      value={garmentColor}
+                      onChange={(e) => onGarmentColorChange?.(e.target.value.trim() || "#ffffff")}
+                      className="h-9 w-24 rounded-lg border border-border bg-background px-2.5 font-mono text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                      placeholder="#ffffff"
+                      aria-label="Código hex del color"
+                    />
+                  </div>
                 </div>
               </div>
               <TextureUploadPanel

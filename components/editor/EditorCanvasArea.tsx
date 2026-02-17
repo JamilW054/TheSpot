@@ -19,6 +19,8 @@ const MockupViewer3D = dynamic(
 );
 
 export const CANVAS_DROPPABLE_ID = "canvas-drop-zone";
+/** ID del drop zone del editor 2D en el panel derecho (misma lógica de posición). */
+export const CANVAS_DROPPABLE_ID_2D = "canvas-drop-zone-2d";
 
 /** Logical design size used for element positions (matches render-design-to-texture). */
 export const LOGICAL_WIDTH = 400;
@@ -34,6 +36,7 @@ export interface EditorCanvasAreaProps {
     textureUrl: string | null;
     rotation?: number;
     zoom?: number;
+    garmentColorHex?: string;
     onUVBoundsDetected?: (bounds: { u0: number; v0: number; u1: number; v1: number }) => void;
   } | null;
   zoomPercent?: number;
@@ -68,6 +71,7 @@ export const EditorCanvasArea = forwardRef<HTMLDivElement, EditorCanvasAreaProps
                   fullSize
                   rotation={show3DViewer.rotation}
                   zoom={show3DViewer.zoom}
+                  garmentColorHex={show3DViewer.garmentColorHex}
                   onUVBoundsDetected={show3DViewer.onUVBoundsDetected}
                 />
               </div>

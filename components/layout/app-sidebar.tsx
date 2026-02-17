@@ -1,13 +1,18 @@
 "use client";
 
 import {
+  BarChart2,
   BookOpen,
   FolderOpen,
   HelpCircle,
   LayoutGrid,
+  LayoutDashboard,
+  MessageCircle,
   PanelLeftClose,
   PenSquare,
+  Settings,
   Shirt,
+  ShoppingCart,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -29,6 +34,14 @@ const APP_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   BookOpen,
   FolderOpen,
   HelpCircle,
+};
+
+const ADMIN_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+  LayoutDashboard,
+  ShoppingCart,
+  Shirt,
+  BarChart2,
+  Settings,
 };
 
 export interface AppSidebarProps {
@@ -98,7 +111,8 @@ export function AppSidebar({
               const isActive =
                 pathname === item.href ||
                 (item.href !== "/" && pathname.startsWith(item.href));
-              const Icon = item.icon ? APP_ICONS[item.icon] : null;
+              const iconMap = variant === "admin" ? ADMIN_ICONS : APP_ICONS;
+              const Icon = item.icon ? iconMap[item.icon] : null;
               return (
                 <Link
                   key={item.href}
@@ -127,6 +141,26 @@ export function AppSidebar({
           </nav>
         </div>
         <div className="border-t border-border p-4">
+          {variant === "admin" && (
+            <>
+              <div className="rounded-xl border border-border bg-muted/30 p-3">
+                <p className="text-xs italic text-muted-foreground">
+                  &ldquo;El trabajo de hoy era lo imposible de ayer.&rdquo;
+                </p>
+                <p className="mt-1 text-[10px] text-muted-foreground">
+                  — Robert H. Schuller
+                </p>
+              </div>
+              <Link
+                href="/soporte"
+                onClick={onClose}
+                className="mt-3 flex items-center justify-center gap-2 rounded-xl border border-border bg-muted/30 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              >
+                <MessageCircle className="size-4" />
+                Chatea con nosotros
+              </Link>
+            </>
+          )}
           {variant === "app" && user?.role === "admin" && (
             <Link
               href="/admin"
@@ -134,15 +168,6 @@ export function AppSidebar({
               className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             >
               Vista Admin
-            </Link>
-          )}
-          {variant === "admin" && (
-            <Link
-              href="/mis-disenos"
-              onClick={onClose}
-              className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-            >
-              Vista Cliente
             </Link>
           )}
         </div>

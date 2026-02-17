@@ -11,4 +11,6 @@ export interface Pedido {
   items: number;
   total: string;
   estado: PedidoEstado;
+  /** Fecha de creación para listados (ej. "22/02/24") */
+  createdAt?: string;
 }

@@ -8,7 +8,7 @@ import {
 } from "@/lib/texture-storage";
 import JSZip from "jszip";
 import { Download, ImagePlus } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 const ACCEPTED_TYPES = "image/png,image/jpeg,image/jpg,image/webp";
 
@@ -32,6 +32,9 @@ export function TextureUploadPanel({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const onTextureChangeRef = useRef(onTextureChange);
+  onTextureChangeRef.current = onTextureChange;
+
   const projectSlug =
     projectName.replace(/[^a-zA-Z0-9-_]/g, "-").slice(0, 64) || "proyecto";
 
@@ -41,13 +44,13 @@ export function TextureUploadPanel({
     try {
       const url = await loadTexture(projectName);
       setPreviewUrl(url);
-      onTextureChange(url);
+      onTextureChangeRef.current(url);
     } catch {
       setError("Error al cargar la textura");
     } finally {
       setLoading(false);
     }
-  }, [projectName, onTextureChange]);
+  }, [projectName]);
 
   useEffect(() => {
     loadStored();

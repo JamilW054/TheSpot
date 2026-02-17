@@ -49,12 +49,30 @@ export async function renderElementsToTextureUrl(
     uvBoundsFromModel ??
     (modelPath ? getDesignZoneUV(modelPath) : { u0: 0, v0: 0, u1: 1, v1: 1 });
 
+  // Asegurar zona válida (u0 < u1, v0 < v1) para no invertir escala
+  const u0 = Math.min(zone.u0, zone.u1);
+  const u1 = Math.max(zone.u0, zone.u1);
+  const v0 = Math.min(zone.v0, zone.v1);
+  const v1 = Math.max(zone.v0, zone.v1);
+
   // Three.js aplica la textura con flipY: (0,0) en imagen = top-left → GPU v=1 (top).
   // Para que el diseño quede en la zona UV [v0,v1] del modelo, dibujamos en imagen en Y = (1-v1)*H hasta (1-v0)*H.
-  const destX = zone.u0 * DESIGN_TEXTURE_WIDTH;
-  const destY = (1 - zone.v1) * DESIGN_TEXTURE_HEIGHT;
-  const destW = (zone.u1 - zone.u0) * DESIGN_TEXTURE_WIDTH;
-  const destH = (zone.v1 - zone.v0) * DESIGN_TEXTURE_HEIGHT;
+  let destX = u0 * DESIGN_TEXTURE_WIDTH;
+  let destY = (1 - v1) * DESIGN_TEXTURE_HEIGHT;
+  let destW = (u1 - u0) * DESIGN_TEXTURE_WIDTH;
+  let destH = (v1 - v0) * DESIGN_TEXTURE_HEIGHT;
+
+  // Clamp al tamaño de la textura para no dibujar fuera
+  const maxW = DESIGN_TEXTURE_WIDTH - destX;
+  const maxH = DESIGN_TEXTURE_HEIGHT - destY;
+  destW = Math.max(0, Math.min(destW, maxW, DESIGN_TEXTURE_WIDTH));
+  destH = Math.max(0, Math.min(destH, maxH, DESIGN_TEXTURE_HEIGHT));
+  destX = Math.max(0, Math.min(destX, DESIGN_TEXTURE_WIDTH - 1));
+  destY = Math.max(0, Math.min(destY, DESIGN_TEXTURE_HEIGHT - 1));
+
+  if (destW <= 0 || destH <= 0) {
+    return canvas.toDataURL("image/png");
+  }
 
   const scaleX = destW / LOGICAL_WIDTH;
   const scaleY = destH / LOGICAL_HEIGHT;

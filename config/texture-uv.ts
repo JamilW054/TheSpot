@@ -32,16 +32,19 @@ const DEFAULT_ZONE: DesignZoneUV = {
 
 /** Por modelo: zona UV donde se dibuja el diseño (pecho, espalda, etc.) */
 const MODEL_UV: Record<string, DesignZoneUV> = {
-  "/models/male_tshirt.glb": {
-    u0: 0.1,
-    v0: 0.2,
-    u1: 0.9,
-    v1: 0.8,
-  },
+  "/models/male_tshirt.glb": { u0: 0.1, v0: 0.2, u1: 0.9, v1: 0.8 },
+  "/models/hoodie.glb": { u0: 0.1, v0: 0.2, u1: 0.9, v1: 0.8 },
+  "/models/robe_cloth_for_iclone_and_character_creator.glb": { u0: 0.1, v0: 0.2, u1: 0.9, v1: 0.8 },
+  "/models/soft_brushed_long_sleeve_shirt.glb": { u0: 0.1, v0: 0.2, u1: 0.9, v1: 0.8 },
 };
 
+function normalizeModelPath(path: string): string {
+  const p = path.trim();
+  return p.startsWith("/") ? p : `/${p}`;
+}
+
 export function getDesignZoneUV(modelPath: string): DesignZoneUV {
-  return MODEL_UV[modelPath] ?? DEFAULT_ZONE;
+  return MODEL_UV[normalizeModelPath(modelPath)] ?? DEFAULT_ZONE;
 }
 
 /**

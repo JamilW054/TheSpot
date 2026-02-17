@@ -16,6 +16,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ElementContent } from "./canvas-element-nodes";
 import {
   CANVAS_DROPPABLE_ID,
+  CANVAS_DROPPABLE_ID_2D,
   EditorCanvasArea,
   LOGICAL_HEIGHT,
   LOGICAL_WIDTH,
@@ -102,6 +103,7 @@ export function EditorLayout({
   const [texture3dUrl, setTexture3dUrl] = useState<string | null>(null);
   const [rotation3d, setRotation3d] = useState(0);
   const [zoom3d, setZoom3d] = useState(1);
+  const [garmentColor, setGarmentColor] = useState("#ffffff");
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
   const [designTextureUrl, setDesignTextureUrl] = useState<string | null>(null);
   const [modelUVBounds, setModelUVBounds] = useState<{ u0: number; v0: number; u1: number; v1: number } | null>(null);
@@ -218,7 +220,8 @@ export function EditorLayout({
   const handleDragEnd = useCallback((event: DragEndEvent) => {
     setActiveDragId(null);
     const { active, over } = event;
-    if (!over || over.id !== CANVAS_DROPPABLE_ID) return;
+    const isCanvasDrop = over && (over.id === CANVAS_DROPPABLE_ID || over.id === CANVAS_DROPPABLE_ID_2D);
+    if (!over || !isCanvasDrop) return;
 
     const translated = active.rect.current.translated;
     const overRect = over.rect;
@@ -306,6 +309,7 @@ export function EditorLayout({
                     textureUrl: effectiveTexture3d,
                     rotation: rotation3d,
                     zoom: zoom3d,
+                    garmentColorHex: garmentColor,
                     onUVBoundsDetected: setModelUVBounds,
                   }
                 : null
@@ -325,6 +329,8 @@ export function EditorLayout({
           onSelect3DMockup={setSelected3DMockup}
           texture3dUrl={texture3dUrl}
           onTexture3dChange={setTexture3dUrl}
+          garmentColor={garmentColor}
+          onGarmentColorChange={setGarmentColor}
           rotation3d={rotation3d}
           zoom3d={zoom3d}
           onRotation3dChange={setRotation3d}

@@ -118,15 +118,13 @@ export const MOCK_LINEAS: Linea[] = lineaNames.map((name, i) => {
   };
 });
 
-// --- MOCK_MOCKUPS (2D / 3D preview templates) ---
-// Thumbnails con imágenes de ropa real para coherencia visual
+// --- MOCK_MOCKUPS (solo prendas con modelo 3D GLB) ---
+// La preview en la card es el propio modelo 3D en vista fija (sin rotar).
 export const MOCK_MOCKUPS: Mockup[] = [
-  { id: "mock-2d-1", name: "Camiseta frontal", category: "2d", imageUrl: unsplash("1521572163474-6864f9cf17ab", 400, 480) },
-  { id: "mock-2d-2", name: "Camiseta espalda", category: "2d", imageUrl: unsplash("1586790170083-2f9ceadc732d", 400, 480) },
-  { id: "mock-2d-3", name: "Tote bag", category: "2d", imageUrl: unsplash("1562157873-818bc0726f68", 400, 400) },
-  { id: "mock-3d-tshirt-male", name: "Camiseta hombre", category: "3d", modelPath: "/models/male_tshirt.glb", imageUrl: unsplash("1521572163474-6864f9cf17ab", 400, 500) },
-  { id: "mock-3d-1", name: "Camiseta", category: "3d", imageUrl: unsplash("1562157873-818bc0726f68", 400, 500) },
-  { id: "mock-3d-2", name: "Sudadera", category: "3d", imageUrl: unsplash("1556821840-3a63f95609a7", 400, 500) },
+  { id: "mock-3d-tshirt-male", name: "Camiseta hombre", category: "3d", modelPath: "/models/male_tshirt.glb" },
+  { id: "mock-3d-hoodie", name: "Hoodie", category: "3d", modelPath: "/models/hoodie.glb" },
+  { id: "mock-3d-robe", name: "Bata", category: "3d", modelPath: "/models/robe_cloth_for_iclone_and_character_creator.glb" },
+  { id: "mock-3d-poloche", name: "Poloche mujer", category: "3d", modelPath: "/models/soft_brushed_long_sleeve_shirt.glb" },
 ];
 
 // --- MOCK_PEDIDOS (18 items) ---
@@ -154,6 +152,12 @@ const clientes = [
 const estados: Pedido["estado"][] = ["pendiente", "en_proceso", "completado"];
 const estadoCount = 6;
 
+function mockFecha(daysAgo: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() - daysAgo);
+  return d.toLocaleDateString("es-ES", { day: "2-digit", month: "2-digit", year: "2-digit" });
+}
+
 export const MOCK_PEDIDOS: Pedido[] = clientes.map((cliente, i) => {
   const id = `PED-${String(i + 1).padStart(3, "0")}`;
   const items = 1 + (i % 5);
@@ -165,5 +169,6 @@ export const MOCK_PEDIDOS: Pedido[] = clientes.map((cliente, i) => {
     items,
     total: `€${totalNum.toFixed(2)}`,
     estado,
+    createdAt: mockFecha(i * 2),
   };
 });

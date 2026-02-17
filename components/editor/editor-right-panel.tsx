@@ -4,6 +4,9 @@ import { ChevronDown, ChevronRight, Plus } from "lucide-react";
 import { useState } from "react";
 import type { CanvasElement } from "@/types";
 import { MOCK_MOCKUPS } from "@/config/mock-data";
+import { CanvasDropZone } from "./canvas-drop-zone";
+import { CanvasElementNodes } from "./canvas-element-nodes";
+import { CANVAS_DROPPABLE_ID_2D } from "./EditorCanvasArea";
 import { LayersPanel } from "./layers-panel";
 import { MockupPanel } from "./mockup-panel";
 import type { CanvasElementPatch } from "./properties-panel";
@@ -21,6 +24,8 @@ export interface EditorRightPanelProps {
   onSelect3DMockup?: (mockup: { modelPath: string } | null) => void;
   texture3dUrl?: string | null;
   onTexture3dChange?: (url: string | null) => void;
+  garmentColor?: string;
+  onGarmentColorChange?: (hex: string) => void;
   rotation3d?: number;
   zoom3d?: number;
   onRotation3dChange?: (v: number) => void;
@@ -87,6 +92,8 @@ export function EditorRightPanel({
   onSelect3DMockup,
   texture3dUrl = null,
   onTexture3dChange,
+  garmentColor = "#ffffff",
+  onGarmentColorChange,
   rotation3d = 0,
   zoom3d = 1,
   onRotation3dChange,
@@ -95,6 +102,7 @@ export function EditorRightPanel({
   getEffectiveTextureBlob,
 }: EditorRightPanelProps) {
   const [prendasOpen, setPrendasOpen] = useState(true);
+  const [editor2DOpen, setEditor2DOpen] = useState(true);
   const [elementosOpen, setElementosOpen] = useState(true);
   const hasSelection = selectedId != null;
 
@@ -116,6 +124,8 @@ export function EditorRightPanel({
           onSelect3DMockup={onSelect3DMockup}
           texture3dUrl={texture3dUrl}
           onTexture3dChange={onTexture3dChange}
+          garmentColor={garmentColor}
+          onGarmentColorChange={onGarmentColorChange}
           rotation3d={rotation3d}
           zoom3d={zoom3d}
           onRotation3dChange={onRotation3dChange}
@@ -123,6 +133,34 @@ export function EditorRightPanel({
           getCanvasAsBlob={getCanvasAsBlob}
           getEffectiveTextureBlob={getEffectiveTextureBlob}
         />
+      </CollapsibleSection>
+
+      <CollapsibleSection
+        title="Editor 2D"
+        open={editor2DOpen}
+        onToggle={() => setEditor2DOpen(!editor2DOpen)}
+      >
+        <p className="mb-2 text-xs text-muted-foreground">
+          Arrastra texto, imagen o forma desde la barra izquierda. Mueve con el asa.
+        </p>
+        <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl border border-border bg-muted/20">
+          <div
+            className="origin-top-left"
+            style={{ width: 400, height: 300, transform: "scale(0.8)" }}
+          >
+            <CanvasDropZone
+              id={CANVAS_DROPPABLE_ID_2D}
+              onBackgroundClick={onClearSelection}
+              compact
+            >
+              <CanvasElementNodes
+                elements={elements}
+                selectedId={selectedId}
+                onSelectElement={onSelectElement}
+              />
+            </CanvasDropZone>
+          </div>
+        </div>
       </CollapsibleSection>
 
       <CollapsibleSection
