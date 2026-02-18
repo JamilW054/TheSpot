@@ -4,6 +4,33 @@ import { useDraggable } from "@dnd-kit/core";
 import { GripVertical } from "lucide-react";
 import type { CanvasElement } from "@/types";
 
+function PathPreview({ el }: { el: CanvasElement }) {
+  if (el.type !== "path" || !el.pathData) return null;
+  let points: [number, number][];
+  try {
+    points = JSON.parse(el.pathData) as [number, number][];
+  } catch {
+    return <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">Trazo</div>;
+  }
+  if (points.length < 2) return null;
+  const ox = el.x;
+  const oy = el.y;
+  const d = points
+    .map(([px, py], i) => `${i === 0 ? "M" : "L"} ${px - ox} ${py - oy}`)
+    .join(" ");
+  const stroke = el.strokeColor ?? "#000000";
+  const style = el.brushStyle ?? "round";
+  const baseWidth = el.strokeWidth ?? 3;
+  const strokeWidth = style === "marker" ? baseWidth * 1.8 : baseWidth;
+  const lineCap = style === "square" ? "butt" : "round";
+  const lineJoin = style === "square" ? "miter" : "round";
+  return (
+    <svg className="h-full w-full overflow-visible" viewBox={`0 0 ${el.width} ${el.height}`} preserveAspectRatio="none">
+      <path d={d} fill="none" stroke={stroke} strokeWidth={strokeWidth} strokeLinecap={lineCap} strokeLinejoin={lineJoin} />
+    </svg>
+  );
+}
+
 function ImagePlaceholderIcon({ className }: { className?: string }) {
   return (
     <svg
@@ -55,6 +82,8 @@ export function ElementContent({ el }: { el: CanvasElement }) {
         <ImagePlaceholderIcon className="text-muted-foreground" />
       </div>
     )
+  ) : el.type === "path" ? (
+    <PathPreview el={el} />
   ) : null;
 }
 

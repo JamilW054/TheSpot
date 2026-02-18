@@ -17,4 +17,5 @@ export const EDITOR_TOOLS: EditorTool[] = [
   { id: "tool-image", type: "image", label: "Imagen", iconName: "Image" },
   { id: "tool-text", type: "text", label: "Texto", iconName: "Type" },
   { id: "tool-shape", type: "shape", label: "Forma", iconName: "Square" },
+  { id: "tool-brush", type: "path", label: "Pincel", iconName: "Pencil" },
 ];

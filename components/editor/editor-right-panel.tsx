@@ -1,16 +1,20 @@
 "use client";
 
 import { ChevronDown, ChevronRight, Plus } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { CanvasElement } from "@/types";
+import type { PathPoint } from "@/types";
 import { MOCK_MOCKUPS } from "@/config/mock-data";
 import { CanvasDropZone } from "./canvas-drop-zone";
 import { CanvasElementNodes } from "./canvas-element-nodes";
 import { CANVAS_DROPPABLE_ID_2D } from "./EditorCanvasArea";
+import { GeometryNodesPanel } from "./GeometryNodesPanel";
 import { LayersPanel } from "./layers-panel";
 import { MockupPanel } from "./mockup-panel";
 import type { CanvasElementPatch } from "./properties-panel";
 import { PropertiesPanel } from "./properties-panel";
+
+export type EditorPanelTab = "design" | "nodes";
 
 export interface EditorRightPanelProps {
   selectedId: string | null;
@@ -34,6 +38,12 @@ export interface EditorRightPanelProps {
   getCanvasAsBlob?: () => Promise<Blob | null>;
   /** Current texture with design in correct UV zone (for export) */
   getEffectiveTextureBlob?: () => Promise<Blob | null>;
+  /** Cuando el pincel está activo, dibujar en el canvas 2D termina un trazo */
+  activeTool?: string;
+  onPathStrokeComplete?: (points: PathPoint[], strokeColor?: string, strokeWidth?: number) => void;
+  /** Tab activo: diseño 2D o nodos de geometría (GLTF JSON) */
+  rightPanelTab?: EditorPanelTab;
+  onRightPanelTabChange?: (tab: EditorPanelTab) => void;
 }
 
 function CollapsibleSection({
@@ -100,11 +110,50 @@ export function EditorRightPanel({
   onZoom3dChange,
   getCanvasAsBlob,
   getEffectiveTextureBlob,
+  activeTool = "move",
+  onPathStrokeComplete,
+  rightPanelTab = "design",
+  onRightPanelTabChange,
 }: EditorRightPanelProps) {
   const [prendasOpen, setPrendasOpen] = useState(true);
   const [editor2DOpen, setEditor2DOpen] = useState(true);
   const [elementosOpen, setElementosOpen] = useState(true);
+  const [drawingPoints, setDrawingPoints] = useState<PathPoint[] | null>(null);
+  const canvas2DRef = useRef<HTMLDivElement>(null);
   const hasSelection = selectedId != null;
+
+  const getLogicalCoords = (e: React.PointerEvent) => {
+    const el = canvas2DRef.current;
+    if (!el) return { x: 0, y: 0 };
+    const rect = el.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 400;
+    const y = ((e.clientY - rect.top) / rect.height) * 300;
+    return { x: Math.max(0, Math.min(400, x)), y: Math.max(0, Math.min(300, y)) };
+  };
+
+  const handleBrushPointerDown = (e: React.PointerEvent) => {
+    if (activeTool !== "tool-brush" || !onPathStrokeComplete) return;
+    e.preventDefault();
+    const { x, y } = getLogicalCoords(e);
+    setDrawingPoints([[x, y]]);
+    (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
+  };
+
+  const handleBrushPointerMove = (e: React.PointerEvent) => {
+    if (activeTool !== "tool-brush" || !drawingPoints) return;
+    e.preventDefault();
+    const { x, y } = getLogicalCoords(e);
+    setDrawingPoints((prev) => (prev ? [...prev, [x, y]] : null));
+  };
+
+  const handleBrushPointerUp = (e: React.PointerEvent) => {
+    if (activeTool !== "tool-brush") return;
+    (e.target as HTMLElement).releasePointerCapture?.(e.pointerId);
+    if (drawingPoints && drawingPoints.length >= 2 && onPathStrokeComplete) {
+      onPathStrokeComplete(drawingPoints);
+    }
+    setDrawingPoints(null);
+  };
 
   return (
     <aside
@@ -135,70 +184,122 @@ export function EditorRightPanel({
         />
       </CollapsibleSection>
 
-      <CollapsibleSection
-        title="Editor 2D"
-        open={editor2DOpen}
-        onToggle={() => setEditor2DOpen(!editor2DOpen)}
-      >
-        <p className="mb-2 text-xs text-muted-foreground">
-          Arrastra texto, imagen o forma desde la barra izquierda. Mueve con el asa.
-        </p>
-        <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl border border-border bg-muted/20">
-          <div
-            className="origin-top-left"
-            style={{ width: 400, height: 300, transform: "scale(0.8)" }}
-          >
-            <CanvasDropZone
-              id={CANVAS_DROPPABLE_ID_2D}
-              onBackgroundClick={onClearSelection}
-              compact
-            >
-              <CanvasElementNodes
-                elements={elements}
-                selectedId={selectedId}
-                onSelectElement={onSelectElement}
-              />
-            </CanvasDropZone>
-          </div>
-        </div>
-      </CollapsibleSection>
+      <div className="flex border-b border-border">
+        <button
+          type="button"
+          onClick={() => onRightPanelTabChange?.("design")}
+          className={`flex-1 py-2.5 text-sm font-medium transition-colors ${
+            rightPanelTab === "design"
+              ? "border-b-2 border-primary text-primary"
+              : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          Diseño 2D
+        </button>
+        <button
+          type="button"
+          onClick={() => onRightPanelTabChange?.("nodes")}
+          className={`flex-1 py-2.5 text-sm font-medium transition-colors ${
+            rightPanelTab === "nodes"
+              ? "border-b-2 border-primary text-primary"
+              : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          Nodos geometría
+        </button>
+      </div>
 
-      <CollapsibleSection
-        title="Elementos"
-        open={elementosOpen}
-        onToggle={() => setElementosOpen(!elementosOpen)}
-        onAdd={() => {}}
-      >
-        <div className="flex flex-col gap-5">
-          <div>
-            <h3 className="editor-section-title mb-2.5">Propiedades</h3>
-            <PropertiesPanel
-              elements={elements}
-              selectedId={selectedId}
-              onUpdateElement={onUpdateElement}
-            />
-            {hasSelection && (
-              <button
-                type="button"
-                className="mt-2.5 rounded-lg border border-border bg-transparent px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                onClick={onClearSelection}
+      {rightPanelTab === "design" ? (
+        <>
+          <CollapsibleSection
+            title="Editor 2D"
+            open={editor2DOpen}
+            onToggle={() => setEditor2DOpen(!editor2DOpen)}
+          >
+            <p className="mb-2 text-xs text-muted-foreground">
+              {activeTool === "tool-brush"
+                ? "Pincel activo: dibuja en el recuadro. El trazo se aplica a la camiseta 3D."
+                : "Arrastra texto, imagen o forma desde la barra izquierda. Mueve con el asa."}
+            </p>
+            <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl border border-border bg-muted/20">
+              <div
+                ref={canvas2DRef}
+                className="origin-top-left relative"
+                style={{ width: 400, height: 300, transform: "scale(0.8)" }}
               >
-                Deseleccionar
-              </button>
-            )}
-          </div>
-          <div>
-            <h3 className="editor-section-title mb-2.5">Capas</h3>
-            <LayersPanel
-              elements={elements}
-              selectedId={selectedId}
-              onSelectElement={onSelectElement}
-              onMoveLayer={onMoveLayer}
-              onUpdateElement={onUpdateElement}
-            />
-          </div>
-        </div>
-      </CollapsibleSection>
+                <CanvasDropZone
+                  id={CANVAS_DROPPABLE_ID_2D}
+                  onBackgroundClick={onClearSelection}
+                  compact
+                >
+                  <CanvasElementNodes
+                    elements={elements}
+                    selectedId={selectedId}
+                    onSelectElement={onSelectElement}
+                  />
+                </CanvasDropZone>
+                {activeTool === "tool-brush" && (
+                  <div
+                    className="absolute inset-0 z-10 cursor-crosshair"
+                    style={{ width: 400, height: 300 }}
+                    onPointerDown={handleBrushPointerDown}
+                    onPointerMove={handleBrushPointerMove}
+                    onPointerUp={handleBrushPointerUp}
+                    onPointerLeave={() => {
+                      if (drawingPoints && drawingPoints.length >= 2 && onPathStrokeComplete) {
+                        onPathStrokeComplete(drawingPoints);
+                      }
+                      setDrawingPoints(null);
+                    }}
+                    aria-label="Zona de dibujo con pincel"
+                  />
+                )}
+              </div>
+            </div>
+          </CollapsibleSection>
+
+          <CollapsibleSection
+            title="Elementos"
+            open={elementosOpen}
+            onToggle={() => setElementosOpen(!elementosOpen)}
+            onAdd={() => {}}
+          >
+            <div className="flex flex-col gap-5">
+              <div>
+                <h3 className="editor-section-title mb-2.5">Propiedades</h3>
+                <PropertiesPanel
+                  elements={elements}
+                  selectedId={selectedId}
+                  onUpdateElement={onUpdateElement}
+                />
+                {hasSelection && (
+                  <button
+                    type="button"
+                    className="mt-2.5 rounded-lg border border-border bg-transparent px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                    onClick={onClearSelection}
+                  >
+                    Deseleccionar
+                  </button>
+                )}
+              </div>
+              <div>
+                <h3 className="editor-section-title mb-2.5">Capas</h3>
+                <LayersPanel
+                  elements={elements}
+                  selectedId={selectedId}
+                  onSelectElement={onSelectElement}
+                  onMoveLayer={onMoveLayer}
+                  onUpdateElement={onUpdateElement}
+                />
+              </div>
+            </div>
+          </CollapsibleSection>
+        </>
+      ) : (
+        <CollapsibleSection title="Nodos del modelo (GLTF JSON)" open={true} onToggle={() => {}}>
+          <GeometryNodesPanel modelPath={selected3DMockup?.modelPath ?? null} />
+        </CollapsibleSection>
+      )}
 
       <div className="mt-4">
         <button

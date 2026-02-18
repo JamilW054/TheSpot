@@ -10,27 +10,31 @@ const ICON_BY_NAME: Record<string, React.ComponentType<{ className?: string }>> 
   Image,
   Type,
   Square,
+  Pencil,
+};
+
+const TOOL_TITLES: Record<string, string> = {
+  text: "Texto: arrastra al canvas para añadir",
+  image: "Imagen: arrastra al canvas para añadir",
+  shape: "Forma: arrastra al canvas para añadir",
+  path: "Pincel: activa dibujo en el panel 2D o arrastra para añadir trazo",
 };
 
 function DraggableToolButton({
   tool,
   isActive,
+  onSelect,
 }: {
   tool: EditorTool;
   isActive?: boolean;
+  onSelect?: (id: string) => void;
 }) {
   const { attributes, listeners, setNodeRef } = useDraggable({
     id: tool.id,
     data: { type: tool.type },
   });
   const Icon = tool.iconName ? ICON_BY_NAME[tool.iconName] : null;
-
-  const dragTitle =
-    tool.type === "text"
-      ? "Texto: arrastra al canvas para añadir"
-      : tool.type === "image"
-        ? "Imagen: arrastra al canvas para añadir"
-        : "Forma: arrastra al canvas para añadir";
+  const title = TOOL_TITLES[tool.type] ?? `${tool.label}: arrastra al canvas`;
 
   return (
     <button
@@ -38,12 +42,13 @@ function DraggableToolButton({
       type="button"
       {...listeners}
       {...attributes}
+      onClick={() => onSelect?.(tool.id)}
       className={`flex size-10 shrink-0 items-center justify-center rounded-xl transition-all duration-150 ${
         isActive
           ? "bg-primary/20 text-primary shadow-inner"
           : "text-muted-foreground hover:bg-muted hover:text-foreground"
       }`}
-      title={dragTitle}
+      title={title}
     >
       {Icon ? <Icon className="size-5" /> : null}
     </button>
@@ -53,12 +58,33 @@ function DraggableToolButton({
 export interface EditorToolbarProps {
   onAddImageFromFile?: (file: File) => void;
   activeTool?: string;
+  onToolChange?: (toolId: string) => void;
+  onUndo?: () => void;
+  onRedo?: () => void;
+  canUndo?: boolean;
+  canRedo?: boolean;
+  onMenuClick?: () => void;
+  onOpenClick?: () => void;
+  onPlusClick?: () => void;
 }
 
 const btn =
   "flex size-10 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-all duration-150 hover:bg-muted hover:text-foreground";
 
-export function EditorToolbar({ onAddImageFromFile, activeTool = "move" }: EditorToolbarProps) {
+function noop() {}
+
+export function EditorToolbar({
+  onAddImageFromFile,
+  activeTool = "move",
+  onToolChange = noop,
+  onUndo,
+  onRedo,
+  canUndo = false,
+  canRedo = false,
+  onMenuClick,
+  onOpenClick,
+  onPlusClick,
+}: EditorToolbarProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -74,10 +100,20 @@ export function EditorToolbar({ onAddImageFromFile, activeTool = "move" }: Edito
     >
       {/* Archivo */}
       <div className="flex flex-col items-center gap-1 px-2">
-        <button type="button" className={btn} title="Menú">
+        <button
+          type="button"
+          onClick={onMenuClick}
+          className={btn}
+          title="Menú (guardar / exportar)"
+        >
           <Menu className="size-5" />
         </button>
-        <button type="button" className={btn} title="Archivo">
+        <button
+          type="button"
+          onClick={onOpenClick}
+          className={btn}
+          title="Abrir diseño"
+        >
           <FolderOpen className="size-5" />
         </button>
       </div>
@@ -86,11 +122,17 @@ export function EditorToolbar({ onAddImageFromFile, activeTool = "move" }: Edito
 
       {/* Insertar en canvas */}
       <div className="flex flex-col items-center gap-1.5 px-2">
-        <button type="button" className={btn} title="Añadir elemento">
+        <button
+          type="button"
+          onClick={onPlusClick}
+          className={btn}
+          title="Añadir elemento (texto, forma, imagen, pincel)"
+        >
           <Plus className="size-5" />
         </button>
         <button
           type="button"
+          onClick={() => onToolChange("move")}
           className={`flex size-10 shrink-0 items-center justify-center rounded-xl transition-all duration-150 ${
             activeTool === "move"
               ? "bg-primary/20 text-primary shadow-inner"
@@ -105,6 +147,7 @@ export function EditorToolbar({ onAddImageFromFile, activeTool = "move" }: Edito
             key={tool.id}
             tool={tool}
             isActive={activeTool === tool.id}
+            onSelect={onToolChange ?? noop}
           />
         ))}
         {onAddImageFromFile && (
@@ -127,7 +170,16 @@ export function EditorToolbar({ onAddImageFromFile, activeTool = "move" }: Edito
             </button>
           </>
         )}
-        <button type="button" className={btn} title="Dibujar">
+        <button
+          type="button"
+          onClick={() => onToolChange("tool-brush")}
+          className={`flex size-10 shrink-0 items-center justify-center rounded-xl transition-all duration-150 ${
+            activeTool === "tool-brush"
+              ? "bg-primary/20 text-primary shadow-inner"
+              : "text-muted-foreground hover:bg-muted hover:text-foreground"
+          }`}
+          title="Pincel: dibuja en el panel 2D (zona de diseño)"
+        >
           <Pencil className="size-5" />
         </button>
       </div>
@@ -138,14 +190,18 @@ export function EditorToolbar({ onAddImageFromFile, activeTool = "move" }: Edito
       <div className="flex flex-col items-center gap-1 px-2">
         <button
           type="button"
-          className={btn}
+          onClick={onUndo}
+          disabled={!canUndo}
+          className={`${btn} disabled:opacity-40 disabled:cursor-not-allowed`}
           title="Deshacer"
         >
           <Redo2 className="size-4 rotate-180" />
         </button>
         <button
           type="button"
-          className={btn}
+          onClick={onRedo}
+          disabled={!canRedo}
+          className={`${btn} disabled:opacity-40 disabled:cursor-not-allowed`}
           title="Rehacer"
         >
           <Redo2 className="size-4" />

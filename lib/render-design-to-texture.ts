@@ -1,7 +1,9 @@
 /**
- * Renders 2D canvas elements (text, images, shapes) to a single texture image
+ * Renders 2D canvas elements (text, images, shapes, path/brush) to a single texture image
  * so it can be applied to the 3D model. The design is drawn in the correct
- * UV region (pecho, espalda, etc.) so it appears in the right place on the mesh.
+ * UV region (u0,v0)-(u1,v1) so it appears on the mesh polygons that use those UVs.
+ * Polygon logic: each mesh triangle has UV coords; we draw only in the design zone
+ * rectangle; the texture is then applied to the model, so all elements map correctly.
  */
 
 import { getDesignZoneUV } from "@/config/texture-uv";
@@ -134,6 +136,49 @@ export async function renderElementsToTextureUrl(
         ctx.fillStyle = "#e5e7eb";
         ctx.fillRect(x, y, w, h);
       }
+    } else if (el.type === "path" && el.pathData) {
+      let points: [number, number][];
+      try {
+        points = JSON.parse(el.pathData) as [number, number][];
+      } catch {
+        points = [];
+      }
+      if (points.length < 2) continue;
+      ctx.save();
+      const style = el.brushStyle ?? "round";
+      const baseWidth = el.strokeWidth ?? 3;
+      if (style === "marker") {
+        ctx.lineWidth = baseWidth * 1.8;
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+      } else if (style === "square") {
+        ctx.lineWidth = baseWidth;
+        ctx.lineCap = "butt";
+        ctx.lineJoin = "miter";
+      } else {
+        ctx.lineWidth = baseWidth;
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+      }
+      if (el.brushTexture) {
+        try {
+          const texImg = await loadImage(el.brushTexture);
+          const pattern = ctx.createPattern(texImg, "repeat");
+          if (pattern) ctx.strokeStyle = pattern;
+          else ctx.strokeStyle = el.strokeColor ?? "#000000";
+        } catch {
+          ctx.strokeStyle = el.strokeColor ?? "#000000";
+        }
+      } else {
+        ctx.strokeStyle = el.strokeColor ?? "#000000";
+      }
+      ctx.beginPath();
+      ctx.moveTo(points[0]![0]!, points[0]![1]!);
+      for (let i = 1; i < points.length; i++) {
+        ctx.lineTo(points[i]![0]!, points[i]![1]!);
+      }
+      ctx.stroke();
+      ctx.restore();
     }
   }
 

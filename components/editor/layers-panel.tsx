@@ -7,6 +7,7 @@ const TYPE_LABELS: Record<CanvasElement["type"], string> = {
   text: "Texto",
   image: "Imagen",
   shape: "Forma",
+  path: "Pincel",
 };
 
 function shortId(id: string): string {

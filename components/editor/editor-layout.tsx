@@ -10,6 +10,7 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
+import { MOCK_MOCKUPS } from "@/config/mock-data";
 import { renderElementsToTextureUrl } from "@/lib/render-design-to-texture";
 import type { CanvasElement, CanvasElementType } from "@/types";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -74,6 +75,56 @@ function createShapeElement(x: number, y: number): CanvasElement {
   };
 }
 
+const PATH_PADDING = 8;
+const DEFAULT_STROKE_COLOR = "#000000";
+const DEFAULT_STROKE_WIDTH = 3;
+
+function createPathElement(
+  points: [number, number][],
+  strokeColor = DEFAULT_STROKE_COLOR,
+  strokeWidth = DEFAULT_STROKE_WIDTH
+): CanvasElement {
+  if (points.length === 0) {
+    return {
+      id: crypto.randomUUID(),
+      type: "path",
+      x: 0,
+      y: 0,
+      width: 40,
+      height: 40,
+      pathData: "[]",
+      strokeColor,
+      strokeWidth,
+    };
+  }
+  let minX = points[0]![0]!;
+  let minY = points[0]![1]!;
+  let maxX = minX;
+  let maxY = minY;
+  for (let i = 1; i < points.length; i++) {
+    const [px, py] = points[i]!;
+    minX = Math.min(minX, px);
+    minY = Math.min(minY, py);
+    maxX = Math.max(maxX, px);
+    maxY = Math.max(maxY, py);
+  }
+  const x = Math.max(0, minX - PATH_PADDING);
+  const y = Math.max(0, minY - PATH_PADDING);
+  const width = Math.min(LOGICAL_WIDTH - x, maxX - minX + PATH_PADDING * 2);
+  const height = Math.min(LOGICAL_HEIGHT - y, maxY - minY + PATH_PADDING * 2);
+  return {
+    id: crypto.randomUUID(),
+    type: "path",
+    x,
+    y,
+    width: Math.max(20, width),
+    height: Math.max(20, height),
+    pathData: JSON.stringify(points),
+    strokeColor,
+    strokeWidth,
+  };
+}
+
 const DEFAULT_IMAGE_POS = { x: 50, y: 50 };
 
 export interface EditorLayoutProps {
@@ -93,7 +144,10 @@ export function EditorLayout({
 }: EditorLayoutProps) {
   const [elements, setElements] = useState<CanvasElement[]>(initialElements);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [selected3DMockup, setSelected3DMockupState] = useState<{ modelPath: string } | null>(null);
+  const [selected3DMockup, setSelected3DMockupState] = useState<{ modelPath: string } | null>(() => {
+    const first = MOCK_MOCKUPS[0];
+    return first?.modelPath ? { modelPath: first.modelPath } : null;
+  });
   const viewMode = "3d" as const; // Single 3D view only (no 2D canvas)
   const setSelected3DMockup = useCallback((m: { modelPath: string } | null) => {
     setSelected3DMockupState(m);
@@ -105,9 +159,43 @@ export function EditorLayout({
   const [zoom3d, setZoom3d] = useState(1);
   const [garmentColor, setGarmentColor] = useState("#ffffff");
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
+  const [activeTool, setActiveTool] = useState<string>("move");
+  const [rightPanelTab, setRightPanelTab] = useState<"design" | "nodes">("design");
   const [designTextureUrl, setDesignTextureUrl] = useState<string | null>(null);
   const [modelUVBounds, setModelUVBounds] = useState<{ u0: number; v0: number; u1: number; v1: number } | null>(null);
   const objectUrlsByElementId = useRef<Map<string, string>>(new Map());
+  const historyPast = useRef<CanvasElement[][]>([]);
+  const historyFuture = useRef<CanvasElement[][]>([]);
+  const HISTORY_MAX = 50;
+
+  const [historyCanUndo, setHistoryCanUndo] = useState(false);
+  const [historyCanRedo, setHistoryCanRedo] = useState(false);
+
+  const pushHistory = useCallback((current: CanvasElement[]) => {
+    historyPast.current = historyPast.current.slice(-(HISTORY_MAX - 1));
+    historyPast.current.push(current.map((el) => ({ ...el })));
+    historyFuture.current = [];
+    setHistoryCanUndo(true);
+    setHistoryCanRedo(false);
+  }, []);
+
+  const handleUndo = useCallback(() => {
+    if (historyPast.current.length === 0) return;
+    const prev = historyPast.current.pop()!;
+    historyFuture.current.push(elements.map((el) => ({ ...el })));
+    setElements(prev);
+    setHistoryCanUndo(historyPast.current.length > 0);
+    setHistoryCanRedo(true);
+  }, [elements]);
+
+  const handleRedo = useCallback(() => {
+    if (historyFuture.current.length === 0) return;
+    const next = historyFuture.current.pop()!;
+    historyPast.current.push(elements.map((el) => ({ ...el })));
+    setElements(next);
+    setHistoryCanUndo(true);
+    setHistoryCanRedo(historyFuture.current.length > 0);
+  }, [elements]);
 
   // Al cambiar de modelo, limpiar bounds hasta que el nuevo GLB reporte los suyos
   useEffect(() => {
@@ -161,11 +249,12 @@ export function EditorLayout({
   }, []);
 
   const handleAddImageFromFile = useCallback((file: File) => {
+    pushHistory(elements);
     const url = URL.createObjectURL(file);
     const el = createImageElement(DEFAULT_IMAGE_POS.x, DEFAULT_IMAGE_POS.y, url);
     objectUrlsByElementId.current.set(el.id, url);
     setElements((prev) => [...prev, el]);
-  }, []);
+  }, [elements, pushHistory]);
 
   useEffect(() => {
     const ids = new Set(elements.map((el) => el.id));
@@ -188,12 +277,14 @@ export function EditorLayout({
   }, []);
 
   const handleUpdateElement = useCallback((id: string, partial: CanvasElementPatch) => {
+    pushHistory(elements);
     setElements((prev) =>
       prev.map((el) => (el.id === id ? { ...el, ...partial } : el))
     );
-  }, []);
+  }, [elements, pushHistory]);
 
   const handleMoveLayer = useCallback((id: string, direction: "up" | "down") => {
+    pushHistory(elements);
     setElements((prev) => {
       const i = prev.findIndex((el) => el.id === id);
       if (i === -1) return prev;
@@ -209,7 +300,7 @@ export function EditorLayout({
       }
       return prev;
     });
-  }, []);
+  }, [elements, pushHistory]);
 
   const handleDragStart = useCallback((event: DragStartEvent) => {
     if (event.active.data.current?.kind === "element") {
@@ -240,6 +331,7 @@ export function EditorLayout({
     const dragType = active.data.current?.type as CanvasElementType | undefined;
 
     if (isExistingElement && typeof active.id === "string") {
+      pushHistory(elements);
       setElements((prev) =>
         prev.map((el) =>
           el.id === active.id ? { ...el, x: xClamp, y: yClamp } : el
@@ -248,14 +340,29 @@ export function EditorLayout({
       return;
     }
 
+    pushHistory(elements);
     if (dragType === "image") {
       setElements((prev) => [...prev, createImageElement(xClamp, yClamp)]);
     } else if (dragType === "shape") {
       setElements((prev) => [...prev, createShapeElement(xClamp, yClamp)]);
     } else if (dragType === "text") {
       setElements((prev) => [...prev, createTextElement(xClamp, yClamp)]);
+    } else if (dragType === "path") {
+      setElements((prev) => [
+        ...prev,
+        createPathElement([[xClamp, yClamp], [xClamp + 30, yClamp + 20]]),
+      ]);
     }
-  }, []);
+  }, [elements, pushHistory]);
+
+  const handlePathStrokeComplete = useCallback((points: [number, number][], strokeColor?: string, strokeWidth?: number) => {
+    if (points.length < 2) return;
+    pushHistory(elements);
+    setElements((prev) => [
+      ...prev,
+      createPathElement(points, strokeColor ?? DEFAULT_STROKE_COLOR, strokeWidth ?? DEFAULT_STROKE_WIDTH),
+    ]);
+  }, [elements, pushHistory]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -295,7 +402,18 @@ export function EditorLayout({
       >
         <EditorHeader projectName={designId ?? "Nuevo diseño"} />
         <div className="flex min-h-0 flex-1 flex-row">
-          <EditorToolbar onAddImageFromFile={handleAddImageFromFile} />
+          <EditorToolbar
+            onAddImageFromFile={handleAddImageFromFile}
+            activeTool={activeTool}
+            onToolChange={setActiveTool}
+            onUndo={handleUndo}
+            onRedo={handleRedo}
+            canUndo={historyCanUndo}
+            canRedo={historyCanRedo}
+            onMenuClick={() => setRightPanelTab("design")}
+            onOpenClick={() => setRightPanelTab("design")}
+            onPlusClick={() => setActiveTool("tool-text")}
+          />
           <EditorCanvasArea
             ref={canvasContainerRef}
             elements={elements}
@@ -337,6 +455,10 @@ export function EditorLayout({
           onZoom3dChange={setZoom3d}
           getCanvasAsBlob={getCanvasAsBlob}
           getEffectiveTextureBlob={getEffectiveTextureBlob}
+          activeTool={activeTool}
+          onPathStrokeComplete={handlePathStrokeComplete}
+          rightPanelTab={rightPanelTab}
+          onRightPanelTabChange={setRightPanelTab}
           />
         </div>
       </div>

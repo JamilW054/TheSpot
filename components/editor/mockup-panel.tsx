@@ -117,6 +117,10 @@ function DesignZoneContent({
                   <ImagePlaceholderIcon className="text-muted-foreground" />
                 </div>
               )
+            ) : el.type === "path" ? (
+              <div className="flex h-full w-full items-center justify-center text-[10px] text-muted-foreground">
+                Trazo
+              </div>
             ) : null}
           </div>
         );

@@ -118,9 +118,10 @@ export const MOCK_LINEAS: Linea[] = lineaNames.map((name, i) => {
   };
 });
 
-// --- MOCK_MOCKUPS (solo prendas con modelo 3D GLB) ---
+// --- MOCK_MOCKUPS (modelo principal: camiseta GLTF editable; resto GLB) ---
 // La preview en la card es el propio modelo 3D en vista fija (sin rotar).
 export const MOCK_MOCKUPS: Mockup[] = [
+  { id: "mock-3d-tshirt", name: "Camiseta (GLTF)", category: "3d", modelPath: "/models/tshirt/scene.gltf" },
   { id: "mock-3d-tshirt-male", name: "Camiseta hombre", category: "3d", modelPath: "/models/male_tshirt.glb" },
   { id: "mock-3d-hoodie", name: "Hoodie", category: "3d", modelPath: "/models/hoodie.glb" },
   { id: "mock-3d-robe", name: "Bata", category: "3d", modelPath: "/models/robe_cloth_for_iclone_and_character_creator.glb" },

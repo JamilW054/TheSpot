@@ -3,7 +3,7 @@
 import type { CanvasElement } from "@/types";
 
 export type CanvasElementPatch = Partial<
-  Pick<CanvasElement, "x" | "y" | "width" | "height" | "content" | "visible">
+  Pick<CanvasElement, "x" | "y" | "width" | "height" | "content" | "visible" | "pathData" | "strokeColor" | "strokeWidth" | "brushStyle" | "brushTexture">
 >;
 
 export interface PropertiesPanelProps {
@@ -215,6 +215,61 @@ export function PropertiesPanel({
             placeholder="Texto"
             className="rounded border border-border bg-background px-2 py-1 text-foreground w-full resize-y min-h-16"
           />
+        </div>
+      )}
+      {element.type === "path" && (
+        <div className="space-y-2 pt-2 border-t border-border">
+          <div className="grid grid-cols-[auto_1fr] gap-x-2 gap-y-1 items-center">
+            <label htmlFor="prop-stroke-color" className="text-muted-foreground">
+              Color
+            </label>
+            <input
+              id="prop-stroke-color"
+              type="color"
+              value={element.strokeColor ?? "#000000"}
+              onChange={(e) => onUpdateElement(element.id, { strokeColor: e.target.value })}
+              className="h-8 w-full min-w-0 rounded border border-border bg-background cursor-pointer"
+            />
+            <label htmlFor="prop-stroke-width" className="text-muted-foreground">
+              Grosor
+            </label>
+            <input
+              id="prop-stroke-width"
+              type="number"
+              min={1}
+              max={30}
+              value={element.strokeWidth ?? 3}
+              onChange={(e) => {
+                const v = Number(e.target.value);
+                if (!Number.isNaN(v)) onUpdateElement(element.id, { strokeWidth: Math.max(1, Math.min(30, v)) });
+              }}
+              className={inputCn}
+            />
+            <label htmlFor="prop-brush-style" className="text-muted-foreground">
+              Estilo brocha
+            </label>
+            <select
+              id="prop-brush-style"
+              value={element.brushStyle ?? "round"}
+              onChange={(e) => onUpdateElement(element.id, { brushStyle: e.target.value as "round" | "square" | "marker" })}
+              className={inputCn}
+            >
+              <option value="round">Redondo (suave)</option>
+              <option value="square">Cuadrado (corte)</option>
+              <option value="marker">Marker (grueso)</option>
+            </select>
+            <label htmlFor="prop-brush-texture" className="text-muted-foreground">
+              Textura (URL)
+            </label>
+            <input
+              id="prop-brush-texture"
+              type="url"
+              placeholder="Opcional"
+              value={element.brushTexture ?? ""}
+              onChange={(e) => onUpdateElement(element.id, { brushTexture: e.target.value || undefined })}
+              className={inputCn}
+            />
+          </div>
         </div>
       )}
     </div>

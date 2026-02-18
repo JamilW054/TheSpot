@@ -11,10 +11,17 @@ import { clampUVBounds } from "@/config/texture-uv";
 
 /** Offset Y por modelo: más negativo = más abajo en pantalla (bata y camiseta quedan centrados). */
 const MODEL_OFFSET_Y: Record<string, number> = {
+  "/models/tshirt/scene.gltf": -0.32,
   "/models/male_tshirt.glb": -0.32,
   "/models/robe_cloth_for_iclone_and_character_creator.glb": -0.32,
 };
 const DEFAULT_OFFSET_Y = -0.08;
+
+/** Escala por modelo (Sketchfab suele usar unidades grandes; GLB propios suelen 1). */
+const MODEL_SCALE: Record<string, number> = {
+  "/models/tshirt/scene.gltf": 0.0008,
+};
+const DEFAULT_SCALE = 1;
 
 interface TShirtModelProps {
   modelPath: string;
@@ -24,6 +31,7 @@ interface TShirtModelProps {
 
 function TShirtModel({ modelPath, textureUrl, garmentColorHex }: TShirtModelProps) {
   const { scene } = useGLTF(modelPath);
+  const scale = MODEL_SCALE[modelPath] ?? DEFAULT_SCALE;
 
   useEffect(() => {
     const safeHex = garmentColorHex && /^#[0-9A-Fa-f]{6}$/.test(garmentColorHex) ? garmentColorHex : "#ffffff";
@@ -84,7 +92,7 @@ function TShirtModel({ modelPath, textureUrl, garmentColorHex }: TShirtModelProp
 
   return (
     <Center>
-      <primitive object={scene} scale={1} />
+      <primitive object={scene} scale={scale} />
     </Center>
   );
 }
