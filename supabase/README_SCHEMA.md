@@ -9,13 +9,20 @@ Complete reference: tables, relations, triggers, functions, RLS, storage.
 | Table | Columns | Description |
 |-------|---------|-------------|
 | **base_models** | id, path (UNIQUE), name, created_at | Whitelist of 3D model paths |
-| **profiles** | id (PK, FK → auth.users), name, created_at, updated_at | User profiles (id = auth.uid()) |
-| **products** | id, slug (UNIQUE), name, description, price_cents, model_path (FK → base_models.path), cover_image_url, default_design_id (FK → designs), base_texture_id (FK → textures), created_at, updated_at | Catalog products |
-| **textures** | id, source ('buxxep'\|'user'), url, product_id (FK → products), uploaded_by_user_id (FK → profiles), created_at | Base textures |
-| **designs** | id, name, user_id (FK → profiles), source ('buxxep'\|'user'), model_path (FK → base_models), product_id (FK → products), garment_color_hex, base_texture_id (FK → textures), canvas_elements (JSONB), export_version, rendered_texture_url, created_at, updated_at | Saved designs; exportable as JSON/image |
+| **profiles** | id (PK, FK → auth.users), name, avatar_url, phone, created_at, updated_at | User profiles (id = auth.uid()) |
+| **products** | id, slug (UNIQUE), name, description, price_cents, model_path (FK → base_models.path), cover_image_url, default_design_id, base_texture_id, published, sort_order, category_id (FK → categories), created_at, updated_at | Catalog products |
+| **textures** | id, source ('buxxep'\|'user'), url, name, mime_type, product_id (FK → products), uploaded_by_user_id (FK → profiles), created_at | Base textures |
+| **designs** | id, name, slug, description, cover_image_url, gallery (JSONB), user_id (FK → profiles), source, model_path (FK → base_models), product_id (FK → products), garment_color_hex, base_texture_id (FK → textures), canvas_elements (JSONB), export_version, rendered_texture_url, created_at, updated_at | Saved designs; exportable as JSON/image |
 | **cart_items** | id, user_id (FK → profiles), session_id, product_id (FK → products), design_id (FK → designs), quantity, created_at, updated_at | Cart lines (user or anonymous) |
-| **orders** | id, user_id (FK → profiles), session_id, status, shipping_*, total_cents, created_at, updated_at | Order header |
+| **orders** | id, user_id, session_id, status, shipping_name/address/email/phone/city/postal_code/country, payment_id, notes, total_cents, created_at, updated_at | Order header |
 | **order_items** | id, order_id (FK → orders), product_id (FK → products), design_id (FK → designs), quantity, unit_price_cents, texture_url, created_at | Order lines |
+| **lineas** | id, slug (UNIQUE), name, description, cover_image_url, gallery (JSONB), published, sort_order, created_at, updated_at | Product lines / collections |
+| **product_lineas** | id, product_id (FK → products), linea_id (FK → lineas), sort_order, created_at | Junction: products ↔ lineas |
+| **categories** | id, slug (UNIQUE), name, parent_id (FK → categories), sort_order, created_at, updated_at | Product categories (tree) |
+| **addresses** | id, user_id (FK → profiles), label, full_name, address_line1/2, city, postal_code, country_code, phone, is_default, created_at, updated_at | User shipping addresses |
+| **order_status_history** | id, order_id (FK → orders), status, note, created_at | Audit log of order status changes |
+
+*Added in 00003:* profiles (avatar_url, phone); products (published, sort_order, category_id); designs (slug, description, cover_image_url, gallery); orders (shipping_phone/city/postal_code/country, payment_id, notes); textures (name, mime_type).
 
 ---
 
@@ -57,7 +64,21 @@ designs
     └── order_items.design_id
 
 orders
-    └── order_items.order_id
+    ├── order_items.order_id
+    └── order_status_history.order_id
+
+lineas
+    └── product_lineas.linea_id
+
+products
+    ├── product_lineas.product_id
+    └── products.category_id (FK → categories)
+
+categories
+    └── categories.parent_id (self)
+
+profiles
+    └── addresses.user_id
 ```
 
 ---
@@ -88,9 +109,10 @@ orders
 
 | Trigger | Table | When | Action |
 |---------|--------|------|--------|
-| set_*_updated_at | profiles, products, designs, cart_items, orders | BEFORE UPDATE | Set updated_at = now() |
+| set_*_updated_at | profiles, products, designs, cart_items, orders, lineas, categories, addresses | BEFORE UPDATE | Set updated_at = now() |
 | on_auth_user_created | auth.users | AFTER INSERT | Insert row into profiles (id, name from meta) |
 | after_order_items_change | order_items | AFTER INSERT/UPDATE/DELETE | Recompute orders.total_cents for affected order |
+| after_orders_status_change | orders | AFTER UPDATE OF status | Insert row into order_status_history |
 
 ---
 
@@ -104,6 +126,7 @@ orders
 | **trigger_recompute_order_total()** | Trigger function for order_items; calls recompute_order_total. |
 | **migrate_cart_session_to_user(p_session_id, p_user_id)** | Moves cart_items from session_id to user_id (call after login). Returns number of rows updated. |
 | **validate_model_path(p_path text)** | Returns true if path exists in base_models. |
+| **record_order_status_change()** | Trigger: append order_status_history when orders.status changes. |
 
 ---
 
@@ -121,6 +144,11 @@ All tables have RLS enabled.
 | cart_items | SELECT/INSERT/UPDATE/DELETE own (user_id = auth.uid() or session_id set) |
 | orders | SELECT/UPDATE own; INSERT allowed |
 | order_items | SELECT via order ownership; INSERT allowed |
+| lineas | SELECT all |
+| product_lineas | SELECT all |
+| categories | SELECT all |
+| addresses | SELECT/INSERT/UPDATE/DELETE own (user_id = auth.uid()) |
+| order_status_history | SELECT via order ownership |
 
 Note: Anonymous cart by `session_id` is allowed; for strict per-session isolation you may need to filter by session in app (e.g. pass session_id and filter in API).
 
@@ -149,5 +177,6 @@ Store URLs in `textures.url`, `designs.rendered_texture_url`, `order_items.textu
 1. `00001_buxxep_full_schema.sql` — tables, FKs, indexes, triggers, functions, RLS, seed base_models, grants.
 2. Create buckets **textures** and **rendered** in Supabase Dashboard (Storage).
 3. `00002_storage_buckets_and_policies.sql` — RLS policies on `storage.objects`.
+4. `00003_add_tables_relations_and_columns.sql` — ALTER existing tables (new columns), new tables: lineas, product_lineas, categories, addresses, order_status_history; triggers and RLS.
 
 Apply with Supabase CLI: `supabase db push` or run each file in SQL Editor.
