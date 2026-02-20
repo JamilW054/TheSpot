@@ -68,7 +68,7 @@ export function AppShell({
           onLogout={onLogout}
           onMenuClick={() => setSidebarOpen(true)}
         />
-        <main className="flex-1 p-4 sm:p-6">{children}</main>
+        <main className={`flex-1 p-4 sm:p-6 ${isEditor ? "scrollbar-hide overflow-hidden" : ""}`}>{children}</main>
       </div>
     </div>
   );

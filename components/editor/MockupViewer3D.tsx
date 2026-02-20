@@ -110,6 +110,34 @@ class ViewerErrorBoundary extends Component<
 }
 
 /**
+ * Información de la malla del modelo (polígonos/triángulos y vértices).
+ * Útil para mostrar al usuario que las herramientas del sidebar se aplican a este modelo.
+ */
+export interface ModelMeshInfo {
+  vertexCount: number;
+  faceCount: number;
+}
+
+/**
+ * Recorre la escena y cuenta vértices y caras (triángulos) de todos los Mesh.
+ */
+function readMeshInfoFromScene(scene: Object3D): ModelMeshInfo {
+  let vertexCount = 0;
+  let faceCount = 0;
+  scene.traverse((child) => {
+    if (child.type !== "Mesh") return;
+    const mesh = child as Mesh;
+    const geo = mesh.geometry;
+    if (!geo) return;
+    const pos = geo.attributes?.position;
+    if (pos) vertexCount += pos.count;
+    if (geo.index) faceCount += Math.floor(geo.index.count / 3);
+    else if (pos) faceCount += Math.floor(pos.count / 3);
+  });
+  return { vertexCount, faceCount };
+}
+
+/**
  * Lee geometry.attributes.uv del modelo y calcula el bounding box en espacio UV.
  * Three.js: cada vértice tiene (u,v) en [0,1] que apunta a un píxel en la textura.
  * Usamos esos bounds para dibujar el diseño en la zona correcta de la textura.
@@ -164,6 +192,21 @@ function UVBoundsReader({
   return null;
 }
 
+function MeshInfoReader({
+  modelPath,
+  onMeshInfo,
+}: {
+  modelPath: string;
+  onMeshInfo: (info: ModelMeshInfo) => void;
+}) {
+  const { scene } = useGLTF(modelPath);
+  useEffect(() => {
+    const info = readMeshInfoFromScene(scene);
+    if (info.vertexCount > 0 || info.faceCount > 0) onMeshInfo(info);
+  }, [scene, onMeshInfo]);
+  return null;
+}
+
 export const ROTATION_STEP_3D = 15;
 export const ZOOM_STEP_3D = 0.25;
 export const MIN_ZOOM_3D = 0.005;
@@ -180,6 +223,8 @@ export interface MockupViewer3DProps {
   garmentColorHex?: string;
   /** Llamado cuando el modelo carga: bounds UV leídos de geometry.attributes.uv */
   onUVBoundsDetected?: (bounds: DesignZoneUV) => void;
+  /** Llamado cuando el modelo carga: conteo de vértices y polígonos (para UI) */
+  onMeshInfoDetected?: (info: ModelMeshInfo) => void;
 }
 
 export function MockupViewer3D({
@@ -190,6 +235,7 @@ export function MockupViewer3D({
   zoom = 1,
   garmentColorHex,
   onUVBoundsDetected,
+  onMeshInfoDetected,
 }: MockupViewer3DProps) {
   const rotationNorm = ((rotation % 360) + 360) % 360;
   const offsetY = MODEL_OFFSET_Y[modelPath] ?? DEFAULT_OFFSET_Y;
@@ -210,7 +256,7 @@ export function MockupViewer3D({
       >
       <div className="relative size-full min-h-0 flex-1 overflow-hidden">
         <Canvas
-          camera={{ position: [0, 0, 2.5], fov: 50 }}
+          camera={{ position: [0, offsetY, 2.5], fov: 50 }}
           gl={{ antialias: true, alpha: true }}
           className="!h-full !w-full"
         >
@@ -228,6 +274,9 @@ export function MockupViewer3D({
             {onUVBoundsDetected && (
               <UVBoundsReader modelPath={modelPath} onBounds={onUVBoundsDetected} />
             )}
+            {onMeshInfoDetected && (
+              <MeshInfoReader modelPath={modelPath} onMeshInfo={onMeshInfoDetected} />
+            )}
             <group
               position={[0, offsetY, 0]}
               rotation={[0, (rotationNorm * Math.PI) / 180, 0]}
@@ -241,11 +290,12 @@ export function MockupViewer3D({
             </group>
           </Suspense>
           <OrbitControls
+            target={[0, offsetY, 0]}
             enablePan={true}
             enableZoom={true}
             enableRotate={true}
-            minDistance={0.8}
-            maxDistance={20}
+            minDistance={0.4}
+            maxDistance={8}
           />
         </Canvas>
       </div>

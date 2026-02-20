@@ -42,8 +42,8 @@ export function GeometryNodesPanel({ modelPath }: GeometryNodesPanelProps) {
 
   if (!modelPath) {
     return (
-      <div className="rounded-xl border border-border bg-muted/20 p-4 text-center text-sm text-muted-foreground">
-        Selecciona una prenda en la pestaña Diseño para ver los nodos del modelo GLTF.
+      <div className="rounded-xl border border-border bg-muted/20 p-6 text-center text-sm text-muted-foreground">
+        Selecciona una prenda en Prendas para ver los nodos de geometría del modelo GLTF aquí.
       </div>
     );
   }
@@ -65,13 +65,13 @@ export function GeometryNodesPanel({ modelPath }: GeometryNodesPanelProps) {
   }
 
   return (
-    <div className="flex flex-col gap-2">
-      <p className="text-xs text-muted-foreground">
+    <div className="flex min-h-0 flex-1 flex-col gap-2">
+      <p className="shrink-0 text-xs text-muted-foreground">
         JSON del modelo (escenas, nodos, mallas, materiales). Editable para inspección; los cambios no se aplican al
         modelo en tiempo real.
       </p>
       <textarea
-        className="min-h-[320px] w-full resize-y rounded-lg border border-border bg-background p-3 font-mono text-xs text-foreground"
+        className="min-h-[320px] flex-1 w-full resize-y rounded-lg border border-border bg-background p-3 font-mono text-xs text-foreground"
         value={json ?? ""}
         onChange={(e) => setJson(e.target.value)}
         spellCheck={false}

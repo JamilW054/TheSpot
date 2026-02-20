@@ -28,7 +28,7 @@ export default async function EditorPage({ searchParams }: EditorPageProps) {
   const initialMockupModelPath = catalogProduct?.modelPath ?? null;
 
   return (
-    <div className="-m-4 flex h-[calc(100vh-3.5rem)] flex-col sm:-m-6">
+    <div className="scrollbar-hide -m-4 flex h-[calc(100vh-3.5rem)] flex-col overflow-hidden sm:-m-6">
       <EditorLayout
         key={`${designId ?? "new"}-${copyId ?? ""}-${productId ?? ""}`}
         initialElements={initialElements}

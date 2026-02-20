@@ -160,3 +160,21 @@ input[type="range"].editor-range::-moz-range-thumb {
 .color-picker-popover {
   animation: color-picker-in 0.2s ease-out forwards;
 }
+
+/* Oculta la barra de desplazamiento pero mantiene el scroll (rueda, touch) */
+.scrollbar-hide {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Panel derecho del editor: sin barra de desplazamiento visible */
+.editor-panel {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.editor-panel::-webkit-scrollbar {
+  display: none;
+}

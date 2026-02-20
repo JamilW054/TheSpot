@@ -91,7 +91,7 @@ export function EditorSidebar({ onAddImageFromFile }: EditorSidebarProps) {
           </>
         ) : null}
         <p className="text-xs text-muted-foreground">
-          Arrastra una herramienta al canvas para añadir elementos.
+          Arrastra una herramienta al canvas. Todo se aplica al modelo 3D.
         </p>
       </div>
     </aside>

@@ -1,15 +1,47 @@
 "use client";
 
-import type { CanvasElement } from "@/types";
+import { useEffect, useRef } from "react";
+import type { CanvasElement, ShapeKind } from "@/types";
 
 export type CanvasElementPatch = Partial<
-  Pick<CanvasElement, "x" | "y" | "width" | "height" | "content" | "visible" | "pathData" | "strokeColor" | "strokeWidth" | "brushStyle" | "brushTexture">
+  Pick<
+    CanvasElement,
+    | "x"
+    | "y"
+    | "width"
+    | "height"
+    | "content"
+    | "visible"
+    | "locked"
+    | "groupId"
+    | "pathData"
+    | "strokeColor"
+    | "strokeWidth"
+    | "brushStyle"
+    | "brushTexture"
+    | "shapeKind"
+    | "fillColor"
+    | "shapeStrokeColor"
+    | "shapeStrokeWidth"
+    | "opacity"
+    | "borderRadius"
+    | "boxShadow"
+    | "fontSize"
+    | "fontFamily"
+    | "textColor"
+    | "letterSpacing"
+    | "lineHeight"
+    | "textAlign"
+  >
 >;
 
 export interface PropertiesPanelProps {
   elements: CanvasElement[];
   selectedId: string | null;
   onUpdateElement: (id: string, partial: CanvasElementPatch) => void;
+  /** Tras insertar texto, llevar foco al textarea de contenido */
+  focusTextId?: string;
+  onFocusTextDone?: () => void;
 }
 
 function clampNum(value: number, min: number, max: number): number {
@@ -20,10 +52,26 @@ export function PropertiesPanel({
   elements,
   selectedId,
   onUpdateElement,
+  focusTextId,
+  onFocusTextDone,
 }: PropertiesPanelProps) {
+  const textContentRef = useRef<HTMLTextAreaElement>(null);
   const element = selectedId
     ? elements.find((el) => el.id === selectedId)
     : null;
+
+  // Llevar scroll y foco al texto cuando se acaba de insertar (pendingFocusTextId)
+  useEffect(() => {
+    if (!focusTextId || !selectedId || focusTextId !== selectedId || element?.type !== "text") return;
+    const ta = textContentRef.current;
+    if (!ta) return;
+    const t = setTimeout(() => {
+      ta.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      ta.focus();
+      onFocusTextDone?.();
+    }, 100);
+    return () => clearTimeout(t);
+  }, [focusTextId, selectedId, element?.type, onFocusTextDone]);
 
   if (!selectedId || !element) {
     return (
@@ -35,6 +83,13 @@ export function PropertiesPanel({
 
   const STEP_POS = 1;
   const STEP_SIZE = 10;
+  const SHAPE_KINDS: { value: ShapeKind; label: string }[] = [
+    { value: "rect", label: "Rectángulo" },
+    { value: "circle", label: "Círculo" },
+    { value: "triangle", label: "Triángulo" },
+    { value: "star", label: "Estrella" },
+  ];
+  const FONT_FAMILIES = ["Inter", "system-ui", "Georgia", "serif", "monospace"];
 
   const handleX = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = Number(e.target.value);
@@ -81,7 +136,7 @@ export function PropertiesPanel({
   return (
     <div className="mt-2 space-y-3 text-sm">
       <div className="grid grid-cols-[auto_1fr] gap-x-2 gap-y-1 items-center">
-        <label htmlFor="prop-x" className="text-muted-foreground">
+        <label htmlFor="prop-x" className="text-muted-foreground" title="Flechas: 1px. Mayús+Flechas: 8px (cuadrícula)">
           Posición X (px)
         </label>
         <div className="flex gap-1 items-center">
@@ -111,7 +166,7 @@ export function PropertiesPanel({
             +
           </button>
         </div>
-        <label htmlFor="prop-y" className="text-muted-foreground">
+        <label htmlFor="prop-y" className="text-muted-foreground" title="Flechas: 1px. Mayús+Flechas: 8px (cuadrícula)">
           Posición Y (px)
         </label>
         <div className="flex gap-1 items-center">
@@ -202,19 +257,161 @@ export function PropertiesPanel({
           </button>
         </div>
       </div>
+      <div className="pt-2 border-t border-border">
+        <label className="text-muted-foreground flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={element.locked === true}
+            onChange={(e) => onUpdateElement(element.id, { locked: e.target.checked })}
+            className="rounded border-border"
+          />
+          Bloquear elemento
+        </label>
+      </div>
+      {element.type === "shape" && (
+        <div className="space-y-2 pt-2 border-t border-border">
+          <label className="text-muted-foreground block text-xs">Forma</label>
+          <select
+            value={element.shapeKind ?? "rect"}
+            onChange={(e) => onUpdateElement(element.id, { shapeKind: e.target.value as ShapeKind })}
+            className={inputCn}
+          >
+            {SHAPE_KINDS.map((k) => (
+              <option key={k.value} value={k.value}>{k.label}</option>
+            ))}
+          </select>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="text-muted-foreground block text-xs">Relleno</label>
+              <input
+                type="color"
+                value={element.fillColor ?? "#6366f1"}
+                onChange={(e) => onUpdateElement(element.id, { fillColor: e.target.value })}
+                className="h-8 w-full rounded border border-border cursor-pointer"
+              />
+            </div>
+            <div>
+              <label className="text-muted-foreground block text-xs">Borde</label>
+              <input
+                type="color"
+                value={element.shapeStrokeColor ?? "#4f46e5"}
+                onChange={(e) => onUpdateElement(element.id, { shapeStrokeColor: e.target.value })}
+                className="h-8 w-full rounded border border-border cursor-pointer"
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <label className="text-muted-foreground text-xs">Grosor borde</label>
+            <input
+              type="number"
+              min={0}
+              max={20}
+              value={element.shapeStrokeWidth ?? 2}
+              onChange={(e) => onUpdateElement(element.id, { shapeStrokeWidth: Math.max(0, Math.min(20, Number(e.target.value) || 0)) })}
+              className={inputCn}
+            />
+            <label className="text-muted-foreground text-xs">Opacidad</label>
+            <input
+              type="number"
+              min={0}
+              max={1}
+              step={0.1}
+              value={element.opacity ?? 1}
+              onChange={(e) => onUpdateElement(element.id, { opacity: Math.max(0, Math.min(1, Number(e.target.value) || 1)) })}
+              className={inputCn}
+            />
+          </div>
+          {(element.shapeKind ?? "rect") === "rect" && (
+            <>
+              <label className="text-muted-foreground text-xs">Esquinas redondeadas (px)</label>
+              <input
+                type="number"
+                min={0}
+                value={element.borderRadius ?? 0}
+                onChange={(e) => onUpdateElement(element.id, { borderRadius: Math.max(0, Number(e.target.value) || 0) })}
+                className={inputCn}
+              />
+            </>
+          )}
+        </div>
+      )}
       {element.type === "text" && (
-        <div className="space-y-1">
+        <div className="space-y-2 pt-2 border-t border-border">
           <label htmlFor="prop-content" className="text-muted-foreground block">
-            Texto
+            Editar texto
           </label>
           <textarea
+            ref={textContentRef}
             id="prop-content"
             rows={3}
             value={element.content ?? ""}
             onChange={handleContent}
-            placeholder="Texto"
+            placeholder="Escribe tu texto aquí"
             className="rounded border border-border bg-background px-2 py-1 text-foreground w-full resize-y min-h-16"
+            aria-label="Editar texto del elemento"
           />
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="text-muted-foreground text-xs">Tamaño (px)</label>
+              <input
+                type="number"
+                min={8}
+                max={120}
+                value={element.fontSize ?? 14}
+                onChange={(e) => onUpdateElement(element.id, { fontSize: Math.max(8, Math.min(120, Number(e.target.value) || 14)) })}
+                className={inputCn}
+              />
+            </div>
+            <div>
+              <label className="text-muted-foreground text-xs">Color</label>
+              <input
+                type="color"
+                value={element.textColor ?? "#111111"}
+                onChange={(e) => onUpdateElement(element.id, { textColor: e.target.value })}
+                className="h-8 w-full rounded border border-border cursor-pointer"
+              />
+            </div>
+          </div>
+          <label className="text-muted-foreground text-xs">Fuente</label>
+          <select
+            value={element.fontFamily ?? "inherit"}
+            onChange={(e) => onUpdateElement(element.id, { fontFamily: e.target.value })}
+            className={inputCn}
+          >
+            <option value="inherit">Por defecto</option>
+            {FONT_FAMILIES.map((f) => (
+              <option key={f} value={f}>{f}</option>
+            ))}
+          </select>
+          <div className="grid grid-cols-2 gap-2">
+            <label className="text-muted-foreground text-xs">Espaciado letras</label>
+            <input
+              type="number"
+              value={element.letterSpacing ?? 0}
+              onChange={(e) => onUpdateElement(element.id, { letterSpacing: Number(e.target.value) || 0 })}
+              className={inputCn}
+            />
+            <label className="text-muted-foreground text-xs">Interlineado</label>
+            <input
+              type="number"
+              min={0.5}
+              max={3}
+              step={0.1}
+              value={element.lineHeight ?? 1.2}
+              onChange={(e) => onUpdateElement(element.id, { lineHeight: Math.max(0.5, Math.min(3, Number(e.target.value) || 1.2)) })}
+              className={inputCn}
+            />
+          </div>
+          <label className="text-muted-foreground text-xs">Alineación</label>
+          <select
+            value={element.textAlign ?? "left"}
+            onChange={(e) => onUpdateElement(element.id, { textAlign: e.target.value as "left" | "center" | "right" })}
+            className={inputCn}
+          >
+            <option value="left">Izquierda</option>
+            <option value="center">Centro</option>
+            <option value="right">Derecha</option>
+          </select>
         </div>
       )}
       {element.type === "path" && (

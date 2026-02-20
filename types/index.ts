@@ -32,6 +32,9 @@ export type { Pedido, PedidoEstado } from "./pedido";
 
 export type CanvasElementType = "image" | "text" | "shape" | "path";
 
+/** Tipo de forma para type "shape". */
+export type ShapeKind = "rect" | "circle" | "triangle" | "star" | "polygon";
+
 /** Puntos de un trazo de pincel en coordenadas lógicas del canvas (ej. [[x,y],[x,y],...]). */
 export type PathPoint = [number, number];
 
@@ -45,6 +48,10 @@ export interface CanvasElement {
   content?: string;
   /** Default true when undefined. When false, element is not drawn on canvas. */
   visible?: boolean;
+  /** Bloqueado: no se puede mover ni editar por arrastre. */
+  locked?: boolean;
+  /** Agrupación: mismo groupId = mismo grupo. */
+  groupId?: string;
   /** Solo para type "path": array de [x,y] en coords lógicas (JSON string). */
   pathData?: string;
   /** Solo para type "path": color del trazo (hex). */
@@ -55,6 +62,32 @@ export interface CanvasElement {
   brushStyle?: "round" | "square" | "marker";
   /** Solo para type "path": URL de imagen como textura del trazo (opcional). */
   brushTexture?: string;
+  /** Solo para type "shape": rect | circle | triangle | star | polygon. */
+  shapeKind?: ShapeKind;
+  /** Solo para type "shape": color de relleno (hex). */
+  fillColor?: string;
+  /** Solo para type "shape": color de borde (hex). Default si no se define. */
+  shapeStrokeColor?: string;
+  /** Solo para type "shape": grosor de borde en px. */
+  shapeStrokeWidth?: number;
+  /** Opacidad 0-1. Aplica a shape y text. */
+  opacity?: number;
+  /** Solo para type "shape": radio de esquinas en px (rect). */
+  borderRadius?: number;
+  /** Solo para type "shape": sombra CSS (ej. "0 2px 8px rgba(0,0,0,0.15)"). */
+  boxShadow?: string;
+  /** Solo para type "text": tamaño en px. */
+  fontSize?: number;
+  /** Solo para type "text": familia de fuente. */
+  fontFamily?: string;
+  /** Solo para type "text": color del texto (hex). */
+  textColor?: string;
+  /** Solo para type "text": espaciado entre letras (px). */
+  letterSpacing?: number;
+  /** Solo para type "text": interlineado (múltiplo, ej. 1.5). */
+  lineHeight?: number;
+  /** Solo para type "text": left | center | right. */
+  textAlign?: "left" | "center" | "right";
 }
 
 export type MockupCategory = "2d" | "3d";
