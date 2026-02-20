@@ -1,4 +1,5 @@
 import type { CanvasElement, Design, Linea, Mockup, Pedido } from "@/types";
+import type { CatalogProduct } from "@/types";
 import { buildSlug } from "@/lib/slug";
 
 const placeholder = (w: number, h: number, seed: string) =>
@@ -127,6 +128,20 @@ export const MOCK_MOCKUPS: Mockup[] = [
   { id: "mock-3d-robe", name: "Bata", category: "3d", modelPath: "/models/robe_cloth_for_iclone_and_character_creator.glb" },
   { id: "mock-3d-poloche", name: "Poloche mujer", category: "3d", modelPath: "/models/soft_brushed_long_sleeve_shirt.glb" },
 ];
+
+// --- CATÁLOGO PÚBLICO: ropa a la venta, personalizable en el editor ---
+const catalogProductRows: Omit<CatalogProduct, "slug">[] = [
+  { id: "p01", name: "Camiseta personalizable", description: "Camiseta de algodón con diseño único. Elige tu talla y personaliza el estampado en el editor 3D.", price: "24,99 €", priceCents: 2499, modelPath: "/models/tshirt/scene.gltf", coverImage: unsplash("1521572163474-6864f9cf17ab", 600, 600), defaultDesignId: "d01" },
+  { id: "p02", name: "Camiseta hombre", description: "Corte clásico para hombre. Añade texto, imágenes o dibujos con el pincel en la zona de diseño.", price: "26,99 €", priceCents: 2699, modelPath: "/models/male_tshirt.glb", coverImage: unsplash("1586790170083-2f9ceadc732d", 600, 600), defaultDesignId: "d01" },
+  { id: "p03", name: "Hoodie", description: "Sudadera con capucha. Personalízala con el editor: diseña desde cero o usa una plantilla.", price: "44,99 €", priceCents: 4499, modelPath: "/models/hoodie.glb", coverImage: unsplash("1556821840-3a63f95609a7", 600, 600), defaultDesignId: "d02" },
+  { id: "p04", name: "Bata", description: "Bata cómoda para casa. Ideal para regalo personalizado.", price: "34,99 €", priceCents: 3499, modelPath: "/models/robe_cloth_for_iclone_and_character_creator.glb", coverImage: unsplash("1615397587950-3cbb55f95b77", 600, 600) },
+  { id: "p05", name: "Poloche mujer", description: "Manga larga y tejido suave. Diseña tu propio estampado en el editor.", price: "32,99 €", priceCents: 3299, modelPath: "/models/soft_brushed_long_sleeve_shirt.glb", coverImage: unsplash("1745695894760-600be9c8c307", 600, 600), defaultDesignId: "d03" },
+];
+
+export const MOCK_CATALOG_PRODUCTS: CatalogProduct[] = catalogProductRows.map((p) => ({
+  ...p,
+  slug: buildSlug(p.name, p.id),
+}));
 
 // --- MOCK_PEDIDOS (18 items) ---
 const clientes = [

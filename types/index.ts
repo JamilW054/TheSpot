@@ -69,6 +69,32 @@ export interface Mockup {
   modelPath?: string;
 }
 
+/** Producto del catálogo público: ropa a la venta que se puede personalizar en el editor. */
+export interface CatalogProduct {
+  id: string;
+  slug: string;
+  name: string;
+  description: string;
+  /** Precio en euros (string para mostrar). */
+  price: string;
+  /** Precio en céntimos para cálculos (total carrito, etc.). */
+  priceCents: number;
+  /** Ruta del modelo 3D (mismo que mockup). */
+  modelPath: string;
+  /** Imagen de portada para la ficha y el listado. */
+  coverImage: string;
+  /** IDs de diseño plantilla para "Personalizar con plantilla". Al editar se crea una copia local. */
+  defaultDesignId?: string;
+}
+
+/** Línea del carrito: producto + cantidad; opcionalmente diseño personalizado. */
+export interface CartItem {
+  productId: string;
+  quantity: number;
+  /** Si viene del editor, id del diseño personalizado (opcional). */
+  designId?: string | null;
+}
+
 // Re-export domain-specific types
 export type {
   FilterEstado,

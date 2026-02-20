@@ -102,10 +102,10 @@ export default function PublicPage() {
           </h1>
           <div className="flex flex-wrap items-center justify-center gap-3">
             <Link
-              href="#comprar"
+              href="/catalogo"
               className="inline-flex items-center justify-center font-medium h-12 px-6 text-lg rounded-full border-2 border-border bg-transparent hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background transition-opacity"
             >
-              Comprar en Buxxep
+              Ver catálogo
             </Link>
             <Link
               href="/editor"

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Button } from "@/components/ui";
+import { CartNavLink } from "./CartNavLink";
 
 export function PublicNavbar() {
   return (
@@ -16,7 +17,14 @@ export function PublicNavbar() {
             Buxxep
           </Link>
 
-          <div className="flex flex-1 items-center justify-end gap-3 sm:gap-4">
+          <div className="flex flex-1 items-center justify-end gap-1 sm:gap-2">
+            <CartNavLink />
+            <Link
+              href="/catalogo"
+              className="text-sm font-medium text-muted-foreground hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-md"
+            >
+              Catálogo
+            </Link>
             <Link
               href="/registro"
               className="text-sm font-medium text-muted-foreground hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-md"

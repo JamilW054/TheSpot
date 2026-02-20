@@ -130,8 +130,10 @@ const DEFAULT_IMAGE_POS = { x: 50, y: 50 };
 export interface EditorLayoutProps {
   /** Initial canvas elements when editing an existing design (e.g. from ?design=id). */
   initialElements?: CanvasElement[];
-  /** Design id when editing; used for future save. */
+  /** Design id when editing; used for future save. null when ?copy= (local copy). */
   designId?: string | null;
+  /** When coming from catalog ?product=id, preselect this garment (modelPath). */
+  initialMockupModelPath?: string | null;
 }
 
 const ZOOM_MIN = 0.005;
@@ -141,10 +143,12 @@ const ZOOM_STEP = 0.1;
 export function EditorLayout({
   initialElements = [],
   designId = null,
+  initialMockupModelPath = null,
 }: EditorLayoutProps) {
   const [elements, setElements] = useState<CanvasElement[]>(initialElements);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [selected3DMockup, setSelected3DMockupState] = useState<{ modelPath: string } | null>(() => {
+    if (initialMockupModelPath) return { modelPath: initialMockupModelPath };
     const first = MOCK_MOCKUPS[0];
     return first?.modelPath ? { modelPath: first.modelPath } : null;
   });
