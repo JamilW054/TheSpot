@@ -19,6 +19,7 @@ import {
   CANVAS_DROPPABLE_ID,
   CANVAS_DROPPABLE_ID_2D,
   EditorCanvasArea,
+  type CenterViewMode,
   LOGICAL_HEIGHT,
   LOGICAL_WIDTH,
 } from "./EditorCanvasArea";
@@ -31,7 +32,7 @@ const DEFAULT_TEXT_ELEMENT = {
   width: 120,
   height: 40,
   type: "text" as const,
-  content: "Nuevo texto",
+  content: "Texto",
 };
 
 const DEFAULT_IMAGE_ELEMENT = {
@@ -40,11 +41,24 @@ const DEFAULT_IMAGE_ELEMENT = {
   type: "image" as const,
 };
 
+const GRID_SIZE = 8;
+const KEYBOARD_STEP = 1;
+const KEYBOARD_STEP_LARGE = GRID_SIZE;
+
+function snapToGrid(value: number, grid: number): number {
+  return Math.round(value / grid) * grid;
+}
+
 const DEFAULT_SHAPE_ELEMENT = {
   width: 100,
   height: 80,
   type: "shape" as const,
-  content: "rect" as const,
+  shapeKind: "rect" as const,
+  fillColor: "#6366f1",
+  shapeStrokeColor: "#4f46e5",
+  shapeStrokeWidth: 2,
+  opacity: 1,
+  borderRadius: 0,
 };
 
 function createTextElement(x: number, y: number): CanvasElement {
@@ -66,10 +80,11 @@ function createImageElement(x: number, y: number, content?: string): CanvasEleme
   };
 }
 
-function createShapeElement(x: number, y: number): CanvasElement {
+function createShapeElement(x: number, y: number, shapeKind?: CanvasElement["shapeKind"]): CanvasElement {
   return {
     id: crypto.randomUUID(),
     ...DEFAULT_SHAPE_ELEMENT,
+    ...(shapeKind && { shapeKind }),
     x,
     y,
   };
@@ -160,9 +175,12 @@ export function EditorLayout({
   const [garmentColor, setGarmentColor] = useState("#ffffff");
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
   const [activeTool, setActiveTool] = useState<string>("move");
+  const [centerViewMode, setCenterViewMode] = useState<CenterViewMode>("3d");
   const [rightPanelTab, setRightPanelTab] = useState<"design" | "nodes">("design");
+  const [pendingFocusTextId, setPendingFocusTextId] = useState<string | null>(null);
   const [designTextureUrl, setDesignTextureUrl] = useState<string | null>(null);
   const [modelUVBounds, setModelUVBounds] = useState<{ u0: number; v0: number; u1: number; v1: number } | null>(null);
+  const [modelMeshInfo, setModelMeshInfo] = useState<{ vertexCount: number; faceCount: number } | null>(null);
   const objectUrlsByElementId = useRef<Map<string, string>>(new Map());
   const historyPast = useRef<CanvasElement[][]>([]);
   const historyFuture = useRef<CanvasElement[][]>([]);
@@ -197,9 +215,10 @@ export function EditorLayout({
     setHistoryCanRedo(historyFuture.current.length > 0);
   }, [elements]);
 
-  // Al cambiar de modelo, limpiar bounds hasta que el nuevo GLB reporte los suyos
+  // Al cambiar de modelo, limpiar bounds y mesh info hasta que el nuevo GLB reporte
   useEffect(() => {
     setModelUVBounds(null);
+    setModelMeshInfo(null);
   }, [selected3DMockup?.modelPath]);
 
   const zoomPercent = useMemo(() => Math.round(zoom3d * 100), [zoom3d]);
@@ -283,11 +302,23 @@ export function EditorLayout({
     );
   }, [elements, pushHistory]);
 
-  const handleMoveLayer = useCallback((id: string, direction: "up" | "down") => {
+  const handleMoveLayer = useCallback((id: string, direction: "up" | "down" | "front" | "back") => {
     pushHistory(elements);
     setElements((prev) => {
       const i = prev.findIndex((el) => el.id === id);
       if (i === -1) return prev;
+      if (direction === "front") {
+        if (i === prev.length - 1) return prev;
+        const next = prev.filter((_, idx) => idx !== i);
+        next.push(prev[i]!);
+        return next;
+      }
+      if (direction === "back") {
+        if (i === 0) return prev;
+        const next = prev.filter((_, idx) => idx !== i);
+        next.unshift(prev[i]!);
+        return next;
+      }
       if (direction === "up" && i < prev.length - 1) {
         const next = [...prev];
         [next[i], next[i + 1]] = [next[i + 1]!, next[i]!];
@@ -322,15 +353,20 @@ export function EditorLayout({
     const py = translated.top - overRect.top;
     const w = overRect.width || 1;
     const h = overRect.height || 1;
-    const x = Math.round((px / w) * LOGICAL_WIDTH);
-    const y = Math.round((py / h) * LOGICAL_HEIGHT);
-    const xClamp = Math.max(0, Math.min(LOGICAL_WIDTH - 20, x));
-    const yClamp = Math.max(0, Math.min(LOGICAL_HEIGHT - 20, y));
+    const xRaw = (px / w) * LOGICAL_WIDTH;
+    const yRaw = (py / h) * LOGICAL_HEIGHT;
+    const xSnap = snapToGrid(xRaw, GRID_SIZE);
+    const ySnap = snapToGrid(yRaw, GRID_SIZE);
+    const xClamp = Math.max(0, Math.min(LOGICAL_WIDTH - 20, xSnap));
+    const yClamp = Math.max(0, Math.min(LOGICAL_HEIGHT - 20, ySnap));
 
     const isExistingElement = active.data.current?.kind === "element";
     const dragType = active.data.current?.type as CanvasElementType | undefined;
+    const shapeKind = active.data.current?.shapeKind as CanvasElement["shapeKind"] | undefined;
 
     if (isExistingElement && typeof active.id === "string") {
+      const el = elements.find((e) => e.id === active.id);
+      if (el?.locked) return;
       pushHistory(elements);
       setElements((prev) =>
         prev.map((el) =>
@@ -344,9 +380,13 @@ export function EditorLayout({
     if (dragType === "image") {
       setElements((prev) => [...prev, createImageElement(xClamp, yClamp)]);
     } else if (dragType === "shape") {
-      setElements((prev) => [...prev, createShapeElement(xClamp, yClamp)]);
+      setElements((prev) => [...prev, createShapeElement(xClamp, yClamp, shapeKind)]);
     } else if (dragType === "text") {
-      setElements((prev) => [...prev, createTextElement(xClamp, yClamp)]);
+      const newText = createTextElement(xClamp, yClamp);
+      setElements((prev) => [...prev, newText]);
+      setSelectedId(newText.id);
+      setRightPanelTab("design");
+      setPendingFocusTextId(newText.id);
     } else if (dragType === "path") {
       setElements((prev) => [
         ...prev,
@@ -368,6 +408,39 @@ export function EditorLayout({
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } })
   );
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (!selectedId) return;
+      const el = elements.find((elem) => elem.id === selectedId);
+      if (!el || el.locked) return;
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || (e.target as HTMLElement).isContentEditable) return;
+      const step = e.shiftKey ? KEYBOARD_STEP_LARGE : KEYBOARD_STEP;
+      let dx = 0;
+      let dy = 0;
+      if (e.key === "ArrowLeft") dx = -step;
+      if (e.key === "ArrowRight") dx = step;
+      if (e.key === "ArrowUp") dy = -step;
+      if (e.key === "ArrowDown") dy = step;
+      if (dx !== 0 || dy !== 0) {
+        e.preventDefault();
+        pushHistory(elements);
+        setElements((prev) =>
+          prev.map((elem) =>
+            elem.id === selectedId
+              ? {
+                  ...elem,
+                  x: Math.max(0, Math.min(LOGICAL_WIDTH - elem.width, elem.x + dx)),
+                  y: Math.max(0, Math.min(LOGICAL_HEIGHT - elem.height, elem.y + dy)),
+                }
+              : elem
+          )
+        );
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [selectedId, elements, pushHistory]);
 
   const canvasContainerRef = useRef<HTMLDivElement>(null);
   const projectName = designId ?? "proyecto";
@@ -420,6 +493,8 @@ export function EditorLayout({
             selectedId={selectedId}
             onSelectElement={setSelectedId}
             onClearSelection={() => setSelectedId(null)}
+            centerViewMode={centerViewMode}
+            onCenterViewModeChange={setCenterViewMode}
             show3DViewer={
               selected3DMockup
                 ? {
@@ -429,6 +504,9 @@ export function EditorLayout({
                     zoom: zoom3d,
                     garmentColorHex: garmentColor,
                     onUVBoundsDetected: setModelUVBounds,
+                    onMeshInfoDetected: setModelMeshInfo,
+                    onMaterialColorChange: setGarmentColor,
+                    onMaterialTextureChange: setTexture3dUrl,
                   }
                 : null
             }
@@ -445,6 +523,9 @@ export function EditorLayout({
           projectName={projectName}
           selected3DMockup={selected3DMockup}
           onSelect3DMockup={setSelected3DMockup}
+          centerViewMode={centerViewMode}
+          onCenterViewModeChange={setCenterViewMode}
+          modelMeshInfo={modelMeshInfo}
           texture3dUrl={texture3dUrl}
           onTexture3dChange={setTexture3dUrl}
           garmentColor={garmentColor}
@@ -459,6 +540,8 @@ export function EditorLayout({
           onPathStrokeComplete={handlePathStrokeComplete}
           rightPanelTab={rightPanelTab}
           onRightPanelTabChange={setRightPanelTab}
+          pendingFocusTextId={pendingFocusTextId}
+          onFocusTextDone={() => setPendingFocusTextId(null)}
           />
         </div>
       </div>

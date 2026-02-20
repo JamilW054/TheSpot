@@ -107,25 +107,77 @@ export async function renderElementsToTextureUrl(
 
     if (el.type === "text") {
       ctx.save();
-      const fontSize = Math.max(12, h * 0.5);
-      ctx.font = `${fontSize}px sans-serif`;
-      ctx.fillStyle = "#111111";
-      ctx.fillText(el.content ?? "Texto", x + 4, y + h / 2 + fontSize / 2);
+      const fontSize = el.fontSize ?? Math.max(12, h * 0.5);
+      const fontFamily = el.fontFamily ?? "sans-serif";
+      ctx.font = `${fontSize}px ${fontFamily}`;
+      ctx.fillStyle = el.textColor ?? "#111111";
+      ctx.globalAlpha = el.opacity ?? 1;
+      const text = el.content ?? "Texto";
+      const lineHeight = (el.lineHeight ?? 1.2) * fontSize;
+      const align = el.textAlign ?? "left";
+      ctx.textAlign = align;
+      ctx.textBaseline = "top";
+      const pad = 4;
+      let ty = y + pad;
+      const lines = text.split("\n");
+      for (const line of lines) {
+        const lx = align === "center" ? x + w / 2 : align === "right" ? x + w - pad : x + pad;
+        ctx.fillText(line, lx, ty);
+        ty += lineHeight;
+      }
       ctx.restore();
     } else if (el.type === "shape") {
       ctx.save();
-      ctx.fillStyle = "rgba(99, 102, 241, 0.35)";
-      ctx.strokeStyle = "rgb(99, 102, 241)";
-      ctx.lineWidth = 2;
-      if (el.content === "circle") {
+      const kind = el.shapeKind ?? (el.content === "circle" ? "circle" : "rect");
+      const fill = el.fillColor ?? "#6366f1";
+      const stroke = el.shapeStrokeColor ?? "#4f46e5";
+      const strokeW = el.shapeStrokeWidth ?? 2;
+      ctx.globalAlpha = el.opacity ?? 1;
+      ctx.fillStyle = fill;
+      ctx.strokeStyle = stroke;
+      ctx.lineWidth = strokeW;
+      const radius = el.borderRadius ?? 0;
+      if (kind === "circle") {
         const r = Math.min(w, h) / 2;
         ctx.beginPath();
         ctx.arc(x + w / 2, y + h / 2, r, 0, Math.PI * 2);
         ctx.fill();
         ctx.stroke();
+      } else if (kind === "triangle") {
+        ctx.beginPath();
+        ctx.moveTo(x + w / 2, y);
+        ctx.lineTo(x + w, y + h);
+        ctx.lineTo(x, y + h);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+      } else if (kind === "star") {
+        const cx = x + w / 2;
+        const cy = y + h / 2;
+        const r1 = Math.min(w, h) * 0.2;
+        const r2 = Math.min(w, h) * 0.45;
+        ctx.beginPath();
+        for (let i = 0; i < 10; i++) {
+          const r = i % 2 === 0 ? r2 : r1;
+          const a = (i * Math.PI) / 5 - Math.PI / 2;
+          const px = cx + r * Math.cos(a);
+          const py = cy + r * Math.sin(a);
+          if (i === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
       } else {
-        ctx.fillRect(x, y, w, h);
-        ctx.strokeRect(x, y, w, h);
+        if (radius > 0) {
+          ctx.beginPath();
+          ctx.roundRect(x, y, w, h, radius);
+          ctx.fill();
+          ctx.stroke();
+        } else {
+          ctx.fillRect(x, y, w, h);
+          ctx.strokeRect(x, y, w, h);
+        }
       }
       ctx.restore();
     } else if (el.type === "image" && el.content) {

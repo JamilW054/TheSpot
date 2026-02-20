@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { CanvasElement, Mockup, MockupCategory } from "@/types";
 import {
   MAX_ZOOM_3D,
@@ -46,6 +46,9 @@ export interface MockupPanelProps {
   onZoom3dChange?: (v: number) => void;
   getCanvasAsBlob?: () => Promise<Blob | null>;
   getEffectiveTextureBlob?: () => Promise<Blob | null>;
+  /** Vista central; al elegir "Nodos de geometría" en Prendas, se muestra en el centro */
+  centerViewMode?: "3d" | "nodes" | "geometry";
+  onCenterViewModeChange?: (mode: "3d" | "nodes" | "geometry") => void;
 }
 
 function ImagePlaceholderIcon({ className }: { className?: string }) {
@@ -97,12 +100,12 @@ function DesignZoneContent({
                 {el.content != null && el.content !== "" ? (
                   el.content
                 ) : (
-                  <span className="text-muted-foreground">Texto</span>
+                  <span className="text-muted-foreground">Escribe tu texto</span>
                 )}
               </span>
             ) : el.type === "shape" ? (
               <div
-                className={`h-full w-full border border-primary bg-primary/20 ${el.content === "circle" ? "rounded-full" : "rounded"}`}
+                className={`h-full w-full border border-primary bg-primary/20 ${(el.shapeKind ?? (el.content === "circle" ? "circle" : "rect")) === "circle" ? "rounded-full" : "rounded"}`}
               />
             ) : el.type === "image" ? (
               el.content ? (
@@ -145,6 +148,8 @@ export function MockupPanel({
   onZoom3dChange,
   getCanvasAsBlob,
   getEffectiveTextureBlob,
+  centerViewMode = "3d",
+  onCenterViewModeChange,
 }: MockupPanelProps) {
   const [selectedMockupId, setSelectedMockupId] = useState<string | null>(null);
   const [rotationY, setRotationY] = useState(0);
@@ -162,12 +167,28 @@ export function MockupPanel({
     setScale(1);
   };
 
-  const [filterCategory, setFilterCategory] = useState<MockupCategory | "all">("all");
+  /** all | geometry | 3d: geometry abre nodos de geometría en el centro */
+  const [filterCategory, setFilterCategory] = useState<MockupCategory | "all" | "geometry">("all");
 
   const filteredMockups = useMemo(() => {
-    if (filterCategory === "all") return mockups;
+    if (filterCategory === "geometry" || filterCategory === "all") return mockups;
     return mockups.filter((m) => m.category === filterCategory);
   }, [mockups, filterCategory]);
+
+  const handlePrendaTab = (key: "all" | "geometry" | "3d") => {
+    setFilterCategory(key);
+    onCenterViewModeChange?.(key === "geometry" ? "geometry" : "3d");
+  };
+
+  const isGeometryActive = centerViewMode === "geometry";
+  const isAllActive = !isGeometryActive && filterCategory === "all";
+  const is3dActive = !isGeometryActive && filterCategory === "3d";
+
+  useEffect(() => {
+    if (centerViewMode !== "geometry" && filterCategory === "geometry") {
+      setFilterCategory("all");
+    }
+  }, [centerViewMode]);
 
   if (mockups.length === 0) {
     return (
@@ -182,22 +203,35 @@ export function MockupPanel({
       <div
         className="flex rounded-lg bg-muted/40 p-0.5"
         role="group"
-        aria-label="Filtrar por tipo"
+        aria-label="Filtrar por tipo y vista"
       >
-        {(["all", "2d", "3d"] as const).map((key) => (
-          <button
-            key={key}
-            type="button"
-            onClick={() => setFilterCategory(key)}
-            className={`flex-1 rounded-md px-2.5 py-1.5 text-xs font-medium transition-all duration-150 ${
-              filterCategory === key
-                ? "bg-background text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {key === "all" ? "Todos" : key.toUpperCase()}
-          </button>
-        ))}
+        <button
+          type="button"
+          onClick={() => handlePrendaTab("all")}
+          className={`flex-1 rounded-md px-2.5 py-1.5 text-xs font-medium transition-all duration-150 ${
+            isAllActive ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          Todos
+        </button>
+        <button
+          type="button"
+          onClick={() => handlePrendaTab("geometry")}
+          className={`flex-1 rounded-md px-2.5 py-1.5 text-xs font-medium transition-all duration-150 ${
+            isGeometryActive ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          Nodos de geometría
+        </button>
+        <button
+          type="button"
+          onClick={() => handlePrendaTab("3d")}
+          className={`flex-1 rounded-md px-2.5 py-1.5 text-xs font-medium transition-all duration-150 ${
+            is3dActive ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          3D
+        </button>
       </div>
 
       <ul className="grid grid-cols-2 gap-2.5" role="list" aria-label="Lista de prendas">

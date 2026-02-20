@@ -14,11 +14,13 @@ function shortId(id: string): string {
   return id.slice(0, 6);
 }
 
+export type LayerMoveDirection = "up" | "down" | "front" | "back";
+
 export interface LayersPanelProps {
   elements: CanvasElement[];
   selectedId: string | null;
   onSelectElement: (id: string) => void;
-  onMoveLayer: (id: string, direction: "up" | "down") => void;
+  onMoveLayer: (id: string, direction: LayerMoveDirection) => void;
   onUpdateElement: (id: string, partial: CanvasElementPatch) => void;
 }
 
@@ -110,6 +112,45 @@ function EyeOffIcon({ className }: { className?: string }) {
   );
 }
 
+function LockIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden
+    >
+      <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+    </svg>
+  );
+}
+
+function FrontIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M12 19V5M5 12l7-7 7 7" />
+      <path d="M12 19V9" opacity={0.6} />
+    </svg>
+  );
+}
+
+function BackIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M12 5v14M5 12l7 7 7-7" />
+      <path d="M12 15V5" opacity={0.6} />
+    </svg>
+  );
+}
+
 export function LayersPanel({
   elements,
   selectedId,
@@ -138,9 +179,12 @@ export function LayersPanel({
         const index = elements.findIndex((e) => e.id === el.id);
         const canMoveUp = index >= 0 && index < elements.length - 1;
         const canMoveDown = index > 0;
-        const label = `${TYPE_LABELS[el.type]} · ${shortId(el.id)}`;
+        const canBringFront = index >= 0 && index < elements.length - 1;
+        const canSendBack = index > 0;
+        const isLocked = el.locked === true;
+        const label = `${TYPE_LABELS[el.type]} · ${shortId(el.id)}${isLocked ? " 🔒" : ""}`;
         return (
-          <li key={el.id} className="flex items-center gap-1">
+          <li key={el.id} className="flex items-center gap-1 flex-wrap">
             <button
               type="button"
               aria-label={isVisible ? "Ocultar capa" : "Mostrar capa"}
@@ -156,6 +200,18 @@ export function LayersPanel({
               ) : (
                 <EyeOffIcon className="text-muted-foreground opacity-60" />
               )}
+            </button>
+            <button
+              type="button"
+              aria-label={isLocked ? "Desbloquear" : "Bloquear"}
+              title={isLocked ? "Desbloquear" : "Bloquear"}
+              className={btnIconCn}
+              onClick={(e) => {
+                e.stopPropagation();
+                onUpdateElement(el.id, { locked: !isLocked });
+              }}
+            >
+              <LockIcon className={isLocked ? "text-primary" : ""} />
             </button>
             <button
               type="button"
@@ -195,6 +251,32 @@ export function LayersPanel({
               }}
             >
               <ArrowDownIcon />
+            </button>
+            <button
+              type="button"
+              aria-label="Traer al frente"
+              title="Traer al frente"
+              className={btnIconCn}
+              disabled={!canBringFront}
+              onClick={(e) => {
+                e.stopPropagation();
+                onMoveLayer(el.id, "front");
+              }}
+            >
+              <FrontIcon />
+            </button>
+            <button
+              type="button"
+              aria-label="Enviar atrás"
+              title="Enviar atrás"
+              className={btnIconCn}
+              disabled={!canSendBack}
+              onClick={(e) => {
+                e.stopPropagation();
+                onMoveLayer(el.id, "back");
+              }}
+            >
+              <BackIcon />
             </button>
           </li>
         );

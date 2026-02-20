@@ -1,15 +1,15 @@
 "use client";
 
 import { ChevronDown, ChevronRight, Plus } from "lucide-react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { CanvasElement } from "@/types";
 import type { PathPoint } from "@/types";
 import { MOCK_MOCKUPS } from "@/config/mock-data";
 import { CanvasDropZone } from "./canvas-drop-zone";
 import { CanvasElementNodes } from "./canvas-element-nodes";
 import { CANVAS_DROPPABLE_ID_2D } from "./EditorCanvasArea";
-import { GeometryNodesPanel } from "./GeometryNodesPanel";
 import { LayersPanel } from "./layers-panel";
+import type { CenterViewMode } from "./EditorCanvasArea";
 import { MockupPanel } from "./mockup-panel";
 import type { CanvasElementPatch } from "./properties-panel";
 import { PropertiesPanel } from "./properties-panel";
@@ -20,12 +20,14 @@ export interface EditorRightPanelProps {
   selectedId: string | null;
   elements: CanvasElement[];
   onSelectElement: (id: string) => void;
-  onMoveLayer: (id: string, direction: "up" | "down") => void;
+  onMoveLayer: (id: string, direction: import("./layers-panel").LayerMoveDirection) => void;
   onUpdateElement: (id: string, partial: CanvasElementPatch) => void;
   onClearSelection: () => void;
   projectName?: string;
   selected3DMockup?: { modelPath: string } | null;
   onSelect3DMockup?: (mockup: { modelPath: string } | null) => void;
+  /** Info de la malla del modelo (vértices/polígonos); se muestra cuando hay modelo seleccionado */
+  modelMeshInfo?: { vertexCount: number; faceCount: number } | null;
   texture3dUrl?: string | null;
   onTexture3dChange?: (url: string | null) => void;
   garmentColor?: string;
@@ -44,6 +46,12 @@ export interface EditorRightPanelProps {
   /** Tab activo: diseño 2D o nodos de geometría (GLTF JSON) */
   rightPanelTab?: EditorPanelTab;
   onRightPanelTabChange?: (tab: EditorPanelTab) => void;
+  /** Vista central (3d / nodos de textura / nodos de geometría); para sincronizar con el tab Prendas */
+  centerViewMode?: CenterViewMode;
+  onCenterViewModeChange?: (mode: CenterViewMode) => void;
+  /** Tras insertar texto, llevar scroll y foco al campo de edición */
+  pendingFocusTextId?: string | null;
+  onFocusTextDone?: () => void;
 }
 
 function CollapsibleSection({
@@ -100,6 +108,7 @@ export function EditorRightPanel({
   projectName = "proyecto",
   selected3DMockup = null,
   onSelect3DMockup,
+  modelMeshInfo = null,
   texture3dUrl = null,
   onTexture3dChange,
   garmentColor = "#ffffff",
@@ -114,7 +123,27 @@ export function EditorRightPanel({
   onPathStrokeComplete,
   rightPanelTab = "design",
   onRightPanelTabChange,
+  centerViewMode = "3d",
+  onCenterViewModeChange,
+  pendingFocusTextId = null,
+  onFocusTextDone,
 }: EditorRightPanelProps) {
+  const designSectionRef = useRef<HTMLDivElement>(null);
+
+  // Scroll suave al panel de diseño cuando se selecciona un elemento (ej. tras insertar texto)
+  useEffect(() => {
+    if (!selectedId) return;
+    designSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }, [selectedId]);
+
+  // Al insertar texto, abrir la sección Elementos para que se vea Propiedades
+  useEffect(() => {
+    if (pendingFocusTextId) setElementosOpen(true);
+  }, [pendingFocusTextId]);
+
+  const handleFocusTextDone = () => {
+    onFocusTextDone?.();
+  };
   const [prendasOpen, setPrendasOpen] = useState(true);
   const [editor2DOpen, setEditor2DOpen] = useState(true);
   const [elementosOpen, setElementosOpen] = useState(true);
@@ -157,9 +186,18 @@ export function EditorRightPanel({
 
   return (
     <aside
-      className="editor-panel flex w-80 shrink-0 flex-col overflow-auto border-l border-border px-5 py-4"
+      className="editor-panel scrollbar-hide flex w-80 shrink-0 flex-col overflow-y-auto border-l border-border px-5 py-4"
       aria-label="Prendas y elementos"
     >
+      {selected3DMockup && modelMeshInfo && (
+        <div className="mb-3 rounded-lg border border-border/80 bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
+          <span className="font-medium text-foreground">Modelo cargado</span>
+          <p className="mt-1">
+            {modelMeshInfo.vertexCount.toLocaleString()} vértices · {modelMeshInfo.faceCount.toLocaleString()} polígonos
+          </p>
+          <p className="mt-0.5 italic">Todas las herramientas del sidebar se aplican a este modelo.</p>
+        </div>
+      )}
       <CollapsibleSection
         title="Prendas"
         open={prendasOpen}
@@ -171,6 +209,8 @@ export function EditorRightPanel({
           projectName={projectName}
           selected3DMockup={selected3DMockup}
           onSelect3DMockup={onSelect3DMockup}
+          centerViewMode={centerViewMode}
+          onCenterViewModeChange={onCenterViewModeChange}
           texture3dUrl={texture3dUrl}
           onTexture3dChange={onTexture3dChange}
           garmentColor={garmentColor}
@@ -184,42 +224,15 @@ export function EditorRightPanel({
         />
       </CollapsibleSection>
 
-      <div className="flex border-b border-border">
-        <button
-          type="button"
-          onClick={() => onRightPanelTabChange?.("design")}
-          className={`flex-1 py-2.5 text-sm font-medium transition-colors ${
-            rightPanelTab === "design"
-              ? "border-b-2 border-primary text-primary"
-              : "text-muted-foreground hover:text-foreground"
-          }`}
-        >
-          Diseño 2D
-        </button>
-        <button
-          type="button"
-          onClick={() => onRightPanelTabChange?.("nodes")}
-          className={`flex-1 py-2.5 text-sm font-medium transition-colors ${
-            rightPanelTab === "nodes"
-              ? "border-b-2 border-primary text-primary"
-              : "text-muted-foreground hover:text-foreground"
-          }`}
-        >
-          Nodos geometría
-        </button>
-      </div>
-
-      {rightPanelTab === "design" ? (
-        <>
-          <CollapsibleSection
-            title="Editor 2D"
-            open={editor2DOpen}
-            onToggle={() => setEditor2DOpen(!editor2DOpen)}
-          >
+      <CollapsibleSection
+        title="Diseño sobre el modelo"
+        open={editor2DOpen}
+        onToggle={() => setEditor2DOpen(!editor2DOpen)}
+      >
             <p className="mb-2 text-xs text-muted-foreground">
               {activeTool === "tool-brush"
                 ? "Pincel activo: dibuja en el recuadro. El trazo se aplica a la camiseta 3D."
-                : "Arrastra texto, imagen o forma desde la barra izquierda. Mueve con el asa."}
+                : "Añade texto, imagen o forma; edita el texto y mueve los elementos en el recuadro."}
             </p>
             <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl border border-border bg-muted/20">
               <div
@@ -256,21 +269,23 @@ export function EditorRightPanel({
                 )}
               </div>
             </div>
-          </CollapsibleSection>
+      </CollapsibleSection>
 
-          <CollapsibleSection
-            title="Elementos"
-            open={elementosOpen}
-            onToggle={() => setElementosOpen(!elementosOpen)}
-            onAdd={() => {}}
-          >
-            <div className="flex flex-col gap-5">
+      <CollapsibleSection
+        title="Elementos"
+        open={elementosOpen}
+        onToggle={() => setElementosOpen(!elementosOpen)}
+        onAdd={() => {}}
+      >
+        <div ref={designSectionRef} className="flex flex-col gap-5">
               <div>
                 <h3 className="editor-section-title mb-2.5">Propiedades</h3>
                 <PropertiesPanel
                   elements={elements}
                   selectedId={selectedId}
                   onUpdateElement={onUpdateElement}
+                  focusTextId={pendingFocusTextId ?? undefined}
+                  onFocusTextDone={handleFocusTextDone}
                 />
                 {hasSelection && (
                   <button
@@ -292,14 +307,8 @@ export function EditorRightPanel({
                   onUpdateElement={onUpdateElement}
                 />
               </div>
-            </div>
-          </CollapsibleSection>
-        </>
-      ) : (
-        <CollapsibleSection title="Nodos del modelo (GLTF JSON)" open={true} onToggle={() => {}}>
-          <GeometryNodesPanel modelPath={selected3DMockup?.modelPath ?? null} />
-        </CollapsibleSection>
-      )}
+        </div>
+      </CollapsibleSection>
 
       <div className="mt-4">
         <button

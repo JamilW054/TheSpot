@@ -1,7 +1,7 @@
 "use client";
 
 import { useDraggable } from "@dnd-kit/core";
-import { FolderOpen, Image, Menu, Move, Pencil, Plus, Redo2, Square, Type, Upload } from "lucide-react";
+import { Circle, FolderOpen, Image, Menu, Move, Pencil, Plus, Redo2, Square, Star, Triangle, Type, Upload } from "lucide-react";
 import { useRef } from "react";
 import type { EditorTool } from "@/config/editor-tools";
 import { EDITOR_TOOLS } from "@/config/editor-tools";
@@ -10,14 +10,18 @@ const ICON_BY_NAME: Record<string, React.ComponentType<{ className?: string }>> 
   Image,
   Type,
   Square,
+  Circle,
+  Triangle,
+  Star,
   Pencil,
 };
 
+/** Títulos que indican que la herramienta se aplica al diseño del modelo 3D. */
 const TOOL_TITLES: Record<string, string> = {
-  text: "Texto: arrastra al canvas para añadir",
-  image: "Imagen: arrastra al canvas para añadir",
-  shape: "Forma: arrastra al canvas para añadir",
-  path: "Pincel: activa dibujo en el panel 2D o arrastra para añadir trazo",
+  text: "Texto: se aplica al modelo. Arrastra al canvas para añadir.",
+  image: "Imagen: se aplica al modelo. Arrastra al canvas para añadir.",
+  shape: "Forma: se aplica al modelo. Arrastra al canvas para añadir.",
+  path: "Pincel: se aplica al modelo. Dibuja en el panel 2D o arrastra para añadir trazo.",
 };
 
 function DraggableToolButton({
@@ -31,10 +35,10 @@ function DraggableToolButton({
 }) {
   const { attributes, listeners, setNodeRef } = useDraggable({
     id: tool.id,
-    data: { type: tool.type },
+    data: { type: tool.type, shapeKind: tool.shapeKind },
   });
   const Icon = tool.iconName ? ICON_BY_NAME[tool.iconName] : null;
-  const title = TOOL_TITLES[tool.type] ?? `${tool.label}: arrastra al canvas`;
+  const title = tool.tooltip ?? TOOL_TITLES[tool.type] ?? `${tool.label}. Arrastra al canvas.${tool.shortcut ? ` (${tool.shortcut})` : ""}`;
 
   return (
     <button
@@ -104,7 +108,7 @@ export function EditorToolbar({
           type="button"
           onClick={onMenuClick}
           className={btn}
-          title="Menú (guardar / exportar)"
+          title="Menú (guardar/exportar el diseño del modelo)"
         >
           <Menu className="size-5" />
         </button>
@@ -112,7 +116,7 @@ export function EditorToolbar({
           type="button"
           onClick={onOpenClick}
           className={btn}
-          title="Abrir diseño"
+          title="Abrir diseño (se aplica al modelo 3D)"
         >
           <FolderOpen className="size-5" />
         </button>
@@ -126,7 +130,7 @@ export function EditorToolbar({
           type="button"
           onClick={onPlusClick}
           className={btn}
-          title="Añadir elemento (texto, forma, imagen, pincel)"
+          title="Añadir elemento al modelo (texto, forma, imagen, pincel)"
         >
           <Plus className="size-5" />
         </button>
@@ -138,7 +142,7 @@ export function EditorToolbar({
               ? "bg-primary/20 text-primary shadow-inner"
               : "text-muted-foreground hover:bg-muted hover:text-foreground"
           }`}
-          title="Seleccionar elementos. Arrastra los elementos en el canvas para moverlos."
+          title="Mover: selecciona y arrastra elementos del diseño sobre el modelo"
         >
           <Move className="size-5" />
         </button>
@@ -164,7 +168,7 @@ export function EditorToolbar({
               type="button"
               onClick={() => fileInputRef.current?.click()}
               className={btn}
-              title="Subir imagen al canvas (o arrastra el icono de imagen)"
+              title="Subir imagen al diseño del modelo (o arrastra el icono de imagen)"
             >
               <Upload className="size-5" />
             </button>
@@ -178,7 +182,7 @@ export function EditorToolbar({
               ? "bg-primary/20 text-primary shadow-inner"
               : "text-muted-foreground hover:bg-muted hover:text-foreground"
           }`}
-          title="Pincel: dibuja en el panel 2D (zona de diseño)"
+          title="Pincel: dibuja sobre el modelo en el panel 2D (zona de diseño)"
         >
           <Pencil className="size-5" />
         </button>
@@ -193,7 +197,7 @@ export function EditorToolbar({
           onClick={onUndo}
           disabled={!canUndo}
           className={`${btn} disabled:opacity-40 disabled:cursor-not-allowed`}
-          title="Deshacer"
+          title="Deshacer (cambios en el diseño del modelo)"
         >
           <Redo2 className="size-4 rotate-180" />
         </button>
@@ -202,7 +206,7 @@ export function EditorToolbar({
           onClick={onRedo}
           disabled={!canRedo}
           className={`${btn} disabled:opacity-40 disabled:cursor-not-allowed`}
-          title="Rehacer"
+          title="Rehacer (cambios en el diseño del modelo)"
         >
           <Redo2 className="size-4" />
         </button>
