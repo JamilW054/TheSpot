@@ -40,6 +40,8 @@ export interface EditorRightPanelProps {
   getCanvasAsBlob?: () => Promise<Blob | null>;
   /** Current texture with design in correct UV zone (for export) */
   getEffectiveTextureBlob?: () => Promise<Blob | null>;
+  /** Export design as JSON (canvas elements + metadata) for portability */
+  onExportDesignJson?: () => void;
   /** Cuando el pincel está activo, dibujar en el canvas 2D termina un trazo */
   activeTool?: string;
   onPathStrokeComplete?: (points: PathPoint[], strokeColor?: string, strokeWidth?: number) => void;
@@ -119,6 +121,7 @@ export function EditorRightPanel({
   onZoom3dChange,
   getCanvasAsBlob,
   getEffectiveTextureBlob,
+  onExportDesignJson,
   activeTool = "move",
   onPathStrokeComplete,
   rightPanelTab = "design",
@@ -221,6 +224,7 @@ export function EditorRightPanel({
           onZoom3dChange={onZoom3dChange}
           getCanvasAsBlob={getCanvasAsBlob}
           getEffectiveTextureBlob={getEffectiveTextureBlob}
+          onExportDesignJson={onExportDesignJson}
         />
       </CollapsibleSection>
 

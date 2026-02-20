@@ -11,6 +11,7 @@ import {
   useSensors,
 } from "@dnd-kit/core";
 import { MOCK_MOCKUPS } from "@/config/mock-data";
+import { buildDesignExportPayload, downloadDesignJson } from "@/lib/design-export";
 import { renderElementsToTextureUrl } from "@/lib/render-design-to-texture";
 import type { CanvasElement, CanvasElementType } from "@/types";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -149,6 +150,8 @@ export interface EditorLayoutProps {
   designId?: string | null;
   /** When coming from catalog ?product=id, preselect this garment (modelPath). */
   initialMockupModelPath?: string | null;
+  /** Catalog product id when opened from catalog (for export JSON). */
+  initialProductId?: string | null;
 }
 
 const ZOOM_MIN = 0.005;
@@ -159,6 +162,7 @@ export function EditorLayout({
   initialElements = [],
   designId = null,
   initialMockupModelPath = null,
+  initialProductId = null,
 }: EditorLayoutProps) {
   const [elements, setElements] = useState<CanvasElement[]>(initialElements);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -466,6 +470,18 @@ export function EditorLayout({
     });
   }, []);
 
+  const handleExportDesignJson = useCallback(() => {
+    const payload = buildDesignExportPayload({
+      name: projectName,
+      modelPath: selected3DMockup?.modelPath ?? null,
+      productId: initialProductId,
+      garmentColorHex: garmentColor,
+      baseTextureUrl: texture3dUrl ?? null,
+      canvasElements: elements,
+    });
+    downloadDesignJson(payload);
+  }, [projectName, selected3DMockup?.modelPath, initialProductId, garmentColor, texture3dUrl, elements]);
+
   return (
     <DndContext
       sensors={sensors}
@@ -540,6 +556,7 @@ export function EditorLayout({
           onZoom3dChange={setZoom3d}
           getCanvasAsBlob={getCanvasAsBlob}
           getEffectiveTextureBlob={getEffectiveTextureBlob}
+          onExportDesignJson={handleExportDesignJson}
           activeTool={activeTool}
           onPathStrokeComplete={handlePathStrokeComplete}
           rightPanelTab={rightPanelTab}

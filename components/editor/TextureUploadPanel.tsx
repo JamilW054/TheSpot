@@ -20,6 +20,8 @@ export interface TextureUploadPanelProps {
   getCanvasAsBlob?: () => Promise<Blob | null>;
   /** Texture with design in correct UV zone (1024x1024, for export) */
   getEffectiveTextureBlob?: () => Promise<Blob | null>;
+  /** Export design as JSON (canvas elements + metadata) */
+  onExportDesignJson?: () => void;
 }
 
 export function TextureUploadPanel({
@@ -27,6 +29,7 @@ export function TextureUploadPanel({
   onTextureChange,
   getCanvasAsBlob,
   getEffectiveTextureBlob,
+  onExportDesignJson,
 }: TextureUploadPanelProps) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -216,7 +219,7 @@ export function TextureUploadPanel({
             </div>
           </div>
         )}
-        {(getEffectiveTextureBlob || getCanvasAsBlob) && (
+        {(getEffectiveTextureBlob || getCanvasAsBlob || onExportDesignJson) && (
           <div className="flex flex-col gap-2">
             <p className="text-xs font-medium text-foreground">Exportar</p>
             <div className="flex flex-wrap gap-2">
@@ -232,16 +235,29 @@ export function TextureUploadPanel({
                   {exportingZip ? "Creando ZIP…" : "Exportar ZIP"}
                 </button>
               )}
-              <button
-                type="button"
-                onClick={handleExport}
-                disabled={exporting}
-                className="flex items-center gap-1.5 rounded-lg bg-muted px-2.5 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-muted/80 disabled:opacity-50"
-                title="Solo la imagen (textura 1024×1024)"
-              >
-                <Download className="size-3.5" />
-                {exporting ? "Exportando…" : "Solo imagen"}
-              </button>
+              {getEffectiveTextureBlob && (
+                <button
+                  type="button"
+                  onClick={handleExport}
+                  disabled={exporting}
+                  className="flex items-center gap-1.5 rounded-lg bg-muted px-2.5 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-muted/80 disabled:opacity-50"
+                  title="Solo la imagen (textura 1024×1024)"
+                >
+                  <Download className="size-3.5" />
+                  {exporting ? "Exportando…" : "Solo imagen"}
+                </button>
+              )}
+              {onExportDesignJson && (
+                <button
+                  type="button"
+                  onClick={onExportDesignJson}
+                  className="flex items-center gap-1.5 rounded-lg bg-muted px-2.5 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-muted/80 disabled:opacity-50"
+                  title="Descargar JSON del diseño (elementos + metadatos)"
+                >
+                  <Download className="size-3.5" />
+                  Exportar JSON
+                </button>
+              )}
             </div>
             <p className="text-xs text-muted-foreground">
               ZIP: textura 1024×1024 + captura 3D o textura con diseño (<code className="rounded bg-muted/60 px-1 font-mono">diseno_{projectSlug}.zip</code>).

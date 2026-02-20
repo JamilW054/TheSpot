@@ -46,6 +46,8 @@ export interface MockupPanelProps {
   onZoom3dChange?: (v: number) => void;
   getCanvasAsBlob?: () => Promise<Blob | null>;
   getEffectiveTextureBlob?: () => Promise<Blob | null>;
+  /** Export design as JSON (canvas + metadata) */
+  onExportDesignJson?: () => void;
   /** Vista central; al elegir "Nodos de geometría" en Prendas, se muestra en el centro */
   centerViewMode?: "3d" | "nodes" | "geometry";
   onCenterViewModeChange?: (mode: "3d" | "nodes" | "geometry") => void;
@@ -148,6 +150,7 @@ export function MockupPanel({
   onZoom3dChange,
   getCanvasAsBlob,
   getEffectiveTextureBlob,
+  onExportDesignJson,
   centerViewMode = "3d",
   onCenterViewModeChange,
 }: MockupPanelProps) {
@@ -377,6 +380,7 @@ export function MockupPanel({
                 onTextureChange={(url) => onTexture3dChange?.(url)}
                 getCanvasAsBlob={getCanvasAsBlob}
                 getEffectiveTextureBlob={getEffectiveTextureBlob}
+                onExportDesignJson={onExportDesignJson}
               />
             </>
           ) : (

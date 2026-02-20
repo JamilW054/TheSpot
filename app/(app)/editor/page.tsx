@@ -34,6 +34,7 @@ export default async function EditorPage({ searchParams }: EditorPageProps) {
         initialElements={initialElements}
         designId={designId}
         initialMockupModelPath={initialMockupModelPath}
+        initialProductId={productId}
       />
     </div>
   );
