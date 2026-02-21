@@ -33,8 +33,8 @@ export default function LoginPage() {
     }
     try {
       await login(trimmedEmail, trimmedPassword);
-    } catch {
-      setError("No se pudo iniciar sesión. Inténtalo de nuevo.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo iniciar sesión. Inténtalo de nuevo.");
     }
   }
 

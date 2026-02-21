@@ -2,16 +2,28 @@
 
 import { Center, OrbitControls, useGLTF } from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
-import { Component, Suspense, useEffect } from "react";
+import { Component, Suspense, useMemo, useEffect } from "react";
 import { Color, ClampToEdgeWrapping, TextureLoader } from "three";
 import type { BufferAttribute, Object3D } from "three";
 import type { Mesh, MeshStandardMaterial, Texture } from "three";
 import type { DesignZoneUV } from "@/config/texture-uv";
 import { clampUVBounds } from "@/config/texture-uv";
 
+import {
+  CATALOG_3D_MODEL,
+  CATALOG_CAMERA_Z,
+  CATALOG_DEFAULT_ZOOM,
+  CATALOG_ROTATION_Y_DEG,
+  CATALOG_ROTATION_Z_DEG,
+} from "@/config/catalog";
+
+/** Re-export para uso en componentes que ya lo importaban desde aquí. */
+export { CATALOG_3D_MODEL };
+
 /** Offset Y por modelo: más negativo = más abajo en pantalla (bata y camiseta quedan centrados). */
 const MODEL_OFFSET_Y: Record<string, number> = {
   "/models/tshirt/scene.gltf": -0.32,
+  [CATALOG_3D_MODEL]: -0.32,
   "/models/male_tshirt.glb": -0.32,
   "/models/robe_cloth_for_iclone_and_character_creator.glb": -0.32,
 };
@@ -20,6 +32,7 @@ const DEFAULT_OFFSET_Y = -0.08;
 /** Escala por modelo (Sketchfab suele usar unidades grandes; GLB propios suelen 1). */
 const MODEL_SCALE: Record<string, number> = {
   "/models/tshirt/scene.gltf": 0.0008,
+  [CATALOG_3D_MODEL]: 0.0008,
 };
 const DEFAULT_SCALE = 1;
 
@@ -30,7 +43,18 @@ interface TShirtModelProps {
 }
 
 function TShirtModel({ modelPath, textureUrl, garmentColorHex }: TShirtModelProps) {
-  const { scene } = useGLTF(modelPath);
+  const { scene: sourceScene } = useGLTF(modelPath);
+  const scene = useMemo(() => {
+    const c = sourceScene.clone();
+    c.traverse((child) => {
+      if (child.type === "Mesh") {
+        const mesh = child as Mesh;
+        const mat = mesh.material;
+        if (mat) mesh.material = Array.isArray(mat) ? mat.map((m) => (m as MeshStandardMaterial).clone()) : (mat as MeshStandardMaterial).clone();
+      }
+    });
+    return c;
+  }, [sourceScene]);
   const scale = MODEL_SCALE[modelPath] ?? DEFAULT_SCALE;
 
   useEffect(() => {
@@ -62,7 +86,7 @@ function TShirtModel({ modelPath, textureUrl, garmentColorHex }: TShirtModelProp
         const materials = Array.isArray(mat) ? mat : [mat];
         for (const m of materials) {
           const std = m as MeshStandardMaterial;
-          if (std && typeof std.map !== "undefined") {
+          if (std) {
             if (std.map) std.map.dispose();
             std.map = tex;
             std.needsUpdate = true;
@@ -71,23 +95,41 @@ function TShirtModel({ modelPath, textureUrl, garmentColorHex }: TShirtModelProp
       });
     };
 
-    if (!textureUrl) {
+    const url = (textureUrl ?? "").trim();
+    if (!url) {
       applyToMaterials(null);
       return;
     }
 
+    // placehold.co devuelve SVG por defecto; Three.js necesita raster (PNG). Forzar .png
+    let loadUrl = url;
+    if (loadUrl.includes("placehold.co") && !loadUrl.includes(".png")) {
+      loadUrl = loadUrl.replace(/\?/, ".png?");
+    }
+
+    let cancelled = false;
     const loader = new TextureLoader();
+    loader.setCrossOrigin("anonymous");
     loader.load(
-      textureUrl,
+      loadUrl,
       (tex: Texture) => {
+        if (cancelled) {
+          tex.dispose();
+          return;
+        }
         tex.wrapS = tex.wrapT = ClampToEdgeWrapping;
         tex.anisotropy = 4;
         tex.flipY = true;
         applyToMaterials(tex);
       },
       undefined,
-      () => {}
+      (err) => {
+        if (!cancelled) applyToMaterials(null);
+      }
     );
+    return () => {
+      cancelled = true;
+    };
   }, [textureUrl, scene]);
 
   return (
@@ -221,6 +263,10 @@ export interface MockupViewer3DProps {
   zoom?: number;
   /** Color base de la prenda (hex, ej. #ffffff). Tinta el material. */
   garmentColorHex?: string;
+  /** Vista compacta (ej. cuadrícula catálogo): sin altura mínima, sin texto de controles. */
+  compact?: boolean;
+  /** Vista fija de frente: sin rotar ni pan, solo zoom (para catálogo). */
+  fixedFrontView?: boolean;
   /** Llamado cuando el modelo carga: bounds UV leídos de geometry.attributes.uv */
   onUVBoundsDetected?: (bounds: DesignZoneUV) => void;
   /** Llamado cuando el modelo carga: conteo de vértices y polígonos (para UI) */
@@ -231,6 +277,8 @@ export function MockupViewer3D({
   modelPath,
   textureUrl,
   fullSize = false,
+  compact = false,
+  fixedFrontView = false,
   rotation = 0,
   zoom = 1,
   garmentColorHex,
@@ -239,13 +287,16 @@ export function MockupViewer3D({
 }: MockupViewer3DProps) {
   const rotationNorm = ((rotation % 360) + 360) % 360;
   const offsetY = MODEL_OFFSET_Y[modelPath] ?? DEFAULT_OFFSET_Y;
+  const sizeClass = compact ? "h-full min-h-0" : fullSize ? "h-full min-h-[300px]" : "h-[280px]";
+  const noRotate = fixedFrontView;
+  const noPan = fixedFrontView;
+  const rotationYDeg = fixedFrontView ? rotationNorm + CATALOG_ROTATION_Y_DEG : rotationNorm;
+  const rotationZDeg = fixedFrontView ? CATALOG_ROTATION_Z_DEG : 0;
+  const effectiveZoom = fixedFrontView ? zoom * CATALOG_DEFAULT_ZOOM : zoom;
+  const cameraZ = fixedFrontView ? CATALOG_CAMERA_Z : 2.5;
 
   return (
-    <div
-      className={`flex flex-col bg-transparent ${
-        fullSize ? "h-full min-h-[300px]" : "h-[280px]"
-      }`}
-    >
+    <div className={`flex flex-col bg-transparent ${sizeClass}`}>
       <ViewerErrorBoundary
         fallback={
           <div className="flex size-full min-h-[200px] flex-col items-center justify-center gap-2 rounded-lg bg-muted/50 p-4 text-center text-sm text-muted-foreground">
@@ -256,7 +307,7 @@ export function MockupViewer3D({
       >
       <div className="relative size-full min-h-0 flex-1 overflow-hidden">
         <Canvas
-          camera={{ position: [0, offsetY, 2.5], fov: 50 }}
+          camera={{ position: [0, offsetY, cameraZ], fov: 50 }}
           gl={{ antialias: true, alpha: true }}
           className="!h-full !w-full"
         >
@@ -279,8 +330,12 @@ export function MockupViewer3D({
             )}
             <group
               position={[0, offsetY, 0]}
-              rotation={[0, (rotationNorm * Math.PI) / 180, 0]}
-              scale={zoom}
+              rotation={[
+                0,
+                (rotationYDeg * Math.PI) / 180,
+                (rotationZDeg * Math.PI) / 180,
+              ]}
+              scale={effectiveZoom}
             >
               <TShirtModel
                 modelPath={modelPath}
@@ -291,15 +346,15 @@ export function MockupViewer3D({
           </Suspense>
           <OrbitControls
             target={[0, offsetY, 0]}
-            enablePan={true}
+            enablePan={!noPan}
             enableZoom={true}
-            enableRotate={true}
+            enableRotate={!noRotate}
             minDistance={0.4}
             maxDistance={8}
           />
         </Canvas>
       </div>
-      {!fullSize && (
+      {!fullSize && !compact && (
         <p className="border-t border-border p-2 text-xs text-muted-foreground">
           Arrastra para rotar · Rueda para zoom
         </p>

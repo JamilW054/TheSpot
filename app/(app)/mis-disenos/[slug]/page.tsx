@@ -1,6 +1,5 @@
 import { PageLayout } from "@/components/layout";
-import { MOCK_DESIGNS } from "@/config/mock-data";
-import { parseSlugId } from "@/lib/slug";
+import { getDesignById, getDesignBySlug } from "@/lib/db";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -11,12 +10,7 @@ interface PageProps {
 
 export default async function DesignDetailPage({ params }: PageProps) {
   const { slug } = await params;
-  const design =
-    MOCK_DESIGNS.find((d) => d.slug === slug) ??
-    (() => {
-      const id = parseSlugId(slug);
-      return id ? MOCK_DESIGNS.find((d) => d.id === id) ?? null : null;
-    })();
+  const design = (await getDesignBySlug(slug)) ?? (await getDesignById(slug));
 
   if (!design) {
     notFound();

@@ -273,7 +273,8 @@ export function GarmentColorPicker({
                     key={preset}
                     type="button"
                     onClick={() => {
-                      updateFromHsl(...Object.values(hexToHsl(preset)));
+                      const { h, s, l } = hexToHsl(preset);
+                      updateFromHsl(h, s, l);
                       setOpen(false);
                     }}
                     className="size-6 rounded-lg border-2 border-border shadow-sm transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-primary/50"

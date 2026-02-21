@@ -1,6 +1,7 @@
 import { AddToCartButton } from "@/components/catalog/AddToCartButton";
 import { CatalogProductViewer } from "@/components/catalog/CatalogProductViewer";
-import { MOCK_CATALOG_PRODUCTS } from "@/config/mock-data";
+import { CATALOG_3D_MODEL } from "@/config/catalog";
+import { getProductBySlug } from "@/lib/db";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -9,13 +10,9 @@ interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
-function findProduct(slug: string) {
-  return MOCK_CATALOG_PRODUCTS.find((p) => p.slug === slug) ?? null;
-}
-
 export async function generateMetadata({ params }: PageProps) {
   const { slug } = await params;
-  const product = findProduct(slug);
+  const product = await getProductBySlug(slug);
   if (!product) return { title: "Producto | Buxxep" };
   return {
     title: `${product.name} | Catálogo Buxxep`,
@@ -25,7 +22,7 @@ export async function generateMetadata({ params }: PageProps) {
 
 export default async function CatalogProductPage({ params }: PageProps) {
   const { slug } = await params;
-  const product = findProduct(slug);
+  const product = await getProductBySlug(slug);
 
   if (!product) {
     notFound();
@@ -49,11 +46,15 @@ export default async function CatalogProductPage({ params }: PageProps) {
               className="object-cover object-top"
               sizes="(max-width: 1024px) 100vw, 50vw"
               priority
+              unoptimized={product.coverImage?.includes("placehold.co") ?? false}
             />
           </div>
           <div>
             <h2 className="mb-2 text-sm font-medium text-muted-foreground">Vista 3D</h2>
-            <CatalogProductViewer modelPath={product.modelPath} />
+            <CatalogProductViewer
+              modelPath={CATALOG_3D_MODEL}
+              textureUrl={product.baseTextureUrl ?? (product.coverImage || null)}
+            />
           </div>
         </section>
 

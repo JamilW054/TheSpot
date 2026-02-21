@@ -1,8 +1,7 @@
 import { PageLayout } from "@/components/layout";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { MOCK_LINEAS } from "@/config/mock-data";
-import { parseSlugId } from "@/lib/slug";
+import { getLineaBySlug } from "@/lib/db";
 import type { Linea } from "@/types";
 import Image from "next/image";
 import Link from "next/link";
@@ -17,12 +16,7 @@ interface PageProps {
 
 export default async function LineaDetailPage({ params }: PageProps) {
   const { slug } = await params;
-  const linea: Linea | null =
-    MOCK_LINEAS.find((l) => l.slug === slug) ??
-    (() => {
-      const id = parseSlugId(slug);
-      return id ? (MOCK_LINEAS.find((l) => l.id === id) ?? null) : null;
-    })();
+  const linea: Linea | null = await getLineaBySlug(slug);
 
   if (!linea) {
     notFound();

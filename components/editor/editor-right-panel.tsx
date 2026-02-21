@@ -4,7 +4,7 @@ import { ChevronDown, ChevronRight, Plus } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { CanvasElement } from "@/types";
 import type { PathPoint } from "@/types";
-import { MOCK_MOCKUPS } from "@/config/mock-data";
+import type { Mockup } from "@/types";
 import { CanvasDropZone } from "./canvas-drop-zone";
 import { CanvasElementNodes } from "./canvas-element-nodes";
 import { CANVAS_DROPPABLE_ID_2D } from "./EditorCanvasArea";
@@ -51,6 +51,8 @@ export interface EditorRightPanelProps {
   /** Vista central (3d / nodos de textura / nodos de geometría); para sincronizar con el tab Prendas */
   centerViewMode?: CenterViewMode;
   onCenterViewModeChange?: (mode: CenterViewMode) => void;
+  /** Mockups (base_models) from DB for Prendas panel */
+  mockups?: Mockup[];
   /** Tras insertar texto, llevar scroll y foco al campo de edición */
   pendingFocusTextId?: string | null;
   onFocusTextDone?: () => void;
@@ -128,6 +130,7 @@ export function EditorRightPanel({
   onRightPanelTabChange,
   centerViewMode = "3d",
   onCenterViewModeChange,
+  mockups = [],
   pendingFocusTextId = null,
   onFocusTextDone,
 }: EditorRightPanelProps) {
@@ -207,7 +210,7 @@ export function EditorRightPanel({
         onToggle={() => setPrendasOpen(!prendasOpen)}
       >
         <MockupPanel
-          mockups={MOCK_MOCKUPS}
+          mockups={mockups}
           elements={elements}
           projectName={projectName}
           selected3DMockup={selected3DMockup}

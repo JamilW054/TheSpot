@@ -1,5 +1,10 @@
 import { EditorLayout } from "@/components/editor";
-import { MOCK_CATALOG_PRODUCTS, MOCK_DESIGNS } from "@/config/mock-data";
+import {
+  getDesignById,
+  getDesignBySlug,
+  getMockups,
+  getProductById,
+} from "@/lib/db";
 
 /**
  * Página del editor de diseños.
@@ -18,13 +23,17 @@ export default async function EditorPage({ searchParams }: EditorPageProps) {
   const copyId = resolved?.copy ?? null;
   const productId = resolved?.product ?? null;
 
+  const [mockups, designById, designBySlug, catalogProduct] = await Promise.all([
+    getMockups(),
+    designIdParam || copyId ? getDesignById(designIdParam ?? copyId ?? "") : Promise.resolve(null),
+    designIdParam || copyId ? getDesignBySlug(designIdParam ?? copyId ?? "") : Promise.resolve(null),
+    productId ? getProductById(productId) : Promise.resolve(null),
+  ]);
+
+  const design = designById ?? designBySlug ?? null;
   const isCopy = copyId != null;
-  const sourceDesignId = isCopy ? copyId : designIdParam;
-  const design = sourceDesignId != null ? MOCK_DESIGNS.find((d) => d.id === sourceDesignId) : null;
   const initialElements = design?.canvasElements ?? [];
   const designId = isCopy ? null : designIdParam;
-
-  const catalogProduct = productId != null ? MOCK_CATALOG_PRODUCTS.find((p) => p.id === productId) : null;
   const initialMockupModelPath = catalogProduct?.modelPath ?? null;
 
   return (
@@ -35,6 +44,7 @@ export default async function EditorPage({ searchParams }: EditorPageProps) {
         designId={designId}
         initialMockupModelPath={initialMockupModelPath}
         initialProductId={productId}
+        mockups={mockups}
       />
     </div>
   );

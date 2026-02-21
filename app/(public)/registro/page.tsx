@@ -43,8 +43,8 @@ export default function RegistroPage() {
 
     try {
       await register(trimmedEmail, trimmedPassword, trimmedName);
-    } catch {
-      setError("No se pudo crear la cuenta. Inténtalo de nuevo.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo crear la cuenta. Inténtalo de nuevo.");
     }
   }
 

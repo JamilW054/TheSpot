@@ -111,7 +111,14 @@ export function CheckoutContent({ products }: { products: CatalogProduct[] }) {
             return (
               <li key={`${item.productId}:${item.designId ?? ""}`} className="flex gap-4 p-4">
                 <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-muted">
-                  <Image src={product.coverImage} alt="" fill className="object-cover" sizes="64px" />
+                  <Image
+                  src={product.coverImage}
+                  alt=""
+                  fill
+                  className="object-cover"
+                  sizes="64px"
+                  unoptimized={product.coverImage?.includes("placehold.co") ?? false}
+                />
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="font-medium text-foreground">{product.name}</p>

@@ -1,4 +1,4 @@
-import { MOCK_CATALOG_PRODUCTS } from "@/config/mock-data";
+import { getProducts } from "@/lib/db";
 import { CartContent } from "./CartContent";
 import Link from "next/link";
 
@@ -7,7 +7,8 @@ export const metadata = {
   description: "Tu carrito de compra. Revisa los productos y finaliza tu pedido.",
 };
 
-export default function CartPage() {
+export default async function CartPage() {
+  const products = await getProducts();
   return (
     <article className="min-h-[80vh]">
       <section className="mb-8" aria-labelledby="cart-title">
@@ -18,7 +19,7 @@ export default function CartPage() {
           Revisa los productos y continúa al checkout cuando quieras.
         </p>
       </section>
-      <CartContent products={MOCK_CATALOG_PRODUCTS} />
+      <CartContent products={products} />
       <p className="mt-6">
         <Link href="/catalogo" className="text-sm font-medium text-primary hover:underline">
           Seguir comprando

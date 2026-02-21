@@ -1,6 +1,7 @@
 import { AddToCartButton } from "@/components/catalog/AddToCartButton";
-import { MOCK_CATALOG_PRODUCTS } from "@/config/mock-data";
-import Image from "next/image";
+import { CatalogProductViewer } from "@/components/catalog/CatalogProductViewer";
+import { CATALOG_3D_MODEL } from "@/config/catalog";
+import { getProducts } from "@/lib/db";
 import Link from "next/link";
 
 export const metadata = {
@@ -8,7 +9,8 @@ export const metadata = {
   description: "Ropa a la venta. Personaliza tu prenda en el editor 3D o diseña desde cero.",
 };
 
-export default function CatalogPage() {
+export default async function CatalogPage() {
+  const products = await getProducts();
   return (
     <article className="min-h-[80vh]">
       <section className="mb-10 text-center" aria-labelledby="catalog-title">
@@ -21,19 +23,23 @@ export default function CatalogPage() {
       </section>
 
       <section aria-label="Productos" className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {MOCK_CATALOG_PRODUCTS.map((product) => (
+        {products.map((product) => (
           <article
             key={product.id}
             className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-shadow hover:shadow-md"
           >
-            <Link href={`/catalogo/${product.slug}`} className="relative block aspect-square overflow-hidden bg-muted">
-              <Image
-                src={product.coverImage}
-                alt=""
-                fill
-                className="object-cover object-top transition-transform duration-300 group-hover:scale-105"
-                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-              />
+            <Link
+              href={`/catalogo/${product.slug}`}
+              className="relative flex aspect-square overflow-hidden bg-muted transition-transform duration-300 hover:scale-[1.02]"
+            >
+              <div className="relative h-full w-full">
+                <CatalogProductViewer
+                  key={product.id}
+                  modelPath={CATALOG_3D_MODEL}
+                  textureUrl={product.baseTextureUrl ?? (product.coverImage || null)}
+                  compact
+                />
+              </div>
               <span className="absolute bottom-3 right-3 rounded-full bg-background/90 px-3 py-1 text-sm font-medium text-foreground">
                 {product.price}
               </span>

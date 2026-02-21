@@ -1,5 +1,6 @@
 "use client";
 
+import { createClient } from "@/lib/supabase/client";
 import {
   createContext,
   useCallback,
@@ -28,48 +29,23 @@ export interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-const MOCK_DELAY_MS = 400;
-const SESSION_STORAGE_KEY = "buxxep_user";
-
-function mockRoleFromEmail(email: string): UserRole {
+function roleFromEmail(email: string): UserRole {
   return email.toLowerCase().includes("admin") ? "admin" : "client";
 }
 
-function mockId(): string {
-  return `user_${Math.random().toString(36).slice(2, 11)}`;
-}
-
-function loadUserFromStorage(): User | null {
-  if (typeof window === "undefined") return null;
-  try {
-    const raw = localStorage.getItem(SESSION_STORAGE_KEY);
-    if (!raw) return null;
-    const data = JSON.parse(raw) as User;
-    if (data?.email && data?.name && data?.role) {
-      return {
-        id: data.id ?? mockId(),
-        email: data.email,
-        name: data.name,
-        role: data.role === "admin" ? "admin" : "client",
-      };
-    }
-  } catch {
-    // ignore
-  }
-  return null;
-}
-
-function saveUserToStorage(user: User | null): void {
-  if (typeof window === "undefined") return;
-  try {
-    if (user) {
-      localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(user));
-    } else {
-      localStorage.removeItem(SESSION_STORAGE_KEY);
-    }
-  } catch {
-    // ignore
-  }
+function userFromSession(session: { user: { id: string; email?: string; user_metadata?: { full_name?: string; name?: string } } } | null): User | null {
+  if (!session?.user?.email) return null;
+  const name =
+    session.user.user_metadata?.full_name ??
+    session.user.user_metadata?.name ??
+    session.user.email?.split("@")[0] ??
+    "Usuario";
+  return {
+    id: session.user.id,
+    email: session.user.email,
+    name: typeof name === "string" ? name : "Usuario",
+    role: roleFromEmail(session.user.email),
+  };
 }
 
 export function useAuth(): AuthContextValue {
@@ -85,51 +61,63 @@ interface AuthProviderProps {
 export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const supabase = useMemo(() => createClient(), []);
 
   useEffect(() => {
-    const stored = loadUserFromStorage();
-    setUser(stored);
-    setIsLoading(false);
-  }, []);
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(userFromSession(session));
+      setIsLoading(false);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(userFromSession(session));
+    });
+    return () => subscription.unsubscribe();
+  }, [supabase]);
 
   const login = useCallback(
     async (email: string, password: string) => {
       setIsLoading(true);
-      await new Promise((resolve) => setTimeout(resolve, MOCK_DELAY_MS));
-      const newUser: User = {
-        id: mockId(),
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
-        name: email.split("@")[0] ?? "Usuario",
-        role: mockRoleFromEmail(email),
-      };
-      setUser(newUser);
-      saveUserToStorage(newUser);
+        password,
+      });
+      if (error) {
+        setIsLoading(false);
+        throw new Error(error.message ?? "No se pudo iniciar sesión.");
+      }
+      setUser(userFromSession(data.session));
       setIsLoading(false);
     },
-    []
+    [supabase]
   );
 
   const register = useCallback(
     async (email: string, password: string, name: string) => {
       setIsLoading(true);
-      await new Promise((resolve) => setTimeout(resolve, MOCK_DELAY_MS));
-      const newUser: User = {
-        id: mockId(),
+      const { data, error } = await supabase.auth.signUp({
         email,
-        name: (name.trim() || email.split("@")[0]) ?? "Usuario",
-        role: mockRoleFromEmail(email),
-      };
-      setUser(newUser);
-      saveUserToStorage(newUser);
+        password,
+        options: {
+          data: { full_name: name.trim() || undefined },
+        },
+      });
+      if (error) {
+        setIsLoading(false);
+        throw new Error(error.message ?? "No se pudo crear la cuenta.");
+      }
+      setUser(userFromSession(data.session));
       setIsLoading(false);
     },
-    []
+    [supabase]
   );
 
   const logout = useCallback(() => {
+    supabase.auth.signOut();
     setUser(null);
-    saveUserToStorage(null);
-  }, []);
+  }, [supabase]);
 
   const value = useMemo<AuthContextValue>(
     () => ({ user, login, register, logout, isLoading }),

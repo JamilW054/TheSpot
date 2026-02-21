@@ -10,7 +10,7 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import { MOCK_MOCKUPS } from "@/config/mock-data";
+import type { Mockup } from "@/types";
 import { buildDesignExportPayload, downloadDesignJson } from "@/lib/design-export";
 import { renderElementsToTextureUrl } from "@/lib/render-design-to-texture";
 import type { CanvasElement, CanvasElementType } from "@/types";
@@ -152,6 +152,8 @@ export interface EditorLayoutProps {
   initialMockupModelPath?: string | null;
   /** Catalog product id when opened from catalog (for export JSON). */
   initialProductId?: string | null;
+  /** Mockups (base_models) from DB for the Prendas panel. */
+  mockups?: Mockup[];
 }
 
 const ZOOM_MIN = 0.005;
@@ -163,12 +165,14 @@ export function EditorLayout({
   designId = null,
   initialMockupModelPath = null,
   initialProductId = null,
+  mockups: mockupsProp = [],
 }: EditorLayoutProps) {
+  const mockups = mockupsProp.length > 0 ? mockupsProp : [];
   const [elements, setElements] = useState<CanvasElement[]>(initialElements);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [selected3DMockup, setSelected3DMockupState] = useState<{ modelPath: string } | null>(() => {
     if (initialMockupModelPath) return { modelPath: initialMockupModelPath };
-    const first = MOCK_MOCKUPS[0];
+    const first = mockups[0];
     return first?.modelPath ? { modelPath: first.modelPath } : null;
   });
   const viewMode = "3d" as const; // Single 3D view only (no 2D canvas)
@@ -543,6 +547,7 @@ export function EditorLayout({
           projectName={projectName}
           selected3DMockup={selected3DMockup}
           onSelect3DMockup={setSelected3DMockup}
+          mockups={mockups}
           centerViewMode={centerViewMode}
           onCenterViewModeChange={setCenterViewMode}
           modelMeshInfo={modelMeshInfo}

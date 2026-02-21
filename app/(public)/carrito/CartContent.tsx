@@ -42,6 +42,7 @@ export function CartContent({ products }: { products: CatalogProduct[] }) {
                   fill
                   className="object-cover"
                   sizes="96px"
+                  unoptimized={product.coverImage?.includes("placehold.co") ?? false}
                 />
               </div>
               <div className="min-w-0 flex-1">

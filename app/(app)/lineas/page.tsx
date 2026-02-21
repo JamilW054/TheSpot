@@ -1,10 +1,11 @@
 import { LineaCard } from "@/components/lineas";
 import { PageLayout } from "@/components/layout";
-import { MOCK_LINEAS } from "@/config/mock-data";
+import { getLineas } from "@/lib/db";
 import Link from "next/link";
 
-export default function LineasPage() {
-  if (MOCK_LINEAS.length === 0) {
+export default async function LineasPage() {
+  const lineas = await getLineas();
+  if (lineas.length === 0) {
     return (
       <PageLayout title="Líneas de ropa">
         <section
@@ -31,7 +32,7 @@ export default function LineasPage() {
   return (
     <PageLayout title="Líneas de ropa">
       <div className="grid grid-cols-2 gap-4 sm:gap-5 md:grid-cols-3 lg:grid-cols-4">
-        {MOCK_LINEAS.map((linea) => (
+        {lineas.map((linea) => (
           <LineaCard key={linea.id} linea={linea} />
         ))}
       </div>

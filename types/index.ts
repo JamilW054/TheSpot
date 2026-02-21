@@ -116,6 +116,8 @@ export interface CatalogProduct {
   modelPath: string;
   /** Imagen de portada para la ficha y el listado. */
   coverImage: string;
+  /** URL de la textura base (tabla textures) para la vista 3D. */
+  baseTextureUrl?: string | null;
   /** IDs de diseño plantilla para "Personalizar con plantilla". Al editar se crea una copia local. */
   defaultDesignId?: string;
 }
