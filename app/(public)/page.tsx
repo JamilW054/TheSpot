@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { InstagramEmbeds } from "@/components/landing/InstagramEmbeds";
 import { NewsletterForm } from "@/components/landing/NewsletterForm";
+import { HeroLightRaysBackground } from "@/components/landing/HeroLightRaysBackground";
 
 const HERO_MODEL = "/people/modelo-joshua.png";
 const MODEL_BIANDY = "/people/modelo-biandy.png";
@@ -31,8 +32,9 @@ export default function PublicPage() {
   return (
     <article className="min-h-screen flex flex-col bg-background text-foreground">
       {/* 1. Hero — CONTAINER */}
-      <section className="relative min-h-0 bg-background border-b border-border pt-0 pb-6 md:pb-8" aria-labelledby="hero-title">
-        <div className={`w-full ${CONTAINER} flex flex-col md:flex-row md:items-stretch justify-between gap-4 md:gap-6`}>
+      <section className="relative min-h-0 bg-background border-b border-border pt-0 pb-6 md:pb-8 overflow-hidden" aria-labelledby="hero-title">
+        <HeroLightRaysBackground />
+        <div className={`relative z-10 w-full ${CONTAINER} flex flex-col md:flex-row md:items-stretch justify-between gap-4 md:gap-6`}>
           {/* Columna de texto centrada en Y; misma altura que la foto para evitar hueco arriba */}
           <div className="flex-1 min-w-0 flex flex-col justify-center py-4 md:py-0 pl-[14px] md:pl-24">
             <div className="absolute left-4 top-[40%] w-24 h-px bg-muted-foreground/25 rounded-full hidden md:block -rotate-[8deg]" />

@@ -1,6 +1,9 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui";
 import { CartNavLink } from "./CartNavLink";
+
+const LOGO_SRC = "/resources/buxxep-transparent.png";
 
 export function PublicNavbar() {
   return (
@@ -12,9 +15,17 @@ export function PublicNavbar() {
         >
           <Link
             href="/"
-            className="text-xl font-bold tracking-tight text-foreground hover:text-primary transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-md"
+            className="flex items-center focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-md"
+            aria-label="Buxxep - Inicio"
           >
-            Buxxep
+            <Image
+              src={LOGO_SRC}
+              alt="Buxxep"
+              width={140}
+              height={40}
+              className="h-8 w-auto object-contain"
+              priority
+            />
           </Link>
 
           <div className="hidden sm:flex items-center gap-8">
