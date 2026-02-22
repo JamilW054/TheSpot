@@ -14,16 +14,32 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://buxxep.com";
+const SITE_URL = "https://buxxep.vercel.app";
+const OG_IMAGE_PATH = "/banner/1.png";
+const OG_IMAGE_ABSOLUTE = `${SITE_URL}${OG_IMAGE_PATH}`;
+const FAVICON_PATH = "/favicon.jpg";
+
+const DEFAULT_TITLE = "Buxxep — Moda atemporal, alma moderna. Ropa personalizada y streetwear";
+const DEFAULT_DESCRIPTION =
+  "Diseña y compra ropa personalizada. Camisetas, hoodies y streetwear con tu estilo. Editor 3D, calidad y envíos. Moda urbana en República Dominicana.";
+const OG_IMAGE_ALT = "Buxxep — Moda atemporal, alma moderna. Ropa personalizada y streetwear";
+
+const sharedImage = {
+  url: OG_IMAGE_ABSOLUTE,
+  width: 1200,
+  height: 630,
+  alt: OG_IMAGE_ALT,
+  type: "image/png" as const,
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "Buxxep — Moda atemporal, alma moderna. Ropa personalizada y streetwear",
+    default: DEFAULT_TITLE,
     template: "%s | Buxxep",
   },
-  description:
-    "Diseña y compra ropa personalizada. Camisetas, hoodies y streetwear con tu estilo. Editor 3D, calidad y envíos. Moda urbana en República Dominicana.",
+  description: DEFAULT_DESCRIPTION,
+  applicationName: "Buxxep",
   keywords: [
     "Buxxep",
     "ropa personalizada",
@@ -44,23 +60,17 @@ export const metadata: Metadata = {
     locale: "es_DO",
     url: SITE_URL,
     siteName: "Buxxep",
-    title: "Buxxep — Moda atemporal, alma moderna",
-    description:
-      "Diseña y compra ropa personalizada. Streetwear, editor 3D y calidad. Moda urbana.",
-    images: [
-      {
-        url: "/banner/1.png",
-        width: 1200,
-        height: 630,
-        alt: "Buxxep — Moda atemporal, alma moderna. Ropa personalizada y streetwear",
-      },
-    ],
+    title: DEFAULT_TITLE,
+    description: DEFAULT_DESCRIPTION,
+    images: [sharedImage],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Buxxep — Moda atemporal, alma moderna",
-    description: "Ropa personalizada, streetwear y editor 3D. Diseña la tuya.",
-    images: ["/banner/1.png"],
+    site: "@buxxep",
+    creator: "@buxxep",
+    title: DEFAULT_TITLE,
+    description: DEFAULT_DESCRIPTION,
+    images: [sharedImage],
   },
   robots: {
     index: true,
@@ -78,7 +88,9 @@ export const metadata: Metadata = {
   },
   category: "fashion",
   icons: {
-    icon: "/favicon.jpg",
+    icon: [{ url: FAVICON_PATH, type: "image/jpeg" }],
+    shortcut: FAVICON_PATH,
+    apple: FAVICON_PATH,
   },
   verification: {
     // Añade cuando tengas: google: "tu-codigo-google-search-console",
