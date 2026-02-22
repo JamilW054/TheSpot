@@ -15,21 +15,22 @@ const geistMono = Geist_Mono({
 });
 
 const SITE_URL = "https://buxxep.vercel.app";
-const OG_IMAGE_PATH = "/banner/1.png";
-const OG_IMAGE_ABSOLUTE = `${SITE_URL}${OG_IMAGE_PATH}`;
+// Use /banner/og.jpg (1200×630, <600 KB) for WhatsApp & social. Generate with: pnpm run og:image
+const OG_IMAGE_PATH = "/banner/og.jpg";
 const FAVICON_PATH = "/favicon.jpg";
 
-const DEFAULT_TITLE = "Buxxep — Moda atemporal, alma moderna. Ropa personalizada y streetwear";
+// Keep under 60 chars for best display on social (e.g. WhatsApp)
+const DEFAULT_TITLE = "Buxxep — Moda atemporal, alma moderna. Streetwear.";
 const DEFAULT_DESCRIPTION =
   "Diseña y compra ropa personalizada. Camisetas, hoodies y streetwear con tu estilo. Editor 3D, calidad y envíos. Moda urbana en República Dominicana.";
 const OG_IMAGE_ALT = "Buxxep — Moda atemporal, alma moderna. Ropa personalizada y streetwear";
 
-const sharedImage = {
-  url: OG_IMAGE_ABSOLUTE,
+const ogImage = {
+  url: OG_IMAGE_PATH,
   width: 1200,
   height: 630,
   alt: OG_IMAGE_ALT,
-  type: "image/png" as const,
+  type: "image/jpeg" as const,
 };
 
 export const metadata: Metadata = {
@@ -62,7 +63,7 @@ export const metadata: Metadata = {
     siteName: "Buxxep",
     title: DEFAULT_TITLE,
     description: DEFAULT_DESCRIPTION,
-    images: [sharedImage],
+    images: [ogImage],
   },
   twitter: {
     card: "summary_large_image",
@@ -70,7 +71,7 @@ export const metadata: Metadata = {
     creator: "@buxxep",
     title: DEFAULT_TITLE,
     description: DEFAULT_DESCRIPTION,
-    images: [sharedImage],
+    images: [ogImage],
   },
   robots: {
     index: true,
