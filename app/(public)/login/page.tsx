@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { Input, Button } from "@/components/ui";
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, login, isLoading } = useAuth();
@@ -45,56 +45,64 @@ export default function LoginPage() {
   return (
     <div className="flex flex-1 flex-col items-center justify-center">
       <div className="mx-auto max-w-md w-full py-8">
-      <h1 className="text-2xl font-semibold text-foreground mb-2">
-        Iniciar sesión
-      </h1>
-      <p className="text-muted-foreground text-sm mb-8">
-        Entra con tu email y contraseña.
-      </p>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <Input
-          label="Email"
-          type="email"
-          placeholder="tu@email.com"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          disabled={isLoading}
-          autoComplete="email"
-        />
-        <Input
-          label="Contraseña"
-          type="password"
-          placeholder="••••••••"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          disabled={isLoading}
-          autoComplete="current-password"
-        />
-        {error ? (
-          <p role="alert" className="text-sm text-destructive">
-            {error}
-          </p>
-        ) : null}
-        <Button
-          type="submit"
-          variant="primary"
-          size="lg"
-          className="w-full"
-          disabled={isLoading}
-        >
-          {isLoading ? "Iniciando sesión…" : "Iniciar sesión"}
-        </Button>
-      </form>
-      <p className="mt-6 text-center text-sm text-muted-foreground">
-        ¿No tienes cuenta?{" "}
-        <Link
-          href="/registro"
-          className="font-medium text-primary hover:underline"
-        >
-          Regístrate
-        </Link>
-      </p>
+        <h1 className="text-2xl font-semibold text-foreground mb-2">
+          Iniciar sesión
+        </h1>
+        <p className="text-muted-foreground text-sm mb-8">
+          Entra con tu email y contraseña.
+        </p>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <Input
+            label="Email"
+            type="email"
+            placeholder="tu@email.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            disabled={isLoading}
+            autoComplete="email"
+          />
+          <Input
+            label="Contraseña"
+            type="password"
+            placeholder="••••••••"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            disabled={isLoading}
+            autoComplete="current-password"
+          />
+          {error ? (
+            <p role="alert" className="text-sm text-destructive">
+              {error}
+            </p>
+          ) : null}
+          <Button
+            type="submit"
+            variant="primary"
+            size="lg"
+            className="w-full"
+            disabled={isLoading}
+          >
+            {isLoading ? "Iniciando sesión…" : "Iniciar sesión"}
+          </Button>
+        </form>
+        <p className="mt-6 text-center text-sm text-muted-foreground">
+          ¿No tienes cuenta?{" "}
+          <Link
+            href="/registro"
+            className="font-medium text-primary hover:underline"
+          >
+            Regístrate
+          </Link>
+        </p>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="flex flex-1 items-center justify-center text-muted-foreground">Cargando…</div>}>
+      <LoginForm />
+    </Suspense>
   );
 }
