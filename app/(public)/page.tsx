@@ -3,9 +3,11 @@ import Image from "next/image";
 import { InstagramEmbeds } from "@/components/landing/InstagramEmbeds";
 import { NewsletterForm } from "@/components/landing/NewsletterForm";
 import { HeroLightRaysBackground } from "@/components/landing/HeroLightRaysBackground";
+import MagicBento from "@/components/MagicBento";
 
 const HERO_MODEL = "/people/modelo-joshua.png";
 const MODEL_BIANDY = "/people/modelo-biandy.png";
+const MODEL_ACTITUD = "/people/modelo-actitud.png";
 const PROJECT_IMAGES = [
   "/project/project-01.png",
   "/project/project-02.png",
@@ -95,45 +97,45 @@ export default function PublicPage() {
         </div>
       </section>
 
-      {/* 3. Modestia + estilo — CONTAINER */}
-      <section className={`py-8 border-b border-border ${CONTAINER}`} aria-labelledby="section-modesty">
-          <div className="w-full flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-            <h2 id="section-modesty" className="text-xl sm:text-2xl font-bold text-foreground uppercase tracking-tight flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" aria-hidden />
-              Donde la modestia encuentra el <span className="landing-wavy-underline">estilo</span>
-            </h2>
-            <div className="flex flex-wrap items-center gap-2">
-              {CATEGORIES.map((cat, i) => (
-                <button
-                  key={cat}
-                  type="button"
-                  className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors shrink-0 ${
-                    i === 0 ? "bg-primary text-primary-foreground" : "border border-border text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            {PROJECT_IMAGES.slice(0, 4).map((src, i) => (
-              <Link key={src} href="/catalogo" className="group block rounded-lg overflow-hidden bg-card border border-border">
-                <div className="relative aspect-[3/4] overflow-hidden">
-                  <Image src={src} alt="" fill className="object-cover group-hover:scale-105 transition-transform duration-300" sizes="(max-width: 1024px) 50vw, 25vw" />
-                </div>
-                <div className="p-3 flex items-center justify-between gap-2">
-                  <span className="font-medium text-foreground text-xs truncate">{CARD_LABELS[i] ?? "Ver colección"}</span>
-                  <span className="text-primary text-sm shrink-0" aria-hidden>→</span>
-                </div>
-              </Link>
+      {/* 3. Modestia + estilo — CONTAINER (igual que antes) */}
+      <section className={`py-6 border-b border-border ${CONTAINER}`} aria-labelledby="section-modesty">
+        <div className="w-full flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+          <h2 id="section-modesty" className="text-xl sm:text-2xl font-bold text-foreground uppercase tracking-tight flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" aria-hidden />
+            Donde la modestia encuentra el <span className="landing-wavy-underline">estilo</span>
+          </h2>
+          <div className="flex flex-wrap items-center gap-2">
+            {CATEGORIES.map((cat, i) => (
+              <button
+                key={cat}
+                type="button"
+                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors shrink-0 ${
+                  i === 0 ? "bg-primary text-primary-foreground" : "border border-border text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                }`}
+              >
+                {cat}
+              </button>
             ))}
           </div>
+        </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {PROJECT_IMAGES.slice(0, 4).map((src, i) => (
+            <Link key={src} href="/catalogo" className="group block rounded-lg overflow-hidden bg-card border border-border">
+              <div className="relative aspect-[3/4] overflow-hidden">
+                <Image src={src} alt="" fill className="object-cover group-hover:scale-105 transition-transform duration-300" sizes="(max-width: 1024px) 50vw, 25vw" />
+              </div>
+              <div className="p-3 flex items-center justify-between gap-2">
+                <span className="font-medium text-foreground text-xs truncate">{CARD_LABELS[i] ?? "Ver colección"}</span>
+                <span className="text-primary text-sm shrink-0" aria-hidden>→</span>
+              </div>
+            </Link>
+          ))}
+        </div>
       </section>
 
       {/* 4. Diseñado para un mejor mañana — CONTAINER */}
-      <section className={`py-8 bg-muted/20 ${CONTAINER}`} aria-labelledby="section-tomorrow">
-        <div className="w-full grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+      <section className={`py-6 bg-muted/20 ${CONTAINER}`} aria-labelledby="section-tomorrow">
+        <div className="w-full grid grid-cols-1 lg:grid-cols-2 gap-6 items-center">
           <div className="relative">
             <div className="grid grid-cols-2 gap-3">
               <div className="relative aspect-[3/4] rounded-md overflow-hidden">
@@ -168,100 +170,78 @@ export default function PublicPage() {
         </div>
       </section>
 
-      {/* 5. Bento — CONTAINER, proporciones coherentes: 1 grande (2×2), 1 ancha (2×1), 5 pequeñas (1×1) */}
-      <section className={`py-8 border-b border-border ${CONTAINER}`} aria-labelledby="section-strength">
-          <div className="w-full text-center mb-6">
-            <h2 id="section-strength" className="text-xl sm:text-2xl font-bold text-foreground uppercase tracking-tight inline-flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" aria-hidden />
-              Hecho para el día a día <span className="landing-wavy-underline">fuerte</span>
-            </h2>
-            <p className="mt-2 text-muted-foreground text-sm max-w-lg mx-auto">
-              Prendas que aguantan el ritmo. Personalízalas a tu gusto en el editor 3D.
-            </p>
-          </div>
-          <div className="w-full grid grid-cols-2 lg:grid-cols-4 gap-3 auto-rows-fr">
-            {/* Grande: 2 cols × 2 rows = 4 celdas (misma altura que 2 filas de pequeñas) */}
-            <div className="relative aspect-square lg:aspect-auto lg:row-span-2 lg:min-h-0 rounded-lg overflow-hidden lg:col-span-2">
-              <Image src={PROJECT_IMAGES[0]} alt="" fill className="object-cover" sizes="(max-width: 1024px) 50vw, 50vw" />
-            </div>
-            <div className="relative aspect-square rounded-lg overflow-hidden min-h-0">
-              <Image src={PROJECT_IMAGES[1]} alt="" fill className="object-cover" sizes="(max-width: 1024px) 50vw, 25vw" />
-            </div>
-            <div className="relative aspect-square rounded-lg overflow-hidden min-h-0">
-              <Image src={PROJECT_IMAGES[2]} alt="" fill className="object-cover" sizes="(max-width: 1024px) 50vw, 25vw" />
-            </div>
-            <div className="relative aspect-square rounded-lg overflow-hidden min-h-0">
-              <Image src={PROJECT_IMAGES[3]} alt="" fill className="object-cover" sizes="(max-width: 1024px) 50vw, 25vw" />
-            </div>
-            <div className="relative aspect-square rounded-lg overflow-hidden min-h-0">
-              <Image src={PROJECT_IMAGES[4]} alt="" fill className="object-cover" sizes="(max-width: 1024px) 50vw, 25vw" />
-            </div>
-            <div className="relative aspect-square rounded-lg overflow-hidden min-h-0">
-              <Image src={PROJECT_IMAGES[5]} alt="" fill className="object-cover" sizes="(max-width: 1024px) 50vw, 25vw" />
-            </div>
-            {/* Ancha: 2 cols en última fila para rellenar sin huecos */}
-            <div className="relative aspect-square lg:aspect-2/1 rounded-lg overflow-hidden min-h-0 lg:col-span-2">
-              <Image src={PROJECT_IMAGES[6]} alt="" fill className="object-cover" sizes="(max-width: 1024px) 50vw, 50vw" />
-            </div>
-          </div>
+      {/* 5. Hecho para el día a día fuerte — MagicBento */}
+      <section className={`py-6 border-b border-border ${CONTAINER}`} aria-labelledby="section-strength">
+        <h2 id="section-strength" className="text-xl sm:text-2xl font-bold text-foreground uppercase tracking-tight flex items-center gap-2 mb-4">
+          <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" aria-hidden />
+          Hecho para el día a día <span className="landing-wavy-underline">fuerte</span>
+        </h2>
+        <p className="text-muted-foreground text-sm mb-4">
+          Prendas que aguantan el ritmo. Personalízalas a tu gusto en el editor 3D.
+        </p>
+        <MagicBento
+          textAutoHide
+          enableStars
+          enableSpotlight
+          enableBorderGlow
+          enableTilt={false}
+          enableMagnetism={false}
+          clickEffect
+          spotlightRadius={400}
+          particleCount={12}
+          glowColor="60, 200, 247"
+          disableAnimations={false}
+        />
       </section>
 
-      {/* 6. Donde la moda encuentra actitud — CONTAINER, más compacto */}
-      <section className={`py-6 bg-muted/20 ${CONTAINER}`} aria-labelledby="section-attitude">
-        <div className="w-full grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-          <div className="space-y-2 min-w-0">
-            <h2 id="section-attitude" className="text-lg sm:text-xl font-bold text-foreground uppercase tracking-tight flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" aria-hidden />
-              Donde la moda encuentra <span className="landing-wavy-underline">actitud</span>
-            </h2>
-            <div className="relative w-full max-h-[240px] sm:max-h-[280px] aspect-[4/3] rounded-lg overflow-hidden border border-border">
-              <Image src={PROJECT_IMAGES[1]} alt="" fill className="object-cover" sizes="(max-width: 1024px) 100vw, 50vw" />
-            </div>
-            <p className="text-muted-foreground text-xs sm:text-sm leading-snug">
-              Estilo único para quien no sigue tendencias. Diseña, personaliza y compra en Buxxep.
-            </p>
-          </div>
-          <div className="space-y-2">
-            {FEATURES.map((f, i) => (
-              <div
-                key={f.num}
-                className={`rounded-lg p-3 flex gap-2.5 ${
-                  i === 0 ? "bg-primary text-primary-foreground" : "bg-card border border-primary/30"
-                }`}
-              >
-                <span className={`w-2 h-2 rounded-full shrink-0 mt-0.5 ${i === 0 ? "bg-primary-foreground" : "bg-primary"}`} aria-hidden />
-                <div className="min-w-0">
-                  <h3 className="font-bold text-xs">{f.title}</h3>
-                  <p className={i === 0 ? "text-primary-foreground/90 mt-0.5 text-[11px]" : "text-muted-foreground mt-0.5 text-[11px]"}>{f.text}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* 7. Cómo funciona — CONTAINER */}
-      <section className={`py-8 bg-muted/40 ${CONTAINER}`} aria-labelledby="how-title">
-        <div className="w-full">
-          <h2 id="how-title" className="text-xl sm:text-2xl font-bold text-center text-foreground mb-6">
-            Cómo funciona
+      {/* 6. Donde la moda encuentra actitud — full width imagen + overlay */}
+      <section className="w-full relative min-h-[50vh] sm:min-h-[60vh] overflow-hidden" aria-labelledby="section-attitude">
+        <Image
+          src={MODEL_ACTITUD}
+          alt=""
+          fill
+          className="object-cover"
+          sizes="100vw"
+          priority={false}
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/50 to-transparent" />
+        <div className={`absolute inset-0 ${CONTAINER} flex flex-col justify-center py-12`}>
+          <h2 id="section-attitude" className="text-2xl sm:text-3xl md:text-4xl font-bold text-white uppercase tracking-tight max-w-xl">
+            Donde la moda encuentra <span className="text-primary">actitud</span>
           </h2>
-          <div className="grid sm:grid-cols-3 gap-6">
-            {[
-              { step: "1", title: "Elige prenda", text: "Entra al catálogo y elige la camiseta o prenda que quieras personalizar." },
-              { step: "2", title: "Diseña", text: "Usa el editor: añade texto, imágenes y formas. Vista previa en 3D en tiempo real." },
-              { step: "3", title: "Compra", text: "Añade al carrito y finaliza tu pedido. Nosotros lo preparamos y enviamos." },
-            ].map((item) => (
-              <div key={item.step} className="text-center">
-                <span className="inline-flex justify-center items-center w-10 h-10 rounded-full bg-primary text-primary-foreground font-bold text-sm">
-                  {item.step}
-                </span>
-                <h3 className="mt-3 font-semibold text-foreground text-base">{item.title}</h3>
-                <p className="mt-1.5 text-muted-foreground text-xs sm:text-sm">{item.text}</p>
-              </div>
+          <p className="mt-2 text-white/90 text-sm sm:text-base max-w-md">
+            Estilo único para quien no sigue tendencias. Diseña, personaliza y compra en Buxxep.
+          </p>
+          <ul className="mt-6 flex flex-wrap gap-x-6 gap-y-1 text-xs sm:text-sm text-white/80">
+            {FEATURES.map((f) => (
+              <li key={f.num}>
+                <span className="text-primary font-mono">{f.num}</span> {f.title}
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
+      </section>
+
+      {/* 7. Cómo funciona — lista editorial sin cards */}
+      <section className={`py-6 bg-muted/40 ${CONTAINER}`} aria-labelledby="how-title">
+        <h2 id="how-title" className="text-lg font-bold text-foreground uppercase tracking-tight mb-4">
+          Cómo funciona
+        </h2>
+        <ol className="list-none p-0 m-0 flex flex-col sm:flex-row sm:gap-10 gap-5">
+          {[
+            { step: 1, title: "Elige prenda", text: "Catálogo → elige la prenda." },
+            { step: 2, title: "Diseña", text: "Editor 3D: texto, imágenes, formas." },
+            { step: 3, title: "Compra", text: "Carrito → pedido → te lo enviamos." },
+          ].map((item) => (
+            <li key={item.step} className="flex gap-3 sm:flex-1">
+              <span className="text-primary font-mono text-base tabular-nums shrink-0">{item.step}.</span>
+              <div>
+                <h3 className="font-semibold text-foreground text-sm">{item.title}</h3>
+                <p className="mt-0.5 text-muted-foreground text-xs">{item.text}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
       </section>
 
       <InstagramEmbeds />
@@ -269,7 +249,7 @@ export default function PublicPage() {
       {/* 8. Footer — CONTAINER */}
       <footer className="mt-auto border-t border-border bg-muted/30">
         <div className={`w-full ${CONTAINER} py-10`}>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-10">
             <div className="space-y-3">
               <Link href="/" className="text-lg font-bold text-foreground hover:text-primary transition-colors">
                 Buxxep
@@ -286,13 +266,17 @@ export default function PublicPage() {
               <p className="font-semibold text-foreground text-sm">Suscríbete al boletín</p>
               <NewsletterForm />
             </div>
-            <div className="flex flex-col gap-2 text-xs text-muted-foreground">
-              <Link href="/catalogo" className="hover:text-foreground transition-colors">Catálogo</Link>
-              <Link href="/editor" className="hover:text-foreground transition-colors">Editor</Link>
+            <div className="space-y-2">
+              <p className="font-semibold text-foreground text-sm">Enlaces</p>
+              <div className="flex flex-col gap-2 text-xs text-muted-foreground">
+                <Link href="/catalogo" className="hover:text-foreground transition-colors">Catálogo</Link>
+                <Link href="/editor" className="hover:text-foreground transition-colors">Editor</Link>
+                <Link href="/carrito" className="hover:text-foreground transition-colors">Carrito</Link>
+              </div>
             </div>
           </div>
           <div className="mt-8 pt-6 border-t border-border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs text-muted-foreground">
-            <p>© {new Date().getFullYear()} Buxxep. Todos los derechos reservados. Términos de uso · Privacidad</p>
+            <p>© {new Date().getFullYear()} Buxxep. Todos los derechos reservados.</p>
             <p>CEO — Biandy Peguero</p>
           </div>
         </div>

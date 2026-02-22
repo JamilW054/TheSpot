@@ -1,64 +1,44 @@
-import Link from "next/link";
-import Image from "next/image";
-import { Button } from "@/components/ui";
-import { CartNavLink } from "./CartNavLink";
+"use client";
+
+import StaggeredMenu from "@/components/StaggeredMenu";
 
 const LOGO_SRC = "/resources/buxxep-transparent.png";
+const PRIMARY = "#3CC8F7";
+
+const MENU_ITEMS = [
+  { label: "Inicio", ariaLabel: "Ir a inicio", link: "/" },
+  { label: "Catálogo", ariaLabel: "Ver catálogo", link: "/catalogo" },
+  { label: "Editor", ariaLabel: "Abrir editor", link: "/editor" },
+  { label: "Carrito", ariaLabel: "Ver carrito", link: "/carrito" },
+  { label: "Entrar", ariaLabel: "Iniciar sesión", link: "/login" },
+  { label: "Registrarse", ariaLabel: "Crear cuenta", link: "/registro" },
+];
+
+const SOCIAL_ITEMS = [
+  { label: "Instagram", link: "https://www.instagram.com/buxxep/" },
+];
 
 export function PublicNavbar() {
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/80 bg-background/90 backdrop-blur-md">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        <nav
-          className="flex h-16 items-center justify-between gap-6"
-          aria-label="Navegación principal"
-        >
-          <Link
-            href="/"
-            className="flex items-center focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-md"
-            aria-label="Buxxep - Inicio"
-          >
-            <Image
-              src={LOGO_SRC}
-              alt="Buxxep"
-              width={140}
-              height={40}
-              className="h-8 w-auto object-contain"
-              priority
-            />
-          </Link>
-
-          <div className="hidden sm:flex items-center gap-8">
-            <Link
-              href="/catalogo"
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Catálogo
-            </Link>
-            <Link
-              href="/editor"
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Editor
-            </Link>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <CartNavLink />
-            <Link
-              href="/registro"
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Registrarse
-            </Link>
-            <Link href="/login">
-              <Button variant="primary" size="sm" className="rounded-full px-5">
-                Entrar
-              </Button>
-            </Link>
-          </div>
-        </nav>
-      </div>
-    </header>
+    <StaggeredMenu
+      position="right"
+      items={MENU_ITEMS}
+      socialItems={SOCIAL_ITEMS}
+      displaySocials
+      displayItemNumbering
+      menuButtonColor="#ffffff"
+      openMenuButtonColor="#ffffff"
+      changeMenuColorOnOpen
+      colors={["#0c0c0e", "#1a1a1f", "#2aa8d4", PRIMARY]}
+      logoUrl={LOGO_SRC}
+      logoAlt="Buxxep - Ir a inicio"
+      accentColor={PRIMARY}
+      isFixed
+      closeOnClickAway
+      menuLabel="Menú"
+      closeLabel="Cerrar"
+      openAriaLabel="Abrir menú"
+      closeAriaLabel="Cerrar menú"
+    />
   );
 }

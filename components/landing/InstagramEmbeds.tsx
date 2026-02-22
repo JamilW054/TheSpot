@@ -2,7 +2,6 @@
 
 /**
  * Embeds oficiales de posts de Instagram (@buxxep).
- * Cada iframe carga la URL de embed de Instagram para el post.
  */
 const EMBED_SHORTCODES = [
   "DBURvQ9vqA-",

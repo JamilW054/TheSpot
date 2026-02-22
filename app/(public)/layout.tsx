@@ -8,7 +8,7 @@ export default function PublicLayout({
     <CartProvider>
       <div className="min-h-screen flex flex-col bg-background text-foreground">
         <PublicNavbar />
-        <main className="flex flex-1 w-full flex-col pt-0">
+        <main className="flex flex-1 w-full flex-col pt-24 sm:pt-26">
           {children}
         </main>
       </div>
