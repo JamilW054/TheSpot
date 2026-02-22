@@ -76,4 +76,4 @@ Abre [http://localhost:3000](http://localhost:3000).
 
 ## Licencia
 
-Ver [LICENSE](./LICENSE).
+Ver [licencia](./LICENSE).
