@@ -58,7 +58,7 @@ pnpm install
 | App    | `/mis-disenos`, `/editor`, `/lineas`, `/guia`, `/recursos`, `/soporte` |
 | Admin  | `/admin`, `/admin/pedidos`, `/admin/config` |
 
-La autenticación es **mock**: cualquier email y contraseña son válidos. Si el email contiene `admin` (ej. `admin@test.com`), el usuario entra como administrador y se redirige a `/admin`; en caso contrario, como cliente a `/mis-disenos`.
+**Autenticación (Supabase Auth):** Login y registro usan Supabase. Variables de entorno: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`. Si en el Dashboard de Supabase (Authentication → Providers → Email) tienes **Confirm email** activado, tras registrarse el usuario debe confirmar el correo; el enlace de confirmación redirige a `/auth/callback` y luego puede iniciar sesión. Para desarrollo sin confirmación, desactiva **Confirm email** y el registro dejará sesión iniciada al instante. El rol admin se asigna si el email contiene `admin` (ej. `admin@tuemail.com`); entonces se redirige a `/admin`.
 
 ## Editor de diseños
 

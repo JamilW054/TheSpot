@@ -14,6 +14,7 @@ export default function RegistroPage() {
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -42,7 +43,11 @@ export default function RegistroPage() {
     }
 
     try {
-      await register(trimmedEmail, trimmedPassword, trimmedName);
+      const result = await register(trimmedEmail, trimmedPassword, trimmedName);
+      if (result.needsEmailConfirmation) {
+        setError(null);
+        setSuccess("Cuenta creada. Revisa tu correo para confirmar el email y luego inicia sesión.");
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo crear la cuenta. Inténtalo de nuevo.");
     }
@@ -97,6 +102,11 @@ export default function RegistroPage() {
         {error ? (
           <p role="alert" className="text-sm text-destructive">
             {error}
+          </p>
+        ) : null}
+        {success ? (
+          <p role="status" className="text-sm text-green-600 dark:text-green-400">
+            {success}
           </p>
         ) : null}
         <Button

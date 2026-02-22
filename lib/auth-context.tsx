@@ -19,10 +19,12 @@ export interface User {
   role: UserRole;
 }
 
+export type RegisterResult = { needsEmailConfirmation: true } | { needsEmailConfirmation?: false };
+
 export interface AuthContextValue {
   user: User | null;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, name: string) => Promise<void>;
+  register: (email: string, password: string, name: string) => Promise<RegisterResult>;
   logout: () => void;
   isLoading: boolean;
 }
@@ -95,21 +97,29 @@ export function AuthProvider({ children }: AuthProviderProps) {
   );
 
   const register = useCallback(
-    async (email: string, password: string, name: string) => {
+    async (email: string, password: string, name: string): Promise<RegisterResult> => {
       setIsLoading(true);
+      const origin = typeof window !== "undefined" ? window.location.origin : "";
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: { full_name: name.trim() || undefined },
+          emailRedirectTo: `${origin}/auth/callback`,
         },
       });
       if (error) {
         setIsLoading(false);
         throw new Error(error.message ?? "No se pudo crear la cuenta.");
       }
-      setUser(userFromSession(data.session));
+      if (data.session) {
+        setUser(userFromSession(data.session));
+        setIsLoading(false);
+        return { needsEmailConfirmation: false };
+      }
       setIsLoading(false);
+      setUser(null);
+      return { needsEmailConfirmation: true };
     },
     [supabase]
   );
