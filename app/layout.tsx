@@ -77,6 +77,9 @@ export const metadata: Metadata = {
     canonical: SITE_URL,
   },
   category: "fashion",
+  icons: {
+    icon: "/favicon.jpg",
+  },
   verification: {
     // Añade cuando tengas: google: "tu-codigo-google-search-console",
   },
