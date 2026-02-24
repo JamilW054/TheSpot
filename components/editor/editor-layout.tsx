@@ -12,6 +12,12 @@ import {
 } from "@dnd-kit/core";
 import type { Mockup } from "@/types";
 import { buildDesignExportPayload, downloadDesignJson } from "@/lib/design-export";
+import {
+  getCurrentDraftFromLocal,
+  getDraftFromLocal,
+  getOrCreateDraftId,
+  saveDraftToLocal,
+} from "@/lib/editor-drafts";
 import { renderElementsToTextureUrl } from "@/lib/render-design-to-texture";
 import type { CanvasElement, CanvasElementType } from "@/types";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -154,11 +160,15 @@ export interface EditorLayoutProps {
   initialProductId?: string | null;
   /** Mockups (base_models) from DB for the Prendas panel. */
   mockups?: Mockup[];
+  /** Id de borrador local para restaurar (/?draft=id). */
+  initialDraftId?: string | null;
 }
 
 const ZOOM_MIN = 0.005;
 const ZOOM_MAX = 4;
 const ZOOM_STEP = 0.1;
+
+const AUTO_SAVE_DEBOUNCE_MS = 2000;
 
 export function EditorLayout({
   initialElements = [],
@@ -166,8 +176,12 @@ export function EditorLayout({
   initialMockupModelPath = null,
   initialProductId = null,
   mockups: mockupsProp = [],
+  initialDraftId = null,
 }: EditorLayoutProps) {
   const mockups = mockupsProp.length > 0 ? mockupsProp : [];
+  const draftIdRef = useRef<string | null>(null);
+  const [restoredFromDraft, setRestoredFromDraft] = useState(false);
+
   const [elements, setElements] = useState<CanvasElement[]>(initialElements);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [selected3DMockup, setSelected3DMockupState] = useState<{ modelPath: string } | null>(() => {
@@ -226,6 +240,61 @@ export function EditorLayout({
     setHistoryCanUndo(true);
     setHistoryCanRedo(historyFuture.current.length > 0);
   }, [elements]);
+
+  // Restaurar borrador al montar: ?draft=id o borrador actual (solo si no estamos editando un diseño existente ni una copia con contenido)
+  useEffect(() => {
+    if (designId != null) return;
+    if (initialElements.length > 0 && initialDraftId == null) return;
+    const draft =
+      initialDraftId != null
+        ? getDraftFromLocal(initialDraftId)
+        : getCurrentDraftFromLocal();
+    if (!draft) return;
+    if (Array.isArray(draft.elements) && draft.elements.length > 0) {
+      setElements(draft.elements);
+    }
+    setTexture3dUrl(draft.textureUrl ?? null);
+    setGarmentColor(draft.garmentColorHex ?? "#ffffff");
+    setRotation3d(draft.rotation3d ?? 0);
+    setZoom3d(draft.zoom3d ?? 1);
+    if (draft.modelPath) {
+      setSelected3DMockupState({ modelPath: draft.modelPath });
+    }
+    draftIdRef.current = draft.id;
+    setRestoredFromDraft(true);
+  }, []);
+
+  // Auto-guardado en localStorage (borradores)
+  useEffect(() => {
+    if (designId != null) return;
+    const t = setTimeout(() => {
+      const id = draftIdRef.current ?? getOrCreateDraftId();
+      draftIdRef.current = id;
+      saveDraftToLocal({
+        id,
+        name: designId ?? "Borrador",
+        updatedAt: new Date().toISOString(),
+        elements,
+        modelPath: selected3DMockup?.modelPath ?? null,
+        textureUrl: texture3dUrl,
+        garmentColorHex: garmentColor,
+        rotation3d,
+        zoom3d,
+        productId: initialProductId ?? null,
+        designId,
+      });
+    }, AUTO_SAVE_DEBOUNCE_MS);
+    return () => clearTimeout(t);
+  }, [
+    designId,
+    elements,
+    selected3DMockup?.modelPath,
+    texture3dUrl,
+    garmentColor,
+    rotation3d,
+    zoom3d,
+    initialProductId,
+  ]);
 
   // Al cambiar de modelo, limpiar bounds y mesh info hasta que el nuevo GLB reporte
   useEffect(() => {

@@ -1,7 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
 import { InstagramEmbeds } from "@/components/landing/InstagramEmbeds";
-import { NewsletterForm } from "@/components/landing/NewsletterForm";
 import { HeroLightRaysBackground } from "@/components/landing/HeroLightRaysBackground";
 import MagicBento from "@/components/MagicBento";
 
@@ -245,42 +244,6 @@ export default function PublicPage() {
       </section>
 
       <InstagramEmbeds />
-
-      {/* 8. Footer — CONTAINER */}
-      <footer className="mt-auto border-t border-border bg-muted/30">
-        <div className={`w-full ${CONTAINER} py-10`}>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-10">
-            <div className="space-y-3">
-              <Link href="/" className="text-lg font-bold text-foreground hover:text-primary transition-colors">
-                Buxxep
-              </Link>
-              <div className="flex flex-col gap-2 text-xs text-muted-foreground">
-                <Link href="/catalogo" className="hover:text-foreground transition-colors">Términos y condiciones</Link>
-                <Link href="/catalogo" className="hover:text-foreground transition-colors">Política de privacidad</Link>
-              </div>
-              <a href="https://www.instagram.com/buxxep/" target="_blank" rel="noopener noreferrer" className="inline-block text-xs text-muted-foreground hover:text-foreground transition-colors" aria-label="Instagram">
-                Instagram
-              </a>
-            </div>
-            <div className="space-y-2">
-              <p className="font-semibold text-foreground text-sm">Suscríbete al boletín</p>
-              <NewsletterForm />
-            </div>
-            <div className="space-y-2">
-              <p className="font-semibold text-foreground text-sm">Enlaces</p>
-              <div className="flex flex-col gap-2 text-xs text-muted-foreground">
-                <Link href="/catalogo" className="hover:text-foreground transition-colors">Catálogo</Link>
-                <Link href="/editor" className="hover:text-foreground transition-colors">Editor</Link>
-                <Link href="/carrito" className="hover:text-foreground transition-colors">Carrito</Link>
-              </div>
-            </div>
-          </div>
-          <div className="mt-8 pt-6 border-t border-border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs text-muted-foreground">
-            <p>© {new Date().getFullYear()} Buxxep. Todos los derechos reservados.</p>
-            <p>CEO — Biandy Peguero</p>
-          </div>
-        </div>
-      </footer>
     </article>
   );
 }

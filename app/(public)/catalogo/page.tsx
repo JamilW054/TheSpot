@@ -1,8 +1,9 @@
 import { AddToCartButton } from "@/components/catalog/AddToCartButton";
-import { CatalogProductViewer } from "@/components/catalog/CatalogProductViewer";
-import { CATALOG_3D_MODEL } from "@/config/catalog";
+import { CatalogProductViewerWithDesign } from "@/components/catalog/CatalogProductViewerWithDesign";
+import { getDesignById } from "@/lib/db";
 import { getProducts } from "@/lib/db";
 import Link from "next/link";
+import type { Design } from "@/types";
 
 export const metadata = {
   title: "Catálogo | Buxxep",
@@ -11,8 +12,16 @@ export const metadata = {
 
 export default async function CatalogPage() {
   const products = await getProducts();
+  const designIds = [...new Set(products.map((p) => p.defaultDesignId).filter(Boolean))] as string[];
+  const designResults = await Promise.all(designIds.map((id) => getDesignById(id)));
+  const designById = new Map<string, Design>();
+  designIds.forEach((id, i) => {
+    const d = designResults[i];
+    if (d) designById.set(id, d);
+  });
+
   return (
-    <article className="min-h-[80vh]">
+    <article className="min-h-[80vh] w-full max-w-7xl mx-auto px-0">
       <section className="mb-10 text-center" aria-labelledby="catalog-title">
         <h1 id="catalog-title" className="text-3xl font-bold tracking-tight sm:text-4xl text-foreground">
           Catálogo
@@ -33,10 +42,10 @@ export default async function CatalogPage() {
               className="relative flex aspect-square overflow-hidden bg-muted transition-transform duration-300 hover:scale-[1.02]"
             >
               <div className="relative h-full w-full">
-                <CatalogProductViewer
+                <CatalogProductViewerWithDesign
                   key={product.id}
-                  modelPath={CATALOG_3D_MODEL}
-                  textureUrl={product.baseTextureUrl ?? (product.coverImage || null)}
+                  product={product}
+                  design={product.defaultDesignId ? (designById.get(product.defaultDesignId) ?? null) : null}
                   compact
                 />
               </div>

@@ -8,13 +8,14 @@ import {
 
 /**
  * Página del editor de diseños.
- * - Sin query: canvas vacío (nuevo diseño).
+ * - Sin query: canvas vacío (nuevo diseño) o borrador restaurado de localStorage.
  * - ?design=id: carga el diseño por id (edición del original).
- * - ?copy=id: carga el diseño como copia local (designId=null); se crea una copia en tu máquina al editar.
- * - ?product=id: preselecciona la prenda del catálogo (modelPath) en el editor.
+ * - ?copy=id: carga el diseño como copia local (designId=null).
+ * - ?product=id: preselecciona la prenda del catálogo (modelPath).
+ * - ?draft=id: carga un borrador guardado localmente (lista en Mis diseños).
  */
 interface EditorPageProps {
-  searchParams: Promise<{ design?: string; copy?: string; product?: string }> | { design?: string; copy?: string; product?: string };
+  searchParams: Promise<{ design?: string; copy?: string; product?: string; draft?: string }> | { design?: string; copy?: string; product?: string; draft?: string };
 }
 
 export default async function EditorPage({ searchParams }: EditorPageProps) {
@@ -22,6 +23,7 @@ export default async function EditorPage({ searchParams }: EditorPageProps) {
   const designIdParam = resolved?.design ?? null;
   const copyId = resolved?.copy ?? null;
   const productId = resolved?.product ?? null;
+  const draftId = resolved?.draft ?? null;
 
   const [mockups, designById, designBySlug, catalogProduct] = await Promise.all([
     getMockups(),
@@ -39,11 +41,12 @@ export default async function EditorPage({ searchParams }: EditorPageProps) {
   return (
     <div className="scrollbar-hide -m-4 flex h-[calc(100vh-3.5rem)] flex-col overflow-hidden sm:-m-6">
       <EditorLayout
-        key={`${designId ?? "new"}-${copyId ?? ""}-${productId ?? ""}`}
+        key={`${designId ?? "new"}-${copyId ?? ""}-${productId ?? ""}-${draftId ?? ""}`}
         initialElements={initialElements}
         designId={designId}
         initialMockupModelPath={initialMockupModelPath}
         initialProductId={productId}
+        initialDraftId={draftId}
         mockups={mockups}
       />
     </div>

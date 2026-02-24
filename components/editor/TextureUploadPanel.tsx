@@ -61,7 +61,7 @@ export function TextureUploadPanel({
 
   useEffect(() => {
     return () => {
-      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      if (previewUrl?.startsWith("blob:")) URL.revokeObjectURL(previewUrl);
     };
   }, [previewUrl]);
 
@@ -92,10 +92,10 @@ export function TextureUploadPanel({
   );
 
   const handleRemove = useCallback(async () => {
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl);
-      setPreviewUrl(null);
-    }
+      if (previewUrl) {
+        if (previewUrl.startsWith("blob:")) URL.revokeObjectURL(previewUrl);
+        setPreviewUrl(null);
+      }
     onTextureChange(null);
     setError(null);
     try {
@@ -172,16 +172,43 @@ export function TextureUploadPanel({
     }
   }, [projectName, projectSlug, getCanvasAsBlob, getEffectiveTextureBlob]);
 
+  const [urlInput, setUrlInput] = useState("");
+  const handleApplyUrl = useCallback(() => {
+    const u = urlInput.trim();
+    if (!u) return;
+    onTextureChange(u);
+    setPreviewUrl(u);
+    setUrlInput("");
+  }, [urlInput, onTextureChange]);
+
   return (
     <div className="mt-3 flex flex-col gap-3">
-      <h3 className="editor-section-title">Diseño / Textura</h3>
+      <h3 className="editor-section-title">Textura del modelo</h3>
       <p className="text-xs leading-relaxed text-muted-foreground">
-        Sube una imagen para usarla como diseño en el modelo 3D. Se guarda como{" "}
-        <code className="rounded bg-muted/60 px-1 py-0.5 font-mono text-[11px]">
-          textura_{projectSlug}.ext
-        </code>
+        Aplica una imagen como textura al modelo entero. Puedes subir un archivo o pegar una URL.
       </p>
       <div className="flex flex-col gap-2">
+        <label className="text-muted-foreground text-xs">Pegar URL de imagen</label>
+        <div className="flex gap-2">
+          <input
+            type="url"
+            value={urlInput}
+            onChange={(e) => setUrlInput(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleApplyUrl()}
+            placeholder="https://…"
+            className="flex-1 min-w-0 rounded border border-border bg-background px-2 py-1.5 text-sm text-foreground"
+            aria-label="URL de la imagen para textura del modelo"
+          />
+          <button
+            type="button"
+            onClick={handleApplyUrl}
+            disabled={!urlInput.trim()}
+            className="shrink-0 rounded-lg border border-border bg-muted/50 px-3 py-1.5 text-sm font-medium hover:bg-muted disabled:opacity-50"
+          >
+            Aplicar
+          </button>
+        </div>
+        <p className="text-muted-foreground text-xs">o sube un archivo:</p>
         <label className="group flex cursor-pointer flex-col items-center gap-2 rounded-xl border-2 border-dashed border-border bg-muted/20 px-4 py-5 text-center transition-colors hover:border-primary/40 hover:bg-muted/40">
           <input
             type="file"

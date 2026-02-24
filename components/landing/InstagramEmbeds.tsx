@@ -6,9 +6,9 @@
 const EMBED_SHORTCODES = [
   "DBURvQ9vqA-",
   "DBURRqrPXqt",
-  "DBURFxEP3Ti",
-  "CxGm1UVP5sC",
-  "CxGmx8_vwrf",
+  "DBUROQAPSKV",
+  "DBURDk-P4bB",
+  "DBURZQ9vjbG",
 ] as const;
 
 const INSTAGRAM_PROFILE = "https://www.instagram.com/buxxep/";

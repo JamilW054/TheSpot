@@ -335,6 +335,25 @@ export function PropertiesPanel({
           )}
         </div>
       )}
+      {element.type === "image" && (
+        <div className="space-y-2 pt-2 border-t border-border">
+          <label htmlFor="prop-image-url" className="text-muted-foreground block">
+            URL de la imagen
+          </label>
+          <input
+            id="prop-image-url"
+            type="url"
+            value={element.content ?? ""}
+            onChange={handleContent}
+            placeholder="https://… o deja vacío y usa Subir imagen en el sidebar"
+            className="rounded border border-border bg-background px-2 py-1 text-foreground w-full min-w-0 text-sm"
+            aria-label="URL de la imagen del elemento"
+          />
+          <p className="text-xs text-muted-foreground">
+            Arrastra &quot;Imagen&quot; al canvas y pega aquí la URL, o usa &quot;Subir imagen&quot; en el sidebar. Puedes mover y redimensionar con los valores de posición y tamaño.
+          </p>
+        </div>
+      )}
       {element.type === "text" && (
         <div className="space-y-2 pt-2 border-t border-border">
           <label htmlFor="prop-content" className="text-muted-foreground block">

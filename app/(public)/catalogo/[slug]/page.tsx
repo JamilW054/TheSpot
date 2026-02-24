@@ -1,6 +1,6 @@
 import { AddToCartButton } from "@/components/catalog/AddToCartButton";
-import { CatalogProductViewer } from "@/components/catalog/CatalogProductViewer";
-import { CATALOG_3D_MODEL } from "@/config/catalog";
+import { CatalogProductViewerWithDesign } from "@/components/catalog/CatalogProductViewerWithDesign";
+import { getDesignById } from "@/lib/db";
 import { getProductBySlug } from "@/lib/db";
 import Image from "next/image";
 import Link from "next/link";
@@ -28,6 +28,8 @@ export default async function CatalogProductPage({ params }: PageProps) {
     notFound();
   }
 
+  const design = product.defaultDesignId ? await getDesignById(product.defaultDesignId) : null;
+
   const personalizarHref = product.defaultDesignId
     ? `/editor?copy=${product.defaultDesignId}&product=${product.id}`
     : `/editor?product=${product.id}`;
@@ -51,9 +53,9 @@ export default async function CatalogProductPage({ params }: PageProps) {
           </div>
           <div>
             <h2 className="mb-2 text-sm font-medium text-muted-foreground">Vista 3D</h2>
-            <CatalogProductViewer
-              modelPath={CATALOG_3D_MODEL}
-              textureUrl={product.baseTextureUrl ?? (product.coverImage || null)}
+            <CatalogProductViewerWithDesign
+              product={product}
+              design={design}
             />
           </div>
         </section>

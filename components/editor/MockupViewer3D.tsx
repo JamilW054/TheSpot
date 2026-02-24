@@ -89,6 +89,9 @@ function TShirtModel({ modelPath, textureUrl, garmentColorHex }: TShirtModelProp
           if (std) {
             if (std.map) std.map.dispose();
             std.map = tex;
+            if (tex) {
+              std.color.setHex(0xffffff);
+            }
             std.needsUpdate = true;
           }
         }
@@ -106,6 +109,10 @@ function TShirtModel({ modelPath, textureUrl, garmentColorHex }: TShirtModelProp
     if (loadUrl.includes("placehold.co") && !loadUrl.includes(".png")) {
       loadUrl = loadUrl.replace(/\?/, ".png?");
     }
+    // URL absoluta para que TextureLoader cargue bien (p. ej. /api/texture?url=... en el cliente)
+    if (typeof window !== "undefined" && loadUrl.startsWith("/")) {
+      loadUrl = window.location.origin + loadUrl;
+    }
 
     let cancelled = false;
     const loader = new TextureLoader();
@@ -118,12 +125,15 @@ function TShirtModel({ modelPath, textureUrl, garmentColorHex }: TShirtModelProp
           return;
         }
         tex.wrapS = tex.wrapT = ClampToEdgeWrapping;
+        tex.repeat.set(1, 1);
+        tex.offset.set(0, 0);
         tex.anisotropy = 4;
         tex.flipY = true;
+        tex.needsUpdate = true;
         applyToMaterials(tex);
       },
       undefined,
-      (err) => {
+      () => {
         if (!cancelled) applyToMaterials(null);
       }
     );

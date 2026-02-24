@@ -1,4 +1,5 @@
 export { PublicNavbar } from "./public-navbar";
+export { PublicFooter } from "./public-footer";
 export {
   AppSidebar,
   type AppSidebarProps,
