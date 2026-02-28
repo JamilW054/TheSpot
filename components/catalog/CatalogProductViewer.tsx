@@ -17,13 +17,21 @@ const MockupViewer3D = dynamic(
 
 interface CatalogProductViewerProps {
   modelPath: string;
-  /** URL de la textura base (tabla textures en DB). */
   textureUrl?: string | null;
-  /** Vista compacta para la cuadrícula del catálogo (rellena el contenedor, vista fija de frente). */
   compact?: boolean;
+  /** Rotación Y inicial (grados), p. ej. misma que en listado catálogo. */
+  initialRotationY?: number;
+  /** Zoom inicial del modelo (misma escala que en listado catálogo). */
+  initialZoom?: number;
 }
 
-export function CatalogProductViewer({ modelPath, textureUrl = null, compact = false }: CatalogProductViewerProps) {
+export function CatalogProductViewer({
+  modelPath,
+  textureUrl = null,
+  compact = false,
+  initialRotationY,
+  initialZoom,
+}: CatalogProductViewerProps) {
   const [mounted, setMounted] = useState(false);
   const [everInView, setEverInView] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -62,6 +70,8 @@ export function CatalogProductViewer({ modelPath, textureUrl = null, compact = f
         fullSize={!compact}
         compact={compact}
         fixedFrontView={compact}
+        rotation={initialRotationY ?? 0}
+        zoom={initialZoom ?? 1}
         garmentColorHex="#ffffff"
       />
     </div>

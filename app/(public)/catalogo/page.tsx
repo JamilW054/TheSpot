@@ -1,5 +1,6 @@
 import { AddToCartButton } from "@/components/catalog/AddToCartButton";
 import { CatalogProductViewerWithDesign } from "@/components/catalog/CatalogProductViewerWithDesign";
+import { CatalogSupabaseDebugLog } from "@/components/catalog/CatalogSupabaseDebugLog";
 import { getDesignById } from "@/lib/db";
 import { getProducts } from "@/lib/db";
 import Link from "next/link";
@@ -20,8 +21,11 @@ export default async function CatalogPage() {
     if (d) designById.set(id, d);
   });
 
+  const designsByKey = Object.fromEntries(designById);
+
   return (
     <article className="w-full max-w-5xl mx-auto px-8 sm:px-10 lg:px-12 pt-2 pb-10">
+      <CatalogSupabaseDebugLog products={products} designsByKey={designsByKey} />
       <section className="mb-4 sm:mb-6 text-center" aria-labelledby="catalog-title">
         <h1 id="catalog-title" className="text-2xl font-bold tracking-tight sm:text-4xl text-foreground">
           Catálogo

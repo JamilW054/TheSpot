@@ -114,6 +114,10 @@ function TShirtModel({ modelPath, textureUrl, garmentColorHex }: TShirtModelProp
       loadUrl = window.location.origin + loadUrl;
     }
 
+    if (typeof window !== "undefined") {
+      console.log("[3D] Cargando textura para modelo:", loadUrl.startsWith("blob:") ? "(blob URL local)" : loadUrl);
+    }
+
     let cancelled = false;
     const loader = new TextureLoader();
     loader.setCrossOrigin("anonymous");
@@ -123,6 +127,9 @@ function TShirtModel({ modelPath, textureUrl, garmentColorHex }: TShirtModelProp
         if (cancelled) {
           tex.dispose();
           return;
+        }
+        if (typeof window !== "undefined") {
+          console.log("[3D] Textura aplicada al modelo correctamente");
         }
         tex.wrapS = tex.wrapT = ClampToEdgeWrapping;
         tex.repeat.set(1, 1);
@@ -134,7 +141,10 @@ function TShirtModel({ modelPath, textureUrl, garmentColorHex }: TShirtModelProp
       },
       undefined,
       () => {
-        if (!cancelled) applyToMaterials(null);
+        if (!cancelled) {
+          if (typeof window !== "undefined") console.warn("[3D] Error al cargar textura para el modelo");
+          applyToMaterials(null);
+        }
       }
     );
     return () => {
