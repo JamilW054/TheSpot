@@ -63,7 +63,7 @@ pnpm install
 
 ## Editor de diseños
 
-- **Layout:** tres columnas: sidebar de herramientas | canvas | panel de propiedades y capas.
+- **Layout:** tres columnas: sidebar de herramientas | canvas | panel de propiedades y capas
 - **Drag and drop:** desde el sidebar se arrastran herramientas al canvas (Texto, Imagen, Forma).
 - **Elementos:** `CanvasElement` con tipos `text`, `image`, `shape`; posición y tamaño; texto con `content`; formas con variante rect/circle y estilos del design system.
 
