@@ -1,6 +1,7 @@
 "use client";
 
 import { createOrderAction } from "@/app/(public)/carrito/checkout/actions";
+import { ORDER_STATUS_PAGE } from "@/config/navigation";
 import { useCart } from "@/contexts/cart-context";
 import type { CatalogProduct } from "@/types";
 import Image from "next/image";
@@ -108,8 +109,8 @@ export function CheckoutContent({ products }: { products: CatalogProduct[] }) {
           </p>
         )}
         <p className="mt-4 text-sm text-muted-foreground">
-          <Link href="/estado-pedido" className="font-medium text-primary hover:underline">
-            Consultar estado del pedido
+          <Link href={ORDER_STATUS_PAGE.href} className="font-medium text-primary hover:underline">
+            {ORDER_STATUS_PAGE.ariaLabel}
           </Link>
         </p>
         <Link

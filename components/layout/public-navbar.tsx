@@ -1,5 +1,6 @@
 "use client";
 
+import { ORDER_STATUS_PAGE } from "@/config/navigation";
 import StaggeredMenu from "@/components/StaggeredMenu";
 
 const LOGO_SRC = "/resources/buxxep-transparent.png";
@@ -8,7 +9,7 @@ const PRIMARY = "#3CC8F7";
 const MENU_ITEMS = [
   { label: "Inicio", ariaLabel: "Ir a inicio", link: "/" },
   { label: "Catálogo", ariaLabel: "Ver catálogo", link: "/catalogo" },
-  { label: "Editor", ariaLabel: "Abrir editor", link: "/editor" },
+  { label: ORDER_STATUS_PAGE.label, ariaLabel: ORDER_STATUS_PAGE.ariaLabel, link: ORDER_STATUS_PAGE.href },
   { label: "Carrito", ariaLabel: "Ver carrito", link: "/carrito" },
   { label: "Entrar", ariaLabel: "Iniciar sesión", link: "/login" },
   { label: "Registrarse", ariaLabel: "Crear cuenta", link: "/registro" },

@@ -1,3 +1,4 @@
+import { ORDER_STATUS_PAGE } from "@/config/navigation";
 import Link from "next/link";
 import { NewsletterForm } from "@/components/landing/NewsletterForm";
 
@@ -39,9 +40,8 @@ export function PublicFooter() {
             <p className="font-semibold text-foreground text-sm mb-2 sm:mb-3">Enlaces</p>
             <nav className="flex flex-col gap-2 text-sm text-muted-foreground md:items-end" aria-label="Enlaces del footer">
               <Link href="/catalogo" className="hover:text-foreground transition-colors">Catálogo</Link>
-              <Link href="/editor" className="hover:text-foreground transition-colors">Editor</Link>
+              <Link href={ORDER_STATUS_PAGE.href} className="hover:text-foreground transition-colors">{ORDER_STATUS_PAGE.label}</Link>
               <Link href="/carrito" className="hover:text-foreground transition-colors">Carrito</Link>
-              <Link href="/estado-pedido" className="hover:text-foreground transition-colors">Estado del pedido</Link>
             </nav>
           </div>
         </div>

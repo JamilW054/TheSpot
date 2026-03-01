@@ -3,6 +3,13 @@
  * Consumed by layouts, sidebars, and navbars.
  */
 
+/** Ruta y etiqueta de la página de estado del pedido (público). */
+export const ORDER_STATUS_PAGE = {
+  href: "/estado-pedido",
+  label: "Estado del pedido",
+  ariaLabel: "Consultar estado del pedido",
+} as const;
+
 export interface NavItem {
   label: string;
   href: string;

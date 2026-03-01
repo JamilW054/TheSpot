@@ -1,8 +1,9 @@
+import { ORDER_STATUS_PAGE } from "@/config/navigation";
 import { OrderStatusContent } from "./OrderStatusContent";
 import Link from "next/link";
 
 export const metadata = {
-  title: "Estado del pedido | Buxxep",
+  title: `${ORDER_STATUS_PAGE.label} | Buxxep`,
   description: "Consulta el estado de tu pedido con el número de pedido.",
 };
 
@@ -23,7 +24,7 @@ export default function EstadoPedidoPage() {
 
       <header className="mb-6 sm:mb-8" aria-labelledby="order-status-title">
         <h1 id="order-status-title" className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl lg:text-4xl">
-          Estado del pedido
+          {ORDER_STATUS_PAGE.label}
         </h1>
         <p className="mt-2 text-sm text-muted-foreground max-w-lg">
           Introduce el número de pedido que recibiste al finalizar la compra para ver el estado y el detalle.
