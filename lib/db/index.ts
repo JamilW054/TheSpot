@@ -356,26 +356,27 @@ export interface CreateOrderShipping {
 }
 
 /**
- * Creates an order and its order_items from cart data. Uses current auth (user_id if logged in)
- * or sessionId for anonymous. Returns the order id or throws.
+ * Creates an order and its order_items from cart data. Requires an active session (user_id mandatory).
+ * Returns the order id or throws.
  */
 export async function createOrder(
   shipping: CreateOrderShipping,
   items: CreateOrderItem[],
-  sessionId?: string | null
+  _sessionId?: string | null
 ): Promise<{ orderId: string }> {
   if (items.length === 0) throw new Error("El carrito está vacío");
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-
-  const session = sessionId ?? (user ? null : `anon-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`);
+  if (!user) {
+    throw new Error("Debes iniciar sesión para realizar la compra.");
+  }
 
   const { data: orderRow, error: orderError } = await supabase
     .from("orders")
     .insert({
-      user_id: user?.id ?? null,
-      session_id: session,
+      user_id: user.id,
+      session_id: null,
       status: "pending",
       shipping_name: shipping.name.trim(),
       shipping_email: shipping.email.trim(),

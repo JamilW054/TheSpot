@@ -19,12 +19,18 @@ function LoginForm() {
 
   useEffect(() => {
     if (!user) return;
+    const redirectTo = searchParams.get("redirect");
+    const safeRedirect =
+      redirectTo &&
+      redirectTo.startsWith("/") &&
+      !redirectTo.startsWith("//") &&
+      redirectTo.length < 500;
     if (user.role === "admin") {
-      router.replace("/admin");
+      router.replace(safeRedirect && redirectTo.startsWith("/admin") ? redirectTo : "/admin");
     } else {
-      router.replace("/mis-disenos");
+      router.replace(safeRedirect ? redirectTo : "/mis-disenos");
     }
-  }, [user, router]);
+  }, [user, router, searchParams]);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
