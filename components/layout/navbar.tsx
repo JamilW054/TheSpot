@@ -87,11 +87,11 @@ export function Navbar({
           {homeLabel}
         </Link>
       </div>
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 min-w-0">
         {user ? (
           <>
             {displayName ? (
-              <span className="text-sm text-muted-foreground truncate max-w-[180px]">
+              <span className="hidden text-sm text-muted-foreground truncate sm:inline max-w-[200px]" title={displayName}>
                 Hola, {displayName}
               </span>
             ) : null}
@@ -100,6 +100,7 @@ export function Navbar({
               variant="outline"
               size="sm"
               onClick={onLogout}
+              className="shrink-0"
             >
               Cerrar sesión
             </Button>

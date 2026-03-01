@@ -64,7 +64,6 @@ export function AppSidebar({
   const pathname = usePathname();
   const { user } = useAuth();
   const items = NAV_BY_VARIANT[variant];
-
   const hiddenOnDesktop = collapsed;
 
   return (
@@ -73,7 +72,7 @@ export function AppSidebar({
         type="button"
         aria-label="Cerrar menú"
         onClick={onClose}
-        className={`fixed inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden transition-opacity ${
+        className={`fixed inset-0 z-40 bg-black/50 backdrop-blur-sm md:hidden transition-opacity duration-200 ${
           open ? "opacity-100" : "opacity-0 pointer-events-none"
         }`}
       />
@@ -84,31 +83,34 @@ export function AppSidebar({
             : "Navegación de la aplicación"
         }
         className={`
-          fixed md:sticky top-0 left-0 z-50 h-full w-72 shrink-0
-          flex flex-col border-r border-border bg-background
+          fixed md:sticky top-0 left-0 z-50 w-64 shrink-0
+          min-h-screen h-screen
+          flex flex-col bg-card border-r border-border
+          shadow-sm
           transition-transform duration-200 ease-out
           ${open ? "translate-x-0" : "-translate-x-full"}
-          md:transition-transform
-          ${hiddenOnDesktop ? "md:-translate-x-full md:w-0 md:overflow-hidden md:border-r-0" : "md:translate-x-0"}
+          md:transition-none
+          ${hiddenOnDesktop ? "md:-translate-x-full md:w-0 md:overflow-hidden md:border-r-0 md:shadow-none" : "md:translate-x-0"}
         `}
       >
-        <div className="flex flex-1 flex-col p-4">
-          <div className="mb-4 flex items-center justify-between gap-2">
-            <p className="px-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-              {variant === "admin" ? "Administración" : "Menú"}
-            </p>
+        <div className="flex flex-1 flex-col overflow-y-auto py-5 px-3">
+          <div className="flex items-center justify-between gap-2 px-3 mb-6">
+            <span className="text-[11px] font-medium uppercase tracking-widest text-muted-foreground">
+              {variant === "admin" ? "Admin" : "Navegación"}
+            </span>
             {onCollapsedChange && (
               <button
                 type="button"
                 onClick={() => onCollapsedChange(true)}
-                className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground md:flex"
+                className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
                 aria-label="Ocultar menú"
               >
                 <PanelLeftClose className="size-4" />
               </button>
             )}
           </div>
-          <nav className="flex flex-col gap-0.5">
+
+          <nav className="flex flex-col gap-1">
             {items.map((item) => {
               const isActive =
                 pathname === item.href ||
@@ -121,45 +123,44 @@ export function AppSidebar({
                   href={item.href}
                   onClick={onClose}
                   className={`
-                    flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium
+                    flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium
                     transition-colors duration-150
-                    focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background
+                    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-card
                     ${
                       isActive
-                        ? "border-l-2 border-primary bg-muted text-foreground"
-                        : "text-muted-foreground hover:bg-muted hover:text-foreground border-l-2 border-transparent"
+                        ? "bg-primary/10 text-primary"
+                        : "text-muted-foreground hover:bg-muted/80 hover:text-foreground"
                     }
                   `}
                 >
                   {Icon != null ? (
-                    <Icon className="size-5 shrink-0 opacity-80" aria-hidden />
+                    <Icon className="size-5 shrink-0" aria-hidden />
                   ) : (
                     <span className="size-5 shrink-0" aria-hidden />
                   )}
-                  <span>{item.label}</span>
+                  <span className="truncate">{item.label}</span>
                 </Link>
               );
             })}
           </nav>
         </div>
-        <div className="border-t border-border p-4">
+
+        <div className="border-t border-border p-3">
           {variant === "admin" && (
             <>
-              <div className="rounded-xl border border-border bg-muted/30 p-3">
+              <div className="rounded-xl bg-muted/40 p-3">
                 <p className="text-xs italic text-muted-foreground">
                   &ldquo;El trabajo de hoy era lo imposible de ayer.&rdquo;
                 </p>
-                <p className="mt-1 text-[10px] text-muted-foreground">
-                  — Robert H. Schuller
-                </p>
+                <p className="mt-1 text-[10px] text-muted-foreground/80">— Robert H. Schuller</p>
               </div>
               <Link
                 href="/soporte"
                 onClick={onClose}
-                className="mt-3 flex items-center justify-center gap-2 rounded-xl border border-border bg-muted/30 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                className="mt-3 flex items-center justify-center gap-2 rounded-xl bg-muted/40 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
               >
                 <MessageCircle className="size-4" />
-                Chatea con nosotros
+                Soporte
               </Link>
             </>
           )}
@@ -167,8 +168,9 @@ export function AppSidebar({
             <Link
               href="/admin"
               onClick={onClose}
-              className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             >
+              <LayoutDashboard className="size-4 shrink-0" aria-hidden />
               Vista Admin
             </Link>
           )}

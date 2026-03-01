@@ -17,7 +17,7 @@ export default async function MisPedidosDetailPage({
   const isMine = orders.some((o) => o.id === id);
   if (!isMine || !orderDetail) notFound();
   return (
-    <PageLayout title="Detalle del pedido">
+    <PageLayout title="Detalle del pedido" description="Resumen y estado de tu pedido.">
       <OrderDetailView
         order={orderDetail}
         backHref="/mis-pedidos"

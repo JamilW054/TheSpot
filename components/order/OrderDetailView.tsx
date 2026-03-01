@@ -26,6 +26,12 @@ const STATUS_DESCRIPTIONS: Record<OrderStatusDetail["status"], string> = {
   completado: "Tu pedido ha sido enviado o entregado.",
 };
 
+const STATUS_BADGE_CLASS: Record<OrderStatusDetail["status"], string> = {
+  pendiente: "bg-muted text-muted-foreground border-border",
+  en_proceso: "bg-primary/10 text-primary border-primary/20",
+  completado: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
+};
+
 export interface OrderDetailViewProps {
   order: OrderStatusDetail;
   backHref: string;
@@ -34,32 +40,39 @@ export interface OrderDetailViewProps {
 
 export function OrderDetailView({ order, backHref, backLabel }: OrderDetailViewProps) {
   return (
-    <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-      <div className="border-b border-border bg-muted/30 p-5 sm:p-6">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Nº de pedido
-            </p>
-            <p className="mt-1 font-mono text-sm text-foreground">{order.id}</p>
+    <div className="space-y-4">
+      <p className="text-sm text-muted-foreground">
+        <Link href={backHref} className="font-medium text-foreground hover:text-primary transition-colors inline-flex items-center gap-1.5">
+          <svg className="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+            <path d="M19 12H5M12 19l-7-7 7-7" />
+          </svg>
+          {backLabel}
+        </Link>
+      </p>
+      <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+        <div className="border-b border-border bg-muted/20 p-5 sm:p-6">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="min-w-0">
+              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                Nº de pedido
+              </p>
+              <p className="mt-1 font-mono text-sm text-foreground break-all">{order.id}</p>
+            </div>
+            <div className={`rounded-xl border px-4 py-2 shrink-0 ${STATUS_BADGE_CLASS[order.status]}`}>
+              <p className="text-xs font-medium uppercase tracking-wider opacity-90">Estado</p>
+              <p className="mt-0.5 font-semibold">{STATUS_LABELS[order.status]}</p>
+            </div>
           </div>
-          <div className="rounded-lg border border-border bg-background px-3 py-2">
-            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Estado
-            </p>
-            <p className="mt-0.5 font-semibold text-foreground">{STATUS_LABELS[order.status]}</p>
-          </div>
-        </div>
-        <p className="mt-3 text-sm text-muted-foreground">
-          {STATUS_DESCRIPTIONS[order.status]}
-        </p>
-        {order.shippingName && (
-          <p className="mt-2 text-sm text-muted-foreground">
-            Envío a: <span className="text-foreground">{order.shippingName}</span>
+          <p className="mt-4 text-sm text-muted-foreground">
+            {STATUS_DESCRIPTIONS[order.status]}
           </p>
-        )}
-        <p className="mt-1 text-sm text-muted-foreground">Fecha: {order.createdAt}</p>
-      </div>
+          {order.shippingName && (
+            <p className="mt-2 text-sm text-muted-foreground">
+              Envío a: <span className="text-foreground">{order.shippingName}</span>
+            </p>
+          )}
+          <p className="mt-1 text-sm text-muted-foreground">Fecha: {order.createdAt}</p>
+        </div>
 
       <ul className="divide-y divide-border">
         {order.items.map((item, i) => (
@@ -123,20 +136,15 @@ export function OrderDetailView({ order, backHref, backLabel }: OrderDetailViewP
         ))}
       </ul>
 
-      <div className="border-t border-border bg-muted/20 px-5 py-4 sm:px-6">
-        <div className="flex items-baseline justify-between gap-4">
-          <span className="text-sm font-medium text-muted-foreground">Total</span>
-          <span className="text-xl font-bold tabular-nums text-primary">
-            {(order.totalCents / 100).toFixed(2).replace(".", ",")} €
-          </span>
+        <div className="border-t border-border bg-muted/20 px-5 py-4 sm:px-6">
+          <div className="flex items-baseline justify-between gap-4">
+            <span className="text-sm font-medium text-muted-foreground">Total</span>
+            <span className="text-xl font-bold tabular-nums text-primary">
+              {(order.totalCents / 100).toFixed(2).replace(".", ",")} €
+            </span>
+          </div>
         </div>
       </div>
-
-      <p className="border-t border-border p-4 text-center text-sm text-muted-foreground">
-        <Link href={backHref} className="font-medium text-foreground hover:text-primary transition-colors">
-          {backLabel}
-        </Link>
-      </p>
     </div>
   );
 }

@@ -9,6 +9,9 @@ export const metadata = {
   description: "Finaliza tu pedido. Introduce tus datos de envío y confirma.",
 };
 
+/** Evita caché: siempre comprobar sesión en el servidor. */
+export const dynamic = "force-dynamic";
+
 const CHECKOUT_PATH = "/carrito/checkout";
 
 export default async function CheckoutPage() {
