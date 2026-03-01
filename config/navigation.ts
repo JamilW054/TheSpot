@@ -17,9 +17,10 @@ export const PUBLIC_NAV: NavItem[] = [
   { label: "Registro", href: "/registro" },
 ];
 
-/** App autenticada: mis diseños, editor, líneas, guía, recursos, soporte */
+/** App autenticada: mis diseños, mis pedidos, editor, líneas, guía, recursos, soporte */
 export const APP_NAV: NavItem[] = [
   { label: "Mis diseños", href: "/mis-disenos", icon: "LayoutGrid" },
+  { label: "Mis pedidos", href: "/mis-pedidos", icon: "Package" },
   { label: "Editor", href: "/editor", icon: "PenSquare" },
   { label: "Líneas de ropa", href: "/lineas", icon: "Shirt" },
   { label: "Guía", href: "/guia", icon: "BookOpen" },

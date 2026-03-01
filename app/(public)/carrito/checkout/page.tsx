@@ -4,27 +4,35 @@ import Link from "next/link";
 
 export const metadata = {
   title: "Checkout | Buxxep",
-  description: "Finaliza tu pedido.",
+  description: "Finaliza tu pedido. Introduce tus datos de envío y confirma.",
 };
 
 export default async function CheckoutPage() {
   const products = await getProducts();
   return (
-    <article className="min-h-[80vh]">
-      <section className="mb-8" aria-labelledby="checkout-title">
-        <h1 id="checkout-title" className="text-2xl font-bold tracking-tight sm:text-3xl text-foreground">
-          Finalizar compra
-        </h1>
-        <p className="mt-1 text-muted-foreground">
-          Revisa el resumen e introduce tus datos para completar el pedido.
-        </p>
-      </section>
-      <CheckoutContent products={products} />
-      <p className="mt-6">
-        <Link href="/carrito" className="text-sm font-medium text-primary hover:underline">
+    <article className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-2 sm:pt-4 pb-16 sm:pb-20">
+      <nav className="mb-4 sm:mb-5" aria-label="Navegación">
+        <Link
+          href="/carrito"
+          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <svg className="size-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <path d="M19 12H5M12 19l-7-7 7-7" />
+          </svg>
           Volver al carrito
         </Link>
-      </p>
+      </nav>
+
+      <header className="mb-6 sm:mb-8" aria-labelledby="checkout-title">
+        <h1 id="checkout-title" className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl lg:text-4xl">
+          Finalizar compra
+        </h1>
+        <p className="mt-2 text-sm text-muted-foreground max-w-lg">
+          Introduce tus datos de envío y confirma el pedido.
+        </p>
+      </header>
+
+      <CheckoutContent products={products} />
     </article>
   );
 }

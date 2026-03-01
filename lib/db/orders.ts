@@ -10,7 +10,7 @@ export interface OrderRow {
   created_at: string;
 }
 
-const statusMap: Record<string, PedidoEstado> = {
+export const statusMap: Record<string, PedidoEstado> = {
   pending: "pendiente",
   paid: "en_proceso",
   shipped: "completado",

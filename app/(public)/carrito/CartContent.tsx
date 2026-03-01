@@ -5,16 +5,35 @@ import type { CatalogProduct } from "@/types";
 import Image from "next/image";
 import Link from "next/link";
 
+function isExternalImage(src: string): boolean {
+  return (
+    src.includes("placehold.co") ||
+    src.includes("imgur.com") ||
+    src.includes("unsplash.com") ||
+    src.startsWith("http")
+  );
+}
+
 export function CartContent({ products }: { products: CatalogProduct[] }) {
   const { items, updateQuantity, removeItem } = useCart();
 
   if (items.length === 0) {
     return (
-      <div className="rounded-2xl border border-border bg-muted/30 p-8 text-center">
-        <p className="text-muted-foreground">Tu carrito está vacío.</p>
+      <div className="rounded-3xl border border-border bg-card p-16 sm:p-20 text-center">
+        <div className="mx-auto flex size-20 items-center justify-center rounded-full bg-muted/50 text-muted-foreground">
+          <svg className="size-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <circle cx="9" cy="21" r="1" />
+            <circle cx="20" cy="21" r="1" />
+            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+          </svg>
+        </div>
+        <h2 className="mt-8 text-xl font-semibold text-foreground">Tu carrito está vacío</h2>
+        <p className="mt-3 text-sm text-muted-foreground max-w-sm mx-auto leading-relaxed">
+          Añade productos desde el catálogo y vuelve aquí para finalizar tu pedido.
+        </p>
         <Link
           href="/catalogo"
-          className="mt-4 inline-flex items-center justify-center rounded-xl bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground hover:opacity-90"
+          className="mt-10 inline-flex items-center justify-center rounded-xl bg-primary px-10 py-4 text-sm font-semibold text-primary-foreground shadow-sm transition-all hover:opacity-90 hover:shadow"
         >
           Ir al catálogo
         </Link>
@@ -24,83 +43,135 @@ export function CartContent({ products }: { products: CatalogProduct[] }) {
 
   const productMap = new Map(products.map((p) => [p.id, p]));
   let totalCents = 0;
+  const totalItems = items.reduce((acc, i) => acc + i.quantity, 0);
 
   return (
-    <div className="space-y-6">
-      <ul className="divide-y divide-border rounded-2xl border border-border bg-card overflow-hidden">
-        {items.map((item) => {
-          const product = productMap.get(item.productId);
-          if (!product) return null;
-          const lineTotal = product.priceCents * item.quantity;
-          totalCents += lineTotal;
-          return (
-            <li key={`${item.productId}:${item.designId ?? ""}`} className="flex gap-4 p-4 sm:p-5">
-              <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-lg bg-muted">
-                <Image
-                  src={product.coverImage}
-                  alt=""
-                  fill
-                  className="object-cover"
-                  sizes="96px"
-                  unoptimized={product.coverImage?.includes("placehold.co") ?? false}
-                />
-              </div>
-              <div className="min-w-0 flex-1">
-                <Link href={`/catalogo/${product.slug}`} className="font-medium text-foreground hover:underline">
-                  {product.name}
+    <div className="lg:grid lg:grid-cols-[1fr_380px] lg:gap-10 xl:gap-12">
+      {/* Lista de productos */}
+      <div className="lg:min-w-0">
+        <p className="mb-4 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+          {totalItems} {totalItems === 1 ? "artículo" : "artículos"}
+        </p>
+        <ul className="space-y-4">
+          {items.map((item) => {
+            const product = productMap.get(item.productId);
+            if (!product) return null;
+            const lineTotal = product.priceCents * item.quantity;
+            totalCents += lineTotal;
+            return (
+              <li
+                key={`${item.productId}:${item.designId ?? ""}`}
+                className="group flex flex-col gap-4 rounded-2xl border border-border bg-card p-4 shadow-sm transition-shadow hover:shadow-md sm:flex-row sm:items-center sm:gap-6 sm:p-5"
+              >
+                <Link
+                  href={`/catalogo/${product.slug}`}
+                  className="relative block aspect-square w-full shrink-0 overflow-hidden rounded-xl bg-muted ring-1 ring-border/50 sm:h-24 sm:w-24"
+                >
+                  <Image
+                    src={product.coverImage}
+                    alt={product.name}
+                    fill
+                    className="object-cover transition-transform duration-200 group-hover:scale-105"
+                    sizes="(max-width: 640px) 100vw, 96px"
+                    unoptimized={isExternalImage(product.coverImage)}
+                  />
                 </Link>
-                {item.designId ? (
-                  <p className="text-xs text-muted-foreground">Diseño personalizado</p>
-                ) : null}
-                <p className="mt-0.5 text-sm text-muted-foreground">{product.price} × {item.quantity}</p>
-              </div>
-              <div className="flex flex-col items-end justify-between gap-2">
-                <p className="font-semibold text-foreground">
-                  {(lineTotal / 100).toFixed(2).replace(".", ",")} €
-                </p>
-                <div className="flex items-center gap-1 rounded-lg border border-border bg-muted/50">
+
+                <div className="min-w-0 flex-1 space-y-0.5">
+                  <Link
+                    href={`/catalogo/${product.slug}`}
+                    className="font-semibold text-foreground hover:text-primary transition-colors line-clamp-2"
+                  >
+                    {product.name}
+                  </Link>
+                  {item.designId ? (
+                    <span className="inline-block text-xs font-medium text-muted-foreground">Diseño personalizado</span>
+                  ) : null}
+                  <p className="text-sm text-muted-foreground tabular-nums">
+                    {product.price} <span className="text-foreground/80">× {item.quantity}</span>
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4 sm:justify-end sm:border-0 sm:pt-0 sm:flex-nowrap">
+                  <div className="flex items-center rounded-lg border border-border bg-muted/20">
+                    <button
+                      type="button"
+                      onClick={() => updateQuantity(item.productId, item.quantity - 1, item.designId)}
+                      className="flex h-9 w-9 items-center justify-center text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                      aria-label="Reducir cantidad"
+                    >
+                      −
+                    </button>
+                    <span className="min-w-9 text-center text-sm font-medium tabular-nums">{item.quantity}</span>
+                    <button
+                      type="button"
+                      onClick={() => updateQuantity(item.productId, item.quantity + 1, item.designId)}
+                      className="flex h-9 w-9 items-center justify-center text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                      aria-label="Aumentar cantidad"
+                    >
+                      +
+                    </button>
+                  </div>
+                  <p className="text-lg font-semibold tabular-nums text-foreground">
+                    {(lineTotal / 100).toFixed(2).replace(".", ",")} €
+                  </p>
                   <button
                     type="button"
-                    onClick={() => updateQuantity(item.productId, item.quantity - 1, item.designId)}
-                    className="flex h-8 w-8 items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground"
-                    aria-label="Menos"
+                    onClick={() => removeItem(item.productId, item.designId)}
+                    className="flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-destructive"
+                    aria-label="Quitar del carrito"
                   >
-                    −
-                  </button>
-                  <span className="min-w-8 text-center text-sm tabular-nums">{item.quantity}</span>
-                  <button
-                    type="button"
-                    onClick={() => updateQuantity(item.productId, item.quantity + 1, item.designId)}
-                    className="flex h-8 w-8 items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground"
-                    aria-label="Más"
-                  >
-                    +
+                    <svg className="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                      <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                      <line x1="10" y1="11" x2="10" y2="17" />
+                      <line x1="14" y1="11" x2="14" y2="17" />
+                    </svg>
+                    Quitar
                   </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => removeItem(item.productId, item.designId)}
-                  className="text-xs text-muted-foreground hover:text-destructive"
-                >
-                  Quitar
-                </button>
-              </div>
-            </li>
-          );
-        })}
-      </ul>
+              </li>
+            );
+          })}
+        </ul>
 
-      <div className="flex flex-col items-end gap-4 rounded-2xl border border-border bg-card p-5">
-        <p className="text-lg font-semibold text-foreground">
-          Total: {(totalCents / 100).toFixed(2).replace(".", ",")} €
+        <p className="mt-6">
+          <Link
+            href="/catalogo"
+            className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <svg className="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+              <path d="M19 12H5M12 19l-7-7 7-7" />
+            </svg>
+            Seguir comprando
+          </Link>
         </p>
-        <Link
-          href="/carrito/checkout"
-          className="inline-flex items-center justify-center rounded-xl bg-primary px-6 py-3 text-base font-medium text-primary-foreground hover:opacity-90"
-        >
-          Finalizar compra
-        </Link>
       </div>
+
+      {/* Resumen del pedido — sticky en desktop */}
+      <aside className="mt-8 lg:mt-0 lg:sticky lg:top-28 lg:self-start">
+        <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+            Resumen del pedido
+          </h2>
+          <div className="mt-4 border-t border-border pt-4">
+            <div className="flex items-baseline justify-between gap-4">
+              <span className="text-sm text-muted-foreground">Total</span>
+              <span className="text-2xl font-bold tabular-nums text-primary">
+                {(totalCents / 100).toFixed(2).replace(".", ",")} €
+              </span>
+            </div>
+          </div>
+          <Link
+            href="/carrito/checkout"
+            className="mt-6 flex w-full items-center justify-center rounded-xl bg-primary px-6 py-3.5 text-base font-semibold text-primary-foreground shadow-sm transition-all hover:opacity-90 hover:shadow"
+          >
+            Finalizar compra
+          </Link>
+          <p className="mt-3 text-center text-xs text-muted-foreground">
+            Pago seguro en el siguiente paso
+          </p>
+        </div>
+      </aside>
     </div>
   );
 }

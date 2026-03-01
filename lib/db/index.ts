@@ -48,7 +48,8 @@ import { rowToDesign, type DesignRow } from "./designs";
 import { rowToLinea, type LineaRow } from "./lineas";
 import { rowToMockup, type BaseModelRow } from "./base-models";
 import { rowToPedido, type OrderRow } from "./orders";
-import type { CatalogProduct, Design, Linea, Mockup, Pedido } from "@/types";
+import { statusMap } from "./orders";
+import type { CatalogProduct, Design, Linea, Mockup, OrderStatusDetail, Pedido } from "@/types";
 
 export async function getProducts(): Promise<CatalogProduct[]> {
   return withNetworkFallback(async () => {
@@ -270,4 +271,140 @@ export async function getOrdersAdmin(): Promise<Pedido[]> {
   }
   return rows.map((r) => rowToPedido(r, counts[r.id] ?? 0));
   }, []);
+}
+
+/** Consulta pública: obtiene el estado de un pedido por ID (sin auth). Usa service role. */
+export async function getOrderStatusById(orderId: string): Promise<OrderStatusDetail | null> {
+  if (!orderId?.trim()) return null;
+  const id = orderId.trim().toLowerCase();
+  try {
+    const supabase = createServiceClient();
+    const { data: orderRow, error: orderError } = await supabase
+      .from("orders")
+      .select("id, status, total_cents, created_at, shipping_name")
+      .eq("id", id)
+      .single();
+
+    if (orderError || !orderRow) return null;
+    const o = orderRow as OrderRow;
+
+    const { data: itemsData } = await supabase
+      .from("order_items")
+      .select("quantity, unit_price_cents, design_id, products(name, slug, cover_image_url), designs(name, cover_image_url)")
+      .eq("order_id", id);
+
+    type ItemRow = {
+      quantity: number;
+      unit_price_cents: number;
+      design_id: string | null;
+      products?: { name: string; slug: string; cover_image_url: string | null } | null;
+      product?: { name: string; slug: string; cover_image_url: string | null } | null;
+      designs?: { name: string; cover_image_url: string | null } | null;
+      design?: { name: string; cover_image_url: string | null } | null;
+    };
+    const items = (itemsData ?? []).map((row: ItemRow) => {
+      const product = row.products ?? row.product;
+      const design = row.designs ?? row.design;
+      return {
+        productName: product?.name ?? "Producto",
+        productSlug: product?.slug ?? "",
+        coverImageUrl: product?.cover_image_url ?? "",
+        designName: row.design_id
+          ? (design?.name ?? "Diseño personalizado")
+          : null,
+        designCoverImageUrl: row.design_id && design?.cover_image_url ? design.cover_image_url : null,
+        quantity: row.quantity,
+        unitPriceCents: row.unit_price_cents,
+      };
+    });
+
+    return {
+      id: o.id,
+      status: statusMap[o.status] ?? "pendiente",
+      totalCents: o.total_cents,
+      createdAt: new Date(o.created_at).toLocaleDateString("es-ES", {
+        day: "2-digit",
+        month: "long",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+      shippingName: o.shipping_name,
+      items,
+    };
+  } catch {
+    return null;
+  }
+}
+
+/** Item for creating an order (from cart). */
+export interface CreateOrderItem {
+  productId: string;
+  quantity: number;
+  designId?: string | null;
+}
+
+/** Shipping data for order creation. */
+export interface CreateOrderShipping {
+  name: string;
+  email: string;
+  address: string;
+  phone?: string;
+  city?: string;
+  postalCode?: string;
+  country?: string;
+}
+
+/**
+ * Creates an order and its order_items from cart data. Uses current auth (user_id if logged in)
+ * or sessionId for anonymous. Returns the order id or throws.
+ */
+export async function createOrder(
+  shipping: CreateOrderShipping,
+  items: CreateOrderItem[],
+  sessionId?: string | null
+): Promise<{ orderId: string }> {
+  if (items.length === 0) throw new Error("El carrito está vacío");
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  const session = sessionId ?? (user ? null : `anon-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`);
+
+  const { data: orderRow, error: orderError } = await supabase
+    .from("orders")
+    .insert({
+      user_id: user?.id ?? null,
+      session_id: session,
+      status: "pending",
+      shipping_name: shipping.name.trim(),
+      shipping_email: shipping.email.trim(),
+      shipping_address: shipping.address.trim(),
+      shipping_phone: shipping.phone?.trim() ?? null,
+      shipping_city: shipping.city?.trim() ?? null,
+      shipping_postal_code: shipping.postalCode?.trim() ?? null,
+      shipping_country: shipping.country?.trim() ?? null,
+      total_cents: 0,
+    })
+    .select("id")
+    .single();
+
+  if (orderError || !orderRow) throw toError(orderError ?? { message: "Error al crear el pedido" });
+
+  const orderId = (orderRow as { id: string }).id;
+
+  for (const item of items) {
+    const product = await getProductById(item.productId);
+    if (!product) throw new Error(`Producto no encontrado: ${item.productId}`);
+    const { error: itemError } = await supabase.from("order_items").insert({
+      order_id: orderId,
+      product_id: item.productId,
+      design_id: item.designId ?? null,
+      quantity: item.quantity,
+      unit_price_cents: product.priceCents,
+    });
+    if (itemError) throw toError(itemError);
+  }
+
+  return { orderId };
 }

@@ -41,6 +41,7 @@ export function PublicFooter() {
               <Link href="/catalogo" className="hover:text-foreground transition-colors">Catálogo</Link>
               <Link href="/editor" className="hover:text-foreground transition-colors">Editor</Link>
               <Link href="/carrito" className="hover:text-foreground transition-colors">Carrito</Link>
+              <Link href="/estado-pedido" className="hover:text-foreground transition-colors">Estado del pedido</Link>
             </nav>
           </div>
         </div>

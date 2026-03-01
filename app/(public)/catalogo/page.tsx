@@ -66,17 +66,17 @@ export default async function CatalogPage() {
               <p className="mt-1 flex-1 text-sm text-muted-foreground line-clamp-2">
                 {product.description}
               </p>
-              <div className="mt-3 sm:mt-4 flex flex-wrap gap-2">
-                <AddToCartButton productId={product.id} variant="primary" className="text-xs sm:text-sm" />
+              <div className="mt-3 sm:mt-4 flex flex-nowrap items-center gap-2 min-w-0">
+                <AddToCartButton productId={product.id} variant="primary" className="shrink-0 text-xs sm:text-sm whitespace-nowrap" />
                 <Link
                   href={`/catalogo/${product.slug}`}
-                  className="inline-flex items-center justify-center rounded-lg border border-border bg-transparent px-3 py-2 sm:px-4 text-xs sm:text-sm font-medium hover:bg-muted"
+                  className="shrink-0 inline-flex items-center justify-center rounded-lg border border-border bg-transparent px-2 py-2 sm:px-4 text-xs sm:text-sm font-medium hover:bg-muted whitespace-nowrap"
                 >
                   Ver
                 </Link>
                 <Link
                   href={product.defaultDesignId ? `/editor?copy=${product.defaultDesignId}&product=${product.id}` : `/editor?product=${product.id}`}
-                  className="inline-flex items-center justify-center rounded-lg border border-border bg-transparent px-3 py-2 sm:px-4 text-xs sm:text-sm font-medium hover:bg-muted"
+                  className="shrink-0 inline-flex items-center justify-center rounded-lg border border-border bg-transparent px-2 py-2 sm:px-4 text-xs sm:text-sm font-medium hover:bg-muted whitespace-nowrap"
                 >
                   {product.defaultDesignId ? "Usar plantilla" : "Diseñar"}
                 </Link>

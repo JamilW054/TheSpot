@@ -28,7 +28,7 @@ export interface Linea {
   products?: string[];
 }
 
-export type { Pedido, PedidoEstado } from "./pedido";
+export type { Pedido, PedidoEstado, OrderStatusDetail, OrderStatusDetailItem } from "./pedido";
 
 export type CanvasElementType = "image" | "text" | "shape" | "path";
 
