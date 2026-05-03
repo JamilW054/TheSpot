@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/lib/auth-context";
-import { Button } from "@/components/ui";
 import { CartNavLink } from "@/components/layout/CartNavLink";
+import { Button } from "@/components/ui";
+import { useAuth } from "@/lib/auth-context";
 
 function MenuIcon({ className }: { className?: string }) {
   return (
@@ -21,6 +21,7 @@ function MenuIcon({ className }: { className?: string }) {
       className={className}
       aria-hidden
     >
+      <title>Menú</title>
       <path d="M4 5h16" />
       <path d="M4 12h16" />
       <path d="M4 19h16" />
@@ -56,6 +57,7 @@ export function Navbar({
   const router = useRouter();
   const auth = useAuth();
   const user = userProp ?? auth.user;
+  const sessionRole = auth.user?.role;
   const onLogout =
     onLogoutProp ??
     (() => {
@@ -66,10 +68,7 @@ export function Navbar({
   const displayName = user?.name ?? user?.email ?? null;
 
   return (
-    <header
-      className="sticky top-0 z-30 flex h-14 shrink-0 items-center justify-between gap-4 border-b border-border bg-background/95 px-4 supports-backdrop-filter:bg-background/60 sm:px-6"
-      role="banner"
-    >
+    <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center justify-between gap-4 border-b border-border bg-background/95 px-4 supports-backdrop-filter:bg-background/60 sm:px-6">
       <div className="flex items-center gap-2">
         {onMenuClick ? (
           <button
@@ -90,10 +89,21 @@ export function Navbar({
       </div>
       <div className="flex items-center gap-2 sm:gap-3 min-w-0">
         <CartNavLink />
+        {sessionRole === "admin" ? (
+          <Link
+            href="/admin"
+            className="hidden text-sm font-medium text-primary underline-offset-4 hover:underline sm:inline shrink-0"
+          >
+            Admin
+          </Link>
+        ) : null}
         {user ? (
           <>
             {displayName ? (
-              <span className="hidden text-sm text-muted-foreground truncate sm:inline max-w-[200px]" title={displayName}>
+              <span
+                className="hidden text-sm text-muted-foreground truncate sm:inline max-w-[200px]"
+                title={displayName}
+              >
                 Hola, {displayName}
               </span>
             ) : null}

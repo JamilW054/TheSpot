@@ -6,7 +6,7 @@ import { useAuth } from "@/lib/auth-context";
 
 interface RequireAuthProps {
   children: React.ReactNode;
-  /** Si es true, exige user.role === "admin"; si no, redirige a /mis-disenos */
+  /** Si es true, exige user.role === "admin" (según profiles.role en BD); si no, redirige a /mis-disenos */
   requireAdmin?: boolean;
 }
 

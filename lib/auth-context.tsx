@@ -1,6 +1,6 @@
 "use client";
 
-import { createClient } from "@/lib/supabase/client";
+import type { Session } from "@supabase/supabase-js";
 import {
   createContext,
   useCallback,
@@ -9,8 +9,14 @@ import {
   useMemo,
   useState,
 } from "react";
+import {
+  resolveUserRole,
+  roleFromEmail,
+  type UserRole,
+} from "@/lib/auth/roles";
+import { createClient } from "@/lib/supabase/client";
 
-export type UserRole = "client" | "admin";
+export type { UserRole };
 
 export interface User {
   id: string;
@@ -19,23 +25,33 @@ export interface User {
   role: UserRole;
 }
 
-export type RegisterResult = { needsEmailConfirmation: true } | { needsEmailConfirmation?: false };
+export type RegisterResult =
+  | { needsEmailConfirmation: true }
+  | { needsEmailConfirmation?: false };
 
 export interface AuthContextValue {
   user: User | null;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, name: string) => Promise<RegisterResult>;
+  register: (
+    email: string,
+    password: string,
+    name: string,
+  ) => Promise<RegisterResult>;
   logout: () => void;
   isLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-function roleFromEmail(email: string): UserRole {
-  return email.toLowerCase().includes("admin") ? "admin" : "client";
-}
-
-function userFromSession(session: { user: { id: string; email?: string; user_metadata?: { full_name?: string; name?: string } } } | null): User | null {
+function userFromSession(
+  session: {
+    user: {
+      id: string;
+      email?: string;
+      user_metadata?: { full_name?: string; name?: string };
+    };
+  } | null,
+): User | null {
   if (!session?.user?.email) return null;
   const name =
     session.user.user_metadata?.full_name ??
@@ -47,6 +63,32 @@ function userFromSession(session: { user: { id: string; email?: string; user_met
     email: session.user.email,
     name: typeof name === "string" ? name : "Usuario",
     role: roleFromEmail(session.user.email),
+  };
+}
+
+async function enrichUserFromProfile(
+  supabase: ReturnType<typeof createClient>,
+  session: Session | null,
+): Promise<User | null> {
+  const base = userFromSession(session);
+  if (!base) return null;
+  const { data: profile, error } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", base.id)
+    .maybeSingle();
+  const msg = error?.message ?? "";
+  if (
+    error?.code === "42703" ||
+    msg.includes("'role' column") ||
+    msg.includes("schema cache")
+  ) {
+    return base;
+  }
+  const pr = profile?.role;
+  return {
+    ...base,
+    role: resolveUserRole(base.email, typeof pr === "string" ? pr : undefined),
   };
 }
 
@@ -66,17 +108,26 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const supabase = useMemo(() => createClient(), []);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(userFromSession(session));
-      setIsLoading(false);
+    let cancelled = false;
+    void supabase.auth.getSession().then(async ({ data: { session } }) => {
+      const u = await enrichUserFromProfile(supabase, session);
+      if (!cancelled) {
+        setUser(u);
+        setIsLoading(false);
+      }
     });
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(userFromSession(session));
+      void enrichUserFromProfile(supabase, session).then((u) => {
+        if (!cancelled) setUser(u);
+      });
     });
-    return () => subscription.unsubscribe();
+    return () => {
+      cancelled = true;
+      subscription.unsubscribe();
+    };
   }, [supabase]);
 
   const login = useCallback(
@@ -90,16 +141,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setIsLoading(false);
         throw new Error(error.message ?? "No se pudo iniciar sesión.");
       }
-      setUser(userFromSession(data.session));
+      const u = await enrichUserFromProfile(supabase, data.session);
+      setUser(u);
       setIsLoading(false);
     },
-    [supabase]
+    [supabase],
   );
 
   const register = useCallback(
-    async (email: string, password: string, name: string): Promise<RegisterResult> => {
+    async (
+      email: string,
+      password: string,
+      name: string,
+    ): Promise<RegisterResult> => {
       setIsLoading(true);
-      const origin = typeof window !== "undefined" ? window.location.origin : "";
+      const origin =
+        typeof window !== "undefined" ? window.location.origin : "";
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -113,7 +170,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
         throw new Error(error.message ?? "No se pudo crear la cuenta.");
       }
       if (data.session) {
-        setUser(userFromSession(data.session));
+        const u = await enrichUserFromProfile(supabase, data.session);
+        setUser(u);
         setIsLoading(false);
         return { needsEmailConfirmation: false };
       }
@@ -121,7 +179,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setUser(null);
       return { needsEmailConfirmation: true };
     },
-    [supabase]
+    [supabase],
   );
 
   const logout = useCallback(() => {
@@ -131,10 +189,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const value = useMemo<AuthContextValue>(
     () => ({ user, login, register, logout, isLoading }),
-    [user, login, register, logout, isLoading]
+    [user, login, register, logout, isLoading],
   );
 
-  return (
-    <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

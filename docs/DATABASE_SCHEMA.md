@@ -1,17 +1,18 @@
 # Esquema de base de datos – Proyecto  Buxxep
 
-## 1. **users** (usuarios / auth)
+## 1. Usuarios y rol (`auth.users` + `public.profiles`)
 
-| Atributo   | Tipo        | Restricción | Descripción              |
-|-----------|-------------|-------------|---------------------------|
-| id        | uuid        | PK, default gen_random_uuid() | Id único                  |
-| email     | text        | UNIQUE NOT NULL | Email (login)             |
-| password_hash | text     |             | Hash de contraseña        |
-| name      | text        |             | Nombre para mostrar       |
-| role      | text        | CHECK IN ('client','admin') | Rol                       |
-| avatar_url | text       |             | URL foto perfil           |
-| created_at | timestamptz | default now() | Alta                     |
-| updated_at | timestamptz | default now() | Última actualización     |
+Supabase guarda el **login** en **`auth.users`** (Dashboard → Authentication → Users). Ahí **no** hay una columna de aplicación para “admin/client”: solo datos del proveedor de Auth.
+
+El rol de la app Buxxep (**`client` \| `admin`**) está en **`public.profiles`**, columna **`role`**, con el mismo **`id`** que `auth.users.id` (una fila de perfil por usuario). La migración `supabase/migrations/00005_profiles_role_admin.sql` añade y restringe esa columna; los clientes no pueden cambiar `role` por API (solo columnas como `name`, `avatar_url`, `phone`).
+
+Consulta rápida en SQL Editor:
+
+```sql
+select u.email, p.name, p.role
+from public.profiles p
+join auth.users u on u.id = p.id;
+```
 
 ---
 

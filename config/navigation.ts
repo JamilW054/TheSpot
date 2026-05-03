@@ -28,6 +28,12 @@ export const PUBLIC_NAV: NavItem[] = [
 
 /** App autenticada: clientes ven diseños y pedidos; editor/líneas/guía/recursos/soporte solo admin */
 export const APP_NAV: NavItem[] = [
+  {
+    label: "Panel admin",
+    href: "/admin",
+    icon: "LayoutDashboard",
+    adminOnly: true,
+  },
   { label: "Mis diseños", href: "/mis-disenos", icon: "LayoutGrid" },
   { label: "Mis pedidos", href: "/mis-pedidos", icon: "Package" },
   { label: "Editor", href: "/editor", icon: "PenSquare", adminOnly: true },
@@ -41,6 +47,7 @@ export const APP_NAV: NavItem[] = [
 export const ADMIN_NAV: NavItem[] = [
   { label: "Dashboard", href: "/admin", icon: "LayoutDashboard" },
   { label: "Pedidos", href: "/admin/pedidos", icon: "ShoppingCart" },
+  { label: "Medios (R2)", href: "/admin/medios", icon: "Upload" },
   { label: "Líneas", href: "/lineas", icon: "Shirt" },
   { label: "Reportes", href: "/admin/reportes", icon: "BarChart2" },
   { label: "Configuración", href: "/admin/config", icon: "Settings" },

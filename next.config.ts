@@ -45,6 +45,12 @@ const nextConfig: NextConfig = {
         hostname: "**.supabase.co",
         pathname: "/storage/v1/object/public/**",
       },
+      /** Cloudflare R2 buckets públicos (dominio r2.dev u otro host en remotePatterns si usas custom domain). */
+      {
+        protocol: "https",
+        hostname: "**.r2.dev",
+        pathname: "/**",
+      },
     ],
   },
 };

@@ -14,6 +14,7 @@ import {
   Settings,
   Shirt,
   ShoppingCart,
+  Upload,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -29,6 +30,7 @@ const NAV_BY_VARIANT: Record<SidebarVariant, NavItem[]> = {
 };
 
 const APP_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+  LayoutDashboard,
   LayoutGrid,
   Package,
   PenSquare,
@@ -44,6 +46,7 @@ const ADMIN_ICONS: Record<
 > = {
   LayoutDashboard,
   ShoppingCart,
+  Upload,
   Shirt,
   BarChart2,
   Settings,
@@ -172,16 +175,6 @@ export function AppSidebar({
                 Soporte
               </Link>
             </>
-          )}
-          {variant === "app" && user?.role === "admin" && (
-            <Link
-              href="/admin"
-              onClick={onClose}
-              className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-            >
-              <LayoutDashboard className="size-4 shrink-0" aria-hidden />
-              Vista Admin
-            </Link>
           )}
         </div>
       </aside>
