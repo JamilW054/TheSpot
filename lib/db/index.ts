@@ -6,7 +6,11 @@
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 
 /** Convert Supabase/PostgREST error to a plain Error so Next.js and UI show a readable message. */
-function toError(err: { message?: string; code?: string; details?: string }): Error {
+function toError(err: {
+  message?: string;
+  code?: string;
+  details?: string;
+}): Error {
   const msg = err?.message ?? "Error de base de datos";
   const e = new Error(msg);
   if (err?.code) (e as Error & { code?: string }).code = err.code;
@@ -16,8 +20,11 @@ function toError(err: { message?: string; code?: string; details?: string }): Er
 /** True if the error is a connection/network failure (timeout, unreachable, etc.). */
 function isNetworkError(err: unknown): boolean {
   const msg = err instanceof Error ? err.message : String(err);
-  const details = typeof (err as { details?: string })?.details === "string" ? (err as { details: string }).details : "";
-  const s = (msg + " " + details).toLowerCase();
+  const details =
+    typeof (err as { details?: string })?.details === "string"
+      ? (err as { details: string }).details
+      : "";
+  const s = `${msg} ${details}`.toLowerCase();
   return (
     s.includes("fetch failed") ||
     s.includes("connecttimeout") ||
@@ -31,7 +38,10 @@ function isNetworkError(err: unknown): boolean {
 }
 
 /** Run a DB query; on network error return fallback so the app still renders. */
-async function withNetworkFallback<T>(fn: () => Promise<T>, fallback: T): Promise<T> {
+async function withNetworkFallback<T>(
+  fn: () => Promise<T>,
+  fallback: T,
+): Promise<T> {
   try {
     return await fn();
   } catch (err) {
@@ -40,15 +50,7 @@ async function withNetworkFallback<T>(fn: () => Promise<T>, fallback: T): Promis
   }
 }
 
-import {
-  rowToCatalogProduct,
-  type ProductRow,
-} from "./products";
-import { rowToDesign, type DesignRow } from "./designs";
-import { rowToLinea, type LineaRow } from "./lineas";
-import { rowToMockup, type BaseModelRow } from "./base-models";
-import { rowToPedido, type OrderRow } from "./orders";
-import { statusMap } from "./orders";
+import { formatDOPFromCents } from "@/lib/format-currency";
 import type {
   CatalogProduct,
   Design,
@@ -58,13 +60,20 @@ import type {
   OrderStatusDetail,
   Pedido,
 } from "@/types";
+import { type BaseModelRow, rowToMockup } from "./base-models";
+import { type DesignRow, rowToDesign } from "./designs";
+import { type LineaRow, rowToLinea } from "./lineas";
+import { type OrderRow, rowToPedido, statusMap } from "./orders";
+import { type ProductRow, rowToCatalogProduct } from "./products";
 
 export async function getProducts(): Promise<CatalogProduct[]> {
   return withNetworkFallback(async () => {
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("products")
-      .select("id, slug, name, description, price_cents, model_path, cover_image_url, default_design_id, published, sort_order, textures!base_texture_id(url)")
+      .select(
+        "id, slug, name, description, price_cents, model_path, cover_image_url, default_design_id, published, sort_order, textures!base_texture_id(url)",
+      )
       .eq("published", true)
       .order("sort_order", { ascending: true });
     if (error) throw toError(error);
@@ -73,13 +82,15 @@ export async function getProducts(): Promise<CatalogProduct[]> {
 }
 
 export async function getProductBySlug(
-  slug: string
+  slug: string,
 ): Promise<CatalogProduct | null> {
   return withNetworkFallback(async () => {
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("products")
-      .select("id, slug, name, description, price_cents, model_path, cover_image_url, default_design_id, published, sort_order, textures!base_texture_id(url)")
+      .select(
+        "id, slug, name, description, price_cents, model_path, cover_image_url, default_design_id, published, sort_order, textures!base_texture_id(url)",
+      )
       .eq("published", true)
       .eq("slug", slug)
       .single();
@@ -92,13 +103,15 @@ export async function getProductBySlug(
 }
 
 export async function getProductById(
-  id: string
+  id: string,
 ): Promise<CatalogProduct | null> {
   return withNetworkFallback(async () => {
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("products")
-      .select("id, slug, name, description, price_cents, model_path, cover_image_url, default_design_id, published, sort_order, textures!base_texture_id(url)")
+      .select(
+        "id, slug, name, description, price_cents, model_path, cover_image_url, default_design_id, published, sort_order, textures!base_texture_id(url)",
+      )
       .eq("published", true)
       .eq("id", id)
       .single();
@@ -110,12 +123,99 @@ export async function getProductById(
   }, null);
 }
 
+/** Catálogo completo para admin (incluye no publicados). Service role. */
+export async function getProductsAdmin(): Promise<ProductRow[]> {
+  return withNetworkFallback(async () => {
+    const supabase = createServiceClient();
+    const { data, error } = await supabase
+      .from("products")
+      .select(
+        "id, slug, name, description, price_cents, model_path, cover_image_url, default_design_id, published, sort_order, textures!base_texture_id(url)",
+      )
+      .order("sort_order", { ascending: true });
+    if (error) throw toError(error);
+    return (data ?? []) as ProductRow[];
+  }, []);
+}
+
+/** Producto por slug sin filtrar por published (admin). */
+export async function getProductAdminBySlug(
+  slug: string,
+): Promise<ProductRow | null> {
+  const s = slug.trim();
+  if (!s) return null;
+  return withNetworkFallback(async () => {
+    const supabase = createServiceClient();
+    const { data, error } = await supabase
+      .from("products")
+      .select(
+        "id, slug, name, description, price_cents, model_path, cover_image_url, default_design_id, published, sort_order, textures!base_texture_id(url)",
+      )
+      .eq("slug", s)
+      .maybeSingle();
+    if (error) throw toError(error);
+    return data ? (data as ProductRow) : null;
+  }, null);
+}
+
+/** Pedidos con cobro confirmado en pasarela (base para listado tipo factura). */
+export interface FacturaPedidoListado {
+  id: string;
+  cliente: string;
+  total: string;
+  fechaPedido: string;
+  fechaPago: string | null;
+}
+
+export async function getFacturasPedidosPagadosAdmin(): Promise<
+  FacturaPedidoListado[]
+> {
+  return withNetworkFallback(async () => {
+    const supabase = createServiceClient();
+    const { data, error } = await supabase
+      .from("orders")
+      .select(
+        "id, shipping_name, total_cents, created_at, payment_status, paid_at",
+      )
+      .eq("payment_status", "paid")
+      .order("created_at", { ascending: false });
+    if (error) throw toError(error);
+    const rows = data ?? [];
+    const fmt = (iso: string) =>
+      new Date(iso).toLocaleDateString("es-ES", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    type PaidRow = {
+      id: string;
+      shipping_name: string | null;
+      total_cents: number;
+      created_at: string;
+      paid_at: string | null;
+    };
+    return (rows as PaidRow[]).map((row) => {
+      return {
+        id: row.id,
+        cliente: row.shipping_name ?? "—",
+        total: formatDOPFromCents(row.total_cents),
+        fechaPedido: fmt(row.created_at),
+        fechaPago: row.paid_at ? fmt(row.paid_at) : null,
+      };
+    });
+  }, []);
+}
+
 export async function getDesigns(userId?: string | null): Promise<Design[]> {
   return withNetworkFallback(async () => {
     const supabase = await createClient();
     let query = supabase
       .from("designs")
-      .select("id, name, slug, description, user_id, source, model_path, garment_color_hex, canvas_elements, cover_image_url, gallery, created_at, updated_at")
+      .select(
+        "id, name, slug, description, user_id, source, model_path, garment_color_hex, canvas_elements, cover_image_url, gallery, created_at, updated_at",
+      )
       .order("updated_at", { ascending: false });
     if (userId) {
       query = query.eq("user_id", userId);
@@ -133,7 +233,9 @@ export async function getDesignById(id: string): Promise<Design | null> {
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("designs")
-      .select("id, name, slug, description, user_id, source, model_path, garment_color_hex, canvas_elements, cover_image_url, gallery, created_at, updated_at")
+      .select(
+        "id, name, slug, description, user_id, source, model_path, garment_color_hex, canvas_elements, cover_image_url, gallery, created_at, updated_at",
+      )
       .eq("id", id)
       .single();
     if (error) {
@@ -149,7 +251,9 @@ export async function getDesignBySlug(slug: string): Promise<Design | null> {
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("designs")
-      .select("id, name, slug, description, user_id, source, model_path, garment_color_hex, canvas_elements, cover_image_url, gallery, created_at, updated_at")
+      .select(
+        "id, name, slug, description, user_id, source, model_path, garment_color_hex, canvas_elements, cover_image_url, gallery, created_at, updated_at",
+      )
       .eq("slug", slug)
       .single();
     if (error) {
@@ -165,67 +269,71 @@ export async function getLineas(): Promise<Linea[]> {
     const supabase = await createClient();
     const { data: lineasData, error: lineasError } = await supabase
       .from("lineas")
-      .select("id, slug, name, description, cover_image_url, gallery, published, sort_order")
+      .select(
+        "id, slug, name, description, cover_image_url, gallery, published, sort_order",
+      )
       .eq("published", true)
       .order("sort_order", { ascending: true });
     if (lineasError) throw toError(lineasError);
 
     const { data: countsData } = await supabase
-    .from("product_lineas")
-    .select("linea_id");
-  const countByLinea = (countsData ?? []).reduce<Record<string, number>>(
-    (acc, row) => {
-      const lid = (row as { linea_id: string }).linea_id;
-      acc[lid] = (acc[lid] ?? 0) + 1;
-      return acc;
-    },
-    {}
-  );
+      .from("product_lineas")
+      .select("linea_id");
+    const countByLinea = (countsData ?? []).reduce<Record<string, number>>(
+      (acc, row) => {
+        const lid = (row as { linea_id: string }).linea_id;
+        acc[lid] = (acc[lid] ?? 0) + 1;
+        return acc;
+      },
+      {},
+    );
 
-  return (lineasData ?? []).map((row) => {
-    const r = row as LineaRow;
-    return rowToLinea(r, countByLinea[r.id] ?? 0);
-  });
+    return (lineasData ?? []).map((row) => {
+      const r = row as LineaRow;
+      return rowToLinea(r, countByLinea[r.id] ?? 0);
+    });
   }, []);
 }
 
 export async function getLineaBySlug(slug: string): Promise<Linea | null> {
   return withNetworkFallback(async () => {
-  const supabase = await createClient();
-  const { data: linea, error } = await supabase
-    .from("lineas")
-    .select("id, slug, name, description, cover_image_url, gallery, published, sort_order")
-    .eq("slug", slug)
-    .single();
-  if (error) {
-    if (error.code === "PGRST116") return null;
-    throw toError(error);
-  }
-  if (!linea) return null;
+    const supabase = await createClient();
+    const { data: linea, error } = await supabase
+      .from("lineas")
+      .select(
+        "id, slug, name, description, cover_image_url, gallery, published, sort_order",
+      )
+      .eq("slug", slug)
+      .single();
+    if (error) {
+      if (error.code === "PGRST116") return null;
+      throw toError(error);
+    }
+    if (!linea) return null;
 
-  const { count } = await supabase
-    .from("product_lineas")
-    .select("id", { count: "exact", head: true })
-    .eq("linea_id", linea.id);
-  return rowToLinea(linea as LineaRow, count ?? 0);
+    const { count } = await supabase
+      .from("product_lineas")
+      .select("id", { count: "exact", head: true })
+      .eq("linea_id", linea.id);
+    return rowToLinea(linea as LineaRow, count ?? 0);
   }, null);
 }
 
 export async function getMockups(): Promise<Mockup[]> {
   return withNetworkFallback(async () => {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("base_models")
-    .select("id, path, name")
-    .order("path");
-  if (error) throw toError(error);
-  return (data ?? []).map((row) => rowToMockup(row as BaseModelRow));
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("base_models")
+      .select("id, path, name")
+      .order("path");
+    if (error) throw toError(error);
+    return (data ?? []).map((row) => rowToMockup(row as BaseModelRow));
   }, []);
 }
 
 async function fetchOrdersPedidos(
   ordersData: OrderRow[],
-  supabase: Awaited<ReturnType<typeof createClient>>
+  supabase: Awaited<ReturnType<typeof createClient>>,
 ): Promise<Pedido[]> {
   const orderIds = ordersData.map((o) => o.id);
   const counts: Record<string, number> = {};
@@ -245,44 +353,51 @@ async function fetchOrdersPedidos(
 /** Orders for current user (RLS). */
 export async function getOrders(): Promise<Pedido[]> {
   return withNetworkFallback(async () => {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("orders")
-    .select("id, user_id, session_id, status, shipping_name, total_cents, created_at")
-    .order("created_at", { ascending: false });
-  if (error) throw toError(error);
-  return fetchOrdersPedidos((data ?? []) as OrderRow[], supabase);
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("orders")
+      .select(
+        "id, user_id, session_id, status, shipping_name, total_cents, created_at",
+      )
+      .order("created_at", { ascending: false });
+    if (error) throw toError(error);
+    return fetchOrdersPedidos((data ?? []) as OrderRow[], supabase);
   }, []);
 }
 
 /** All orders (admin). Uses service role, bypasses RLS. */
 export async function getOrdersAdmin(): Promise<Pedido[]> {
   return withNetworkFallback(async () => {
-  const supabase = createServiceClient();
-  const { data, error } = await supabase
-    .from("orders")
-    .select("id, user_id, session_id, status, shipping_name, total_cents, created_at")
-    .order("created_at", { ascending: false });
-  if (error) throw toError(error);
-  const rows = (data ?? []) as OrderRow[];
-  const orderIds = rows.map((o) => o.id);
-  const counts: Record<string, number> = {};
-  if (orderIds.length > 0) {
-    const { data: itemsData } = await supabase
-      .from("order_items")
-      .select("order_id")
-      .in("order_id", orderIds);
-    for (const row of itemsData ?? []) {
-      const oid = (row as { order_id: string }).order_id;
-      counts[oid] = (counts[oid] ?? 0) + 1;
+    const supabase = createServiceClient();
+    const { data, error } = await supabase
+      .from("orders")
+      .select(
+        "id, user_id, session_id, status, shipping_name, total_cents, created_at",
+      )
+      .order("created_at", { ascending: false });
+    if (error) throw toError(error);
+    const rows = (data ?? []) as OrderRow[];
+    const orderIds = rows.map((o) => o.id);
+    const counts: Record<string, number> = {};
+    if (orderIds.length > 0) {
+      const { data: itemsData } = await supabase
+        .from("order_items")
+        .select("order_id")
+        .in("order_id", orderIds);
+      for (const row of itemsData ?? []) {
+        const oid = (row as { order_id: string }).order_id;
+        counts[oid] = (counts[oid] ?? 0) + 1;
+      }
     }
-  }
-  return rows.map((r) => rowToPedido(r, counts[r.id] ?? 0));
+    return rows.map((r) => rowToPedido(r, counts[r.id] ?? 0));
   }, []);
 }
 
-function coercePaymentStatus(value: string | null | undefined): OrderPaymentStatus {
-  if (value === "paid" || value === "declined" || value === "pending") return value;
+function coercePaymentStatus(
+  value: string | null | undefined,
+): OrderPaymentStatus {
+  if (value === "paid" || value === "declined" || value === "pending")
+    return value;
   return "pending";
 }
 
@@ -344,12 +459,17 @@ export async function updateOrderPaymentStatusFromGateway(
     patch.status = "paid";
     patch.paid_at = new Date().toISOString();
   }
-  const { error } = await supabase.from("orders").update(patch).eq("id", params.orderId);
+  const { error } = await supabase
+    .from("orders")
+    .update(patch)
+    .eq("id", params.orderId);
   if (error) throw toError(error);
 }
 
 /** Consulta pública: obtiene el estado de un pedido por ID (sin auth). Usa service role. */
-export async function getOrderStatusById(orderId: string): Promise<OrderStatusDetail | null> {
+export async function getOrderStatusById(
+  orderId: string,
+): Promise<OrderStatusDetail | null> {
   if (!orderId?.trim()) return null;
   const id = orderId.trim().toLowerCase();
   try {
@@ -374,15 +494,25 @@ export async function getOrderStatusById(orderId: string): Promise<OrderStatusDe
 
     const { data: itemsData } = await supabase
       .from("order_items")
-      .select("quantity, unit_price_cents, design_id, products(name, slug, cover_image_url), designs(name, cover_image_url)")
+      .select(
+        "quantity, unit_price_cents, design_id, products(name, slug, cover_image_url), designs(name, cover_image_url)",
+      )
       .eq("order_id", id);
 
     type ItemRow = {
       quantity: number;
       unit_price_cents: number;
       design_id: string | null;
-      products?: { name: string; slug: string; cover_image_url: string | null } | null;
-      product?: { name: string; slug: string; cover_image_url: string | null } | null;
+      products?: {
+        name: string;
+        slug: string;
+        cover_image_url: string | null;
+      } | null;
+      product?: {
+        name: string;
+        slug: string;
+        cover_image_url: string | null;
+      } | null;
       designs?: { name: string; cover_image_url: string | null } | null;
       design?: { name: string; cover_image_url: string | null } | null;
     };
@@ -396,7 +526,10 @@ export async function getOrderStatusById(orderId: string): Promise<OrderStatusDe
         designName: row.design_id
           ? (design?.name ?? "Diseño personalizado")
           : null,
-        designCoverImageUrl: row.design_id && design?.cover_image_url ? design.cover_image_url : null,
+        designCoverImageUrl:
+          row.design_id && design?.cover_image_url
+            ? design.cover_image_url
+            : null,
         quantity: row.quantity,
         unitPriceCents: row.unit_price_cents,
       };
@@ -452,12 +585,14 @@ export interface CreateOrderShipping {
 export async function createOrder(
   shipping: CreateOrderShipping,
   items: CreateOrderItem[],
-  _sessionId?: string | null
+  _sessionId?: string | null,
 ): Promise<{ orderId: string }> {
   if (items.length === 0) throw new Error("El carrito está vacío");
 
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) {
     throw new Error("Debes iniciar sesión para realizar la compra.");
   }
@@ -482,7 +617,8 @@ export async function createOrder(
     .select("id")
     .single();
 
-  if (orderError || !orderRow) throw toError(orderError ?? { message: "Error al crear el pedido" });
+  if (orderError || !orderRow)
+    throw toError(orderError ?? { message: "Error al crear el pedido" });
 
   const orderId = (orderRow as { id: string }).id;
 

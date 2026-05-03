@@ -5,14 +5,16 @@
 
 import type { Pedido, PedidoEstado } from "./pedido";
 
-/** Estado filter for pedidos table: "todos" or a specific PedidoEstado. */
-export type FilterEstado = "todos" | PedidoEstado;
+/** Estado filter for pedidos table; "abiertos" = pendiente + en proceso (no completados). */
+export type FilterEstado = "todos" | "abiertos" | PedidoEstado;
 
 /** Props for the PedidosTable component. */
 export interface PedidosTableProps {
   pedidos: Pedido[];
   /** Si true, muestra barra de búsqueda y filtro por estado (requiere client). */
   withFilters?: boolean;
+  /** Estado inicial del filtro (solo con `withFilters`). */
+  initialFilterEstado?: FilterEstado;
   /** Llamado al ejecutar "Marcar en proceso" en lote; recibe los ids seleccionados. */
   onMarkEnProceso?: (ids: string[]) => void;
   /** Llamado al ejecutar "Marcar completado" en lote; recibe los ids seleccionados. */

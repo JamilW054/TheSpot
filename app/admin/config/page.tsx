@@ -1,9 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import { PageLayout } from "@/components/layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { useState } from "react";
 
 interface TiendaForm {
   nombre: string;
@@ -41,7 +41,8 @@ const LOGISTICA_INITIAL: LogisticaForm = {
 
 export default function AdminConfigPage() {
   const [tienda, setTienda] = useState<TiendaForm>(TIENDA_INITIAL);
-  const [produccion, setProduccion] = useState<ProduccionForm>(PRODUCCION_INITIAL);
+  const [produccion, setProduccion] =
+    useState<ProduccionForm>(PRODUCCION_INITIAL);
   const [logistica, setLogistica] = useState<LogisticaForm>(LOGISTICA_INITIAL);
 
   const handleGuardar = () => {
@@ -143,7 +144,10 @@ export default function AdminConfigPage() {
               label="Envíos activos"
               value={logistica.envioActivo}
               onChange={(e) =>
-                setLogistica((prev) => ({ ...prev, envioActivo: e.target.value }))
+                setLogistica((prev) => ({
+                  ...prev,
+                  envioActivo: e.target.value,
+                }))
               }
               placeholder="sí / no"
             />

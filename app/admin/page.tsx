@@ -1,5 +1,5 @@
-import { AdminDashboardClient } from "./AdminDashboardClient";
 import { getLineas, getOrdersAdmin } from "@/lib/db";
+import { AdminDashboardClient } from "./AdminDashboardClient";
 
 export default async function AdminPage() {
   const [initialPedidos, initialLineas] = await Promise.all([

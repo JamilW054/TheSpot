@@ -1,10 +1,5 @@
 "use client";
 
-import { PedidosTable } from "@/features/admin";
-import type { Linea, Pedido } from "@/types";
-import { formatDOPFromCents, parseFormattedCurrencyToNumber } from "@/lib/format-currency";
-import Link from "next/link";
-import { useState } from "react";
 import {
   Calendar,
   ChevronDown,
@@ -15,6 +10,14 @@ import {
   ShoppingBag,
   Sparkles,
 } from "lucide-react";
+import Link from "next/link";
+import { useState } from "react";
+import { PedidosTable } from "@/features/admin";
+import {
+  formatDOPFromCents,
+  parseFormattedCurrencyToNumber,
+} from "@/lib/format-currency";
+import type { Linea, Pedido } from "@/types";
 
 function kpis(pedidos: Pedido[]) {
   return {
@@ -44,7 +47,12 @@ function MiniChart({ up }: { up: boolean }) {
     ? "0,12 4,10 8,8 12,6 16,4 20,8 24,4"
     : "0,6 4,8 8,10 12,8 16,10 20,6 24,10";
   return (
-    <svg viewBox="0 0 24 16" className="h-8 w-full shrink-0 opacity-80" aria-hidden>
+    <svg
+      viewBox="0 0 24 16"
+      className="h-8 w-full shrink-0 opacity-80"
+      aria-hidden
+    >
+      <title>Mini gráfico</title>
       <polyline
         fill="none"
         stroke="currentColor"
@@ -60,7 +68,10 @@ function MiniChart({ up }: { up: boolean }) {
 function ComingUpCalendar() {
   const [month, setMonth] = useState(new Date());
   const year = month.getFullYear();
-  const monthName = month.toLocaleDateString("es-ES", { month: "long", year: "numeric" });
+  const monthName = month.toLocaleDateString("es-ES", {
+    month: "long",
+    year: "numeric",
+  });
   const firstDay = new Date(year, month.getMonth(), 1);
   const lastDay = new Date(year, month.getMonth() + 1, 0);
   const startPad = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1;
@@ -100,7 +111,8 @@ function ComingUpCalendar() {
           <span key={d}>{d}</span>
         ))}
         {Array.from({ length: startPad }, (_, i) => (
-          <span key={`pad-${i}`} />
+          // Índice estable dentro del mes: huecos antes del día 1
+          <span key={`cal-empty-${year}-${month.getMonth()}-${i}`} />
         ))}
         {days.map((d) => (
           <button
@@ -143,16 +155,16 @@ export function AdminDashboardClient({
   const handleMarkEnProceso = (ids: string[]) => {
     setPedidos((prev) =>
       prev.map((p) =>
-        ids.includes(p.id) ? { ...p, estado: "en_proceso" as const } : p
-      )
+        ids.includes(p.id) ? { ...p, estado: "en_proceso" as const } : p,
+      ),
     );
   };
 
   const handleMarkCompletado = (ids: string[]) => {
     setPedidos((prev) =>
       prev.map((p) =>
-        ids.includes(p.id) ? { ...p, estado: "completado" as const } : p
-      )
+        ids.includes(p.id) ? { ...p, estado: "completado" as const } : p,
+      ),
     );
   };
 
@@ -224,16 +236,39 @@ export function AdminDashboardClient({
 
           <div className="grid gap-4 sm:grid-cols-3">
             {[
-              { key: "pendientes" as const, label: "Pendientes", value: metrics.pendientes, change: "+40% vs mes anterior", up: true, color: "text-emerald-400" },
-              { key: "enProceso" as const, label: "En proceso", value: metrics.enProceso, change: "−10% vs mes anterior", up: false, color: "text-red-400" },
-              { key: "completados" as const, label: "Completados", value: metrics.completados, change: "+20% vs mes anterior", up: true, color: "text-emerald-400" },
+              {
+                key: "pendientes" as const,
+                label: "Pendientes",
+                value: metrics.pendientes,
+                change: "+40% vs mes anterior",
+                up: true,
+                color: "text-emerald-400",
+              },
+              {
+                key: "enProceso" as const,
+                label: "En proceso",
+                value: metrics.enProceso,
+                change: "−10% vs mes anterior",
+                up: false,
+                color: "text-red-400",
+              },
+              {
+                key: "completados" as const,
+                label: "Completados",
+                value: metrics.completados,
+                change: "+20% vs mes anterior",
+                up: true,
+                color: "text-emerald-400",
+              },
             ].map(({ key, label, value, change, up, color }) => (
               <div
                 key={key}
                 className="rounded-2xl border border-zinc-700/80 bg-zinc-900/80 p-4 shadow-sm"
               >
                 <p className="text-xs font-medium text-zinc-400">{label}</p>
-                <p className="mt-1 text-2xl font-bold tabular-nums text-white">{value}</p>
+                <p className="mt-1 text-2xl font-bold tabular-nums text-white">
+                  {value}
+                </p>
                 <p className={`mt-1 text-xs ${color}`}>{change}</p>
                 <div className="mt-2 h-8 w-full text-zinc-500">
                   <MiniChart up={up} />
@@ -248,8 +283,13 @@ export function AdminDashboardClient({
 
           <div className="rounded-2xl border border-zinc-700/80 bg-zinc-900/80 shadow-sm">
             <div className="flex items-center justify-between border-b border-zinc-700/80 px-4 py-3">
-              <h2 className="text-sm font-semibold text-zinc-100">Pedidos recientes</h2>
-              <Link href="/admin/pedidos" className="text-xs font-medium text-indigo-400 hover:text-indigo-300">
+              <h2 className="text-sm font-semibold text-zinc-100">
+                Pedidos recientes
+              </h2>
+              <Link
+                href="/admin/pedidos"
+                className="text-xs font-medium text-indigo-400 hover:text-indigo-300"
+              >
                 Ver todos
               </Link>
             </div>
@@ -266,10 +306,19 @@ export function AdminDashboardClient({
                 </thead>
                 <tbody>
                   {recentPedidos.map((p) => (
-                    <tr key={p.id} className="border-b border-zinc-700/50 transition-colors hover:bg-zinc-800/30">
-                      <td className="px-4 py-3 font-mono text-zinc-200">{p.id}</td>
-                      <td className="px-4 py-3 text-zinc-400">{p.createdAt ?? "—"}</td>
-                      <td className="px-4 py-3 tabular-nums text-zinc-200">{p.total}</td>
+                    <tr
+                      key={p.id}
+                      className="border-b border-zinc-700/50 transition-colors hover:bg-zinc-800/30"
+                    >
+                      <td className="px-4 py-3 font-mono text-zinc-200">
+                        {p.id}
+                      </td>
+                      <td className="px-4 py-3 text-zinc-400">
+                        {p.createdAt ?? "—"}
+                      </td>
+                      <td className="px-4 py-3 tabular-nums text-zinc-200">
+                        {p.total}
+                      </td>
                       <td className="px-4 py-3 text-zinc-300">{p.cliente}</td>
                       <td className="px-4 py-3">
                         <span
@@ -295,8 +344,14 @@ export function AdminDashboardClient({
         <div className="space-y-4">
           <div className="rounded-2xl border border-zinc-700/80 bg-zinc-900/80 p-4 shadow-sm">
             <div className="mb-3 flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-zinc-100">Líneas Buxxep</h3>
-              <button type="button" className="rounded p-1.5 text-zinc-400 hover:bg-zinc-700 hover:text-zinc-100" aria-label="Actualizar">
+              <h3 className="text-sm font-semibold text-zinc-100">
+                Líneas Buxxep
+              </h3>
+              <button
+                type="button"
+                className="rounded p-1.5 text-zinc-400 hover:bg-zinc-700 hover:text-zinc-100"
+                aria-label="Actualizar"
+              >
                 <RefreshCw className="size-4" />
               </button>
             </div>
@@ -309,9 +364,15 @@ export function AdminDashboardClient({
                 </summary>
                 <ul className="mt-2 space-y-1.5 pl-6">
                   {lineasSlice.map((l) => (
-                    <li key={l.id} className="flex items-center gap-2 text-xs text-zinc-400">
+                    <li
+                      key={l.id}
+                      className="flex items-center gap-2 text-xs text-zinc-400"
+                    >
                       <span className="size-2 rounded-full bg-zinc-500" />
-                      <Link href={`/lineas/${l.slug}`} className="hover:text-zinc-200">
+                      <Link
+                        href={`/lineas/${l.slug}`}
+                        className="hover:text-zinc-200"
+                      >
                         {l.name}
                       </Link>
                     </li>
@@ -337,7 +398,9 @@ export function AdminDashboardClient({
       </div>
 
       <section className="rounded-2xl border border-zinc-700/80 bg-zinc-900/80 p-4 shadow-sm">
-        <h2 className="mb-3 text-lg font-semibold text-zinc-100">Todos los pedidos</h2>
+        <h2 className="mb-3 text-lg font-semibold text-zinc-100">
+          Todos los pedidos
+        </h2>
         <PedidosTable
           pedidos={pedidos}
           withFilters

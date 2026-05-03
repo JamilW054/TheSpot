@@ -3,6 +3,7 @@
 import {
   BarChart2,
   BookOpen,
+  FileText,
   FolderOpen,
   HelpCircle,
   LayoutDashboard,
@@ -11,13 +12,16 @@ import {
   Package,
   PanelLeftClose,
   PenSquare,
+  PlusCircle,
   Settings,
   Shirt,
   ShoppingCart,
+  Store,
   Upload,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Fragment } from "react";
 import type { NavItem } from "@/config/navigation";
 import { ADMIN_NAV, APP_NAV } from "@/config/navigation";
 import { useAuth } from "@/lib/auth-context";
@@ -38,6 +42,7 @@ const APP_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   BookOpen,
   FolderOpen,
   HelpCircle,
+  Store,
 };
 
 const ADMIN_ICONS: Record<
@@ -46,11 +51,34 @@ const ADMIN_ICONS: Record<
 > = {
   LayoutDashboard,
   ShoppingCart,
+  FileText,
+  Store,
+  PlusCircle,
   Upload,
+  PenSquare,
   Shirt,
+  BookOpen,
+  FolderOpen,
   BarChart2,
   Settings,
 };
+
+function navItemActive(
+  pathname: string,
+  itemHref: string,
+  items: NavItem[],
+): boolean {
+  if (pathname === itemHref) return true;
+  if (itemHref === "/" || itemHref === "/admin") return false;
+  if (!pathname.startsWith(`${itemHref}/`)) return false;
+  const hasMoreSpecific = items.some(
+    (o) =>
+      o.href !== itemHref &&
+      o.href.startsWith(`${itemHref}/`) &&
+      (pathname === o.href || pathname.startsWith(`${o.href}/`)),
+  );
+  return !hasMoreSpecific;
+}
 
 export interface AppSidebarProps {
   variant?: SidebarVariant;
@@ -121,18 +149,35 @@ export function AppSidebar({
           </div>
 
           <nav className="flex flex-col gap-1">
-            {items.map((item) => {
+            {items.map((item, index) => {
+              const prev = items[index - 1];
+              const showSectionHeading =
+                variant === "admin" &&
+                item.adminSection &&
+                item.adminSection !== prev?.adminSection;
               const isActive =
-                pathname === item.href ||
-                (item.href !== "/" && pathname.startsWith(item.href));
+                variant === "admin"
+                  ? navItemActive(pathname, item.href, rawItems)
+                  : pathname === item.href ||
+                    (item.href !== "/" &&
+                      item.href !== "/admin" &&
+                      (pathname.startsWith(`${item.href}/`) ||
+                        pathname === item.href));
               const iconMap = variant === "admin" ? ADMIN_ICONS : APP_ICONS;
               const Icon = item.icon ? iconMap[item.icon] : null;
               return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={onClose}
-                  className={`
+                <Fragment key={`${item.href}-${item.label}`}>
+                  {showSectionHeading ? (
+                    <div
+                      className={`px-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground ${index === 0 ? "pb-1 pt-0" : "pb-1 pt-5"}`}
+                    >
+                      {item.adminSection}
+                    </div>
+                  ) : null}
+                  <Link
+                    href={item.href}
+                    onClick={onClose}
+                    className={`
                     flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium
                     transition-colors duration-150
                     focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-card
@@ -142,14 +187,15 @@ export function AppSidebar({
                         : "text-muted-foreground hover:bg-muted/80 hover:text-foreground"
                     }
                   `}
-                >
-                  {Icon != null ? (
-                    <Icon className="size-5 shrink-0" aria-hidden />
-                  ) : (
-                    <span className="size-5 shrink-0" aria-hidden />
-                  )}
-                  <span className="truncate">{item.label}</span>
-                </Link>
+                  >
+                    {Icon != null ? (
+                      <Icon className="size-5 shrink-0" aria-hidden />
+                    ) : (
+                      <span className="size-5 shrink-0" aria-hidden />
+                    )}
+                    <span className="truncate">{item.label}</span>
+                  </Link>
+                </Fragment>
               );
             })}
           </nav>

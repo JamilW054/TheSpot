@@ -1,6 +1,6 @@
-
 "use client";
 
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -11,7 +11,6 @@ import type {
   PedidosTableBodyProps,
   PedidosTableProps,
 } from "@/types";
-import { useEffect, useMemo, useRef, useState } from "react";
 
 const ESTADO_LABEL: Record<PedidoEstado, string> = {
   pendiente: "Pendiente",
@@ -19,7 +18,10 @@ const ESTADO_LABEL: Record<PedidoEstado, string> = {
   completado: "Completado",
 };
 
-const ESTADO_BADGE_VARIANT: Record<PedidoEstado, "default" | "warning" | "success"> = {
+const ESTADO_BADGE_VARIANT: Record<
+  PedidoEstado,
+  "default" | "warning" | "success"
+> = {
   pendiente: "warning",
   en_proceso: "default",
   completado: "success",
@@ -27,15 +29,27 @@ const ESTADO_BADGE_VARIANT: Record<PedidoEstado, "default" | "warning" | "succes
 
 const FILTER_ESTADO_OPTIONS: { value: FilterEstado; label: string }[] = [
   { value: "todos", label: "Todos" },
+  { value: "abiertos", label: "Abiertos" },
   { value: "pendiente", label: "Pendiente" },
   { value: "en_proceso", label: "En proceso" },
   { value: "completado", label: "Completado" },
 ];
 
+function estadoMatches(
+  filterEstado: FilterEstado,
+  pedidoEstado: PedidoEstado,
+): boolean {
+  if (filterEstado === "todos") return true;
+  if (filterEstado === "abiertos") {
+    return pedidoEstado === "pendiente" || pedidoEstado === "en_proceso";
+  }
+  return pedidoEstado === filterEstado;
+}
+
 function filterPedidos(
   pedidos: Pedido[],
   searchQuery: string,
-  filterEstado: FilterEstado
+  filterEstado: FilterEstado,
 ): Pedido[] {
   const q = searchQuery.trim().toLowerCase();
   return pedidos.filter((p) => {
@@ -43,9 +57,7 @@ function filterPedidos(
       q === "" ||
       p.id.toLowerCase().includes(q) ||
       p.cliente.toLowerCase().includes(q);
-    const matchEstado =
-      filterEstado === "todos" || p.estado === filterEstado;
-    return matchSearch && matchEstado;
+    return matchSearch && estadoMatches(filterEstado, p.estado);
   });
 }
 
@@ -59,19 +71,19 @@ function toggleSet<T>(set: Set<T>, value: T): Set<T> {
 export function PedidosTable({
   pedidos,
   withFilters = false,
+  initialFilterEstado = "todos",
   onMarkEnProceso,
   onMarkCompletado,
 }: PedidosTableProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterEstado, setFilterEstado] = useState<FilterEstado>("todos");
+  const [filterEstado, setFilterEstado] =
+    useState<FilterEstado>(initialFilterEstado);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const filtered = useMemo(
     () =>
-      withFilters
-        ? filterPedidos(pedidos, searchQuery, filterEstado)
-        : pedidos,
-    [pedidos, searchQuery, filterEstado, withFilters]
+      withFilters ? filterPedidos(pedidos, searchQuery, filterEstado) : pedidos,
+    [pedidos, searchQuery, filterEstado, withFilters],
   );
 
   const handleToggleRow = (id: string) => {
@@ -135,7 +147,7 @@ export function PedidosTable({
               </p>
             )}
             {selectedIds.size > 0 && (
-              <p className="font-medium text-foreground" role="status">
+              <p className="font-medium text-foreground">
                 {selectedIds.size}{" "}
                 {selectedIds.size === 1 ? "seleccionado" : "seleccionados"}
               </p>
@@ -291,7 +303,9 @@ function PedidosTableBody({
                       {ESTADO_LABEL[p.estado]}
                     </Badge>
                   </div>
-                  <p className="mt-1 font-medium text-foreground">{p.cliente}</p>
+                  <p className="mt-1 font-medium text-foreground">
+                    {p.cliente}
+                  </p>
                   <div className="mt-2 flex gap-4 text-sm text-muted-foreground">
                     <span>{p.items} items</span>
                     <span className="tabular-nums">{p.total}</span>
