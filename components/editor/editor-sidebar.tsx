@@ -91,7 +91,7 @@ export function EditorSidebar({ onAddImageFromFile }: EditorSidebarProps) {
           </>
         ) : null}
         <p className="text-xs text-muted-foreground">
-          Arrastra una herramienta al canvas. Todo se aplica al modelo 3D.
+          Arrastra una herramienta al canvas. Todo se incluye en tu diseño y la vista previa.
         </p>
       </div>
     </aside>

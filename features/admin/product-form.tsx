@@ -220,7 +220,7 @@ export function ProductForm({ mode, models, initial }: ProductFormProps) {
           htmlFor="product-model_path"
           className="text-sm font-medium text-foreground"
         >
-          Modelo 3D
+          Plantilla base (model_path)
         </label>
         <select
           id="product-model_path"

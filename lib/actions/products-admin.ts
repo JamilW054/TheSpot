@@ -42,7 +42,7 @@ export async function adminCreateProduct(
     const description =
       formData.get("description")?.toString().trim() || null;
     const model_path = formData.get("model_path")?.toString().trim() ?? "";
-    if (!model_path) throw new Error("Selecciona un modelo 3D.");
+    if (!model_path) throw new Error("Selecciona una plantilla base.");
 
     const price_cents = parsePriceDopToCents(
       formData.get("price_dop")?.toString() ?? "",
@@ -138,7 +138,7 @@ export async function adminUpdateProduct(
     const description =
       formData.get("description")?.toString().trim() || null;
     const model_path = formData.get("model_path")?.toString().trim() ?? "";
-    if (!model_path) throw new Error("Selecciona un modelo 3D.");
+    if (!model_path) throw new Error("Selecciona una plantilla base.");
 
     const price_cents = parsePriceDopToCents(
       formData.get("price_dop")?.toString() ?? "",

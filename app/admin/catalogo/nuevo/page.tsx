@@ -7,7 +7,7 @@ export default async function AdminCatalogoNuevoPage() {
   return (
     <PageLayout
       title="Nuevo artículo"
-      description="Completa los datos y sube la imagen del producto (Cloudflare R2). El modelo 3D debe existir en base_models."
+      description="Completa los datos y sube la imagen del producto (Cloudflare R2). La plantilla base debe estar registrada en base_models."
     >
       <ProductForm mode="create" models={models} />
     </PageLayout>

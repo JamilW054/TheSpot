@@ -176,7 +176,7 @@ export default function PublicPage() {
           Hecho para el día a día <span className="landing-wavy-underline">fuerte</span>
         </h2>
         <p className="text-muted-foreground text-sm mb-4">
-          Prendas que aguantan el ritmo. Personalízalas a tu gusto en el editor 3D.
+          Prendas que aguantan el ritmo. Personalízalas a tu gusto en el editor.
         </p>
         <MagicBento
           textAutoHide
@@ -229,7 +229,7 @@ export default function PublicPage() {
         <ol className="list-none p-0 m-0 flex flex-col sm:flex-row sm:gap-10 gap-5">
           {[
             { step: 1, title: "Elige prenda", text: "Catálogo → elige la prenda." },
-            { step: 2, title: "Diseña", text: "Editor 3D: texto, imágenes, formas." },
+            { step: 2, title: "Diseña", text: "Editor: texto, imágenes y formas en el lienzo." },
             { step: 3, title: "Compra", text: "Carrito → pedido → te lo enviamos." },
           ].map((item) => (
             <li key={item.step} className="flex gap-3 sm:flex-1">

@@ -108,7 +108,7 @@ export function EditorToolbar({
           type="button"
           onClick={onMenuClick}
           className={btn}
-          title="Menú (guardar/exportar el diseño del modelo)"
+          title="Menú (guardar/exportar el diseño)"
         >
           <Menu className="size-5" />
         </button>
@@ -116,7 +116,7 @@ export function EditorToolbar({
           type="button"
           onClick={onOpenClick}
           className={btn}
-          title="Abrir diseño (se aplica al modelo 3D)"
+          title="Abrir diseño (se aplica a la prenda)"
         >
           <FolderOpen className="size-5" />
         </button>
@@ -130,7 +130,7 @@ export function EditorToolbar({
           type="button"
           onClick={onPlusClick}
           className={btn}
-          title="Añadir elemento al modelo (texto, forma, imagen, pincel)"
+          title="Añadir elemento al lienzo (texto, forma, imagen, pincel)"
         >
           <Plus className="size-5" />
         </button>
@@ -142,7 +142,7 @@ export function EditorToolbar({
               ? "bg-primary/20 text-primary shadow-inner"
               : "text-muted-foreground hover:bg-muted hover:text-foreground"
           }`}
-          title="Mover: selecciona y arrastra elementos del diseño sobre el modelo"
+          title="Mover: selecciona y arrastra elementos del diseño"
         >
           <Move className="size-5" />
         </button>
@@ -168,7 +168,7 @@ export function EditorToolbar({
               type="button"
               onClick={() => fileInputRef.current?.click()}
               className={btn}
-              title="Subir imagen al diseño del modelo (o arrastra el icono de imagen)"
+              title="Subir imagen al diseño (o arrastra el icono de imagen)"
             >
               <Upload className="size-5" />
             </button>
@@ -182,7 +182,7 @@ export function EditorToolbar({
               ? "bg-primary/20 text-primary shadow-inner"
               : "text-muted-foreground hover:bg-muted hover:text-foreground"
           }`}
-          title="Pincel: dibuja sobre el modelo en el panel 2D (zona de diseño)"
+          title="Pincel: dibuja en el panel 2D (zona de diseño)"
         >
           <Pencil className="size-5" />
         </button>
@@ -197,7 +197,7 @@ export function EditorToolbar({
           onClick={onUndo}
           disabled={!canUndo}
           className={`${btn} disabled:opacity-40 disabled:cursor-not-allowed`}
-          title="Deshacer (cambios en el diseño del modelo)"
+          title="Deshacer (cambios en el diseño)"
         >
           <Redo2 className="size-4 rotate-180" />
         </button>
@@ -206,7 +206,7 @@ export function EditorToolbar({
           onClick={onRedo}
           disabled={!canRedo}
           className={`${btn} disabled:opacity-40 disabled:cursor-not-allowed`}
-          title="Rehacer (cambios en el diseño del modelo)"
+          title="Rehacer (cambios en el diseño)"
         >
           <Redo2 className="size-4" />
         </button>

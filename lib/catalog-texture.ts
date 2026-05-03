@@ -1,11 +1,11 @@
 import type { CatalogProduct } from "@/types";
 
 /**
- * URL de textura para el visor 3D del catálogo.
+ * URL de textura para vista previa / catálogo.
  * Usa la textura base del producto o la imagen de portada; si es externa, la sirve por proxy para evitar CORS.
  * URLs de Supabase Storage (bucket público) funcionan: el proxy en /api/texture las descarga en el servidor y las sirve al cliente.
  */
-/** placehold.co devuelve SVG por defecto; Three.js necesita raster. Forzar .png en la URL. */
+/** placehold.co devuelve SVG por defecto; la carga de textura necesita raster. Forzar .png en la URL. */
 function toTextureLoadUrl(url: string): string {
   const u = url.trim();
   if (u.includes("placehold.co") && !u.includes(".png")) {
@@ -15,7 +15,7 @@ function toTextureLoadUrl(url: string): string {
 }
 
 /**
- * Para el modelo 3D del catálogo se usa coverImage (portada) cuando existe, así la prenda muestra
+ * En catálogo se usa coverImage (portada) cuando existe, así la prenda muestra
  * la misma imagen que la ficha (p. ej. Imgur/Supabase). Si no hay cover, se usa baseTextureUrl.
  */
 export function getCatalogTextureUrl(product: CatalogProduct): string | null {

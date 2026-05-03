@@ -191,7 +191,7 @@ export function EditorRightPanel({
       </CollapsibleSection>
 
       <CollapsibleSection
-        title="Diseño sobre el modelo"
+        title="Diseño en el lienzo"
         open={editor2DOpen}
         onToggle={() => setEditor2DOpen(!editor2DOpen)}
       >

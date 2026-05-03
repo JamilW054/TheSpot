@@ -16,7 +16,7 @@ export interface TextureUploadPanelProps {
   /** Project/design name for storage key: textura_<projectName>.<ext> */
   projectName: string;
   onTextureChange: (url: string | null) => void;
-  /** Capture 3D canvas for ZIP export (image + model with texture) */
+  /** Capture preview canvas for ZIP export (image + texture) */
   getCanvasAsBlob?: () => Promise<Blob | null>;
   /** Texture with design in correct UV zone (1024x1024, for export) */
   getEffectiveTextureBlob?: () => Promise<Blob | null>;
@@ -183,9 +183,9 @@ export function TextureUploadPanel({
 
   return (
     <div className="mt-3 flex flex-col gap-3">
-      <h3 className="editor-section-title">Textura del modelo</h3>
+      <h3 className="editor-section-title">Textura de la prenda</h3>
       <p className="text-xs leading-relaxed text-muted-foreground">
-        Aplica una imagen como textura al modelo entero. Puedes subir un archivo o pegar una URL.
+        Aplica una imagen como textura completa. Puedes subir un archivo o pegar una URL.
       </p>
       <div className="flex flex-col gap-2">
         <label className="text-muted-foreground text-xs">Pegar URL de imagen</label>
@@ -197,7 +197,7 @@ export function TextureUploadPanel({
             onKeyDown={(e) => e.key === "Enter" && handleApplyUrl()}
             placeholder="https://…"
             className="flex-1 min-w-0 rounded border border-border bg-background px-2 py-1.5 text-sm text-foreground"
-            aria-label="URL de la imagen para textura del modelo"
+            aria-label="URL de la imagen para la textura"
           />
           <button
             type="button"
@@ -287,7 +287,7 @@ export function TextureUploadPanel({
               )}
             </div>
             <p className="text-xs text-muted-foreground">
-              ZIP: textura 1024×1024 + captura 3D o textura con diseño (<code className="rounded bg-muted/60 px-1 font-mono">diseno_{projectSlug}.zip</code>).
+              ZIP: textura 1024×1024 + captura de vista previa o textura con diseño (<code className="rounded bg-muted/60 px-1 font-mono">diseno_{projectSlug}.zip</code>).
             </p>
           </div>
         )}

@@ -11,7 +11,7 @@ const MOBILE_BREAKPOINT = 768;
 
 const cardData = [
   { color: '#0a0a0e', image: '/project/project-01.png', title: 'Personaliza', description: 'Diseña tu prenda a tu gusto', label: 'Estilo' },
-  { color: '#0a0a0e', image: '/project/project-02.png', title: 'Editor 3D', description: 'Vista previa en tiempo real', label: 'Diseño' },
+  { color: '#0a0a0e', image: '/project/project-02.png', title: 'Editor visual', description: 'Vista previa en tiempo real', label: 'Diseño' },
   { color: '#0a0a0e', image: '/project/project-03.png', title: 'Calidad', description: 'Tejidos que aguantan el ritmo', label: 'Material' },
   { color: '#0a0a0e', image: '/project/project-04.png', title: 'Colección', description: 'Nuevas piezas cada temporada', label: 'Tendencias' },
   { color: '#0a0a0e', image: '/project/project-05.png', title: 'Envíos', description: 'Llevamos tu pedido a casa', label: 'Comodidad' },

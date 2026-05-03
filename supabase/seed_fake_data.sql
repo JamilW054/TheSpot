@@ -1,10 +1,10 @@
 -- =============================================================================
 -- Buxxep — Seed: datos falsos para desarrollo
--- Todas las prendas públicas son camisetas con modelo base GLTF (/models/tshirt/scene.gltf)
+-- Todas las prendas públicas son camisetas con la misma plantilla base (model_path /models/tshirt/scene.gltf)
 -- Ejecutar después de: 00001, 00002, 00003
 -- =============================================================================
 
--- Modelo base usado en todos los productos: /models/tshirt/scene.gltf (debe existir en base_models)
+-- Plantilla base usada en todos los productos: /models/tshirt/scene.gltf (debe existir en base_models)
 
 -- -----------------------------------------------------------------------------
 -- 1. CATEGORÍAS
@@ -20,7 +20,7 @@ ON CONFLICT (id) DO NOTHING;
 -- -----------------------------------------------------------------------------
 INSERT INTO public.lineas (id, slug, name, description, published, sort_order) VALUES
   ('a2000000-0000-4000-8000-000000000001'::uuid, 'verano-2024', 'Verano 2024', 'Línea de camisetas para el verano. Diseña la tuya.', true, 0),
-  ('a2000000-0000-4000-8000-000000000002'::uuid, 'basicos', 'Básicos', 'Camisetas básicas de algodón. Todas con el mismo modelo base GLTF.', true, 1),
+  ('a2000000-0000-4000-8000-000000000002'::uuid, 'basicos', 'Básicos', 'Camisetas básicas de algodón. Todas comparten la misma plantilla base.', true, 1),
   ('a2000000-0000-4000-8000-000000000003'::uuid, 'coleccion-minimal', 'Colección minimal', 'Estilo minimal. Personaliza en el editor.', true, 2)
 ON CONFLICT (id) DO NOTHING;
 
@@ -33,7 +33,7 @@ INSERT INTO public.textures (id, source, url, name, mime_type) VALUES
 ON CONFLICT (id) DO NOTHING;
 
 -- -----------------------------------------------------------------------------
--- 4. DISEÑOS PLANTILLA (Buxxep) — modelo t-shirt GLTF, canvas vacío o simple
+-- 4. DISEÑOS PLANTILLA (Buxxep) — plantilla camiseta, canvas vacío o simple
 -- -----------------------------------------------------------------------------
 INSERT INTO public.designs (id, name, slug, source, model_path, garment_color_hex, canvas_elements, export_version) VALUES
   ('d4000000-0000-4000-8000-000000000001'::uuid, 'Plantilla básica', 'plantilla-basica', 'buxxep', '/models/tshirt/scene.gltf', '#ffffff', '[]', '1.0'),
@@ -42,7 +42,7 @@ INSERT INTO public.designs (id, name, slug, source, model_path, garment_color_he
 ON CONFLICT (id) DO NOTHING;
 
 -- -----------------------------------------------------------------------------
--- 5. PRODUCTOS — todas camisetas con modelo GLTF, publicadas
+-- 5. PRODUCTOS — todas camisetas con la misma plantilla base, publicadas
 -- -----------------------------------------------------------------------------
 INSERT INTO public.products (
   id,
@@ -58,12 +58,12 @@ INSERT INTO public.products (
   published,
   sort_order
 ) VALUES
-  ('a5000000-0000-4000-8000-000000000001'::uuid, 'camiseta-basica', 'Camiseta básica', 'Camiseta de algodón. Personaliza en el editor con el modelo 3D (GLTF).', 2499, '/models/tshirt/scene.gltf', 'https://placehold.co/600x600/fff/333?text=Camiseta+Basica', 'd4000000-0000-4000-8000-000000000001'::uuid, 'b3000000-0000-4000-8000-000000000001'::uuid, 'c1000000-0000-4000-8000-000000000001'::uuid, true, 0),
-  ('a5000000-0000-4000-8000-000000000002'::uuid, 'camiseta-personalizable', 'Camiseta personalizable', 'Diseña tu camiseta en el editor. Mismo modelo base GLTF para todas.', 2699, '/models/tshirt/scene.gltf', 'https://placehold.co/600x600/eee/333?text=Personalizable', 'd4000000-0000-4000-8000-000000000001'::uuid, 'b3000000-0000-4000-8000-000000000001'::uuid, 'c1000000-0000-4000-8000-000000000001'::uuid, true, 1),
-  ('a5000000-0000-4000-8000-000000000003'::uuid, 'camiseta-verano', 'Camiseta verano', 'Corte fresco para verano. Modelo 3D camiseta GLTF.', 2299, '/models/tshirt/scene.gltf', 'https://placehold.co/600x600/87ceeb/333?text=Verano', 'd4000000-0000-4000-8000-000000000002'::uuid, 'b3000000-0000-4000-8000-000000000001'::uuid, 'c1000000-0000-4000-8000-000000000001'::uuid, true, 2),
-  ('a5000000-0000-4000-8000-000000000004'::uuid, 'camiseta-minimal', 'Camiseta minimal', 'Estilo minimal. Base modelo t-shirt GLTF.', 2599, '/models/tshirt/scene.gltf', 'https://placehold.co/600x600/f5f5f5/333?text=Minimal', 'd4000000-0000-4000-8000-000000000003'::uuid, 'b3000000-0000-4000-8000-000000000002'::uuid, 'c1000000-0000-4000-8000-000000000002'::uuid, true, 3),
-  ('a5000000-0000-4000-8000-000000000005'::uuid, 'camiseta-unisex', 'Camiseta unisex', 'Unisex, algodón. Personaliza con el editor 3D (modelo camiseta).', 2399, '/models/tshirt/scene.gltf', 'https://placehold.co/600x600/e8e8e8/333?text=Unisex', 'd4000000-0000-4000-8000-000000000001'::uuid, 'b3000000-0000-4000-8000-000000000001'::uuid, 'c1000000-0000-4000-8000-000000000003'::uuid, true, 4),
-  ('a5000000-0000-4000-8000-000000000006'::uuid, 'camiseta-algodon', 'Camiseta algodón', '100% algodón. Mismo modelo base: camiseta GLTF.', 2799, '/models/tshirt/scene.gltf', 'https://placehold.co/600x600/fff8dc/333?text=Algodon', 'd4000000-0000-4000-8000-000000000002'::uuid, 'b3000000-0000-4000-8000-000000000001'::uuid, 'c1000000-0000-4000-8000-000000000002'::uuid, true, 5)
+  ('a5000000-0000-4000-8000-000000000001'::uuid, 'camiseta-basica', 'Camiseta básica', 'Camiseta de algodón. Personalízala en el editor.', 2499, '/models/tshirt/scene.gltf', 'https://placehold.co/600x600/fff/333?text=Camiseta+Basica', 'd4000000-0000-4000-8000-000000000001'::uuid, 'b3000000-0000-4000-8000-000000000001'::uuid, 'c1000000-0000-4000-8000-000000000001'::uuid, true, 0),
+  ('a5000000-0000-4000-8000-000000000002'::uuid, 'camiseta-personalizable', 'Camiseta personalizable', 'Diseña tu camiseta en el editor. Misma plantilla base para todas.', 2699, '/models/tshirt/scene.gltf', 'https://placehold.co/600x600/eee/333?text=Personalizable', 'd4000000-0000-4000-8000-000000000001'::uuid, 'b3000000-0000-4000-8000-000000000001'::uuid, 'c1000000-0000-4000-8000-000000000001'::uuid, true, 1),
+  ('a5000000-0000-4000-8000-000000000003'::uuid, 'camiseta-verano', 'Camiseta verano', 'Corte fresco para verano. Lista para personalizar.', 2299, '/models/tshirt/scene.gltf', 'https://placehold.co/600x600/87ceeb/333?text=Verano', 'd4000000-0000-4000-8000-000000000002'::uuid, 'b3000000-0000-4000-8000-000000000001'::uuid, 'c1000000-0000-4000-8000-000000000001'::uuid, true, 2),
+  ('a5000000-0000-4000-8000-000000000004'::uuid, 'camiseta-minimal', 'Camiseta minimal', 'Estilo minimal. Plantilla camiseta estándar.', 2599, '/models/tshirt/scene.gltf', 'https://placehold.co/600x600/f5f5f5/333?text=Minimal', 'd4000000-0000-4000-8000-000000000003'::uuid, 'b3000000-0000-4000-8000-000000000002'::uuid, 'c1000000-0000-4000-8000-000000000002'::uuid, true, 3),
+  ('a5000000-0000-4000-8000-000000000005'::uuid, 'camiseta-unisex', 'Camiseta unisex', 'Unisex, algodón. Personaliza en el editor.', 2399, '/models/tshirt/scene.gltf', 'https://placehold.co/600x600/e8e8e8/333?text=Unisex', 'd4000000-0000-4000-8000-000000000001'::uuid, 'b3000000-0000-4000-8000-000000000001'::uuid, 'c1000000-0000-4000-8000-000000000003'::uuid, true, 4),
+  ('a5000000-0000-4000-8000-000000000006'::uuid, 'camiseta-algodon', 'Camiseta algodón', '100% algodón. Misma plantilla base que el resto de camisetas.', 2799, '/models/tshirt/scene.gltf', 'https://placehold.co/600x600/fff8dc/333?text=Algodon', 'd4000000-0000-4000-8000-000000000002'::uuid, 'b3000000-0000-4000-8000-000000000001'::uuid, 'c1000000-0000-4000-8000-000000000002'::uuid, true, 5)
 ON CONFLICT (id) DO NOTHING;
 
 -- Evitar conflicto por slug (si ya existen productos con mismo slug, usar ON CONFLICT (slug))
@@ -110,5 +110,5 @@ WHERE id = 'b3000000-0000-4000-8000-000000000002'::uuid;
 -- Líneas: 3 (Verano 2024, Básicos, Colección minimal)
 -- Texturas Buxxep: 2 (base blanca, base gris)
 -- Diseños plantilla: 3 (todos model_path = /models/tshirt/scene.gltf)
--- Productos: 6 camisetas, todas model_path = /models/tshirt/scene.gltf, published = true
+-- Productos: 6 camisetas publicadas, misma plantilla base en model_path
 -- product_lineas: 8 enlaces producto ↔ línea
