@@ -1,5 +1,6 @@
 "use client";
 
+import { CheckCircle2, PlayCircle } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -154,20 +155,24 @@ export function PedidosTable({
             )}
           </div>
           {selectedIds.size > 0 && (
-            <div className="flex flex-wrap items-center gap-3 rounded-lg border border-border bg-muted/30 px-4 py-3">
+            <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-muted/30 px-4 py-3">
               <button
                 type="button"
                 onClick={handleMarkEnProceso}
-                className="inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                title="Marcar en proceso (estado pagado)"
+                aria-label="Marcar en proceso"
+                className="inline-flex size-10 items-center justify-center rounded-md bg-primary text-primary-foreground hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               >
-                Marcar en proceso
+                <PlayCircle className="size-5" aria-hidden />
               </button>
               <button
                 type="button"
                 onClick={handleMarkCompletado}
-                className="inline-flex h-9 items-center justify-center rounded-md border-2 border-border bg-transparent px-4 text-sm font-medium hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                title="Marcar como enviado / completado"
+                aria-label="Marcar completado"
+                className="inline-flex size-10 items-center justify-center rounded-md border-2 border-border bg-transparent hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               >
-                Marcar completado
+                <CheckCircle2 className="size-5" aria-hidden />
               </button>
             </div>
           )}

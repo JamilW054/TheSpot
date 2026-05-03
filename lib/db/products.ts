@@ -9,6 +9,7 @@ export interface ProductRow {
   price_cents: number;
   model_path: string;
   cover_image_url: string | null;
+  base_texture_id?: string | null;
   default_design_id: string | null;
   published: boolean;
   sort_order: number;

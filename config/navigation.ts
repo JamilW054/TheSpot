@@ -53,7 +53,7 @@ export const APP_NAV: NavItem[] = [
 
 /**
  * Panel administración (`/admin`): mismas herramientas con rutas agrupadas por sección.
- * Ventas → pedidos / facturas; Catálogo → productos y medios; Estudio → editor y contenido.
+ * Ventas → pedidos / facturas; Catálogo → productos; Estudio → editor y contenido.
  */
 export const ADMIN_NAV: NavItem[] = [
   {
@@ -84,12 +84,6 @@ export const ADMIN_NAV: NavItem[] = [
     label: "Nuevo artículo",
     href: "/admin/catalogo/nuevo",
     icon: "PlusCircle",
-    adminSection: "Catálogo",
-  },
-  {
-    label: "Medios (R2)",
-    href: "/admin/medios",
-    icon: "Upload",
     adminSection: "Catálogo",
   },
   {

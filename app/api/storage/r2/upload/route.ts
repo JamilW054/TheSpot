@@ -105,7 +105,10 @@ export async function POST(request: Request) {
 
   const buf = Buffer.from(await file.arrayBuffer());
   const safeName = sanitizeUploadFilename(file.name || "image", fallbackExt);
-  const key = `uploads/${user.id}/${Date.now()}-${safeName}`;
+  const scope = formData.get("scope")?.toString().trim() ?? "";
+  const prefix =
+    scope === "catalog" ? `catalog/${user.id}` : `uploads/${user.id}`;
+  const key = `${prefix}/${Date.now()}-${safeName}`;
 
   try {
     const { key: storedKey, url } = await uploadImageToR2({

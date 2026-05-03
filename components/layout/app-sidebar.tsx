@@ -17,7 +17,6 @@ import {
   Shirt,
   ShoppingCart,
   Store,
-  Upload,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -54,7 +53,6 @@ const ADMIN_ICONS: Record<
   FileText,
   Store,
   PlusCircle,
-  Upload,
   PenSquare,
   Shirt,
   BookOpen,

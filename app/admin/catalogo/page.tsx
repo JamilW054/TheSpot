@@ -1,18 +1,17 @@
 import Link from "next/link";
+import { CatalogDeleteButton } from "@/features/admin/catalog-delete-button";
 import { PageLayout } from "@/components/layout";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { getProductsAdmin } from "@/lib/db";
 import { formatDOPFromCents } from "@/lib/format-currency";
+import { ExternalLink, Eye, Pencil, Plus } from "lucide-react";
 
-const linkPrimarySm =
-  "inline-flex h-8 items-center justify-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background";
+const iconGhost =
+  "inline-flex size-9 items-center justify-center rounded-md border-2 border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
 
-const linkOutlineSm =
-  "inline-flex h-8 items-center justify-center rounded-md border-2 border-border bg-transparent px-3 text-sm font-medium hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background";
-
-const linkSecondarySm =
-  "inline-flex h-8 items-center justify-center rounded-md bg-secondary px-3 text-sm font-medium text-secondary-foreground transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background";
+const iconPrimary =
+  "inline-flex size-9 items-center justify-center rounded-md bg-primary text-primary-foreground transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
 
 export default async function AdminCatalogoPage() {
   const products = await getProductsAdmin();
@@ -20,19 +19,26 @@ export default async function AdminCatalogoPage() {
   return (
     <PageLayout
       title="Catálogo"
-      description="Todos los artículos (publicados y borradores). La edición completa y el alta con modelos 3D enlazan con Supabase y reglas de negocio — usa «Editar» para el formulario en construcción."
+      description="CRUD de artículos: crear, editar, eliminar (si no hay pedidos con ese producto) y ver en la tienda."
     >
-      <div className="mb-4 flex flex-wrap gap-3">
-        <Link href="/admin/catalogo/nuevo" className={linkPrimarySm}>
-          Nuevo artículo
+      <div className="mb-4 flex flex-wrap gap-2">
+        <Link
+          href="/admin/catalogo/nuevo"
+          className={iconPrimary}
+          aria-label="Nuevo artículo"
+          title="Nuevo artículo"
+        >
+          <Plus className="size-5" aria-hidden />
         </Link>
         <Link
           href="/catalogo"
           target="_blank"
           rel="noopener noreferrer"
-          className={linkOutlineSm}
+          className={iconGhost}
+          aria-label="Ver tienda pública"
+          title="Tienda pública"
         >
-          Ver tienda pública
+          <ExternalLink className="size-5" aria-hidden />
         </Link>
       </div>
 
@@ -85,21 +91,26 @@ export default async function AdminCatalogoPage() {
                     )}
                   </td>
                   <td className="px-4 py-3">
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap items-center gap-1">
                       <Link
                         href={`/catalogo/${p.slug}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className={linkOutlineSm}
+                        className={iconGhost}
+                        aria-label={`Ver ${p.name} en tienda`}
+                        title="Ver en tienda"
                       >
-                        Ver
+                        <Eye className="size-4" aria-hidden />
                       </Link>
                       <Link
                         href={`/admin/catalogo/${p.slug}/editar`}
-                        className={linkSecondarySm}
+                        className={iconGhost}
+                        aria-label={`Editar ${p.name}`}
+                        title="Editar"
                       >
-                        Editar
+                        <Pencil className="size-4" aria-hidden />
                       </Link>
+                      <CatalogDeleteButton productId={p.id} />
                     </div>
                   </td>
                 </tr>
@@ -130,21 +141,26 @@ export default async function AdminCatalogoPage() {
                 <p className="tabular-nums text-sm">
                   {formatDOPFromCents(p.price_cents)}
                 </p>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-1">
                   <Link
                     href={`/catalogo/${p.slug}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={linkOutlineSm}
+                    className={iconGhost}
+                    aria-label="Ver en tienda"
+                    title="Ver en tienda"
                   >
-                    Ver
+                    <Eye className="size-4" aria-hidden />
                   </Link>
                   <Link
                     href={`/admin/catalogo/${p.slug}/editar`}
-                    className={linkPrimarySm}
+                    className={iconPrimary}
+                    aria-label="Editar"
+                    title="Editar"
                   >
-                    Editar
+                    <Pencil className="size-4" aria-hidden />
                   </Link>
+                  <CatalogDeleteButton productId={p.id} />
                 </div>
               </CardContent>
             </Card>

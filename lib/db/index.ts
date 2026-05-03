@@ -130,7 +130,7 @@ export async function getProductsAdmin(): Promise<ProductRow[]> {
     const { data, error } = await supabase
       .from("products")
       .select(
-        "id, slug, name, description, price_cents, model_path, cover_image_url, default_design_id, published, sort_order, textures!base_texture_id(url)",
+        "id, slug, name, description, price_cents, model_path, cover_image_url, base_texture_id, default_design_id, published, sort_order, textures!base_texture_id(url)",
       )
       .order("sort_order", { ascending: true });
     if (error) throw toError(error);
@@ -149,7 +149,7 @@ export async function getProductAdminBySlug(
     const { data, error } = await supabase
       .from("products")
       .select(
-        "id, slug, name, description, price_cents, model_path, cover_image_url, default_design_id, published, sort_order, textures!base_texture_id(url)",
+        "id, slug, name, description, price_cents, model_path, cover_image_url, base_texture_id, default_design_id, published, sort_order, textures!base_texture_id(url)",
       )
       .eq("slug", s)
       .maybeSingle();
@@ -328,6 +328,19 @@ export async function getMockups(): Promise<Mockup[]> {
       .order("path");
     if (error) throw toError(error);
     return (data ?? []).map((row) => rowToMockup(row as BaseModelRow));
+  }, []);
+}
+
+/** Lista de modelos 3D permitidos (alta/edición de productos). */
+export async function getBaseModelsForAdmin(): Promise<BaseModelRow[]> {
+  return withNetworkFallback(async () => {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("base_models")
+      .select("id, path, name")
+      .order("path");
+    if (error) throw toError(error);
+    return (data ?? []) as BaseModelRow[];
   }, []);
 }
 
