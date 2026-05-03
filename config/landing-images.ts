@@ -1,20 +1,16 @@
 /**
  * Posts de Instagram @buxxep para la landing.
- * Se usan para embeds (iframe) en la sección Instagram.
+ * URLs canónicas; los embeds usan {@link LANDING_INSTAGRAM_EMBED_SHORTCODES}.
  */
 export const LANDING_INSTAGRAM_POSTS = [
-  "https://www.instagram.com/buxxep/p/DBURvQ9vqA-/",
-  "https://www.instagram.com/buxxep/p/DBURRqrPXqt/",
-  "https://www.instagram.com/buxxep/p/DBURFxEP3Ti/",
-  "https://www.instagram.com/buxxep/p/CxGm1UVP5sC/",
-  "https://www.instagram.com/buxxep/p/CxGmx8_vwrf/",
+  "https://www.instagram.com/p/DXIzeiKlltz/",
+  "https://www.instagram.com/p/DXSsiuIkb0h/",
+  "https://www.instagram.com/p/DXfW0Hgkb9c/",
 ] as const;
 
-/** Shortcode de cada post (para iframe embed). */
+/** Shortcode de cada post (iframe embed: /p/{shortcode}/embed/) */
 export const LANDING_INSTAGRAM_EMBED_SHORTCODES = [
-  "DBURvQ9vqA-",
-  "DBURRqrPXqt",
-  "DBURFxEP3Ti",
-  "CxGm1UVP5sC",
-  "CxGmx8_vwrf",
+  "DXIzeiKlltz",
+  "DXSsiuIkb0h",
+  "DXfW0Hgkb9c",
 ] as const;

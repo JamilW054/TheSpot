@@ -1,16 +1,10 @@
 "use client";
 
+import { LANDING_INSTAGRAM_EMBED_SHORTCODES } from "@/config/landing-images";
+
 /**
  * Embeds oficiales de posts de Instagram (@buxxep).
  */
-const EMBED_SHORTCODES = [
-  "DBURvQ9vqA-",
-  "DBURRqrPXqt",
-  "DBUROQAPSKV",
-  "DBURDk-P4bB",
-  "DBURZQ9vjbG",
-] as const;
-
 const INSTAGRAM_PROFILE = "https://www.instagram.com/buxxep/";
 
 const CONTAINER = "max-w-6xl mx-auto px-4 sm:px-6";
@@ -34,7 +28,7 @@ export function InstagramEmbeds() {
           @buxxep
         </a>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-          {EMBED_SHORTCODES.map((shortcode) => (
+          {LANDING_INSTAGRAM_EMBED_SHORTCODES.map((shortcode) => (
             <div
               key={shortcode}
               className="relative w-full min-h-[520px] sm:min-h-[560px] rounded-lg overflow-hidden bg-muted shadow-md"
