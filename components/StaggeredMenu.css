@@ -78,6 +78,12 @@
   pointer-events: auto;
 }
 
+.sm-header-end {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
 .sm-logo {
   display: flex;
   align-items: center;

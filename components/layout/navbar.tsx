@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui";
+import { CartNavLink } from "@/components/layout/CartNavLink";
 
 function MenuIcon({ className }: { className?: string }) {
   return (
@@ -87,7 +88,8 @@ export function Navbar({
           {homeLabel}
         </Link>
       </div>
-      <div className="flex items-center gap-3 min-w-0">
+      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+        <CartNavLink />
         {user ? (
           <>
             {displayName ? (

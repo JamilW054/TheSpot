@@ -1,3 +1,4 @@
+export { CartNavLink } from "./CartNavLink";
 export { PublicNavbar } from "./public-navbar";
 export { PublicFooter } from "./public-footer";
 export {

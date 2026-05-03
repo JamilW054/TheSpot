@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
+import { CartProvider } from "@/contexts/cart-context";
 import { AuthProvider } from "@/lib/auth-context";
 import "./globals.css";
 
@@ -132,7 +133,9 @@ export default function RootLayout({
           suppressHydrationWarning
         />
         <ThemeProvider>
-          <AuthProvider>{children}</AuthProvider>
+          <AuthProvider>
+            <CartProvider>{children}</CartProvider>
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>

@@ -31,6 +31,8 @@ export interface StaggeredMenuProps {
   closeLabel?: string;
   openAriaLabel?: string;
   closeAriaLabel?: string;
+  /** Extra controls shown before the menu toggle (e.g. cart link). */
+  headerTrailing?: ReactNode;
   onMenuOpen?: () => void;
   onMenuClose?: () => void;
 }

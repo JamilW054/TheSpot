@@ -63,6 +63,21 @@ export function CartProvider({ children }: { children: ReactNode }) {
     if (mounted) saveCart(items);
   }, [items, mounted]);
 
+  /** Keep cart in sync when another tab updates localStorage. */
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key !== STORAGE_KEY || e.newValue == null) return;
+      try {
+        const parsed = JSON.parse(e.newValue) as CartItem[];
+        if (Array.isArray(parsed)) setItems(parsed);
+      } catch {
+        /* ignore */
+      }
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
+
   const addItem = useCallback((productId: string, quantity = 1, designId?: string | null) => {
     setItems((prev) => {
       const key = `${productId}:${designId ?? ""}`;

@@ -25,14 +25,14 @@ function CartIcon({ className }: { className?: string }) {
   );
 }
 
-export function CartNavLink() {
+export function CartNavLink({ className = "" }: { className?: string }) {
   const { itemCount } = useCart();
 
   return (
     <Link
       href="/carrito"
-      className="relative flex items-center justify-center rounded-md p-2 text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-      aria-label={itemCount > 0 ? `Carrito: ${itemCount} productos` : "Carrito vacío"}
+      className={`relative flex items-center justify-center rounded-md p-2 text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${className}`}
+      aria-label={itemCount > 0 ? `Carrito: ${itemCount} productos` : "Ir al carrito"}
     >
       <CartIcon />
       {itemCount > 0 ? (
