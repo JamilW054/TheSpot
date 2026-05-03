@@ -1,4 +1,5 @@
 import type { Pedido, PedidoEstado } from "@/types";
+import { formatDOPFromCents } from "@/lib/format-currency";
 
 export interface OrderRow {
   id: string;
@@ -18,10 +19,7 @@ export const statusMap: Record<string, PedidoEstado> = {
 };
 
 export function rowToPedido(row: OrderRow, itemsCount: number): Pedido {
-  const totalFormatted = new Intl.NumberFormat("es-ES", {
-    style: "currency",
-    currency: "EUR",
-  }).format(row.total_cents / 100);
+  const totalFormatted = formatDOPFromCents(row.total_cents);
   return {
     id: row.id,
     cliente: row.shipping_name ?? "—",

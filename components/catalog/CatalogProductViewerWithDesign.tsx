@@ -25,7 +25,7 @@ function rewriteImageUrlsForCors(elements: CanvasElement[]): CanvasElement[] {
 
 export interface CatalogProductViewerWithDesignProps {
   product: CatalogProduct;
-  /** Design template to render onto the product texture (e.g. product.defaultDesignId). */
+  /** Diseño opcional para pintar sobre la textura (solo uso interno; catálogo público no envía plantillas). */
   design: Design | null;
   compact?: boolean;
 }

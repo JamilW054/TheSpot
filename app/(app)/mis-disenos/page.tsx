@@ -8,7 +8,7 @@ export default async function MisDisenosPage() {
   const { data: { user } } = await supabase.auth.getUser();
   const designs = await getDesigns(user?.id ?? undefined);
   return (
-    <PageLayout title="Mis diseños" description="Tus diseños guardados y borradores del editor.">
+    <PageLayout title="Mis diseños" description="Tus diseños guardados en la cuenta y borradores locales del editor.">
       <DraftCardsList />
       <section aria-labelledby="saved-heading">
         <h2 id="saved-heading" className="text-lg font-semibold text-foreground mb-3">

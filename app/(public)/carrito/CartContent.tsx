@@ -1,5 +1,6 @@
 "use client";
 
+import { formatDOPFromCents } from "@/lib/format-currency";
 import { useCart } from "@/contexts/cart-context";
 import type { CatalogProduct } from "@/types";
 import Image from "next/image";
@@ -113,7 +114,7 @@ export function CartContent({ products }: { products: CatalogProduct[] }) {
                     </button>
                   </div>
                   <p className="text-lg font-semibold tabular-nums text-foreground">
-                    {(lineTotal / 100).toFixed(2).replace(".", ",")} €
+                    {formatDOPFromCents(lineTotal)}
                   </p>
                   <button
                     type="button"
@@ -157,7 +158,7 @@ export function CartContent({ products }: { products: CatalogProduct[] }) {
             <div className="flex items-baseline justify-between gap-4">
               <span className="text-sm text-muted-foreground">Total</span>
               <span className="text-2xl font-bold tabular-nums text-primary">
-                {(totalCents / 100).toFixed(2).replace(".", ",")} €
+                {formatDOPFromCents(totalCents)}
               </span>
             </div>
           </div>

@@ -108,7 +108,7 @@ export interface CatalogProduct {
   slug: string;
   name: string;
   description: string;
-  /** Precio en euros (string para mostrar). */
+  /** Precio en DOP (string formateado para mostrar). */
   price: string;
   /** Precio en céntimos para cálculos (total carrito, etc.). */
   priceCents: number;
@@ -118,8 +118,6 @@ export interface CatalogProduct {
   coverImage: string;
   /** URL de la textura base (tabla textures) para la vista previa. */
   baseTextureUrl?: string | null;
-  /** IDs de diseño plantilla para "Personalizar con plantilla". Al editar se crea una copia local. */
-  defaultDesignId?: string;
 }
 
 /** Línea del carrito: producto + cantidad; opcionalmente diseño personalizado. */

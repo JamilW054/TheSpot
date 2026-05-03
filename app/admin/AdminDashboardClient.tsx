@@ -2,6 +2,7 @@
 
 import { PedidosTable } from "@/features/admin";
 import type { Linea, Pedido } from "@/types";
+import { formatDOPFromCents, parseFormattedCurrencyToNumber } from "@/lib/format-currency";
 import Link from "next/link";
 import { useState } from "react";
 import {
@@ -25,10 +26,7 @@ function kpis(pedidos: Pedido[]) {
 }
 
 function parseTotal(total: string): number {
-  if (!total || typeof total !== "string") return 0;
-  const normalized = total.replace(/\s/g, "").replace(/[€$£,]/g, (m) => (m === "," ? "." : ""));
-  const n = Number.parseFloat(normalized);
-  return Number.isFinite(n) ? n : 0;
+  return parseFormattedCurrencyToNumber(total);
 }
 
 function ingresosCompletados(pedidos: Pedido[]): number {
@@ -38,12 +36,7 @@ function ingresosCompletados(pedidos: Pedido[]): number {
 }
 
 function formatMoneda(value: number): string {
-  return new Intl.NumberFormat("es-ES", {
-    style: "currency",
-    currency: "EUR",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(value);
+  return formatDOPFromCents(Math.round(value * 100));
 }
 
 function MiniChart({ up }: { up: boolean }) {

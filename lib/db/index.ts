@@ -110,9 +110,9 @@ export async function getDesigns(userId?: string | null): Promise<Design[]> {
       .select("id, name, slug, description, user_id, source, model_path, garment_color_hex, canvas_elements, cover_image_url, gallery, created_at, updated_at")
       .order("updated_at", { ascending: false });
     if (userId) {
-      query = query.or(`source.eq.buxxep,user_id.eq.${userId}`);
+      query = query.eq("user_id", userId);
     } else {
-      query = query.eq("source", "buxxep");
+      return [];
     }
     const { data, error } = await query;
     if (error) throw toError(error);

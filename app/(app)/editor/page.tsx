@@ -10,7 +10,7 @@ import {
  * Página del editor de diseños.
  * - Sin query: canvas vacío (nuevo diseño) o borrador restaurado de localStorage.
  * - ?design=id: carga el diseño por id (edición del original).
- * - ?copy=id: carga el diseño como copia local (designId=null).
+ * - ?copy=id: (legado) copia local de un diseño por id; el catálogo ya no enlaza plantillas.
  * - ?product=id: abre el editor con el producto del catálogo (prenda inicial si hay mockups).
  * - ?draft=id: carga un borrador guardado localmente (lista en Mis diseños).
  */

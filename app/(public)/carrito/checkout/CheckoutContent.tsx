@@ -1,5 +1,6 @@
 "use client";
 
+import { formatDOPFromCents } from "@/lib/format-currency";
 import { createOrderAction } from "@/app/(public)/carrito/checkout/actions";
 import { ORDER_STATUS_PAGE } from "@/config/navigation";
 import { useCart } from "@/contexts/cart-context";
@@ -248,7 +249,7 @@ export function CheckoutContent({ products }: { products: CatalogProduct[] }) {
                     </p>
                   </div>
                   <p className="font-semibold tabular-nums text-foreground shrink-0">
-                    {(lineTotal / 100).toFixed(2).replace(".", ",")} €
+                    {formatDOPFromCents(lineTotal)}
                   </p>
                 </li>
               );
@@ -258,7 +259,7 @@ export function CheckoutContent({ products }: { products: CatalogProduct[] }) {
             <div className="flex items-baseline justify-between gap-4 mb-4">
               <span className="text-sm text-muted-foreground">Total</span>
               <span className="text-2xl font-bold tabular-nums text-primary">
-                {(totalCents / 100).toFixed(2).replace(".", ",")} €
+                {formatDOPFromCents(totalCents)}
               </span>
             </div>
             {error && (

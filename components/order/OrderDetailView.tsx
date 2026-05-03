@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import type { OrderStatusDetail } from "@/types";
+import { formatDOPFromCents } from "@/lib/format-currency";
 
 function isExternalImage(src: string): boolean {
   if (!src) return false;
@@ -126,11 +127,11 @@ export function OrderDetailView({ order, backHref, backLabel }: OrderDetailViewP
                 </p>
               )}
               <p className="mt-1.5 text-sm text-muted-foreground tabular-nums">
-                {(item.unitPriceCents / 100).toFixed(2).replace(".", ",")} € × {item.quantity}
+                {formatDOPFromCents(item.unitPriceCents)} × {item.quantity}
               </p>
             </div>
             <p className="font-semibold tabular-nums text-foreground shrink-0 self-center">
-              {((item.unitPriceCents * item.quantity) / 100).toFixed(2).replace(".", ",")} €
+              {formatDOPFromCents(item.unitPriceCents * item.quantity)}
             </p>
           </li>
         ))}
@@ -140,7 +141,7 @@ export function OrderDetailView({ order, backHref, backLabel }: OrderDetailViewP
           <div className="flex items-baseline justify-between gap-4">
             <span className="text-sm font-medium text-muted-foreground">Total</span>
             <span className="text-xl font-bold tabular-nums text-primary">
-              {(order.totalCents / 100).toFixed(2).replace(".", ",")} €
+              {formatDOPFromCents(order.totalCents)}
             </span>
           </div>
         </div>

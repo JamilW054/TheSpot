@@ -1,5 +1,6 @@
 import type { CanvasElement, Design, Linea, Mockup, Pedido } from "@/types";
 import type { CatalogProduct } from "@/types";
+import { formatDOPFromCents } from "@/lib/format-currency";
 import { buildSlug } from "@/lib/slug";
 
 const placeholder = (w: number, h: number, seed: string) =>
@@ -129,13 +130,18 @@ export const MOCK_MOCKUPS: Mockup[] = [
 ];
 
 // --- CATÁLOGO PÚBLICO: ropa a la venta, personalizable en el editor ---
-const catalogProductRows: Omit<CatalogProduct, "slug">[] = [
-  { id: "p01", name: "Camiseta personalizable", description: "Camiseta de algodón con diseño único. Elige tu talla y personaliza el estampado en el editor.", price: "24,99 €", priceCents: 2499, coverImage: unsplash("1521572163474-6864f9cf17ab", 600, 600), defaultDesignId: "d01" },
-  { id: "p02", name: "Camiseta hombre", description: "Corte clásico para hombre. Añade texto, imágenes o dibujos con el pincel en la zona de diseño.", price: "26,99 €", priceCents: 2699, coverImage: unsplash("1586790170083-2f9ceadc732d", 600, 600), defaultDesignId: "d01" },
-  { id: "p03", name: "Hoodie", description: "Sudadera con capucha. Personalízala con el editor: diseña desde cero o usa una plantilla.", price: "44,99 €", priceCents: 4499, coverImage: unsplash("1556821840-3a63f95609a7", 600, 600), defaultDesignId: "d02" },
-  { id: "p04", name: "Bata", description: "Bata cómoda para casa. Ideal para regalo personalizado.", price: "34,99 €", priceCents: 3499, coverImage: unsplash("1615397587950-3cbb55f95b77", 600, 600) },
-  { id: "p05", name: "Poloche mujer", description: "Manga larga y tejido suave. Diseña tu propio estampado en el editor.", price: "32,99 €", priceCents: 3299, coverImage: unsplash("1745695894760-600be9c8c307", 600, 600), defaultDesignId: "d03" },
+const catalogProductRowsBase: Omit<CatalogProduct, "slug" | "price">[] = [
+  { id: "p01", name: "Camiseta personalizable", description: "Camiseta de algodón con diseño único. Elige tu talla y personaliza el estampado en el editor.", priceCents: 2499, coverImage: unsplash("1521572163474-6864f9cf17ab", 600, 600) },
+  { id: "p02", name: "Camiseta hombre", description: "Corte clásico para hombre. Añade texto, imágenes o dibujos con el pincel en la zona de diseño.", priceCents: 2699, coverImage: unsplash("1586790170083-2f9ceadc732d", 600, 600) },
+  { id: "p03", name: "Hoodie", description: "Sudadera con capucha. Personalízala en el editor con tu propio diseño.", priceCents: 4499, coverImage: unsplash("1556821840-3a63f95609a7", 600, 600) },
+  { id: "p04", name: "Bata", description: "Bata cómoda para casa. Ideal para regalo personalizado.", priceCents: 3499, coverImage: unsplash("1615397587950-3cbb55f95b77", 600, 600) },
+  { id: "p05", name: "Poloche mujer", description: "Manga larga y tejido suave. Diseña tu propio estampado en el editor.", priceCents: 3299, coverImage: unsplash("1745695894760-600be9c8c307", 600, 600) },
 ];
+
+const catalogProductRows: Omit<CatalogProduct, "slug">[] = catalogProductRowsBase.map((row) => ({
+  ...row,
+  price: formatDOPFromCents(row.priceCents),
+}));
 
 export const MOCK_CATALOG_PRODUCTS: CatalogProduct[] = catalogProductRows.map((p) => ({
   ...p,
@@ -182,7 +188,7 @@ export const MOCK_PEDIDOS: Pedido[] = clientes.map((cliente, i) => {
     id,
     cliente,
     items,
-    total: `€${totalNum.toFixed(2)}`,
+    total: formatDOPFromCents(Math.round(totalNum * 100)),
     estado,
     createdAt: mockFecha(i * 2),
   };
