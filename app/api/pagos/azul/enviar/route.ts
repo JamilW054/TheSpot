@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
 import { buildAzulRequestAuthHash, escapeHtml } from "@/lib/payments/azul";
+import {
+  getAzulMerchantIdentifier,
+  getAzulSigningSecret,
+} from "@/lib/payments/azul-env";
 import { createClient } from "@/lib/supabase/server";
 
 function paymentPageUrl(): string {
@@ -12,21 +16,16 @@ function paymentPageUrl(): string {
  * POST form desde checkout: valida sesión y orden, devuelve HTML que auto-envía el formulario a AZUL.
  */
 export async function POST(request: Request) {
-  const merchantId = process.env.AZUL_MERCHANT_ID?.trim() ?? "";
-  const authKey =
-    process.env.AZUL_AUTH_KEY?.trim() ??
-    process.env.AZUL_SECRET_KEY?.trim() ??
-    "";
+  const merchantId = getAzulMerchantIdentifier();
+  const authKey = getAzulSigningSecret();
   const merchantName = process.env.AZUL_MERCHANT_NAME?.trim() ?? "BUXXEP STORE";
   const baseUrl =
     process.env.NEXT_PUBLIC_APP_URL?.trim() ?? new URL(request.url).origin;
 
   if (!merchantId || !authKey) {
     return new NextResponse(
-      "Falta configuración AZUL (AZUL_MERCHANT_ID / AZUL_AUTH_KEY).",
-      {
-        status: 500,
-      },
+      "Falta configuración AZUL: define AZUL_CLIENT_KEY (clave del sandbox) y AZUL_SECRET_KEY (secreto). Opcional AZUL_MERCHANT_ID si el banco usa otro ID.",
+      { status: 500 },
     );
   }
 

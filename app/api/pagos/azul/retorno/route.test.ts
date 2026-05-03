@@ -54,8 +54,10 @@ function buildRequest(payload: Record<string, string>) {
 describe("POST /api/pagos/azul/retorno", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    process.env.AZUL_MERCHANT_ID = "merchant-123";
+    process.env.AZUL_CLIENT_KEY = "merchant-123";
     process.env.AZUL_SECRET_KEY = "secret-key-123";
+    delete process.env.AZUL_MERCHANT_ID;
+    delete process.env.AZUL_AUTH_KEY;
     process.env.NEXT_PUBLIC_APP_URL = "http://localhost:3000";
   });
 

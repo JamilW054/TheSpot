@@ -8,6 +8,10 @@ import {
   azulReturnedAmountMatchesOrder,
   verifyAzulResponseSignature,
 } from "@/lib/payments/azul";
+import {
+  getAzulMerchantIdentifier,
+  getAzulSigningSecret,
+} from "@/lib/payments/azul-env";
 
 function normalizePayload(formData: FormData): AzulReturnPayload {
   const payload: AzulReturnPayload = {};
@@ -23,13 +27,14 @@ export async function POST(request: Request) {
     const payload = normalizePayload(formData);
     console.info("[AZUL] Respuesta recibida", payload);
 
-    const merchantId = process.env.AZUL_MERCHANT_ID?.trim() ?? "";
-    const secretKey = process.env.AZUL_SECRET_KEY?.trim() ?? "";
+    const merchantId = getAzulMerchantIdentifier();
+    const secretKey = getAzulSigningSecret();
     if (!merchantId || !secretKey) {
       console.error("[AZUL] Configuración faltante");
-      return new NextResponse("Configuración de AZUL incompleta.", {
-        status: 500,
-      });
+      return new NextResponse(
+        "Configuración de AZUL incompleta (AZUL_CLIENT_KEY + AZUL_SECRET_KEY, u opcional AZUL_MERCHANT_ID).",
+        { status: 500 },
+      );
     }
 
     const orderNumber = payload.OrderNumber?.trim() ?? "";
