@@ -13,6 +13,9 @@ export interface ProductRow {
   default_design_id: string | null;
   published: boolean;
   sort_order: number;
+  category_id?: string | null;
+  /** Etiquetas en minúsculas (columna `tags` en DB). */
+  tags?: string[] | null;
   /** Join con textures: url de la textura base (objeto o array según Supabase) */
   textures?: { url: string } | { url: string }[] | null;
 }

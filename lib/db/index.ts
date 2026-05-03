@@ -64,7 +64,14 @@ import { type BaseModelRow, rowToMockup } from "./base-models";
 import { type DesignRow, rowToDesign } from "./designs";
 import { type LineaRow, rowToLinea } from "./lineas";
 import { type OrderRow, rowToPedido, statusMap } from "./orders";
+import {
+  type CategoryRow,
+  getCategoriesForAdmin,
+} from "./categories";
 import { type ProductRow, rowToCatalogProduct } from "./products";
+
+export type { CategoryRow };
+export { getCategoriesForAdmin };
 
 export async function getProducts(): Promise<CatalogProduct[]> {
   return withNetworkFallback(async () => {
@@ -72,7 +79,7 @@ export async function getProducts(): Promise<CatalogProduct[]> {
     const { data, error } = await supabase
       .from("products")
       .select(
-        "id, slug, name, description, price_cents, model_path, cover_image_url, default_design_id, published, sort_order, textures!base_texture_id(url)",
+        "id, slug, name, description, price_cents, model_path, cover_image_url, default_design_id, published, sort_order, category_id, tags, textures!base_texture_id(url)",
       )
       .eq("published", true)
       .order("sort_order", { ascending: true });
@@ -89,7 +96,7 @@ export async function getProductBySlug(
     const { data, error } = await supabase
       .from("products")
       .select(
-        "id, slug, name, description, price_cents, model_path, cover_image_url, default_design_id, published, sort_order, textures!base_texture_id(url)",
+        "id, slug, name, description, price_cents, model_path, cover_image_url, default_design_id, published, sort_order, category_id, tags, textures!base_texture_id(url)",
       )
       .eq("published", true)
       .eq("slug", slug)
@@ -110,7 +117,7 @@ export async function getProductById(
     const { data, error } = await supabase
       .from("products")
       .select(
-        "id, slug, name, description, price_cents, model_path, cover_image_url, default_design_id, published, sort_order, textures!base_texture_id(url)",
+        "id, slug, name, description, price_cents, model_path, cover_image_url, default_design_id, published, sort_order, category_id, tags, textures!base_texture_id(url)",
       )
       .eq("published", true)
       .eq("id", id)
@@ -130,7 +137,7 @@ export async function getProductsAdmin(): Promise<ProductRow[]> {
     const { data, error } = await supabase
       .from("products")
       .select(
-        "id, slug, name, description, price_cents, model_path, cover_image_url, base_texture_id, default_design_id, published, sort_order, textures!base_texture_id(url)",
+        "id, slug, name, description, price_cents, model_path, cover_image_url, base_texture_id, default_design_id, published, sort_order, category_id, tags, textures!base_texture_id(url)",
       )
       .order("sort_order", { ascending: true });
     if (error) throw toError(error);
@@ -149,7 +156,7 @@ export async function getProductAdminBySlug(
     const { data, error } = await supabase
       .from("products")
       .select(
-        "id, slug, name, description, price_cents, model_path, cover_image_url, base_texture_id, default_design_id, published, sort_order, textures!base_texture_id(url)",
+        "id, slug, name, description, price_cents, model_path, cover_image_url, base_texture_id, default_design_id, published, sort_order, category_id, tags, textures!base_texture_id(url)",
       )
       .eq("slug", s)
       .maybeSingle();
@@ -331,7 +338,7 @@ export async function getMockups(): Promise<Mockup[]> {
   }, []);
 }
 
-/** Lista de modelos 3D permitidos (alta/edición de productos). */
+/** Lista de modelos base (p. ej. editor / mockups). */
 export async function getBaseModelsForAdmin(): Promise<BaseModelRow[]> {
   return withNetworkFallback(async () => {
     const supabase = await createClient();

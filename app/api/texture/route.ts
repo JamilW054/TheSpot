@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
   try {
     const res = await fetch(url, {
       headers: { Accept: "image/*" },
-      next: { revalidate: 3600 },
+      next: { revalidate: 86_400 },
     });
     if (!res.ok) {
       return NextResponse.json({ error: "Image fetch failed" }, { status: 502 });
@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
     return new NextResponse(blob, {
       headers: {
         "Content-Type": contentType,
-        "Cache-Control": "public, max-age=3600, s-maxage=3600",
+        "Cache-Control": "public, max-age=86400, s-maxage=86400, stale-while-revalidate=604800",
       },
     });
   } catch (e) {

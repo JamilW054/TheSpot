@@ -20,13 +20,9 @@ export async function generateMetadata({ params }: PageProps) {
   };
 }
 
-function isExternalImage(src: string): boolean {
-  return (
-    src.includes("placehold.co") ||
-    src.includes("imgur.com") ||
-    src.includes("unsplash.com") ||
-    src.startsWith("http")
-  );
+/** placehold.co suele servir SVG; el resto (R2, Supabase, etc.) pasa por optimización de `next/image`. */
+function imageNeedsUnoptimized(src: string): boolean {
+  return src.includes("placehold.co");
 }
 
 export default async function CatalogProductPage({ params }: PageProps) {
@@ -71,7 +67,7 @@ export default async function CatalogProductPage({ params }: PageProps) {
               className="object-cover object-top"
               sizes="(max-width: 1024px) 100vw, 50vw"
               priority
-              unoptimized={isExternalImage(product.coverImage)}
+              unoptimized={imageNeedsUnoptimized(product.coverImage)}
             />
           </div>
           <div className="rounded-2xl border border-border bg-muted/20 overflow-hidden">

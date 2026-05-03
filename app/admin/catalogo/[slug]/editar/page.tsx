@@ -1,6 +1,6 @@
 import { PageLayout } from "@/components/layout";
 import { ProductForm } from "@/features/admin/product-form";
-import { getBaseModelsForAdmin, getProductAdminBySlug } from "@/lib/db";
+import { getCategoriesForAdmin, getProductAdminBySlug } from "@/lib/db";
 import { notFound } from "next/navigation";
 
 interface PageProps {
@@ -9,9 +9,9 @@ interface PageProps {
 
 export default async function AdminCatalogoEditarPage({ params }: PageProps) {
   const { slug } = await params;
-  const [product, models] = await Promise.all([
+  const [product, categories] = await Promise.all([
     getProductAdminBySlug(slug),
-    getBaseModelsForAdmin(),
+    getCategoriesForAdmin(),
   ]);
   if (!product) notFound();
 
@@ -20,7 +20,7 @@ export default async function AdminCatalogoEditarPage({ params }: PageProps) {
       title={`Editar: ${product.name}`}
       description="Actualiza datos e imagen; la foto se sube a R2 y se enlaza como portada y textura base."
     >
-      <ProductForm mode="edit" models={models} initial={product} />
+      <ProductForm mode="edit" categories={categories} initial={product} />
     </PageLayout>
   );
 }

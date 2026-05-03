@@ -1,6 +1,6 @@
 "use client";
 
-import type { BaseModelRow } from "@/lib/db/base-models";
+import type { CategoryRow } from "@/lib/db/categories";
 import type { ProductRow } from "@/lib/db/products";
 import {
   adminCreateProduct,
@@ -23,11 +23,21 @@ const iconBtn =
 
 interface ProductFormProps {
   mode: "create" | "edit";
-  models: BaseModelRow[];
+  categories: CategoryRow[];
   initial?: ProductRow;
 }
 
-export function ProductForm({ mode, models, initial }: ProductFormProps) {
+function tagsDefault(initial?: ProductRow): string {
+  const t = initial?.tags;
+  if (Array.isArray(t) && t.length > 0) return t.join(", ");
+  return "";
+}
+
+export function ProductForm({
+  mode,
+  categories,
+  initial,
+}: ProductFormProps) {
   const router = useRouter();
   const actionFn =
     mode === "create" ? adminCreateProduct : adminUpdateProduct;
@@ -172,12 +182,59 @@ export function ProductForm({ mode, models, initial }: ProductFormProps) {
         placeholder="Ej. Camiseta básica"
       />
 
-      <Input
-        label="Slug (URL)"
-        name="slug"
-        defaultValue={initial?.slug ?? ""}
-        placeholder="Se genera desde el nombre si lo dejas vacío"
-      />
+      {mode === "edit" && initial?.slug ? (
+        <p className="text-xs text-muted-foreground">
+          URL del artículo:{" "}
+          <span className="font-mono text-foreground">/catalogo/{initial.slug}</span>{" "}
+          (se asigna al crear; no cambia al editar)
+        </p>
+      ) : mode === "create" ? (
+        <p className="text-xs text-muted-foreground">
+          La URL pública se genera sola a partir del nombre y las etiquetas.
+        </p>
+      ) : null}
+
+      <div className="space-y-1.5">
+        <label
+          htmlFor="product-category_id"
+          className="text-sm font-medium text-foreground"
+        >
+          Categoría
+        </label>
+        <select
+          id="product-category_id"
+          name="category_id"
+          defaultValue={initial?.category_id ?? ""}
+          className="h-10 w-full rounded-md border border-border bg-background px-3 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        >
+          <option value="">Sin categoría</option>
+          {categories.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="space-y-1.5">
+        <label
+          htmlFor="product-tags"
+          className="text-sm font-medium text-foreground"
+        >
+          Etiquetas
+        </label>
+        <textarea
+          id="product-tags"
+          name="tags"
+          rows={2}
+          defaultValue={tagsDefault(initial)}
+          placeholder="verano, básicos, unisex (separadas por coma)"
+          className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+        />
+        <p className="text-xs text-muted-foreground">
+          Se guardan en minúsculas; influyen en la URL solo al crear el artículo.
+        </p>
+      </div>
 
       <div className="space-y-1.5">
         <label
@@ -213,29 +270,6 @@ export function ProductForm({ mode, models, initial }: ProductFormProps) {
           min={0}
           defaultValue={initial?.sort_order ?? 0}
         />
-      </div>
-
-      <div className="space-y-1.5">
-        <label
-          htmlFor="product-model_path"
-          className="text-sm font-medium text-foreground"
-        >
-          Plantilla base (model_path)
-        </label>
-        <select
-          id="product-model_path"
-          name="model_path"
-          required
-          defaultValue={initial?.model_path ?? ""}
-          className="h-10 w-full rounded-md border border-border bg-background px-3 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-        >
-          <option value="">Seleccionar…</option>
-          {models.map((m) => (
-            <option key={m.path} value={m.path}>
-              {m.name} ({m.path})
-            </option>
-          ))}
-        </select>
       </div>
 
       <label className="flex cursor-pointer items-center gap-2 text-sm font-medium">

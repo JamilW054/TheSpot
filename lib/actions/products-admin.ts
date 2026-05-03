@@ -1,5 +1,6 @@
 "use server";
 
+import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { createServiceClient } from "@/lib/supabase/server";
@@ -15,6 +16,82 @@ function slugify(input: string): string {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
   return (s.slice(0, 96) || "articulo").toLowerCase();
+}
+
+function parseTagsFromForm(formData: FormData): string[] {
+  const raw = formData.get("tags")?.toString() ?? "";
+  const parts = raw.split(/[,;\n]+/);
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const p of parts) {
+    const t = p.trim().toLowerCase().replace(/\s+/g, " ");
+    if (!t || t.length > 48) continue;
+    if (seen.has(t)) continue;
+    seen.add(t);
+    out.push(t);
+    if (out.length >= 24) break;
+  }
+  return out;
+}
+
+function parseCategoryId(formData: FormData): string | null {
+  const v = formData.get("category_id")?.toString().trim() ?? "";
+  return v.length > 0 ? v : null;
+}
+
+async function pickUniqueProductSlug(
+  supabase: ReturnType<typeof createServiceClient>,
+  name: string,
+  tags: string[],
+): Promise<string> {
+  const base = slugify(name) || "articulo";
+  const tagBits = tags
+    .slice(0, 3)
+    .map((t) => slugify(t))
+    .filter((s) => s.length > 0);
+  const primary =
+    tagBits.length > 0
+      ? `${base}-${tagBits.join("-")}`.replace(/-+/g, "-").slice(0, 96)
+      : base.slice(0, 96);
+
+  const trySlug = async (candidate: string) => {
+    const { data } = await supabase
+      .from("products")
+      .select("id")
+      .eq("slug", candidate)
+      .maybeSingle();
+    return data == null;
+  };
+
+  if (await trySlug(primary)) return primary;
+  for (let n = 2; n <= 200; n++) {
+    const c = `${base}-${n}`.slice(0, 96);
+    if (await trySlug(c)) return c;
+  }
+  const fallback = `${base}-${randomUUID().replace(/-/g, "").slice(0, 10)}`.slice(
+    0,
+    96,
+  );
+  return fallback;
+}
+
+async function getDefaultProductModelPath(
+  supabase: ReturnType<typeof createServiceClient>,
+): Promise<string> {
+  const { data, error } = await supabase
+    .from("base_models")
+    .select("path")
+    .order("path", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  const path = (data as { path?: string } | null)?.path?.trim();
+  if (!path) {
+    throw new Error(
+      "Falta configuración: añade al menos una fila en la tabla base_models.",
+    );
+  }
+  return path;
 }
 
 function parsePriceDopToCents(raw: string): number {
@@ -35,14 +112,15 @@ export async function adminCreateProduct(
     const supabase = createServiceClient();
 
     const name = formData.get("name")?.toString().trim() ?? "";
-    let slugRaw = formData.get("slug")?.toString().trim() ?? "";
     if (!name) throw new Error("El nombre es obligatorio.");
-    const slug = slugRaw ? slugify(slugRaw) : slugify(name);
+
+    const tags = parseTagsFromForm(formData);
+    const category_id = parseCategoryId(formData);
+    const slug = await pickUniqueProductSlug(supabase, name, tags);
 
     const description =
       formData.get("description")?.toString().trim() || null;
-    const model_path = formData.get("model_path")?.toString().trim() ?? "";
-    if (!model_path) throw new Error("Selecciona una plantilla base.");
+    const model_path = await getDefaultProductModelPath(supabase);
 
     const price_cents = parsePriceDopToCents(
       formData.get("price_dop")?.toString() ?? "",
@@ -66,6 +144,8 @@ export async function adminCreateProduct(
         cover_image_url,
         published,
         sort_order,
+        category_id,
+        tags,
         default_design_id: null,
         base_texture_id: null,
       })
@@ -74,7 +154,7 @@ export async function adminCreateProduct(
 
     if (insErr) {
       if (insErr.code === "23505") {
-        return { error: "Ya existe un artículo con ese slug." };
+        return { error: "Conflicto al generar la URL del artículo. Vuelve a intentar." };
       }
       return { error: insErr.message ?? "No se pudo crear el producto." };
     }
@@ -120,25 +200,25 @@ export async function adminUpdateProduct(
 
     const { data: prevRow, error: prevErr } = await supabase
       .from("products")
-      .select("cover_image_url, base_texture_id")
+      .select("slug, cover_image_url, base_texture_id")
       .eq("id", id)
       .single();
     if (prevErr || !prevRow) throw new Error("Producto no encontrado.");
 
     const prev = prevRow as {
+      slug: string;
       cover_image_url: string | null;
       base_texture_id: string | null;
     };
 
     const name = formData.get("name")?.toString().trim() ?? "";
-    let slugRaw = formData.get("slug")?.toString().trim() ?? "";
     if (!name) throw new Error("El nombre es obligatorio.");
-    const slug = slugRaw ? slugify(slugRaw) : slugify(name);
+
+    const tags = parseTagsFromForm(formData);
+    const category_id = parseCategoryId(formData);
 
     const description =
       formData.get("description")?.toString().trim() || null;
-    const model_path = formData.get("model_path")?.toString().trim() ?? "";
-    if (!model_path) throw new Error("Selecciona una plantilla base.");
 
     const price_cents = parsePriceDopToCents(
       formData.get("price_dop")?.toString() ?? "",
@@ -186,14 +266,14 @@ export async function adminUpdateProduct(
     }
 
     const patch: Record<string, unknown> = {
-      slug,
       name,
       description,
       price_cents,
-      model_path,
       cover_image_url,
       published,
       sort_order,
+      category_id,
+      tags,
     };
     if (nextBaseTextureId !== undefined) {
       patch.base_texture_id = nextBaseTextureId;
@@ -204,15 +284,12 @@ export async function adminUpdateProduct(
       .update(patch)
       .eq("id", id);
     if (updErr) {
-      if (updErr.code === "23505") {
-        return { error: "Ya existe otro artículo con ese slug." };
-      }
       return { error: updErr.message ?? "No se pudo actualizar." };
     }
 
     revalidatePath("/admin/catalogo");
     revalidatePath("/catalogo");
-    revalidatePath(`/catalogo/${slug}`);
+    revalidatePath(`/catalogo/${prev.slug}`);
     return { ok: true };
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Error desconocido.";
