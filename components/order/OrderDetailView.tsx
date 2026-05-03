@@ -73,6 +73,16 @@ export function OrderDetailView({ order, backHref, backLabel }: OrderDetailViewP
             </p>
           )}
           <p className="mt-1 text-sm text-muted-foreground">Fecha: {order.createdAt}</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Pago (AZUL):{" "}
+            <span className="text-foreground">
+              {order.paymentStatus === "paid"
+                ? "Aprobado"
+                : order.paymentStatus === "declined"
+                  ? "Rechazado"
+                  : "Pendiente"}
+            </span>
+          </p>
         </div>
 
       <ul className="divide-y divide-border">

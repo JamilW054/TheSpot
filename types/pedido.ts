@@ -28,6 +28,8 @@ export interface OrderStatusDetailItem {
   unitPriceCents: number;
 }
 
+export type OrderPaymentStatus = "pending" | "paid" | "declined";
+
 /** Detalle de un pedido para consulta pública por ID (estado del pedido). */
 export interface OrderStatusDetail {
   id: string;
@@ -36,4 +38,11 @@ export interface OrderStatusDetail {
   createdAt: string;
   shippingName: string | null;
   items: OrderStatusDetailItem[];
+  /** Estado del cobro en pasarela (AZUL). */
+  paymentStatus: OrderPaymentStatus;
+  paymentProvider: string | null;
+  paidAt: string | null;
+  azulTransactionId: string | null;
+  azulAuthorizationCode: string | null;
+  azulResponseCode: string | null;
 }

@@ -1,13 +1,12 @@
 "use client";
 
-import { formatDOPFromCents } from "@/lib/format-currency";
-import { createOrderAction } from "@/app/(public)/carrito/checkout/actions";
-import { ORDER_STATUS_PAGE } from "@/config/navigation";
-import { useCart } from "@/contexts/cart-context";
-import type { CatalogProduct } from "@/types";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
+import { createOrderAction } from "@/app/(public)/carrito/checkout/actions";
+import { useCart } from "@/contexts/cart-context";
+import { formatDOPFromCents } from "@/lib/format-currency";
+import type { CatalogProduct } from "@/types";
 
 function isExternalImage(src: string): boolean {
   return (
@@ -24,9 +23,7 @@ const inputClass =
 const labelClass = "block text-sm font-medium text-foreground";
 
 export function CheckoutContent({ products }: { products: CatalogProduct[] }) {
-  const { items, clearCart } = useCart();
-  const [submitted, setSubmitted] = useState(false);
-  const [orderId, setOrderId] = useState<string | null>(null);
+  const { items } = useCart();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -41,15 +38,29 @@ export function CheckoutContent({ products }: { products: CatalogProduct[] }) {
     e.preventDefault();
     setError(null);
     setLoading(true);
-    const form = e.currentTarget;
+    const checkoutForm = e.currentTarget;
     const shipping = {
-      name: (form.querySelector("#checkout-name") as HTMLInputElement).value.trim(),
-      email: (form.querySelector("#checkout-email") as HTMLInputElement).value.trim(),
-      address: (form.querySelector("#checkout-address") as HTMLTextAreaElement).value.trim(),
-      phone: (form.querySelector("#checkout-phone") as HTMLInputElement)?.value?.trim(),
-      city: (form.querySelector("#checkout-city") as HTMLInputElement)?.value?.trim(),
-      postalCode: (form.querySelector("#checkout-postal") as HTMLInputElement)?.value?.trim(),
-      country: (form.querySelector("#checkout-country") as HTMLInputElement)?.value?.trim(),
+      name: (
+        checkoutForm.querySelector("#checkout-name") as HTMLInputElement
+      ).value.trim(),
+      email: (
+        checkoutForm.querySelector("#checkout-email") as HTMLInputElement
+      ).value.trim(),
+      address: (
+        checkoutForm.querySelector("#checkout-address") as HTMLTextAreaElement
+      ).value.trim(),
+      phone: (
+        checkoutForm.querySelector("#checkout-phone") as HTMLInputElement
+      )?.value?.trim(),
+      city: (
+        checkoutForm.querySelector("#checkout-city") as HTMLInputElement
+      )?.value?.trim(),
+      postalCode: (
+        checkoutForm.querySelector("#checkout-postal") as HTMLInputElement
+      )?.value?.trim(),
+      country: (
+        checkoutForm.querySelector("#checkout-country") as HTMLInputElement
+      )?.value?.trim(),
     };
     const orderItems = items.map((it) => ({
       productId: it.productId,
@@ -59,25 +70,44 @@ export function CheckoutContent({ products }: { products: CatalogProduct[] }) {
     const result = await createOrderAction(shipping, orderItems);
     setLoading(false);
     if (result.ok) {
-      setOrderId(result.orderId);
-      clearCart();
-      setSubmitted(true);
-    } else {
-      setError(result.error);
+      const redirectForm = document.createElement("form");
+      redirectForm.method = "POST";
+      redirectForm.action = "/api/pagos/azul/enviar";
+      const input = document.createElement("input");
+      input.type = "hidden";
+      input.name = "orderId";
+      input.value = result.orderId;
+      redirectForm.appendChild(input);
+      document.body.appendChild(redirectForm);
+      redirectForm.submit();
+      return;
     }
+    setError(result.error);
   };
 
-  if (items.length === 0 && !submitted) {
+  if (items.length === 0) {
     return (
       <div className="rounded-2xl border border-border bg-card p-12 sm:p-16 text-center shadow-sm">
         <div className="mx-auto flex size-16 items-center justify-center rounded-full bg-muted/60 text-muted-foreground">
-          <svg className="size-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+          <svg
+            className="size-8"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-label="Carrito vacío"
+          >
+            <title>Carrito vacío</title>
             <circle cx="9" cy="21" r="1" />
             <circle cx="20" cy="21" r="1" />
             <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
           </svg>
         </div>
-        <h2 className="mt-6 text-xl font-semibold text-foreground">No hay productos en el carrito</h2>
+        <h2 className="mt-6 text-xl font-semibold text-foreground">
+          No hay productos en el carrito
+        </h2>
         <p className="mt-2 text-sm text-muted-foreground max-w-sm mx-auto">
           Añade productos desde el catálogo y vuelve al checkout.
         </p>
@@ -91,41 +121,11 @@ export function CheckoutContent({ products }: { products: CatalogProduct[] }) {
     );
   }
 
-  if (submitted) {
-    return (
-      <div className="rounded-2xl border border-border bg-card p-10 sm:p-14 text-center shadow-sm">
-        <div className="mx-auto flex size-16 items-center justify-center rounded-full bg-primary/10 text-primary">
-          <svg className="size-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-            <polyline points="22 4 12 14.01 9 11.01" />
-          </svg>
-        </div>
-        <h2 className="mt-6 text-xl font-semibold text-foreground">Pedido recibido</h2>
-        <p className="mt-2 text-sm text-muted-foreground max-w-sm mx-auto">
-          Gracias por tu compra. Tu pedido ha sido registrado correctamente.
-        </p>
-        {orderId && (
-          <p className="mt-3 text-sm text-muted-foreground">
-            Nº de pedido: <span className="font-mono font-medium text-foreground">{orderId.slice(0, 8)}…</span>
-          </p>
-        )}
-        <p className="mt-4 text-sm text-muted-foreground">
-          <Link href={ORDER_STATUS_PAGE.href} className="font-medium text-primary hover:underline">
-            {ORDER_STATUS_PAGE.ariaLabel}
-          </Link>
-        </p>
-        <Link
-          href="/catalogo"
-          className="mt-6 inline-flex items-center justify-center rounded-xl bg-primary px-8 py-3.5 text-sm font-semibold text-primary-foreground shadow-sm transition-all hover:opacity-90 hover:shadow"
-        >
-          Seguir comprando
-        </Link>
-      </div>
-    );
-  }
-
   return (
-    <form onSubmit={handleSubmit} className="lg:grid lg:grid-cols-[1fr_380px] lg:gap-10 xl:gap-12">
+    <form
+      onSubmit={handleSubmit}
+      className="lg:grid lg:grid-cols-[1fr_380px] lg:gap-10 xl:gap-12"
+    >
       {/* Datos de envío */}
       <div className="lg:min-w-0">
         <p className="mb-4 text-xs font-medium uppercase tracking-wider text-muted-foreground">
@@ -231,7 +231,10 @@ export function CheckoutContent({ products }: { products: CatalogProduct[] }) {
               if (!product) return null;
               const lineTotal = product.priceCents * item.quantity;
               return (
-                <li key={`${item.productId}:${item.designId ?? ""}`} className="flex gap-4 p-4 sm:p-5">
+                <li
+                  key={`${item.productId}:${item.designId ?? ""}`}
+                  className="flex gap-4 p-4 sm:p-5"
+                >
                   <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-muted ring-1 ring-border/50">
                     <Image
                       src={product.coverImage}
@@ -243,7 +246,9 @@ export function CheckoutContent({ products }: { products: CatalogProduct[] }) {
                     />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="font-semibold text-foreground">{product.name}</p>
+                    <p className="font-semibold text-foreground">
+                      {product.name}
+                    </p>
                     <p className="text-sm text-muted-foreground tabular-nums">
                       {product.price} × {item.quantity}
                     </p>
@@ -272,10 +277,11 @@ export function CheckoutContent({ products }: { products: CatalogProduct[] }) {
               disabled={loading}
               className="w-full rounded-xl bg-primary py-3.5 text-base font-semibold text-primary-foreground shadow-sm transition-all hover:opacity-90 hover:shadow disabled:opacity-60 disabled:pointer-events-none"
             >
-              {loading ? "Procesando…" : "Confirmar pedido"}
+              {loading ? "Procesando…" : "Pagar con AZUL"}
             </button>
             <p className="mt-3 text-center text-xs text-muted-foreground">
-              Al confirmar aceptas el procesamiento del pedido.
+              Serás redirigido al pago seguro de Banco Popular (AZUL). Al
+              confirmar aceptas el pedido.
             </p>
           </div>
         </div>

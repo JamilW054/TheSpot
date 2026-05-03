@@ -49,7 +49,15 @@ import { rowToLinea, type LineaRow } from "./lineas";
 import { rowToMockup, type BaseModelRow } from "./base-models";
 import { rowToPedido, type OrderRow } from "./orders";
 import { statusMap } from "./orders";
-import type { CatalogProduct, Design, Linea, Mockup, OrderStatusDetail, Pedido } from "@/types";
+import type {
+  CatalogProduct,
+  Design,
+  Linea,
+  Mockup,
+  OrderPaymentStatus,
+  OrderStatusDetail,
+  Pedido,
+} from "@/types";
 
 export async function getProducts(): Promise<CatalogProduct[]> {
   return withNetworkFallback(async () => {
@@ -273,6 +281,73 @@ export async function getOrdersAdmin(): Promise<Pedido[]> {
   }, []);
 }
 
+function coercePaymentStatus(value: string | null | undefined): OrderPaymentStatus {
+  if (value === "paid" || value === "declined" || value === "pending") return value;
+  return "pending";
+}
+
+/** Snapshot para validar retorno AZUL (service role). */
+export interface OrderPaymentSnapshot {
+  id: string;
+  total_cents: number;
+  payment_provider: string | null;
+  payment_status: string;
+}
+
+export async function getOrderPaymentSnapshotByOrderNumber(
+  orderNumber: string,
+): Promise<OrderPaymentSnapshot | null> {
+  const id = orderNumber.trim().toLowerCase();
+  if (!id) return null;
+  try {
+    const supabase = createServiceClient();
+    const { data, error } = await supabase
+      .from("orders")
+      .select("id, total_cents, payment_provider, payment_status")
+      .eq("id", id)
+      .maybeSingle();
+    if (error || !data) return null;
+    const row = data as OrderPaymentSnapshot;
+    return row;
+  } catch {
+    return null;
+  }
+}
+
+export interface UpdateOrderPaymentFromGatewayInput {
+  orderId: string;
+  paymentStatus: OrderPaymentStatus;
+  provider: string;
+  transactionId: string | null;
+  responseCode: string | null;
+  authorizationCode: string | null;
+  rrn: string | null;
+  rawResponse: Record<string, string>;
+}
+
+/** Persiste resultado del POST de AZUL (service role, bypass RLS). */
+export async function updateOrderPaymentStatusFromGateway(
+  params: UpdateOrderPaymentFromGatewayInput,
+): Promise<void> {
+  const supabase = createServiceClient();
+  const approved = params.paymentStatus === "paid";
+  const patch: Record<string, unknown> = {
+    payment_provider: params.provider,
+    payment_status: params.paymentStatus,
+    azul_transaction_id: params.transactionId,
+    azul_authorization_code: params.authorizationCode,
+    azul_response_code: params.responseCode,
+    azul_rrn: params.rrn,
+    payment_raw_response: params.rawResponse,
+  };
+  if (approved) {
+    patch.status = "paid";
+    patch.paid_at = new Date().toISOString();
+  }
+  const { error } = await supabase.from("orders").update(patch).eq("id", params.orderId);
+  if (error) throw toError(error);
+}
+
 /** Consulta pública: obtiene el estado de un pedido por ID (sin auth). Usa service role. */
 export async function getOrderStatusById(orderId: string): Promise<OrderStatusDetail | null> {
   if (!orderId?.trim()) return null;
@@ -281,12 +356,21 @@ export async function getOrderStatusById(orderId: string): Promise<OrderStatusDe
     const supabase = createServiceClient();
     const { data: orderRow, error: orderError } = await supabase
       .from("orders")
-      .select("id, status, total_cents, created_at, shipping_name")
+      .select(
+        "id, status, total_cents, created_at, shipping_name, payment_status, payment_provider, paid_at, azul_transaction_id, azul_authorization_code, azul_response_code",
+      )
       .eq("id", id)
       .single();
 
     if (orderError || !orderRow) return null;
-    const o = orderRow as OrderRow;
+    const o = orderRow as OrderRow & {
+      payment_status?: string | null;
+      payment_provider?: string | null;
+      paid_at?: string | null;
+      azul_transaction_id?: string | null;
+      azul_authorization_code?: string | null;
+      azul_response_code?: string | null;
+    };
 
     const { data: itemsData } = await supabase
       .from("order_items")
@@ -331,6 +415,12 @@ export async function getOrderStatusById(orderId: string): Promise<OrderStatusDe
       }),
       shippingName: o.shipping_name,
       items,
+      paymentStatus: coercePaymentStatus(o.payment_status ?? undefined),
+      paymentProvider: o.payment_provider ?? null,
+      paidAt: o.paid_at ?? null,
+      azulTransactionId: o.azul_transaction_id ?? null,
+      azulAuthorizationCode: o.azul_authorization_code ?? null,
+      azulResponseCode: o.azul_response_code ?? null,
     };
   } catch {
     return null;
@@ -386,6 +476,8 @@ export async function createOrder(
       shipping_postal_code: shipping.postalCode?.trim() ?? null,
       shipping_country: shipping.country?.trim() ?? null,
       total_cents: 0,
+      payment_status: "pending",
+      payment_provider: null,
     })
     .select("id")
     .single();
@@ -394,9 +486,11 @@ export async function createOrder(
 
   const orderId = (orderRow as { id: string }).id;
 
+  let totalCents = 0;
   for (const item of items) {
     const product = await getProductById(item.productId);
     if (!product) throw new Error(`Producto no encontrado: ${item.productId}`);
+    totalCents += product.priceCents * item.quantity;
     const { error: itemError } = await supabase.from("order_items").insert({
       order_id: orderId,
       product_id: item.productId,
@@ -406,6 +500,12 @@ export async function createOrder(
     });
     if (itemError) throw toError(itemError);
   }
+
+  const { error: totalErr } = await supabase
+    .from("orders")
+    .update({ total_cents: totalCents })
+    .eq("id", orderId);
+  if (totalErr) throw toError(totalErr);
 
   return { orderId };
 }
