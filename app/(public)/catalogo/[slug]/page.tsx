@@ -75,7 +75,7 @@ export default async function CatalogProductPage({ params }: PageProps) {
           </div>
           <div className="rounded-2xl border border-border bg-muted/20 overflow-hidden">
             <p className="px-3 py-2 text-xs font-medium uppercase tracking-wider text-muted-foreground border-b border-border bg-muted/30">
-              Vista 3D
+              Vista previa con diseño
             </p>
             <div className="aspect-square min-h-[240px] sm:min-h-[300px] w-full">
               <CatalogProductViewerWithDesign product={product} design={design} compact />

@@ -156,7 +156,7 @@ export function TextureUploadPanel({
       }
       const zip = new JSZip();
       zip.file(`textura_${projectSlug}_1024x1024.png`, effectiveBlob, { binary: true });
-      // Vista 3D si hay canvas; si no (ej. modo 2D), se usa la textura con diseño aplicado (UV)
+      // Prefiere captura del canvas si existe; si no, la textura con diseño aplicado
       zip.file("camiseta_con_diseno.png", canvasBlob ?? effectiveBlob, { binary: true });
       const zipBlob = await zip.generateAsync({ type: "blob" });
       const url = URL.createObjectURL(zipBlob);
