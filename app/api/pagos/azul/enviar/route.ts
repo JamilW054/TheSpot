@@ -24,7 +24,7 @@ export async function POST(request: Request) {
 
   if (!merchantId || !authKey) {
     return new NextResponse(
-      "Falta configuración AZUL: define AZUL_CLIENT_KEY (clave del sandbox) y AZUL_SECRET_KEY (secreto). Opcional AZUL_MERCHANT_ID si el banco usa otro ID.",
+      "Falta AZUL_MERCHANT_ID (ID de comercio de Payment Page, lo entrega Banco Popular/AZUL; no uses la clave API como MerchantId) y AZUL_SECRET_KEY.",
       { status: 500 },
     );
   }

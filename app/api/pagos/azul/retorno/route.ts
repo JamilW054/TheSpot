@@ -32,7 +32,7 @@ export async function POST(request: Request) {
     if (!merchantId || !secretKey) {
       console.error("[AZUL] Configuración faltante");
       return new NextResponse(
-        "Configuración de AZUL incompleta (AZUL_CLIENT_KEY + AZUL_SECRET_KEY, u opcional AZUL_MERCHANT_ID).",
+        "Configuración de AZUL incompleta: AZUL_MERCHANT_ID + AZUL_SECRET_KEY.",
         { status: 500 },
       );
     }

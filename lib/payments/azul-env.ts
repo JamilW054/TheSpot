@@ -1,16 +1,21 @@
 /**
- * Variables de entorno AZUL alineadas con el sandbox (clave + secreto).
+ * AZUL Payment Page (Banco Popular) — variables de entorno.
  *
- * - MerchantId en el POST a Payment Page: `AZUL_CLIENT_KEY` (la “Clave” del portal).
- *   Opcional `AZUL_MERCHANT_ID` si el banco te da un ID distinto.
- * - Firma AuthHash y retorno: `AZUL_SECRET_KEY` (el “Secreto”).
- *   `AZUL_AUTH_KEY` se acepta solo como alias legacy del secreto.
+ * - `AZUL_MERCHANT_ID`: **ID de comercio** que AZUL asigna al comercio para el formulario
+ *   (`MerchantId`). No es lo mismo que la “Clave” de API del portal de desarrolladores; si usas
+ *   la clave como MerchantId, la pasarela responde `VALIDATION_ERROR:MerchantId`.
+ * - `AZUL_SECRET_KEY` (+ opcional `AZUL_AUTH_KEY`): secreto para **AuthHash** y firma del retorno.
+ * - `AZUL_CLIENT_KEY`: solo si el portal la distingue; **no** se usa como `MerchantId` salvo
+ *   `AZUL_USE_CLIENT_KEY_AS_MERCHANT_ID=true` (no recomendado).
  */
 
 export function getAzulMerchantIdentifier(): string {
-  const explicit = process.env.AZUL_MERCHANT_ID?.trim();
-  if (explicit) return explicit;
-  return process.env.AZUL_CLIENT_KEY?.trim() ?? "";
+  const merchantId = process.env.AZUL_MERCHANT_ID?.trim();
+  if (merchantId) return merchantId;
+  if (process.env.AZUL_USE_CLIENT_KEY_AS_MERCHANT_ID === "true") {
+    return process.env.AZUL_CLIENT_KEY?.trim() ?? "";
+  }
+  return "";
 }
 
 /** Secreto para hash de solicitud y para verificar firma del POST de retorno. */
