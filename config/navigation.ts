@@ -15,6 +15,8 @@ export interface NavItem {
   href: string;
   /** Lucide icon name for sidebar (optional). */
   icon?: string;
+  /** Solo visible si user.role === "admin" (sidebar app). */
+  adminOnly?: boolean;
 }
 
 /** Público: landing, login, registro */
@@ -24,15 +26,15 @@ export const PUBLIC_NAV: NavItem[] = [
   { label: "Registro", href: "/registro" },
 ];
 
-/** App autenticada: mis diseños, mis pedidos, editor, líneas, guía, recursos, soporte */
+/** App autenticada: clientes ven diseños y pedidos; editor/líneas/guía/recursos/soporte solo admin */
 export const APP_NAV: NavItem[] = [
   { label: "Mis diseños", href: "/mis-disenos", icon: "LayoutGrid" },
   { label: "Mis pedidos", href: "/mis-pedidos", icon: "Package" },
-  { label: "Editor", href: "/editor", icon: "PenSquare" },
-  { label: "Líneas de ropa", href: "/lineas", icon: "Shirt" },
-  { label: "Guía", href: "/guia", icon: "BookOpen" },
-  { label: "Recursos", href: "/recursos", icon: "FolderOpen" },
-  { label: "Soporte", href: "/soporte", icon: "HelpCircle" },
+  { label: "Editor", href: "/editor", icon: "PenSquare", adminOnly: true },
+  { label: "Líneas de ropa", href: "/lineas", icon: "Shirt", adminOnly: true },
+  { label: "Guía", href: "/guia", icon: "BookOpen", adminOnly: true },
+  { label: "Recursos", href: "/recursos", icon: "FolderOpen", adminOnly: true },
+  { label: "Soporte", href: "/soporte", icon: "HelpCircle", adminOnly: true },
 ];
 
 /** Admin: dashboard, pedidos, líneas, reportes, configuración */

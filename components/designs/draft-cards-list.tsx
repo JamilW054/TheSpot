@@ -1,11 +1,15 @@
 "use client";
 
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { FileEdit, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { getAllDraftMetaFromLocal, removeDraftFromLocal } from "@/lib/editor-drafts";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { useAuth } from "@/lib/auth-context";
 import type { EditorDraftMeta } from "@/lib/editor-drafts";
-import { FileEdit, Trash2 } from "lucide-react";
+import {
+  getAllDraftMetaFromLocal,
+  removeDraftFromLocal,
+} from "@/lib/editor-drafts";
 
 function formatDraftDate(iso: string): string {
   const d = new Date(iso);
@@ -16,10 +20,16 @@ function formatDraftDate(iso: string): string {
   if (diffM < 60) return `Hace ${diffM} min`;
   const diffH = Math.floor(diffM / 60);
   if (diffH < 24) return `Hace ${diffH} h`;
-  return d.toLocaleDateString("es-ES", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+  return d.toLocaleDateString("es-ES", {
+    day: "numeric",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
 export function DraftCardsList() {
+  const { user, isLoading } = useAuth();
   const [drafts, setDrafts] = useState<EditorDraftMeta[]>([]);
 
   useEffect(() => {
@@ -33,15 +43,20 @@ export function DraftCardsList() {
     setDrafts(getAllDraftMetaFromLocal());
   };
 
+  if (isLoading || user?.role !== "admin") return null;
   if (drafts.length === 0) return null;
 
   return (
     <section className="mb-8" aria-labelledby="drafts-heading">
-      <h2 id="drafts-heading" className="text-lg font-semibold text-foreground mb-3">
+      <h2
+        id="drafts-heading"
+        className="text-lg font-semibold text-foreground mb-3"
+      >
         Borradores recientes
       </h2>
       <p className="text-sm text-muted-foreground mb-4">
-        Proyectos editados que se guardan automáticamente en este dispositivo. Ábrelos para seguir editando.
+        Proyectos editados que se guardan automáticamente en este dispositivo.
+        Ábrelos para seguir editando.
       </p>
       <div className="grid grid-cols-2 gap-4 sm:gap-5 md:grid-cols-3 lg:grid-cols-4">
         {drafts.map((draft) => (
@@ -52,7 +67,10 @@ export function DraftCardsList() {
           >
             <Card className="overflow-hidden transition-shadow hover:shadow-md h-full flex flex-col">
               <div className="relative aspect-4/3 w-full bg-muted/50 flex items-center justify-center">
-                <FileEdit className="size-10 text-muted-foreground" aria-hidden />
+                <FileEdit
+                  className="size-10 text-muted-foreground"
+                  aria-hidden
+                />
                 <button
                   type="button"
                   onClick={(e) => handleRemove(e, draft.id)}

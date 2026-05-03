@@ -5,8 +5,8 @@ import {
   BookOpen,
   FolderOpen,
   HelpCircle,
-  LayoutGrid,
   LayoutDashboard,
+  LayoutGrid,
   MessageCircle,
   Package,
   PanelLeftClose,
@@ -17,9 +17,9 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useAuth } from "@/lib/auth-context";
-import { APP_NAV, ADMIN_NAV } from "@/config/navigation";
 import type { NavItem } from "@/config/navigation";
+import { ADMIN_NAV, APP_NAV } from "@/config/navigation";
+import { useAuth } from "@/lib/auth-context";
 
 export type SidebarVariant = "app" | "admin";
 
@@ -38,7 +38,10 @@ const APP_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   HelpCircle,
 };
 
-const ADMIN_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+const ADMIN_ICONS: Record<
+  string,
+  React.ComponentType<{ className?: string }>
+> = {
   LayoutDashboard,
   ShoppingCart,
   Shirt,
@@ -63,7 +66,11 @@ export function AppSidebar({
 }: AppSidebarProps) {
   const pathname = usePathname();
   const { user } = useAuth();
-  const items = NAV_BY_VARIANT[variant];
+  const rawItems = NAV_BY_VARIANT[variant];
+  const items =
+    variant === "app"
+      ? rawItems.filter((item) => !item.adminOnly || user?.role === "admin")
+      : rawItems;
   const hiddenOnDesktop = collapsed;
 
   return (
@@ -152,7 +159,9 @@ export function AppSidebar({
                 <p className="text-xs italic text-muted-foreground">
                   &ldquo;El trabajo de hoy era lo imposible de ayer.&rdquo;
                 </p>
-                <p className="mt-1 text-[10px] text-muted-foreground/80">— Robert H. Schuller</p>
+                <p className="mt-1 text-[10px] text-muted-foreground/80">
+                  — Robert H. Schuller
+                </p>
               </div>
               <Link
                 href="/soporte"
