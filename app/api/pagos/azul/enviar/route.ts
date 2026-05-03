@@ -23,8 +23,17 @@ export async function POST(request: Request) {
     process.env.NEXT_PUBLIC_APP_URL?.trim() ?? new URL(request.url).origin;
 
   if (!merchantId || !authKey) {
+    const missing: string[] = [];
+    if (!merchantId) {
+      missing.push(
+        "MerchantId: AZUL_MERCHANT_ID o bien AZUL_USE_CLIENT_KEY_AS_MERCHANT_ID=true + AZUL_CLIENT_KEY",
+      );
+    }
+    if (!authKey) {
+      missing.push("secreto firma: AZUL_SECRET_KEY (o AZUL_AUTH_KEY)");
+    }
     return new NextResponse(
-      "Falta AZUL_MERCHANT_ID (ID de comercio de Payment Page, lo entrega Banco Popular/AZUL; no uses la clave API como MerchantId) y AZUL_SECRET_KEY.",
+      `Config AZUL incompleta (${missing.join("; ")}). En local: revisa .env y reinicia el dev server. En Vercel/hosting: añade las mismas variables en Project Settings → Environment Variables.`,
       { status: 500 },
     );
   }
