@@ -2,8 +2,17 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   images: {
-    /** Allow next/image for proxied textures (?url=…); omit `search` to allow any query string */
-    localPatterns: [{ pathname: "/api/texture" }],
+    /**
+     * Next.js 16: local `next/image` src must match a pattern (pathname; omit `search` to allow ?query).
+     * - /api/texture — proxied remote textures
+     * - /people/** — public/people (landing models)
+     * - /project/** — public/project (landing grid cards)
+     */
+    localPatterns: [
+      { pathname: "/api/texture" },
+      { pathname: "/people/**" },
+      { pathname: "/project/**" },
+    ],
     remotePatterns: [
       {
         protocol: "https",
