@@ -98,7 +98,7 @@ export interface Mockup {
   category: MockupCategory;
   /** Optional image URL or path for preview (e.g. /mockups/shirt.svg or external URL). */
   imageUrl?: string;
-  /** Path to 3D model (GLB/GLTF) for 3d category, e.g. /models/tshirt/scene.gltf */
+  /** Legacy / opcional: ya no se usa para cargar geometría en el cliente. */
   modelPath?: string;
 }
 
@@ -112,11 +112,11 @@ export interface CatalogProduct {
   price: string;
   /** Precio en céntimos para cálculos (total carrito, etc.). */
   priceCents: number;
-  /** Ruta del modelo 3D (mismo que mockup). */
-  modelPath: string;
+  /** Legacy en DB; la UI usa portada y texturas planas. */
+  modelPath?: string | null;
   /** Imagen de portada para la ficha y el listado. */
   coverImage: string;
-  /** URL de la textura base (tabla textures) para la vista 3D. */
+  /** URL de la textura base (tabla textures) para la vista previa. */
   baseTextureUrl?: string | null;
   /** IDs de diseño plantilla para "Personalizar con plantilla". Al editar se crea una copia local. */
   defaultDesignId?: string;

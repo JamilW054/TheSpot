@@ -1,12 +1,8 @@
 /**
  * Renders 2D canvas elements (text, images, shapes, path/brush) to a single texture image
- * so it can be applied to the 3D model. The design is drawn in the correct
- * UV region (u0,v0)-(u1,v1) so it appears on the mesh polygons that use those UVs.
- * Polygon logic: each mesh triangle has UV coords; we draw only in the design zone
- * rectangle; the texture is then applied to the model, so all elements map correctly.
+ * for previews and export (flat texture, full canvas mapped to the bitmap).
  */
 
-import { getDesignZoneUV } from "@/config/texture-uv";
 import type { CanvasElement } from "@/types";
 
 export const DESIGN_TEXTURE_WIDTH = 1024;
@@ -26,20 +22,13 @@ function loadImage(src: string): Promise<HTMLImageElement> {
   });
 }
 
-/** Bounds en espacio UV (0–1). Si se pasan, se usan en lugar del config por modelo. */
-export type UVBounds = { u0: number; v0: number; u1: number; v1: number };
-
 /**
  * Renders elements (and optional base texture) to a texture image URL.
- * Usa la zona UV para dibujar donde el modelo lo espera (vértice → uv → textura).
- * Si uvBoundsFromModel está definido, son los bounds leídos de geometry.attributes.uv del GLB.
  * Returns a data URL or null.
  */
 export async function renderElementsToTextureUrl(
   elements: CanvasElement[],
-  baseTextureUrl: string | null,
-  modelPath?: string,
-  uvBoundsFromModel?: UVBounds | null
+  baseTextureUrl: string | null
 ): Promise<string | null> {
   const canvas = document.createElement("canvas");
   canvas.width = DESIGN_TEXTURE_WIDTH;
@@ -47,39 +36,14 @@ export async function renderElementsToTextureUrl(
   const ctx = canvas.getContext("2d");
   if (!ctx) return null;
 
-  const zone =
-    uvBoundsFromModel ??
-    (modelPath ? getDesignZoneUV(modelPath) : { u0: 0, v0: 0, u1: 1, v1: 1 });
-
-  // Asegurar zona válida (u0 < u1, v0 < v1) para no invertir escala
-  const u0 = Math.min(zone.u0, zone.u1);
-  const u1 = Math.max(zone.u0, zone.u1);
-  const v0 = Math.min(zone.v0, zone.v1);
-  const v1 = Math.max(zone.v0, zone.v1);
-
-  // Three.js aplica la textura con flipY: (0,0) en imagen = top-left → GPU v=1 (top).
-  // Para que el diseño quede en la zona UV [v0,v1] del modelo, dibujamos en imagen en Y = (1-v1)*H hasta (1-v0)*H.
-  let destX = u0 * DESIGN_TEXTURE_WIDTH;
-  let destY = (1 - v1) * DESIGN_TEXTURE_HEIGHT;
-  let destW = (u1 - u0) * DESIGN_TEXTURE_WIDTH;
-  let destH = (v1 - v0) * DESIGN_TEXTURE_HEIGHT;
-
-  // Clamp al tamaño de la textura para no dibujar fuera
-  const maxW = DESIGN_TEXTURE_WIDTH - destX;
-  const maxH = DESIGN_TEXTURE_HEIGHT - destY;
-  destW = Math.max(0, Math.min(destW, maxW, DESIGN_TEXTURE_WIDTH));
-  destH = Math.max(0, Math.min(destH, maxH, DESIGN_TEXTURE_HEIGHT));
-  destX = Math.max(0, Math.min(destX, DESIGN_TEXTURE_WIDTH - 1));
-  destY = Math.max(0, Math.min(destY, DESIGN_TEXTURE_HEIGHT - 1));
-
-  if (destW <= 0 || destH <= 0) {
-    return canvas.toDataURL("image/png");
-  }
+  const destX = 0;
+  const destY = 0;
+  const destW = DESIGN_TEXTURE_WIDTH;
+  const destH = DESIGN_TEXTURE_HEIGHT;
 
   const scaleX = destW / LOGICAL_WIDTH;
   const scaleY = destH / LOGICAL_HEIGHT;
 
-  // 1) Base: white or uploaded texture (full texture)
   if (baseTextureUrl) {
     try {
       const img = await loadImage(baseTextureUrl);
@@ -93,7 +57,6 @@ export async function renderElementsToTextureUrl(
     ctx.fillRect(0, 0, DESIGN_TEXTURE_WIDTH, DESIGN_TEXTURE_HEIGHT);
   }
 
-  // 2) Draw elements only in the design zone (correct UV region)
   ctx.save();
   ctx.translate(destX, destY);
   ctx.scale(scaleX, scaleY);

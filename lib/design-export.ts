@@ -14,7 +14,7 @@ export interface DesignExportPayload {
   exportedAt: string;
   /** Design/project name */
   name: string;
-  /** 3D model path (whitelist, e.g. /models/tshirt/scene.gltf) */
+  /** Legacy: ruta de modelo en DB; el cliente ya no carga geometría 3D. */
   modelPath: string | null;
   /** Catalog product id if design was created from a product */
   productId: string | null;

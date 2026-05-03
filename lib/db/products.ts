@@ -37,7 +37,7 @@ export function rowToCatalogProduct(row: ProductRow): CatalogProduct {
     description: row.description ?? "",
     price: formatPrice(row.price_cents),
     priceCents: row.price_cents,
-    modelPath: row.model_path,
+    modelPath: row.model_path ?? null,
     coverImage: row.cover_image_url ?? "",
     ...(baseTextureUrl != null && { baseTextureUrl }),
     ...(row.default_design_id && { defaultDesignId: row.default_design_id }),

@@ -19,11 +19,8 @@ export interface EditorDraftFull {
   name: string;
   updatedAt: string;
   elements: CanvasElement[];
-  modelPath: string | null;
   textureUrl: string | null;
-  garmentColorHex: string;
-  rotation3d: number;
-  zoom3d: number;
+  garmentColorHex?: string;
   productId: string | null;
   designId: string | null;
 }

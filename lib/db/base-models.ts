@@ -7,10 +7,11 @@ export interface BaseModelRow {
 }
 
 export function rowToMockup(row: BaseModelRow): Mockup {
+  const isHttp = /^https?:\/\//i.test(row.path);
   return {
     id: row.path,
     name: row.name,
-    category: "3d",
-    modelPath: row.path,
+    category: "2d",
+    ...(isHttp ? { imageUrl: row.path } : {}),
   };
 }

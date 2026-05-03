@@ -2,6 +2,8 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   images: {
+    /** Allow next/image for proxied textures (?url=…); omit `search` to allow any query string */
+    localPatterns: [{ pathname: "/api/texture" }],
     remotePatterns: [
       {
         protocol: "https",

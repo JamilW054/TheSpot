@@ -119,23 +119,22 @@ export const MOCK_LINEAS: Linea[] = lineaNames.map((name, i) => {
   };
 });
 
-// --- MOCK_MOCKUPS (modelo principal: camiseta GLTF editable; resto GLB) ---
-// La preview en la card es el propio modelo 3D en vista fija (sin rotar).
+// --- MOCK_MOCKUPS (referencias 2D para el panel Prendas) ---
 export const MOCK_MOCKUPS: Mockup[] = [
-  { id: "mock-3d-tshirt", name: "Camiseta (GLTF)", category: "3d", modelPath: "/models/tshirt/scene.gltf" },
-  { id: "mock-3d-tshirt-male", name: "Camiseta hombre", category: "3d", modelPath: "/models/male_tshirt.glb" },
-  { id: "mock-3d-hoodie", name: "Hoodie", category: "3d", modelPath: "/models/hoodie.glb" },
-  { id: "mock-3d-robe", name: "Bata", category: "3d", modelPath: "/models/robe_cloth_for_iclone_and_character_creator.glb" },
-  { id: "mock-3d-poloche", name: "Poloche mujer", category: "3d", modelPath: "/models/soft_brushed_long_sleeve_shirt.glb" },
+  { id: "mock-shirt", name: "Camiseta", category: "2d", imageUrl: unsplash("1521572163474-6864f9cf17ab", 480, 600) },
+  { id: "mock-shirt-male", name: "Camiseta hombre", category: "2d", imageUrl: unsplash("1586790170083-2f9ceadc732d", 480, 600) },
+  { id: "mock-hoodie", name: "Hoodie", category: "2d", imageUrl: unsplash("1556821840-3a63f95609a7", 480, 600) },
+  { id: "mock-robe", name: "Bata", category: "2d", imageUrl: unsplash("1615397587950-3cbb55f95b77", 480, 600) },
+  { id: "mock-poloche", name: "Poloche mujer", category: "2d", imageUrl: unsplash("1745695894760-600be9c8c307", 480, 600) },
 ];
 
 // --- CATÁLOGO PÚBLICO: ropa a la venta, personalizable en el editor ---
 const catalogProductRows: Omit<CatalogProduct, "slug">[] = [
-  { id: "p01", name: "Camiseta personalizable", description: "Camiseta de algodón con diseño único. Elige tu talla y personaliza el estampado en el editor 3D.", price: "24,99 €", priceCents: 2499, modelPath: "/models/tshirt/scene.gltf", coverImage: unsplash("1521572163474-6864f9cf17ab", 600, 600), defaultDesignId: "d01" },
-  { id: "p02", name: "Camiseta hombre", description: "Corte clásico para hombre. Añade texto, imágenes o dibujos con el pincel en la zona de diseño.", price: "26,99 €", priceCents: 2699, modelPath: "/models/male_tshirt.glb", coverImage: unsplash("1586790170083-2f9ceadc732d", 600, 600), defaultDesignId: "d01" },
-  { id: "p03", name: "Hoodie", description: "Sudadera con capucha. Personalízala con el editor: diseña desde cero o usa una plantilla.", price: "44,99 €", priceCents: 4499, modelPath: "/models/hoodie.glb", coverImage: unsplash("1556821840-3a63f95609a7", 600, 600), defaultDesignId: "d02" },
-  { id: "p04", name: "Bata", description: "Bata cómoda para casa. Ideal para regalo personalizado.", price: "34,99 €", priceCents: 3499, modelPath: "/models/robe_cloth_for_iclone_and_character_creator.glb", coverImage: unsplash("1615397587950-3cbb55f95b77", 600, 600) },
-  { id: "p05", name: "Poloche mujer", description: "Manga larga y tejido suave. Diseña tu propio estampado en el editor.", price: "32,99 €", priceCents: 3299, modelPath: "/models/soft_brushed_long_sleeve_shirt.glb", coverImage: unsplash("1745695894760-600be9c8c307", 600, 600), defaultDesignId: "d03" },
+  { id: "p01", name: "Camiseta personalizable", description: "Camiseta de algodón con diseño único. Elige tu talla y personaliza el estampado en el editor.", price: "24,99 €", priceCents: 2499, coverImage: unsplash("1521572163474-6864f9cf17ab", 600, 600), defaultDesignId: "d01" },
+  { id: "p02", name: "Camiseta hombre", description: "Corte clásico para hombre. Añade texto, imágenes o dibujos con el pincel en la zona de diseño.", price: "26,99 €", priceCents: 2699, coverImage: unsplash("1586790170083-2f9ceadc732d", 600, 600), defaultDesignId: "d01" },
+  { id: "p03", name: "Hoodie", description: "Sudadera con capucha. Personalízala con el editor: diseña desde cero o usa una plantilla.", price: "44,99 €", priceCents: 4499, coverImage: unsplash("1556821840-3a63f95609a7", 600, 600), defaultDesignId: "d02" },
+  { id: "p04", name: "Bata", description: "Bata cómoda para casa. Ideal para regalo personalizado.", price: "34,99 €", priceCents: 3499, coverImage: unsplash("1615397587950-3cbb55f95b77", 600, 600) },
+  { id: "p05", name: "Poloche mujer", description: "Manga larga y tejido suave. Diseña tu propio estampado en el editor.", price: "32,99 €", priceCents: 3299, coverImage: unsplash("1745695894760-600be9c8c307", 600, 600), defaultDesignId: "d03" },
 ];
 
 export const MOCK_CATALOG_PRODUCTS: CatalogProduct[] = catalogProductRows.map((p) => ({

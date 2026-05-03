@@ -11,7 +11,7 @@ import {
  * - Sin query: canvas vacío (nuevo diseño) o borrador restaurado de localStorage.
  * - ?design=id: carga el diseño por id (edición del original).
  * - ?copy=id: carga el diseño como copia local (designId=null).
- * - ?product=id: preselecciona la prenda del catálogo (modelPath).
+ * - ?product=id: abre el editor con el producto del catálogo (prenda inicial si hay mockups).
  * - ?draft=id: carga un borrador guardado localmente (lista en Mis diseños).
  */
 interface EditorPageProps {

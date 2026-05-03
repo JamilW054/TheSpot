@@ -16,12 +16,12 @@ const ICON_BY_NAME: Record<string, React.ComponentType<{ className?: string }>> 
   Pencil,
 };
 
-/** Títulos que indican que la herramienta se aplica al diseño del modelo 3D. */
+/** Títulos que indican que la herramienta forma parte del diseño exportado. */
 const TOOL_TITLES: Record<string, string> = {
-  text: "Texto: se aplica al modelo. Arrastra al canvas para añadir.",
-  image: "Imagen: se aplica al modelo. Arrastra al canvas para añadir.",
-  shape: "Forma: se aplica al modelo. Arrastra al canvas para añadir.",
-  path: "Pincel: se aplica al modelo. Dibuja en el panel 2D o arrastra para añadir trazo.",
+  text: "Texto: se incluye en la textura. Arrastra al canvas para añadir.",
+  image: "Imagen: se incluye en la textura. Arrastra al canvas para añadir.",
+  shape: "Forma: se incluye en la textura. Arrastra al canvas para añadir.",
+  path: "Pincel: se incluye en la textura. Dibuja en el panel 2D o arrastra para añadir trazo.",
 };
 
 function DraggableToolButton({

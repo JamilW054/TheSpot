@@ -107,7 +107,6 @@ function blendColors(hexA: string, hexB: string, factor: number): string {
 }
 
 export interface TextureNodesPanelProps {
-  modelPath: string | null;
   fullView?: boolean;
   /** Color actual del material (para sincronizar con el modelo) */
   garmentColor?: string;
@@ -118,7 +117,6 @@ export interface TextureNodesPanelProps {
 }
 
 export function TextureNodesPanel({
-  modelPath,
   fullView = false,
   garmentColor = "#ffffff",
   onMaterialColorChange,
@@ -316,14 +314,6 @@ export function TextureNodesPanel({
     }
   }
 
-  if (!modelPath) {
-    return (
-      <div className="rounded-xl border border-border bg-muted/20 p-6 text-center text-sm text-muted-foreground">
-        Selecciona una prenda 3D para crear texturas con nodos.
-      </div>
-    );
-  }
-
   return (
     <div
       className={`flex flex-col gap-3 ${fullView ? "flex-1 min-h-0 overflow-hidden" : ""}`}
@@ -332,7 +322,7 @@ export function TextureNodesPanel({
       onMouseUp={handleCanvasMouseUp}
     >
       <p className="shrink-0 text-xs text-muted-foreground">
-        Arrastra desde un círculo de salida hasta una entrada del Material. Las conexiones aplican color y textura al modelo.
+        Arrastra desde un círculo de salida hasta una entrada del Material. Las conexiones actualizan color y textura de la prenda en la vista previa.
       </p>
 
       <div className="flex flex-wrap gap-2 shrink-0">
@@ -586,7 +576,7 @@ export function TextureNodesPanel({
       </div>
 
       <p className="shrink-0 text-[11px] text-muted-foreground italic">
-        Conecta Color o Mix al Base Color del Material; Imagen al Map. Los cambios se aplican al modelo en tiempo real.
+        Conecta Color o Mix al Base Color del Material; Imagen al Map. Los cambios se reflejan en la textura de la vista previa.
       </p>
     </div>
   );

@@ -1,36 +1,19 @@
 "use client";
 
-import dynamic from "next/dynamic";
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 
-const MockupViewer3D = dynamic(
-  () => import("@/components/editor/MockupViewer3D").then((m) => ({ default: m.MockupViewer3D })),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="flex size-full min-h-0 items-center justify-center rounded-xl bg-muted/50 text-sm text-muted-foreground">
-        Cargando…
-      </div>
-    ),
-  }
-);
-
 interface CatalogProductViewerProps {
-  modelPath: string;
+  coverImage: string;
+  /** Composite texture (base + design); when set, shown instead of cover only. */
   textureUrl?: string | null;
   compact?: boolean;
-  /** Rotación Y inicial (grados), p. ej. misma que en listado catálogo. */
-  initialRotationY?: number;
-  /** Zoom inicial del modelo (misma escala que en listado catálogo). */
-  initialZoom?: number;
 }
 
 export function CatalogProductViewer({
-  modelPath,
+  coverImage,
   textureUrl = null,
   compact = false,
-  initialRotationY,
-  initialZoom,
 }: CatalogProductViewerProps) {
   const [mounted, setMounted] = useState(false);
   const [everInView, setEverInView] = useState(false);
@@ -51,29 +34,37 @@ export function CatalogProductViewer({
     return () => obs.disconnect();
   }, [compact, mounted]);
 
-  const wrapperClass =
-    compact
-      ? "h-full min-h-0 w-full overflow-hidden rounded-xl border border-border bg-muted/20"
-      : "min-h-[320px] w-full overflow-hidden rounded-xl border border-border bg-muted/20";
+  const wrapperClass = compact
+    ? "h-full min-h-0 w-full overflow-hidden rounded-xl border border-border bg-muted/20"
+    : "min-h-[320px] w-full overflow-hidden rounded-xl border border-border bg-muted/20";
 
-  const showViewer = compact ? mounted && everInView : mounted;
+  const showContent = compact ? mounted && everInView : mounted;
+  const displayUrl = textureUrl && textureUrl.length > 0 ? textureUrl : coverImage;
+  const isDataUrl = displayUrl.startsWith("data:");
 
-  if (!showViewer) {
+  if (!showContent) {
     return <div ref={containerRef} className={wrapperClass} aria-hidden />;
   }
 
   return (
-    <div ref={containerRef} className={wrapperClass}>
-      <MockupViewer3D
-        modelPath={modelPath}
-        textureUrl={textureUrl ?? null}
-        fullSize={!compact}
-        compact={compact}
-        fixedFrontView={compact}
-        rotation={initialRotationY ?? 0}
-        zoom={initialZoom ?? 1}
-        garmentColorHex="#ffffff"
-      />
+    <div ref={containerRef} className={`relative ${wrapperClass}`}>
+      {isDataUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element -- data URLs from canvas export
+        <img
+          src={displayUrl}
+          alt=""
+          className="size-full object-contain"
+        />
+      ) : (
+        <Image
+          src={displayUrl}
+          alt=""
+          fill
+          className="object-contain p-2"
+          sizes={compact ? "(max-width: 768px) 45vw, 280px" : "(max-width: 1024px) 90vw, 560px"}
+          unoptimized={displayUrl.includes("placehold.co")}
+        />
+      )}
     </div>
   );
 }

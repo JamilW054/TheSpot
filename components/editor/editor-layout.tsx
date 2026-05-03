@@ -20,7 +20,7 @@ import {
 } from "@/lib/editor-drafts";
 import { renderElementsToTextureUrl } from "@/lib/render-design-to-texture";
 import type { CanvasElement, CanvasElementType } from "@/types";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ElementContent } from "./canvas-element-nodes";
 import {
   CANVAS_DROPPABLE_ID,
@@ -154,7 +154,7 @@ export interface EditorLayoutProps {
   initialElements?: CanvasElement[];
   /** Design id when editing; used for future save. null when ?copy= (local copy). */
   designId?: string | null;
-  /** When coming from catalog ?product=id, preselect this garment (modelPath). */
+  /** When coming from catalog ?product=id, match mockup / prenda inicial si aplica. */
   initialMockupModelPath?: string | null;
   /** Catalog product id when opened from catalog (for export JSON). */
   initialProductId?: string | null;
@@ -163,10 +163,6 @@ export interface EditorLayoutProps {
   /** Id de borrador local para restaurar (/?draft=id). */
   initialDraftId?: string | null;
 }
-
-const ZOOM_MIN = 0.005;
-const ZOOM_MAX = 4;
-const ZOOM_STEP = 0.1;
 
 const AUTO_SAVE_DEBOUNCE_MS = 2000;
 
@@ -184,29 +180,25 @@ export function EditorLayout({
 
   const [elements, setElements] = useState<CanvasElement[]>(initialElements);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [selected3DMockup, setSelected3DMockupState] = useState<{ modelPath: string } | null>(() => {
-    if (initialMockupModelPath) return { modelPath: initialMockupModelPath };
-    const first = mockups[0];
-    return first?.modelPath ? { modelPath: first.modelPath } : null;
+  const [selectedMockup, setSelectedMockupState] = useState<Mockup | null>(() => {
+    if (mockups.length === 0) return null;
+    if (initialMockupModelPath) {
+      const byPath = mockups.find((m) => m.modelPath === initialMockupModelPath);
+      if (byPath) return byPath;
+    }
+    return mockups[0] ?? null;
   });
-  const viewMode = "3d" as const; // Single 3D view only (no 2D canvas)
-  const setSelected3DMockup = useCallback((m: { modelPath: string } | null) => {
-    setSelected3DMockupState(m);
-    setRotation3d(0);
-    setZoom3d(1);
+  const setSelectedMockup = useCallback((m: Mockup | null) => {
+    setSelectedMockupState(m);
   }, []);
   const [texture3dUrl, setTexture3dUrl] = useState<string | null>(null);
-  const [rotation3d, setRotation3d] = useState(0);
-  const [zoom3d, setZoom3d] = useState(1);
   const [garmentColor, setGarmentColor] = useState("#ffffff");
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
   const [activeTool, setActiveTool] = useState<string>("move");
-  const [centerViewMode, setCenterViewMode] = useState<CenterViewMode>("3d");
+  const [centerViewMode, setCenterViewMode] = useState<CenterViewMode>("preview");
   const [rightPanelTab, setRightPanelTab] = useState<"design" | "nodes">("design");
   const [pendingFocusTextId, setPendingFocusTextId] = useState<string | null>(null);
   const [designTextureUrl, setDesignTextureUrl] = useState<string | null>(null);
-  const [modelUVBounds, setModelUVBounds] = useState<{ u0: number; v0: number; u1: number; v1: number } | null>(null);
-  const [modelMeshInfo, setModelMeshInfo] = useState<{ vertexCount: number; faceCount: number } | null>(null);
   const objectUrlsByElementId = useRef<Map<string, string>>(new Map());
   const historyPast = useRef<CanvasElement[][]>([]);
   const historyFuture = useRef<CanvasElement[][]>([]);
@@ -255,11 +247,6 @@ export function EditorLayout({
     }
     setTexture3dUrl(draft.textureUrl ?? null);
     setGarmentColor(draft.garmentColorHex ?? "#ffffff");
-    setRotation3d(draft.rotation3d ?? 0);
-    setZoom3d(draft.zoom3d ?? 1);
-    if (draft.modelPath) {
-      setSelected3DMockupState({ modelPath: draft.modelPath });
-    }
     draftIdRef.current = draft.id;
     setRestoredFromDraft(true);
   }, []);
@@ -275,11 +262,8 @@ export function EditorLayout({
         name: designId ?? "Borrador",
         updatedAt: new Date().toISOString(),
         elements,
-        modelPath: selected3DMockup?.modelPath ?? null,
         textureUrl: texture3dUrl,
         garmentColorHex: garmentColor,
-        rotation3d,
-        zoom3d,
         productId: initialProductId ?? null,
         designId,
       });
@@ -288,40 +272,28 @@ export function EditorLayout({
   }, [
     designId,
     elements,
-    selected3DMockup?.modelPath,
     texture3dUrl,
     garmentColor,
-    rotation3d,
-    zoom3d,
     initialProductId,
   ]);
 
-  // Al cambiar de modelo, limpiar bounds y mesh info hasta que el nuevo GLB reporte
-  useEffect(() => {
-    setModelUVBounds(null);
-    setModelMeshInfo(null);
-  }, [selected3DMockup?.modelPath]);
-
-  const zoomPercent = useMemo(() => Math.round(zoom3d * 100), [zoom3d]);
   const activeDragElement = activeDragId
     ? elements.find((el) => el.id === activeDragId)
     : null;
 
-  // Render 2D elements to texture. UV bounds = leídos del GLB (geometry.attributes.uv) o config.
   useEffect(() => {
     let cancelled = false;
     if (elements.length === 0) {
       setDesignTextureUrl(null);
       return;
     }
-    const modelPath = selected3DMockup?.modelPath;
-    renderElementsToTextureUrl(elements, texture3dUrl, modelPath, modelUVBounds).then((url) => {
+    renderElementsToTextureUrl(elements, texture3dUrl).then((url) => {
       if (!cancelled) setDesignTextureUrl(url);
     });
     return () => {
       cancelled = true;
     };
-  }, [elements, texture3dUrl, selected3DMockup?.modelPath, modelUVBounds]);
+  }, [elements, texture3dUrl]);
 
   const effectiveTexture3d = designTextureUrl ?? texture3dUrl;
 
@@ -343,10 +315,6 @@ export function EditorLayout({
     }
     return fetch(url).then((r) => r.blob()).catch(() => null);
   }, [effectiveTexture3d]);
-
-  const handleZoomChange = useCallback((delta: number) => {
-    setZoom3d((prev) => Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, prev + delta / 100)));
-  }, []);
 
   const handleAddImageFromFile = useCallback((file: File) => {
     pushHistory(elements);
@@ -546,14 +514,14 @@ export function EditorLayout({
   const handleExportDesignJson = useCallback(() => {
     const payload = buildDesignExportPayload({
       name: projectName,
-      modelPath: selected3DMockup?.modelPath ?? null,
+      modelPath: null,
       productId: initialProductId,
       garmentColorHex: garmentColor,
       baseTextureUrl: texture3dUrl ?? null,
       canvasElements: elements,
     });
     downloadDesignJson(payload);
-  }, [projectName, selected3DMockup?.modelPath, initialProductId, garmentColor, texture3dUrl, elements]);
+  }, [projectName, initialProductId, garmentColor, texture3dUrl, elements]);
 
   return (
     <DndContext
@@ -588,23 +556,12 @@ export function EditorLayout({
             onClearSelection={() => setSelectedId(null)}
             centerViewMode={centerViewMode}
             onCenterViewModeChange={setCenterViewMode}
-            show3DViewer={
-              selected3DMockup
-                ? {
-                    modelPath: selected3DMockup.modelPath,
-                    textureUrl: effectiveTexture3d,
-                    rotation: rotation3d,
-                    zoom: zoom3d,
-                    garmentColorHex: garmentColor,
-                    onUVBoundsDetected: setModelUVBounds,
-                    onMeshInfoDetected: setModelMeshInfo,
-                    onMaterialColorChange: setGarmentColor,
-                    onMaterialTextureChange: setTexture3dUrl,
-                  }
-                : null
-            }
-            zoomPercent={zoomPercent}
-            onZoomChange={handleZoomChange}
+            texturePreview={{
+              textureUrl: effectiveTexture3d,
+              garmentColorHex: garmentColor,
+              onMaterialColorChange: setGarmentColor,
+              onMaterialTextureChange: setTexture3dUrl,
+            }}
           />
           <EditorRightPanel
           selectedId={selectedId}
@@ -614,20 +571,12 @@ export function EditorLayout({
           onUpdateElement={handleUpdateElement}
           onClearSelection={() => setSelectedId(null)}
           projectName={projectName}
-          selected3DMockup={selected3DMockup}
-          onSelect3DMockup={setSelected3DMockup}
+          selectedMockup={selectedMockup}
+          onSelectMockup={setSelectedMockup}
           mockups={mockups}
-          centerViewMode={centerViewMode}
-          onCenterViewModeChange={setCenterViewMode}
-          modelMeshInfo={modelMeshInfo}
-          texture3dUrl={texture3dUrl}
           onTexture3dChange={setTexture3dUrl}
           garmentColor={garmentColor}
           onGarmentColorChange={setGarmentColor}
-          rotation3d={rotation3d}
-          zoom3d={zoom3d}
-          onRotation3dChange={setRotation3d}
-          onZoom3dChange={setZoom3d}
           getCanvasAsBlob={getCanvasAsBlob}
           getEffectiveTextureBlob={getEffectiveTextureBlob}
           onExportDesignJson={handleExportDesignJson}

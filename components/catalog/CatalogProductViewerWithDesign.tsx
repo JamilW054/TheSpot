@@ -1,6 +1,5 @@
 "use client";
 
-import { CATALOG_3D_MODEL } from "@/config/catalog";
 import { getCatalogTextureUrl } from "@/lib/catalog-texture";
 import { renderElementsToTextureUrl } from "@/lib/render-design-to-texture";
 import type { CanvasElement } from "@/types";
@@ -31,14 +30,6 @@ export interface CatalogProductViewerWithDesignProps {
   compact?: boolean;
 }
 
-/**
- * Shows the catalog 3D product with either the base texture or the design (canvas elements)
- * rendered onto the texture, so images/text/shapes from the design appear on the garment.
- */
-/**
- * Descarga la textura en el navegador (fetch → blob → object URL) para renderizarla en el modelo 3D.
- * Así la petición es local y puedes verla en la consola/Network.
- */
 function useLocalTextureUrl(
   sourceUrl: string | null,
   productId: string,
@@ -70,7 +61,7 @@ function useLocalTextureUrl(
         const url = URL.createObjectURL(blob);
         if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current);
         blobUrlRef.current = url;
-        console.log("[Catalog] Textura descargada localmente para", productId, "→ blob URL lista para 3D");
+        console.log("[Catalog] Textura descargada localmente para", productId, "→ blob URL lista para vista previa");
         setLocalUrl(url);
       })
       .catch((err) => {
@@ -101,11 +92,7 @@ export function CatalogProductViewerWithDesign({
     const elements = design?.canvasElements?.length ? design.canvasElements : null;
     if (elements && elements.length > 0) {
       const rewritten = rewriteImageUrlsForCors(elements);
-      renderElementsToTextureUrl(
-        rewritten,
-        baseTextureUrl,
-        CATALOG_3D_MODEL
-      )
+      renderElementsToTextureUrl(rewritten, baseTextureUrl)
         .then((url) => setTextureUrl(url ?? baseTextureUrl))
         .catch(() => setTextureUrl(baseTextureUrl));
     } else {
@@ -117,7 +104,7 @@ export function CatalogProductViewerWithDesign({
 
   return (
     <CatalogProductViewer
-      modelPath={CATALOG_3D_MODEL}
+      coverImage={product.coverImage}
       textureUrl={localTextureUrl}
       compact={compact}
     />
