@@ -64,6 +64,7 @@ import { type BaseModelRow, rowToMockup } from "./base-models";
 import { type DesignRow, rowToDesign } from "./designs";
 import { type LineaRow, rowToLinea } from "./lineas";
 import { type OrderRow, rowToPedido, statusMap } from "./orders";
+import type { CatalogOrden, CatalogPrecio } from "@/lib/catalog-query";
 import {
   type CategoryRow,
   getCategoriesForAdmin,
@@ -86,10 +87,32 @@ const productCatalogSelectCategoryFiltered =
   "id, slug, name, description, price_cents, model_path, cover_image_url, default_design_id, published, sort_order, category_id, tags, textures!base_texture_id(url), categories!inner(slug)";
 
 export interface GetProductsOptions {
-  /** Filtra por slug de categoría (tabla `categories`). */
   categorySlug?: string;
-  /** `recientes` usa sort_order descendente como aproximación de “últimos”. */
-  sort?: "catalog" | "recientes";
+  orden?: CatalogOrden;
+  etiqueta?: string;
+  precio?: CatalogPrecio;
+}
+
+/** Etiquetas distintas en productos publicados (para filtros del catálogo). */
+export async function getPublishedCatalogTags(): Promise<string[]> {
+  return withNetworkFallback(async () => {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("products")
+      .select("tags")
+      .eq("published", true);
+    if (error) throw toError(error);
+    const set = new Set<string>();
+    for (const row of data ?? []) {
+      const tags = (row as { tags?: string[] | null }).tags;
+      if (!tags) continue;
+      for (const t of tags) {
+        const x = t?.trim().toLowerCase();
+        if (x) set.add(x);
+      }
+    }
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, []);
 }
 
 export async function getProducts(
@@ -109,8 +132,32 @@ export async function getProducts(
       query = query.eq("categories.slug", slug);
     }
 
-    const ascending = options?.sort !== "recientes";
-    query = query.order("sort_order", { ascending });
+    const tag = options?.etiqueta?.trim().toLowerCase();
+    if (tag) {
+      query = query.contains("tags", [tag]);
+    }
+
+    const band = options?.precio;
+    if (band === "economico") {
+      query = query.lt("price_cents", 2400);
+    } else if (band === "medio") {
+      query = query.gte("price_cents", 2400).lt("price_cents", 2700);
+    } else if (band === "premium") {
+      query = query.gte("price_cents", 2700);
+    }
+
+    const orden = options?.orden;
+    if (orden === "recientes") {
+      query = query.order("sort_order", { ascending: false });
+    } else if (orden === "precio-menor") {
+      query = query.order("price_cents", { ascending: true });
+    } else if (orden === "precio-mayor") {
+      query = query.order("price_cents", { ascending: false });
+    } else if (orden === "az") {
+      query = query.order("name", { ascending: true });
+    } else {
+      query = query.order("sort_order", { ascending: true });
+    }
 
     const { data, error } = await query;
     if (error) throw toError(error);

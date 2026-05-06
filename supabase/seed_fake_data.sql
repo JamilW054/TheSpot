@@ -1,19 +1,44 @@
 -- =============================================================================
 -- Buxxep — Seed: datos falsos para desarrollo
 -- Todas las prendas públicas son camisetas con el mismo model_path (/models/tshirt/scene.gltf)
--- Ejecutar después de: 00001, 00002, 00003
+-- Ejecutar después de migraciones (incl. 00008 categories.image_url)
 -- =============================================================================
 
 -- model_path por defecto en productos: /models/tshirt/scene.gltf (debe existir en base_models)
 
 -- -----------------------------------------------------------------------------
--- 1. CATEGORÍAS
+-- 1. CATEGORÍAS (tienda de ropa — miniaturas Unsplash para el catálogo)
 -- -----------------------------------------------------------------------------
-INSERT INTO public.categories (id, slug, name, sort_order) VALUES
-  ('c1000000-0000-4000-8000-000000000001'::uuid, 'camisetas', 'Camisetas', 0),
-  ('c1000000-0000-4000-8000-000000000002'::uuid, 'basicos', 'Básicos', 1),
-  ('c1000000-0000-4000-8000-000000000003'::uuid, 'unisex', 'Unisex', 2)
-ON CONFLICT (id) DO NOTHING;
+INSERT INTO public.categories (id, slug, name, sort_order, image_url) VALUES
+  ('c1000000-0000-4000-8000-000000000001'::uuid, 'camisetas', 'Camisetas', 0,
+    'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&h=400&fit=crop'),
+  ('c1000000-0000-4000-8000-000000000002'::uuid, 'basicos', 'Básicos', 1,
+    'https://images.unsplash.com/photo-1586790170083-2f9ceadc732d?w=400&h=400&fit=crop'),
+  ('c1000000-0000-4000-8000-000000000003'::uuid, 'unisex', 'Unisex', 2,
+    'https://images.unsplash.com/photo-1562157873-818bc0726f68?w=400&h=400&fit=crop'),
+  ('c1000000-0000-4000-8000-000000000004'::uuid, 'gorras-y-gorros', 'Gorras y gorros', 3,
+    'https://images.unsplash.com/photo-1514326536292-377554641cff?w=400&h=400&fit=crop'),
+  ('c1000000-0000-4000-8000-000000000005'::uuid, 'abrigos-y-chaquetas', 'Abrigos y chaquetas', 4,
+    'https://images.unsplash.com/photo-1539533018447-63fcce585a9f?w=400&h=400&fit=crop'),
+  ('c1000000-0000-4000-8000-000000000006'::uuid, 'sudaderas', 'Sudaderas y hoodies', 5,
+    'https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=400&h=400&fit=crop'),
+  ('c1000000-0000-4000-8000-000000000007'::uuid, 'pantalones-y-jeans', 'Pantalones y jeans', 6,
+    'https://images.unsplash.com/photo-1542272604-787c3835535d?w=400&h=400&fit=crop'),
+  ('c1000000-0000-4000-8000-000000000008'::uuid, 'vestidos', 'Vestidos', 7,
+    'https://images.unsplash.com/photo-1745695894760-600be9c8c307?w=400&h=400&fit=crop'),
+  ('c1000000-0000-4000-8000-000000000009'::uuid, 'ropa-interior', 'Ropa interior', 8,
+    'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=400&h=400&fit=crop'),
+  ('c1000000-0000-4000-8000-000000000010'::uuid, 'calzado', 'Calzado', 9,
+    'https://images.unsplash.com/photo-1549298916-b41d501d3772?w=400&h=400&fit=crop'),
+  ('c1000000-0000-4000-8000-000000000011'::uuid, 'accesorios', 'Accesorios', 10,
+    'https://images.unsplash.com/photo-1611652026749-79d53ac08265?w=400&h=400&fit=crop'),
+  ('c1000000-0000-4000-8000-000000000012'::uuid, 'ninos', 'Niños', 11,
+    'https://images.unsplash.com/photo-1615397587950-3cbb55f95b77?w=400&h=400&fit=crop')
+ON CONFLICT (id) DO UPDATE SET
+  slug = EXCLUDED.slug,
+  name = EXCLUDED.name,
+  sort_order = EXCLUDED.sort_order,
+  image_url = EXCLUDED.image_url;
 
 -- -----------------------------------------------------------------------------
 -- 2. LÍNEAS (colecciones)
