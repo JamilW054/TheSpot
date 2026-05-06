@@ -1,8 +1,25 @@
+import { readdir } from "fs/promises";
+import path from "node:path";
 import Link from "next/link";
 import Image from "next/image";
 import { InstagramEmbeds } from "@/components/landing/InstagramEmbeds";
 import { HeroLightRaysBackground } from "@/components/landing/HeroLightRaysBackground";
 import MagicBento from "@/components/MagicBento";
+
+async function getClothDesignImageUrls(): Promise<string[]> {
+  try {
+    const dir = path.join(process.cwd(), "public", "cloths");
+    const names = await readdir(dir);
+    return names
+      .filter((n) => /\.(jpe?g|jpeg|png|webp)$/i.test(n))
+      .sort((a, b) =>
+        a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" }),
+      )
+      .map((n) => `/cloths/${n}`);
+  } catch {
+    return [];
+  }
+}
 
 const HERO_MODEL = "/people/modelo-joshua.png";
 const MODEL_BIANDY = "/people/modelo-biandy.png";
@@ -29,7 +46,9 @@ const FEATURES = [
 
 const CONTAINER = "max-w-6xl mx-auto px-4 sm:px-6";
 
-export default function PublicPage() {
+export default async function PublicPage() {
+  const clothDesigns = await getClothDesignImageUrls();
+
   return (
     <article className="min-h-screen flex flex-col bg-background text-foreground">
       {/* 1. Hero — CONTAINER */}
@@ -131,6 +150,67 @@ export default function PublicPage() {
           ))}
         </div>
       </section>
+
+      {/* Diseños desde public/cloths — CONTAINER */}
+      {clothDesigns.length > 0 ? (
+        <section
+          className={`py-6 border-b border-border bg-muted/15 ${CONTAINER}`}
+          aria-labelledby="section-cloth-designs"
+        >
+          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h2
+                id="section-cloth-designs"
+                className="flex items-center gap-2 text-xl font-bold uppercase tracking-tight text-foreground sm:text-2xl"
+              >
+                <span
+                  className="size-1.5 shrink-0 rounded-full bg-primary"
+                  aria-hidden
+                />
+                Diseños en <span className="landing-wavy-underline">tela</span>
+              </h2>
+              <p className="mt-2 max-w-xl text-sm leading-snug text-muted-foreground">
+                Piezas y estampados Buxxep que puedes llevar al editor o comprar
+                en el catálogo.
+              </p>
+            </div>
+            <Link
+              href="/catalogo"
+              className="inline-flex shrink-0 items-center justify-center rounded-md border border-border bg-background px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:bg-muted"
+            >
+              Ver catálogo →
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {clothDesigns.map((src, i) => (
+              <figure
+                key={src}
+                className="overflow-hidden rounded-xl border border-border bg-card"
+              >
+                <Link href="/catalogo" className="group block">
+                  <div className="relative aspect-[3/4]">
+                    <Image
+                      src={src}
+                      alt={`Diseño de ropa Buxxep ${i + 1}`}
+                      fill
+                      className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    />
+                  </div>
+                  <figcaption className="flex items-center justify-between gap-2 border-t border-border px-4 py-3">
+                    <span className="text-xs font-medium text-muted-foreground">
+                      Look {String(i + 1).padStart(2, "0")}
+                    </span>
+                    <span className="text-sm text-primary" aria-hidden>
+                      →
+                    </span>
+                  </figcaption>
+                </Link>
+              </figure>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       {/* 4. Diseñado para un mejor mañana — CONTAINER */}
       <section className={`py-6 bg-muted/20 ${CONTAINER}`} aria-labelledby="section-tomorrow">
