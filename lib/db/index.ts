@@ -69,6 +69,7 @@ import {
   type CategoryRow,
   getCategoriesForAdmin,
   getCategoriesPublic,
+  getCategoryAdminById,
   getCategoryCoverByCategoryId,
 } from "./categories";
 import { type ProductRow, rowToCatalogProduct } from "./products";
@@ -77,6 +78,7 @@ export type { CategoryRow };
 export {
   getCategoriesForAdmin,
   getCategoriesPublic,
+  getCategoryAdminById,
   getCategoryCoverByCategoryId,
 };
 

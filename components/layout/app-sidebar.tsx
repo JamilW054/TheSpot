@@ -8,6 +8,7 @@ import {
   HelpCircle,
   LayoutDashboard,
   LayoutGrid,
+  Layers,
   MessageCircle,
   Package,
   PanelLeftClose,
@@ -35,6 +36,7 @@ const NAV_BY_VARIANT: Record<SidebarVariant, NavItem[]> = {
 const APP_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   LayoutDashboard,
   LayoutGrid,
+  Layers,
   Package,
   PenSquare,
   Shirt,
@@ -52,6 +54,7 @@ const ADMIN_ICONS: Record<
   ShoppingCart,
   FileText,
   Store,
+  Layers,
   PlusCircle,
   PenSquare,
   Shirt,

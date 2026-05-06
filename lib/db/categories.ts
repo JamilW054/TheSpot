@@ -34,6 +34,31 @@ async function withCatalogFallback<T>(fn: () => Promise<T>, fallback: T): Promis
   }
 }
 
+/** Una categoría por id (admin / service). */
+export async function getCategoryAdminById(id: string): Promise<CategoryRow | null> {
+  const s = id.trim();
+  if (!s) return null;
+  const supabase = createServiceClient();
+  const full = await supabase
+    .from("categories")
+    .select("id, slug, name, sort_order, image_url")
+    .eq("id", s)
+    .maybeSingle();
+  let error = full.error;
+  let row = full.data as CategoryRow | null;
+  if (error && isLikelyMissingImageUrlColumn(error)) {
+    const base = await supabase
+      .from("categories")
+      .select("id, slug, name, sort_order")
+      .eq("id", s)
+      .maybeSingle();
+    error = base.error;
+    row = (base.data ?? null) as CategoryRow | null;
+  }
+  if (error) throw new Error(error.message);
+  return row;
+}
+
 export async function getCategoriesForAdmin(): Promise<CategoryRow[]> {
   const supabase = createServiceClient();
   const full = await supabase

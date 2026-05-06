@@ -42,6 +42,12 @@ export const APP_NAV: NavItem[] = [
     icon: "Store",
     adminOnly: true,
   },
+  {
+    label: "Categorías",
+    href: "/admin/categorias",
+    icon: "Layers",
+    adminOnly: true,
+  },
   { label: "Mis diseños", href: "/mis-disenos", icon: "LayoutGrid" },
   { label: "Mis pedidos", href: "/mis-pedidos", icon: "Package" },
   { label: "Editor", href: "/editor", icon: "PenSquare", adminOnly: true },
@@ -78,6 +84,12 @@ export const ADMIN_NAV: NavItem[] = [
     label: "Catálogo",
     href: "/admin/catalogo",
     icon: "Store",
+    adminSection: "Catálogo",
+  },
+  {
+    label: "Categorías",
+    href: "/admin/categorias",
+    icon: "Layers",
     adminSection: "Catálogo",
   },
   {

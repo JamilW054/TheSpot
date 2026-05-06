@@ -5,6 +5,7 @@ import { AddToCartButton } from "@/components/catalog/AddToCartButton";
 import { CatalogCatalogSubnav } from "@/components/catalog/CatalogCatalogSubnav";
 import { CatalogFilterChips } from "@/components/catalog/CatalogFilterChips";
 import { CatalogProductViewerWithDesign } from "@/components/catalog/CatalogProductViewerWithDesign";
+import { CatalogMobileFilters } from "@/components/catalog/CatalogMobileFilters";
 import { CatalogSidebar } from "@/components/catalog/CatalogSidebar";
 import { CatalogSupabaseDebugLog } from "@/components/catalog/CatalogSupabaseDebugLog";
 import { catalogFiltersFromRecord } from "@/lib/catalog-query";
@@ -54,6 +55,14 @@ export default async function CatalogPage({ searchParams }: PageProps) {
       <CatalogSupabaseDebugLog products={products} categoriesCount={categories.length} />
 
       <div className="flex flex-col gap-8 lg:flex-row lg:gap-10 lg:items-start">
+        <Suspense fallback={null}>
+          <CatalogMobileFilters
+            categories={categories}
+            coverByCategoryId={covers}
+            filters={filters}
+            tagOptions={tagOptions}
+          />
+        </Suspense>
         <CatalogSidebar
           categories={categories}
           coverByCategoryId={covers}
@@ -83,8 +92,8 @@ export default async function CatalogPage({ searchParams }: PageProps) {
             <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground sm:text-[15px]">
               {activeCategory ? (
                 <>
-                  Estás viendo esta línea. Combina orden, precio o etiquetas en el panel
-                  izquierdo para afinar resultados.
+                  Estás viendo esta línea. Usa orden, precio o etiquetas en los filtros
+                  (botón «Filtros» en el móvil) para afinar resultados.
                 </>
               ) : (
                 <>
