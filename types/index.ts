@@ -125,6 +125,8 @@ export interface CatalogProduct {
   coverImage: string;
   /** URL de la textura base (tabla textures) para la vista previa. */
   baseTextureUrl?: string | null;
+  /** Slug de categoría asociada en DB (null si sin categoría). */
+  categorySlug: string | null;
 }
 
 /** Línea del carrito: producto + cantidad; opcionalmente diseño personalizado. */

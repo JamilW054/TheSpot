@@ -67,22 +67,52 @@ import { type OrderRow, rowToPedido, statusMap } from "./orders";
 import {
   type CategoryRow,
   getCategoriesForAdmin,
+  getCategoriesPublic,
+  getCategoryCoverByCategoryId,
 } from "./categories";
 import { type ProductRow, rowToCatalogProduct } from "./products";
 
 export type { CategoryRow };
-export { getCategoriesForAdmin };
+export {
+  getCategoriesForAdmin,
+  getCategoriesPublic,
+  getCategoryCoverByCategoryId,
+};
 
-export async function getProducts(): Promise<CatalogProduct[]> {
+const productCatalogSelect =
+  "id, slug, name, description, price_cents, model_path, cover_image_url, default_design_id, published, sort_order, category_id, tags, textures!base_texture_id(url), categories(slug)";
+
+const productCatalogSelectCategoryFiltered =
+  "id, slug, name, description, price_cents, model_path, cover_image_url, default_design_id, published, sort_order, category_id, tags, textures!base_texture_id(url), categories!inner(slug)";
+
+export interface GetProductsOptions {
+  /** Filtra por slug de categoría (tabla `categories`). */
+  categorySlug?: string;
+  /** `recientes` usa sort_order descendente como aproximación de “últimos”. */
+  sort?: "catalog" | "recientes";
+}
+
+export async function getProducts(
+  options?: GetProductsOptions,
+): Promise<CatalogProduct[]> {
   return withNetworkFallback(async () => {
     const supabase = await createClient();
-    const { data, error } = await supabase
-      .from("products")
-      .select(
-        "id, slug, name, description, price_cents, model_path, cover_image_url, default_design_id, published, sort_order, category_id, tags, textures!base_texture_id(url)",
-      )
-      .eq("published", true)
-      .order("sort_order", { ascending: true });
+    const slug = options?.categorySlug?.trim();
+    const select =
+      slug !== undefined && slug !== ""
+        ? productCatalogSelectCategoryFiltered
+        : productCatalogSelect;
+
+    let query = supabase.from("products").select(select).eq("published", true);
+
+    if (slug !== undefined && slug !== "") {
+      query = query.eq("categories.slug", slug);
+    }
+
+    const ascending = options?.sort !== "recientes";
+    query = query.order("sort_order", { ascending });
+
+    const { data, error } = await query;
     if (error) throw toError(error);
     return (data ?? []).map((row) => rowToCatalogProduct(row as ProductRow));
   }, []);
@@ -95,9 +125,7 @@ export async function getProductBySlug(
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("products")
-      .select(
-        "id, slug, name, description, price_cents, model_path, cover_image_url, default_design_id, published, sort_order, category_id, tags, textures!base_texture_id(url)",
-      )
+      .select(productCatalogSelect)
       .eq("published", true)
       .eq("slug", slug)
       .single();
@@ -116,9 +144,7 @@ export async function getProductById(
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("products")
-      .select(
-        "id, slug, name, description, price_cents, model_path, cover_image_url, default_design_id, published, sort_order, category_id, tags, textures!base_texture_id(url)",
-      )
+      .select(productCatalogSelect)
       .eq("published", true)
       .eq("id", id)
       .single();

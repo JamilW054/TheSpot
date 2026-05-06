@@ -18,6 +18,14 @@ export interface ProductRow {
   tags?: string[] | null;
   /** Join con textures: url de la textura base (objeto o array según Supabase) */
   textures?: { url: string } | { url: string }[] | null;
+  /** Join opcional con categories (PostgREST puede devolver objeto o array de un elemento). */
+  categories?: { slug: string } | { slug: string }[] | null;
+}
+
+function categorySlugFromRow(categories: ProductRow["categories"]): string | null {
+  if (!categories) return null;
+  const c = Array.isArray(categories) ? categories[0] : categories;
+  return c?.slug ?? null;
 }
 
 function textureUrlFromRow(textures: ProductRow["textures"]): string | null {
@@ -38,5 +46,6 @@ export function rowToCatalogProduct(row: ProductRow): CatalogProduct {
     modelPath: row.model_path ?? null,
     coverImage: row.cover_image_url ?? "",
     ...(baseTextureUrl != null && { baseTextureUrl }),
+    categorySlug: categorySlugFromRow(row.categories),
   };
 }

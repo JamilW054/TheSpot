@@ -306,7 +306,10 @@ export const MOCK_MOCKUPS: Mockup[] = [
 ];
 
 // --- CATÁLOGO PÚBLICO: ropa a la venta, personalizable en el editor ---
-const catalogProductRowsBase: Omit<CatalogProduct, "slug" | "price">[] = [
+const catalogProductRowsBase: Omit<
+  CatalogProduct,
+  "slug" | "price" | "categorySlug"
+>[] = [
   {
     id: "p01",
     name: "Camiseta personalizable",
@@ -352,6 +355,7 @@ const catalogProductRows: Omit<CatalogProduct, "slug">[] =
   catalogProductRowsBase.map((row) => ({
     ...row,
     price: formatDOPFromCents(row.priceCents),
+    categorySlug: null,
   }));
 
 export const MOCK_CATALOG_PRODUCTS: CatalogProduct[] = catalogProductRows.map(

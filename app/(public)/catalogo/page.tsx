@@ -1,17 +1,43 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { AdminEditorLink } from "@/components/auth";
 import { AddToCartButton } from "@/components/catalog/AddToCartButton";
+import { CatalogCatalogSubnav } from "@/components/catalog/CatalogCatalogSubnav";
+import { CatalogCategoryGrid } from "@/components/catalog/CatalogCategoryGrid";
 import { CatalogProductViewerWithDesign } from "@/components/catalog/CatalogProductViewerWithDesign";
 import { CatalogSupabaseDebugLog } from "@/components/catalog/CatalogSupabaseDebugLog";
-import { getProducts } from "@/lib/db";
+import {
+  getCategoriesPublic,
+  getCategoryCoverByCategoryId,
+  getProducts,
+} from "@/lib/db";
 
 export const metadata = {
   title: "Catálogo | Buxxep",
   description: "Ropa a la venta. Añade al carrito o consulta cada producto.",
 };
 
-export default async function CatalogPage() {
-  const products = await getProducts();
+interface PageProps {
+  searchParams: Promise<{ categoria?: string; orden?: string }>;
+}
+
+export default async function CatalogPage({ searchParams }: PageProps) {
+  const { categoria, orden } = await searchParams;
+  const sort = orden === "recientes" ? "recientes" : "catalog";
+  const slug = categoria?.trim();
+
+  const [products, categories, covers] = await Promise.all([
+    getProducts({
+      categorySlug: slug || undefined,
+      sort,
+    }),
+    getCategoriesPublic(),
+    getCategoryCoverByCategoryId(),
+  ]);
+
+  const activeCategory = slug
+    ? categories.find((c) => c.slug === slug)
+    : undefined;
 
   return (
     <article className="w-full max-w-5xl mx-auto px-8 sm:px-10 lg:px-12 pt-2 pb-10">
@@ -27,14 +53,54 @@ export default async function CatalogPage() {
           Catálogo
         </h1>
         <p className="mt-1 sm:mt-1.5 max-w-xl mx-auto text-sm text-muted-foreground">
-          Elige un producto y complétalo en el carrito.
+          {activeCategory ? (
+            <>
+              Mostrando{" "}
+              <span className="font-medium text-foreground">
+                {activeCategory.name}
+              </span>
+              . Elige otro apartado o vuelve al listado completo.
+            </>
+          ) : (
+            <>Elige un producto y complétalo en el carrito.</>
+          )}
         </p>
       </section>
 
+      {categories.length > 0 ? (
+        <CatalogCategoryGrid
+          categories={categories}
+          coverByCategoryId={covers}
+          activeSlug={slug}
+          orden={orden}
+        />
+      ) : null}
+
+      <Suspense
+        fallback={
+          <div
+            className="h-11 mb-6 sm:mb-8 max-w-lg rounded-full bg-muted/70 animate-pulse"
+            aria-hidden
+          />
+        }
+      >
+        <CatalogCatalogSubnav />
+      </Suspense>
+
       <section
+        id="lista-productos"
         aria-label="Productos"
         className="grid gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3"
       >
+        {products.length === 0 ? (
+          <p className="col-span-full text-center text-sm text-muted-foreground py-10 sm:py-14 border border-dashed border-border rounded-xl bg-muted/30">
+            No hay productos que coincidan con esta vista. Prueba otra categoría o vuelve a{" "}
+            <Link href="/catalogo" className="font-medium text-primary underline underline-offset-2">
+              ver todo el catálogo
+            </Link>
+            .
+          </p>
+        ) : null}
         {products.map((product) => (
           <article
             key={product.id}
