@@ -16,7 +16,7 @@ export default function AdminReportesPage() {
         </p>
         <Link
           href="/admin"
-          className="mt-4 inline-block text-sm font-medium text-indigo-400 hover:text-indigo-300"
+          className="mt-4 inline-block text-sm font-medium text-primary hover:text-primary/80"
         >
           Volver al Dashboard
         </Link>

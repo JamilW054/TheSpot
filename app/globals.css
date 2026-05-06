@@ -170,6 +170,19 @@ input[type="range"].editor-range::-moz-range-thumb {
   display: none;
 }
 
+/* Admin / vistas donde quieres ocultar la barra del documento (sigue habiendo scroll) */
+html.scrollbar-hide-root,
+body.scrollbar-hide-root {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+html.scrollbar-hide-root::-webkit-scrollbar,
+body.scrollbar-hide-root::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
+
 /* Panel derecho del editor: sin barra de desplazamiento visible */
 .editor-panel {
   scrollbar-width: none;

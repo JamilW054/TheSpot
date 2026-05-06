@@ -132,7 +132,7 @@ export function AppSidebar({
           ${hiddenOnDesktop ? "md:-translate-x-full md:w-0 md:overflow-hidden md:border-r-0 md:shadow-none" : "md:translate-x-0"}
         `}
       >
-        <div className="flex flex-1 flex-col overflow-y-auto py-5 px-3">
+        <div className="scrollbar-hide flex flex-1 flex-col overflow-y-auto py-5 px-3">
           <div className="flex items-center justify-between gap-2 px-3 mb-6">
             <span className="text-[11px] font-medium uppercase tracking-widest text-muted-foreground">
               {variant === "admin" ? "Admin" : "Navegación"}

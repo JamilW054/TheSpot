@@ -120,7 +120,7 @@ function ComingUpCalendar() {
             type="button"
             className={`rounded p-1 tabular-nums ${
               isToday(d)
-                ? "bg-indigo-600 text-white"
+                ? "bg-primary text-primary-foreground"
                 : "text-zinc-300 hover:bg-zinc-700/50"
             }`}
           >
@@ -173,7 +173,7 @@ export function AdminDashboardClient({
 
   return (
     <div className="min-h-full space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-indigo-500/30 bg-indigo-950/50 px-4 py-3 sm:px-6">
+      <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-primary/25 bg-primary/5 px-4 py-3 sm:px-6">
         <p className="text-sm text-zinc-200">
           {pendientes > 0 ? (
             <>
@@ -190,7 +190,7 @@ export function AdminDashboardClient({
         </p>
         <Link
           href="/admin/pedidos"
-          className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-500"
+          className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
         >
           Ver pedidos
           <ChevronRight className="size-4" />
@@ -199,8 +199,8 @@ export function AdminDashboardClient({
 
       <div className="grid gap-4 lg:grid-cols-3 lg:items-start">
         <div className="space-y-4 lg:col-span-2">
-          <div className="relative overflow-hidden rounded-2xl border border-zinc-700/80 bg-gradient-to-br from-indigo-900/60 to-zinc-900 shadow-xl">
-            <div className="absolute right-4 top-4 text-[120px] font-bold leading-none text-indigo-500/10">
+          <div className="relative overflow-hidden rounded-2xl border border-zinc-700/80 bg-zinc-900/95 shadow-xl ring-1 ring-primary/10">
+            <div className="absolute right-4 top-4 text-[120px] font-bold leading-none text-primary/10">
               B
             </div>
             <div className="relative p-6">
@@ -224,7 +224,7 @@ export function AdminDashboardClient({
                   </p>
                 </div>
               </div>
-              <div className="mt-4 h-12 text-indigo-300/60">
+              <div className="mt-4 h-12 text-primary/45">
                 <MiniChart up={true} />
               </div>
               <p className="mt-3 flex items-center gap-2 text-xs text-zinc-500">
@@ -288,12 +288,12 @@ export function AdminDashboardClient({
               </h2>
               <Link
                 href="/admin/pedidos"
-                className="text-xs font-medium text-indigo-400 hover:text-indigo-300"
+                className="text-xs font-medium text-primary hover:text-primary/80"
               >
                 Ver todos
               </Link>
             </div>
-            <div className="overflow-x-auto">
+            <div className="scrollbar-hide overflow-x-auto">
               <table className="w-full min-w-[600px] border-collapse text-left text-sm">
                 <thead>
                   <tr className="border-b border-zinc-700/80 bg-zinc-800/50 text-zinc-400">
@@ -326,7 +326,7 @@ export function AdminDashboardClient({
                             p.estado === "completado"
                               ? "bg-emerald-500/20 text-emerald-300"
                               : p.estado === "en_proceso"
-                                ? "bg-indigo-500/20 text-indigo-300"
+                                ? "bg-primary/15 text-primary"
                                 : "bg-amber-500/20 text-amber-300"
                           }`}
                         >
@@ -387,7 +387,7 @@ export function AdminDashboardClient({
             </div>
             <Link
               href="/lineas"
-              className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 py-2.5 text-sm font-medium text-white transition-colors hover:bg-indigo-500"
+              className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-2.5 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
             >
               Ver líneas
             </Link>
