@@ -74,6 +74,11 @@ import {
 } from "./categories";
 import { type ProductRow, rowToCatalogProduct } from "./products";
 
+export {
+  formatGiveawayNumber,
+  getGiveawayGoalPurchases,
+  getGiveawayPaidPurchaseCount,
+} from "./giveaway-stats";
 export type { CategoryRow };
 export {
   getCategoriesForAdmin,

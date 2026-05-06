@@ -7,13 +7,15 @@ const nextConfig: NextConfig = {
      * - /api/texture — proxied remote textures
      * - /people/** — public/people (landing models)
      * - /project/** — public/project (landing grid cards)
-     * - /cloths/** — public/cloths (diseños landing)
+     * - /resources/** — logos y assets estáticos
      */
     localPatterns: [
       { pathname: "/api/texture" },
       { pathname: "/people/**" },
       { pathname: "/project/**" },
       { pathname: "/cloths/**" },
+      { pathname: "/landing/**" },
+      { pathname: "/resources/**" },
     ],
     remotePatterns: [
       {

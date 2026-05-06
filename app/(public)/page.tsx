@@ -2,9 +2,14 @@ import { readdir } from "fs/promises";
 import path from "node:path";
 import Link from "next/link";
 import Image from "next/image";
+import { GiveawayPromoSection } from "@/components/landing/GiveawayPromoSection";
 import { InstagramEmbeds } from "@/components/landing/InstagramEmbeds";
 import { HeroLightRaysBackground } from "@/components/landing/HeroLightRaysBackground";
 import MagicBento from "@/components/MagicBento";
+import {
+  getGiveawayGoalPurchases,
+  getGiveawayPaidPurchaseCount,
+} from "@/lib/db";
 
 async function getClothDesignImageUrls(): Promise<string[]> {
   try {
@@ -48,6 +53,8 @@ const CONTAINER = "max-w-6xl mx-auto px-4 sm:px-6";
 
 export default async function PublicPage() {
   const clothDesigns = await getClothDesignImageUrls();
+  const giveawayPaidCount = await getGiveawayPaidPurchaseCount();
+  const giveawayGoal = getGiveawayGoalPurchases();
 
   return (
     <article className="min-h-screen flex flex-col bg-background text-foreground">
@@ -114,6 +121,12 @@ export default async function PublicPage() {
           <span className="text-muted-foreground">50% COLECCIÓN MUJER</span>
         </div>
       </section>
+
+      {/* Sorteo promocional — layout horizontal con arte vertical */}
+      <GiveawayPromoSection
+        paidPurchaseCount={giveawayPaidCount}
+        goalPurchases={giveawayGoal}
+      />
 
       {/* 3. Modestia + estilo — CONTAINER (igual que antes) */}
       <section className={`py-6 border-b border-border ${CONTAINER}`} aria-labelledby="section-modesty">
