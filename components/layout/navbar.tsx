@@ -39,6 +39,10 @@ export interface NavbarProps {
   homeHref: string;
   /** Texto del logo/título */
   homeLabel: string;
+  /** Título corto en móvil (breakpoint sm y superior usa homeLabel) */
+  homeLabelShort?: string;
+  /** Ocultar enlace al carrito (p. ej. en área admin) */
+  hideCart?: boolean;
   /** Usuario (opcional; si no se pasa, se usa AuthContext) */
   user?: NavbarUser | null;
   /** Callback cerrar sesión (opcional; si no se pasa, se usa AuthContext.logout + redirect) */
@@ -50,6 +54,8 @@ export interface NavbarProps {
 export function Navbar({
   homeHref,
   homeLabel,
+  homeLabelShort,
+  hideCart = false,
   user: userProp,
   onLogout: onLogoutProp,
   onMenuClick,
@@ -68,8 +74,8 @@ export function Navbar({
   const displayName = user?.name ?? user?.email ?? null;
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center justify-between gap-4 border-b border-border bg-background/95 px-4 supports-backdrop-filter:bg-background/60 sm:px-6">
-      <div className="flex items-center gap-2">
+    <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center justify-between gap-2 border-b border-border bg-background/95 px-3 supports-backdrop-filter:bg-background/60 sm:gap-4 sm:px-6">
+      <div className="flex min-w-0 items-center gap-2">
         {onMenuClick ? (
           <button
             type="button"
@@ -82,13 +88,20 @@ export function Navbar({
         ) : null}
         <Link
           href={homeHref}
-          className="font-semibold text-foreground hover:opacity-90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-md"
+          className="min-w-0 truncate rounded-md font-semibold text-foreground hover:opacity-90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         >
-          {homeLabel}
+          {homeLabelShort ? (
+            <>
+              <span className="sm:hidden">{homeLabelShort}</span>
+              <span className="hidden sm:inline">{homeLabel}</span>
+            </>
+          ) : (
+            homeLabel
+          )}
         </Link>
       </div>
-      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-        <CartNavLink />
+      <div className="flex min-w-0 items-center gap-1.5 sm:gap-3">
+        {!hideCart ? <CartNavLink /> : null}
         {sessionRole === "admin" ? (
           <Link
             href="/admin"
@@ -114,13 +127,15 @@ export function Navbar({
               onClick={onLogout}
               className="shrink-0"
             >
-              Cerrar sesión
+              <span className="sm:hidden">Salir</span>
+              <span className="hidden sm:inline">Cerrar sesión</span>
             </Button>
           </>
         ) : (
           <Link href="/login">
             <Button type="button" variant="outline" size="sm">
-              Iniciar sesión
+              <span className="sm:hidden">Entrar</span>
+              <span className="hidden sm:inline">Iniciar sesión</span>
             </Button>
           </Link>
         )}

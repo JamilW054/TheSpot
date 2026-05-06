@@ -173,8 +173,8 @@ export function AdminDashboardClient({
 
   return (
     <div className="min-h-full space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-primary/25 bg-primary/5 px-4 py-3 sm:px-6">
-        <p className="text-sm text-zinc-200">
+      <div className="flex flex-col gap-3 rounded-2xl border border-primary/25 bg-primary/5 px-4 py-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-4 sm:px-6">
+        <p className="min-w-0 text-sm text-zinc-200">
           {pendientes > 0 ? (
             <>
               <span className="inline-flex items-center rounded-full bg-amber-500/20 px-2.5 py-0.5 text-xs font-medium text-amber-300">
@@ -190,7 +190,7 @@ export function AdminDashboardClient({
         </p>
         <Link
           href="/admin/pedidos"
-          className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
+          className="inline-flex w-full shrink-0 items-center justify-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 sm:w-auto sm:justify-end"
         >
           Ver pedidos
           <ChevronRight className="size-4" />

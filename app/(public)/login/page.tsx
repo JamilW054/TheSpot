@@ -51,7 +51,7 @@ function LoginForm() {
   return (
     <div className="flex flex-1 flex-col items-center justify-center">
       <div className="mx-auto max-w-md w-full py-8">
-        <h1 className="text-2xl font-semibold text-foreground mb-2">
+        <h1 className="mb-2 text-xl font-semibold text-foreground sm:text-2xl">
           Iniciar sesión
         </h1>
         <p className="text-muted-foreground text-sm mb-8">

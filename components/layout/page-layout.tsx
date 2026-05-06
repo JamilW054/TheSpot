@@ -18,7 +18,7 @@ export function PageLayout({
   return (
     <div className={`space-y-6 max-w-4xl ${className}`.trim()} {...props}>
       <header>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+        <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl md:text-3xl">
           {title}
         </h1>
         {description ? (

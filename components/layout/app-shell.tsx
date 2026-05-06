@@ -64,12 +64,18 @@ export function AppShell({
         <Navbar
           homeHref={homeHref}
           homeLabel={homeLabel}
+          homeLabelShort={variant === "admin" ? "Admin" : undefined}
+          hideCart={variant === "admin"}
           user={user}
           onLogout={onLogout}
           onMenuClick={() => setSidebarOpen(true)}
         />
-        <main className={`flex-1 p-4 sm:p-6 ${isEditor ? "scrollbar-hide overflow-hidden" : ""}`}>
-          {isEditor ? children : <div className="mx-auto w-full max-w-5xl">{children}</div>}
+        <main
+          className={`flex-1 min-w-0 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-6 sm:pb-6 ${isEditor ? "scrollbar-hide overflow-hidden" : ""}`}
+        >
+          {isEditor ? children : (
+            <div className="mx-auto w-full min-w-0 max-w-5xl">{children}</div>
+          )}
         </main>
       </div>
     </div>
