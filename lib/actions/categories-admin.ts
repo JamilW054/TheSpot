@@ -48,6 +48,29 @@ function parseSortOrder(formData: FormData): number {
   return Number.isFinite(n) ? n : 0;
 }
 
+const MAX_IMAGE_URL_LEN = 2048;
+
+/** Vacío → null; si no, URL http(s) absoluta. */
+function normalizeCategoryImageUrl(raw: unknown): string | null {
+  const t = typeof raw === "string" ? raw.trim() : "";
+  if (!t) return null;
+  if (t.length > MAX_IMAGE_URL_LEN) {
+    throw new Error(`La URL supera ${MAX_IMAGE_URL_LEN} caracteres.`);
+  }
+  let u: URL;
+  try {
+    u = new URL(t);
+  } catch {
+    throw new Error(
+      "URL de imagen no válida (usa una dirección http o https completa).",
+    );
+  }
+  if (u.protocol !== "http:" && u.protocol !== "https:") {
+    throw new Error("La imagen debe usar http o https.");
+  }
+  return u.href;
+}
+
 function revalidateCatalogPaths() {
   revalidatePath("/catalogo");
   revalidatePath("/admin/categorias");
@@ -70,7 +93,7 @@ export async function adminCreateCategory(
     const slug = await pickUniqueCategorySlug(supabase, baseSlug);
 
     const sort_order = parseSortOrder(formData);
-    const image_url = formData.get("image_url")?.toString().trim() || null;
+    const image_url = normalizeCategoryImageUrl(formData.get("image_url"));
 
     const { error } = await supabase.from("categories").insert({
       slug,
@@ -107,7 +130,7 @@ export async function adminUpdateCategory(
     const slug = await pickUniqueCategorySlug(supabase, baseSlug, id);
 
     const sort_order = parseSortOrder(formData);
-    const image_url = formData.get("image_url")?.toString().trim() || null;
+    const image_url = normalizeCategoryImageUrl(formData.get("image_url"));
 
     const { error } = await supabase
       .from("categories")

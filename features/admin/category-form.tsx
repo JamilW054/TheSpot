@@ -1,8 +1,15 @@
 "use client";
 
-import { Loader2, Save, X } from "lucide-react";
+import { ImageIcon, Loader2, Save, Trash2, Upload, X } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useActionState, useEffect } from "react";
+import {
+  type ReactNode,
+  useActionState,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+} from "react";
 import { Input } from "@/components/ui/input";
 import {
   type AdminCategoryActionState,
@@ -11,8 +18,30 @@ import {
 } from "@/lib/actions/categories-admin";
 import type { CategoryRow } from "@/lib/db/categories";
 
-const iconBtn =
-  "inline-flex size-10 shrink-0 items-center justify-center rounded-md border-2 border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50";
+const MAX_IMAGE_URL_LEN = 2048;
+
+function validateCategoryImageUrlInput(t: string): string | null {
+  const s = t.trim();
+  if (!s) return null;
+  if (s.length > MAX_IMAGE_URL_LEN)
+    return `Como máximo ${MAX_IMAGE_URL_LEN} caracteres.`;
+  try {
+    const u = new URL(s);
+    if (u.protocol !== "http:" && u.protocol !== "https:")
+      return "La URL debe empezar por http:// o https://.";
+  } catch {
+    return "URL no válida (prueba con el enlace directo a la imagen).";
+  }
+  return null;
+}
+
+function SectionLabel({ children }: { children: ReactNode }) {
+  return (
+    <h2 className="mb-4 text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+      {children}
+    </h2>
+  );
+}
 
 interface CategoryFormProps {
   mode: "create" | "edit";
@@ -21,12 +50,20 @@ interface CategoryFormProps {
 
 export function CategoryForm({ mode, initial }: CategoryFormProps) {
   const router = useRouter();
+  const fileInputId = useId();
+  const fileRef = useRef<HTMLInputElement>(null);
   const actionFn =
     mode === "create" ? adminCreateCategory : adminUpdateCategory;
   const [state, formAction, pending] = useActionState<
     AdminCategoryActionState | undefined,
     FormData
   >(actionFn, undefined);
+
+  const [imageUrl, setImageUrl] = useState(initial?.image_url ?? "");
+  const [uploadBusy, setUploadBusy] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
+
+  const urlError = validateCategoryImageUrlInput(imageUrl);
 
   useEffect(() => {
     if (state?.ok) {
@@ -35,81 +72,278 @@ export function CategoryForm({ mode, initial }: CategoryFormProps) {
     }
   }, [state?.ok, router]);
 
+  async function uploadFile(file: File) {
+    setUploadBusy(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("scope", "categories");
+      const res = await fetch("/api/storage/r2/upload", {
+        method: "POST",
+        body: fd,
+      });
+      const body = (await res.json()) as {
+        ok?: boolean;
+        url?: string | null;
+        error?: string;
+      };
+      if (!res.ok || !body.ok) {
+        throw new Error(body.error ?? `Error ${res.status}`);
+      }
+      const u = typeof body.url === "string" ? body.url : "";
+      if (!u) {
+        throw new Error(
+          "R2 no devolvió URL pública. Configura R2_PUBLIC_BASE_URL y vuelve a subir.",
+        );
+      }
+      setImageUrl(u);
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Error al subir la imagen.");
+    } finally {
+      setUploadBusy(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  }
+
   return (
-    <form action={formAction} className="space-y-6">
+    <form action={formAction} className="space-y-10">
       {mode === "edit" && initial ? (
         <input type="hidden" name="category_id" value={initial.id} />
       ) : null}
 
+      <input type="hidden" name="image_url" value={imageUrl.trim()} />
+
       {state?.error ? (
-        <p
-          className="rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-2 text-sm text-destructive"
+        <div
+          className="rounded-lg border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive"
           role="alert"
         >
           {state.error}
-        </p>
+        </div>
       ) : null}
 
-      <Input
-        label="Nombre"
-        name="name"
-        required
-        defaultValue={initial?.name ?? ""}
-        placeholder="Ej. Sudaderas"
-      />
+      <section>
+        <SectionLabel>Datos</SectionLabel>
+        <div className="rounded-xl border border-border bg-card p-6 sm:p-8">
+          <div className="grid gap-6 sm:grid-cols-2">
+            <div className="sm:col-span-2">
+              <Input
+                label="Nombre"
+                name="name"
+                required
+                defaultValue={initial?.name ?? ""}
+                placeholder="Ej. Sudaderas"
+              />
+            </div>
+            <div className="sm:col-span-2 space-y-2">
+              <Input
+                label="Slug (opcional)"
+                name="slug"
+                defaultValue={initial?.slug ?? ""}
+                placeholder="Vacío = se genera desde el nombre"
+              />
+              <p className="text-xs leading-relaxed text-muted-foreground">
+                Visible en la tienda como{" "}
+                <span className="font-mono text-foreground/90">
+                  ?categoria=
+                  <span className="text-primary">slug</span>
+                </span>
+                . Si el slug ya existe, se añade un sufijo.
+              </p>
+            </div>
+            <div className="sm:max-w-[160px]">
+              <Input
+                label="Orden"
+                name="sort_order"
+                type="number"
+                min={0}
+                defaultValue={initial?.sort_order ?? 0}
+              />
+            </div>
+          </div>
+        </div>
+      </section>
 
-      <Input
-        label="Slug (opcional)"
-        name="slug"
-        defaultValue={initial?.slug ?? ""}
-        placeholder="Se genera desde el nombre si lo dejas vacío"
-      />
-      <p className="-mt-4 text-xs text-muted-foreground">
-        Usado en la URL del catálogo (?categoria=
-        <span className="font-mono">slug</span>). Si ya existe, se añade un
-        sufijo numérico.
-      </p>
+      <section>
+        <SectionLabel>Imagen</SectionLabel>
+        <div className="rounded-xl border border-border bg-card p-6 sm:p-8">
+          <div className="grid gap-10 lg:grid-cols-[minmax(0,200px)_1fr] lg:items-start">
+            <div className="flex flex-col gap-3">
+              <span className="text-xs font-medium text-muted-foreground">
+                Vista previa
+              </span>
+              <div className="aspect-square w-full max-w-[200px] overflow-hidden rounded-xl border border-border bg-muted">
+                {imageUrl.trim() ? (
+                  // biome-ignore lint/performance/noImgElement: vista previa URL dinámica / R2
+                  <img
+                    src={imageUrl.trim()}
+                    alt=""
+                    className="size-full object-cover"
+                  />
+                ) : (
+                  <div className="flex size-full flex-col items-center justify-center gap-2 text-muted-foreground">
+                    <ImageIcon className="size-10 opacity-40" aria-hidden />
+                    <span className="px-3 text-center text-xs font-medium">
+                      Sin miniatura
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Input
-          label="Orden"
-          name="sort_order"
-          type="number"
-          min={0}
-          defaultValue={initial?.sort_order ?? 0}
-        />
-        <Input
-          label="URL miniatura (opcional)"
-          name="image_url"
-          type="url"
-          defaultValue={initial?.image_url ?? ""}
-          placeholder="https://…"
-        />
-      </div>
+            <div className="min-w-0 space-y-8">
+              <input
+                ref={fileRef}
+                id={fileInputId}
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                className="sr-only"
+                tabIndex={-1}
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) void uploadFile(f);
+                }}
+              />
 
-      <div className="flex flex-wrap gap-3">
-        <button
-          type="submit"
-          disabled={pending}
-          aria-label={mode === "create" ? "Crear categoría" : "Guardar cambios"}
-          title={mode === "create" ? "Crear categoría" : "Guardar cambios"}
-          className="inline-flex size-10 items-center justify-center rounded-md bg-primary text-primary-foreground transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-60"
-        >
-          {pending ? (
-            <Loader2 className="size-5 animate-spin" aria-hidden />
-          ) : (
-            <Save className="size-5" aria-hidden />
-          )}
-        </button>
+              <div className="space-y-3">
+                <span className="text-xs font-medium text-muted-foreground">
+                  Subir archivo
+                </span>
+                <label
+                  htmlFor={fileInputId}
+                  onDragEnter={(e) => {
+                    e.preventDefault();
+                    setDragOver(true);
+                  }}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = "copy";
+                  }}
+                  onDragLeave={(e) => {
+                    e.preventDefault();
+                    if (!e.currentTarget.contains(e.relatedTarget as Node))
+                      setDragOver(false);
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    setDragOver(false);
+                    const f = e.dataTransfer.files?.[0];
+                    if (f) void uploadFile(f);
+                  }}
+                  className={`flex cursor-pointer items-center gap-4 rounded-xl border px-5 py-4 transition-colors ${
+                    dragOver
+                      ? "border-primary bg-muted ring-1 ring-primary"
+                      : "border-border bg-background hover:border-border hover:bg-muted/60"
+                  }`}
+                >
+                  <span className="flex size-12 shrink-0 items-center justify-center rounded-lg border border-border bg-muted">
+                    {uploadBusy ? (
+                      <Loader2
+                        className="size-6 animate-spin text-muted-foreground"
+                        aria-hidden
+                      />
+                    ) : (
+                      <Upload
+                        className="size-6 text-muted-foreground"
+                        aria-hidden
+                      />
+                    )}
+                  </span>
+                  <span className="min-w-0 flex-1 text-left">
+                    <span className="block text-sm font-semibold text-foreground">
+                      Arrastra aquí o haz clic para elegir
+                    </span>
+                    <span className="mt-1 block text-xs leading-snug text-muted-foreground">
+                      PNG, JPEG o WebP · máx. 5 MB · Cloudflare R2
+                    </span>
+                  </span>
+                </label>
+
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    disabled={uploadBusy}
+                    onClick={() => fileRef.current?.click()}
+                    className="rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted disabled:pointer-events-none disabled:opacity-50"
+                  >
+                    Examinar archivos…
+                  </button>
+                  {imageUrl.trim() ? (
+                    <button
+                      type="button"
+                      disabled={uploadBusy}
+                      onClick={() => setImageUrl("")}
+                      className="inline-flex items-center gap-2 rounded-lg border border-destructive/40 bg-background px-4 py-2 text-sm font-medium text-destructive transition-colors hover:bg-destructive/10 disabled:pointer-events-none disabled:opacity-50"
+                    >
+                      <Trash2 className="size-4 shrink-0" aria-hidden />
+                      Quitar imagen
+                    </button>
+                  ) : null}
+                </div>
+              </div>
+
+              <div className="border-t border-border pt-8">
+                <label
+                  htmlFor="category-image-url"
+                  className="mb-2 block text-xs font-medium text-muted-foreground"
+                >
+                  O indicar URL de imagen
+                </label>
+                <input
+                  id="category-image-url"
+                  type="url"
+                  inputMode="url"
+                  autoComplete="off"
+                  placeholder="https://i.imgur.com/ejemplo.jpg"
+                  value={imageUrl}
+                  onChange={(e) => setImageUrl(e.target.value)}
+                  className="h-11 w-full rounded-lg border border-border bg-background px-3 text-sm text-foreground placeholder:text-muted-foreground focus-visible:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+                />
+                {urlError ? (
+                  <p className="mt-2 text-xs text-destructive" role="alert">
+                    {urlError}
+                  </p>
+                ) : (
+                  <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+                    Usa una URL absoluta con{" "}
+                    <span className="font-mono text-foreground/80">
+                      https://
+                    </span>
+                    . Para Imgur, el enlace directo al archivo suele ser{" "}
+                    <span className="font-mono text-foreground/80">
+                      i.imgur.com
+                    </span>
+                    . Vacío = sin miniatura.
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <footer className="flex flex-col-reverse gap-3 border-t border-border pt-8 sm:flex-row sm:items-center sm:justify-between">
         <button
           type="button"
-          className={`${iconBtn} size-10`}
-          aria-label="Cancelar"
           onClick={() => router.push("/admin/categorias")}
+          className="inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-transparent px-5 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
         >
-          <X className="size-5" aria-hidden />
+          <X className="size-4" aria-hidden />
+          Cancelar
         </button>
-      </div>
+        <button
+          type="submit"
+          disabled={pending || !!urlError}
+          className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-95 disabled:pointer-events-none disabled:opacity-50"
+        >
+          {pending ? (
+            <Loader2 className="size-4 animate-spin" aria-hidden />
+          ) : (
+            <Save className="size-4" aria-hidden />
+          )}
+          {mode === "create" ? "Crear categoría" : "Guardar cambios"}
+        </button>
+      </footer>
     </form>
   );
 }

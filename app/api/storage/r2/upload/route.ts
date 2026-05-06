@@ -19,6 +19,7 @@ function requireAdminUpload(): boolean {
 /**
  * POST multipart/form-data con campo `file` (imagen PNG/JPEG/WebP, máx 5 MB).
  * Requiere sesión Supabase. Opcional: R2_UPLOAD_REQUIRE_ADMIN=true.
+ * Campo opcional `scope`: `catalog` → prefijo catalog/{userId}; `categories` → catalog/categories/{userId}; otro → uploads/{userId}.
  */
 export async function POST(request: Request) {
   const cfg = getR2Config();
@@ -107,7 +108,11 @@ export async function POST(request: Request) {
   const safeName = sanitizeUploadFilename(file.name || "image", fallbackExt);
   const scope = formData.get("scope")?.toString().trim() ?? "";
   const prefix =
-    scope === "catalog" ? `catalog/${user.id}` : `uploads/${user.id}`;
+    scope === "catalog"
+      ? `catalog/${user.id}`
+      : scope === "categories"
+        ? `catalog/categories/${user.id}`
+        : `uploads/${user.id}`;
   const key = `${prefix}/${Date.now()}-${safeName}`;
 
   try {
