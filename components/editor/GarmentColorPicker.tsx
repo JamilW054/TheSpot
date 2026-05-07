@@ -56,20 +56,23 @@ export function GarmentColorPicker({
   const [hexInput, setHexInput] = useState(value);
   const isDragging = useRef<"sl" | "h" | null>(null);
 
-  const syncFromHex = useCallback((hex: string) => {
-    const parsed = hex.replace(/^#/, "").trim();
-    if (/^[0-9A-Fa-f]{6}$/.test(parsed)) {
-      const full = `#${parsed}`;
-      const { h: hh, s: ss, l: ll } = hexToHsl(full);
-      setH(hh);
-      setS(ss);
-      setL(ll);
-      setHexInput(full);
-      onChange(full);
-    } else {
-      setHexInput(hex);
-    }
-  }, [onChange]);
+  const syncFromHex = useCallback(
+    (hex: string) => {
+      const parsed = hex.replace(/^#/, "").trim();
+      if (/^[0-9A-Fa-f]{6}$/.test(parsed)) {
+        const full = `#${parsed}`;
+        const { h: hh, s: ss, l: ll } = hexToHsl(full);
+        setH(hh);
+        setS(ss);
+        setL(ll);
+        setHexInput(full);
+        onChange(full);
+      } else {
+        setHexInput(hex);
+      }
+    },
+    [onChange],
+  );
 
   useEffect(() => {
     if (!open) return;
@@ -100,7 +103,7 @@ export function GarmentColorPicker({
       setHexInput(hex);
       onChange(hex);
     },
-    [onChange]
+    [onChange],
   );
 
   useEffect(() => {
@@ -131,7 +134,9 @@ export function GarmentColorPicker({
     (clientX: number, clientY: number) => {
       const popover = popoverRef.current;
       if (!popover) return;
-      const rect = popover.querySelector("[data-sl-area]")?.getBoundingClientRect();
+      const rect = popover
+        .querySelector("[data-sl-area]")
+        ?.getBoundingClientRect();
       if (!rect) return;
       const x = (clientX - rect.left) / rect.width;
       const y = (clientY - rect.top) / rect.height;
@@ -139,20 +144,22 @@ export function GarmentColorPicker({
       const newL = Math.max(0, Math.min(100, (1 - y) * 100));
       updateFromHsl(h, newS, newL);
     },
-    [h, updateFromHsl]
+    [h, updateFromHsl],
   );
 
   const handleHuePointer = useCallback(
     (clientX: number) => {
       const popover = popoverRef.current;
       if (!popover) return;
-      const rect = popover.querySelector("[data-hue-bar]")?.getBoundingClientRect();
+      const rect = popover
+        .querySelector("[data-hue-bar]")
+        ?.getBoundingClientRect();
       if (!rect) return;
       const x = (clientX - rect.left) / rect.width;
       const newH = Math.max(0, Math.min(360, x * 360));
       updateFromHsl(newH, s, l);
     },
-    [s, l, updateFromHsl]
+    [s, l, updateFromHsl],
   );
 
   useEffect(() => {

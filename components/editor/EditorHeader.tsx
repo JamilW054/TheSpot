@@ -7,7 +7,9 @@ export interface EditorHeaderProps {
   projectName?: string;
 }
 
-export function EditorHeader({ projectName = "Nuevo diseño" }: EditorHeaderProps) {
+export function EditorHeader({
+  projectName = "Nuevo diseño",
+}: EditorHeaderProps) {
   return (
     <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-background/95 px-5 backdrop-blur-sm">
       <Link
@@ -18,7 +20,9 @@ export function EditorHeader({ projectName = "Nuevo diseño" }: EditorHeaderProp
       </Link>
 
       <div className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-1">
-        <span className="text-sm font-medium text-foreground">{projectName}</span>
+        <span className="text-sm font-medium text-foreground">
+          {projectName}
+        </span>
       </div>
 
       <div className="flex items-center gap-1">

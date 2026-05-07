@@ -17,7 +17,14 @@ export function NewsletterForm() {
         className="shrink-0 size-10 sm:size-11 rounded-full border border-border bg-background text-foreground hover:bg-muted transition-colors flex items-center justify-center"
         aria-label="Enviar"
       >
-        <svg className="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+        <svg
+          className="size-5"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          aria-hidden
+        >
           <path d="M5 12h14M12 5l7 7-7 7" />
         </svg>
       </button>

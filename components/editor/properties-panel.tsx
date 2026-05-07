@@ -62,7 +62,13 @@ export function PropertiesPanel({
 
   // Llevar scroll y foco al texto cuando se acaba de insertar (pendingFocusTextId)
   useEffect(() => {
-    if (!focusTextId || !selectedId || focusTextId !== selectedId || element?.type !== "text") return;
+    if (
+      !focusTextId ||
+      !selectedId ||
+      focusTextId !== selectedId ||
+      element?.type !== "text"
+    )
+      return;
     const ta = textContentRef.current;
     if (!ta) return;
     const t = setTimeout(() => {
@@ -103,12 +109,14 @@ export function PropertiesPanel({
   };
   const handleWidth = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = Number(e.target.value);
-    const safe = Number.isNaN(value) || value < 1 ? 1 : clampNum(value, 1, 2000);
+    const safe =
+      Number.isNaN(value) || value < 1 ? 1 : clampNum(value, 1, 2000);
     onUpdateElement(element.id, { width: safe });
   };
   const handleHeight = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = Number(e.target.value);
-    const safe = Number.isNaN(value) || value < 1 ? 1 : clampNum(value, 1, 2000);
+    const safe =
+      Number.isNaN(value) || value < 1 ? 1 : clampNum(value, 1, 2000);
     onUpdateElement(element.id, { height: safe });
   };
 
@@ -124,7 +132,9 @@ export function PropertiesPanel({
     onUpdateElement(element.id, {
       height: clampNum(element.height + delta, 1, 2000),
     });
-  const handleContent = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleContent = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
     onUpdateElement(element.id, { content: e.target.value });
   };
 
@@ -136,7 +146,11 @@ export function PropertiesPanel({
   return (
     <div className="mt-2 space-y-3 text-sm">
       <div className="grid grid-cols-[auto_1fr] gap-x-2 gap-y-1 items-center">
-        <label htmlFor="prop-x" className="text-muted-foreground" title="Flechas: 1px. Mayús+Flechas: 8px (cuadrícula)">
+        <label
+          htmlFor="prop-x"
+          className="text-muted-foreground"
+          title="Flechas: 1px. Mayús+Flechas: 8px (cuadrícula)"
+        >
           Posición X (px)
         </label>
         <div className="flex gap-1 items-center">
@@ -166,7 +180,11 @@ export function PropertiesPanel({
             +
           </button>
         </div>
-        <label htmlFor="prop-y" className="text-muted-foreground" title="Flechas: 1px. Mayús+Flechas: 8px (cuadrícula)">
+        <label
+          htmlFor="prop-y"
+          className="text-muted-foreground"
+          title="Flechas: 1px. Mayús+Flechas: 8px (cuadrícula)"
+        >
           Posición Y (px)
         </label>
         <div className="flex gap-1 items-center">
@@ -262,7 +280,9 @@ export function PropertiesPanel({
           <input
             type="checkbox"
             checked={element.locked === true}
-            onChange={(e) => onUpdateElement(element.id, { locked: e.target.checked })}
+            onChange={(e) =>
+              onUpdateElement(element.id, { locked: e.target.checked })
+            }
             className="rounded border-border"
           />
           Bloquear elemento
@@ -273,41 +293,66 @@ export function PropertiesPanel({
           <label className="text-muted-foreground block text-xs">Forma</label>
           <select
             value={element.shapeKind ?? "rect"}
-            onChange={(e) => onUpdateElement(element.id, { shapeKind: e.target.value as ShapeKind })}
+            onChange={(e) =>
+              onUpdateElement(element.id, {
+                shapeKind: e.target.value as ShapeKind,
+              })
+            }
             className={inputCn}
           >
             {SHAPE_KINDS.map((k) => (
-              <option key={k.value} value={k.value}>{k.label}</option>
+              <option key={k.value} value={k.value}>
+                {k.label}
+              </option>
             ))}
           </select>
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="text-muted-foreground block text-xs">Relleno</label>
+              <label className="text-muted-foreground block text-xs">
+                Relleno
+              </label>
               <input
                 type="color"
                 value={element.fillColor ?? "#6366f1"}
-                onChange={(e) => onUpdateElement(element.id, { fillColor: e.target.value })}
+                onChange={(e) =>
+                  onUpdateElement(element.id, { fillColor: e.target.value })
+                }
                 className="h-8 w-full rounded border border-border cursor-pointer"
               />
             </div>
             <div>
-              <label className="text-muted-foreground block text-xs">Borde</label>
+              <label className="text-muted-foreground block text-xs">
+                Borde
+              </label>
               <input
                 type="color"
                 value={element.shapeStrokeColor ?? "#4f46e5"}
-                onChange={(e) => onUpdateElement(element.id, { shapeStrokeColor: e.target.value })}
+                onChange={(e) =>
+                  onUpdateElement(element.id, {
+                    shapeStrokeColor: e.target.value,
+                  })
+                }
                 className="h-8 w-full rounded border border-border cursor-pointer"
               />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-2">
-            <label className="text-muted-foreground text-xs">Grosor borde</label>
+            <label className="text-muted-foreground text-xs">
+              Grosor borde
+            </label>
             <input
               type="number"
               min={0}
               max={20}
               value={element.shapeStrokeWidth ?? 2}
-              onChange={(e) => onUpdateElement(element.id, { shapeStrokeWidth: Math.max(0, Math.min(20, Number(e.target.value) || 0)) })}
+              onChange={(e) =>
+                onUpdateElement(element.id, {
+                  shapeStrokeWidth: Math.max(
+                    0,
+                    Math.min(20, Number(e.target.value) || 0),
+                  ),
+                })
+              }
               className={inputCn}
             />
             <label className="text-muted-foreground text-xs">Opacidad</label>
@@ -317,18 +362,31 @@ export function PropertiesPanel({
               max={1}
               step={0.1}
               value={element.opacity ?? 1}
-              onChange={(e) => onUpdateElement(element.id, { opacity: Math.max(0, Math.min(1, Number(e.target.value) || 1)) })}
+              onChange={(e) =>
+                onUpdateElement(element.id, {
+                  opacity: Math.max(
+                    0,
+                    Math.min(1, Number(e.target.value) || 1),
+                  ),
+                })
+              }
               className={inputCn}
             />
           </div>
           {(element.shapeKind ?? "rect") === "rect" && (
             <>
-              <label className="text-muted-foreground text-xs">Esquinas redondeadas (px)</label>
+              <label className="text-muted-foreground text-xs">
+                Esquinas redondeadas (px)
+              </label>
               <input
                 type="number"
                 min={0}
                 value={element.borderRadius ?? 0}
-                onChange={(e) => onUpdateElement(element.id, { borderRadius: Math.max(0, Number(e.target.value) || 0) })}
+                onChange={(e) =>
+                  onUpdateElement(element.id, {
+                    borderRadius: Math.max(0, Number(e.target.value) || 0),
+                  })
+                }
                 className={inputCn}
               />
             </>
@@ -337,7 +395,10 @@ export function PropertiesPanel({
       )}
       {element.type === "image" && (
         <div className="space-y-2 pt-2 border-t border-border">
-          <label htmlFor="prop-image-url" className="text-muted-foreground block">
+          <label
+            htmlFor="prop-image-url"
+            className="text-muted-foreground block"
+          >
             URL de la imagen
           </label>
           <input
@@ -350,7 +411,9 @@ export function PropertiesPanel({
             aria-label="URL de la imagen del elemento"
           />
           <p className="text-xs text-muted-foreground">
-            Arrastra &quot;Imagen&quot; al canvas y pega aquí la URL, o usa &quot;Subir imagen&quot; en el sidebar. Puedes mover y redimensionar con los valores de posición y tamaño.
+            Arrastra &quot;Imagen&quot; al canvas y pega aquí la URL, o usa
+            &quot;Subir imagen&quot; en el sidebar. Puedes mover y redimensionar
+            con los valores de posición y tamaño.
           </p>
         </div>
       )}
@@ -371,13 +434,22 @@ export function PropertiesPanel({
           />
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="text-muted-foreground text-xs">Tamaño (px)</label>
+              <label className="text-muted-foreground text-xs">
+                Tamaño (px)
+              </label>
               <input
                 type="number"
                 min={8}
                 max={120}
                 value={element.fontSize ?? 14}
-                onChange={(e) => onUpdateElement(element.id, { fontSize: Math.max(8, Math.min(120, Number(e.target.value) || 14)) })}
+                onChange={(e) =>
+                  onUpdateElement(element.id, {
+                    fontSize: Math.max(
+                      8,
+                      Math.min(120, Number(e.target.value) || 14),
+                    ),
+                  })
+                }
                 className={inputCn}
               />
             </div>
@@ -386,7 +458,9 @@ export function PropertiesPanel({
               <input
                 type="color"
                 value={element.textColor ?? "#111111"}
-                onChange={(e) => onUpdateElement(element.id, { textColor: e.target.value })}
+                onChange={(e) =>
+                  onUpdateElement(element.id, { textColor: e.target.value })
+                }
                 className="h-8 w-full rounded border border-border cursor-pointer"
               />
             </div>
@@ -394,37 +468,60 @@ export function PropertiesPanel({
           <label className="text-muted-foreground text-xs">Fuente</label>
           <select
             value={element.fontFamily ?? "inherit"}
-            onChange={(e) => onUpdateElement(element.id, { fontFamily: e.target.value })}
+            onChange={(e) =>
+              onUpdateElement(element.id, { fontFamily: e.target.value })
+            }
             className={inputCn}
           >
             <option value="inherit">Por defecto</option>
             {FONT_FAMILIES.map((f) => (
-              <option key={f} value={f}>{f}</option>
+              <option key={f} value={f}>
+                {f}
+              </option>
             ))}
           </select>
           <div className="grid grid-cols-2 gap-2">
-            <label className="text-muted-foreground text-xs">Espaciado letras</label>
+            <label className="text-muted-foreground text-xs">
+              Espaciado letras
+            </label>
             <input
               type="number"
               value={element.letterSpacing ?? 0}
-              onChange={(e) => onUpdateElement(element.id, { letterSpacing: Number(e.target.value) || 0 })}
+              onChange={(e) =>
+                onUpdateElement(element.id, {
+                  letterSpacing: Number(e.target.value) || 0,
+                })
+              }
               className={inputCn}
             />
-            <label className="text-muted-foreground text-xs">Interlineado</label>
+            <label className="text-muted-foreground text-xs">
+              Interlineado
+            </label>
             <input
               type="number"
               min={0.5}
               max={3}
               step={0.1}
               value={element.lineHeight ?? 1.2}
-              onChange={(e) => onUpdateElement(element.id, { lineHeight: Math.max(0.5, Math.min(3, Number(e.target.value) || 1.2)) })}
+              onChange={(e) =>
+                onUpdateElement(element.id, {
+                  lineHeight: Math.max(
+                    0.5,
+                    Math.min(3, Number(e.target.value) || 1.2),
+                  ),
+                })
+              }
               className={inputCn}
             />
           </div>
           <label className="text-muted-foreground text-xs">Alineación</label>
           <select
             value={element.textAlign ?? "left"}
-            onChange={(e) => onUpdateElement(element.id, { textAlign: e.target.value as "left" | "center" | "right" })}
+            onChange={(e) =>
+              onUpdateElement(element.id, {
+                textAlign: e.target.value as "left" | "center" | "right",
+              })
+            }
             className={inputCn}
           >
             <option value="left">Izquierda</option>
@@ -436,17 +533,25 @@ export function PropertiesPanel({
       {element.type === "path" && (
         <div className="space-y-2 pt-2 border-t border-border">
           <div className="grid grid-cols-[auto_1fr] gap-x-2 gap-y-1 items-center">
-            <label htmlFor="prop-stroke-color" className="text-muted-foreground">
+            <label
+              htmlFor="prop-stroke-color"
+              className="text-muted-foreground"
+            >
               Color
             </label>
             <input
               id="prop-stroke-color"
               type="color"
               value={element.strokeColor ?? "#000000"}
-              onChange={(e) => onUpdateElement(element.id, { strokeColor: e.target.value })}
+              onChange={(e) =>
+                onUpdateElement(element.id, { strokeColor: e.target.value })
+              }
               className="h-8 w-full min-w-0 rounded border border-border bg-background cursor-pointer"
             />
-            <label htmlFor="prop-stroke-width" className="text-muted-foreground">
+            <label
+              htmlFor="prop-stroke-width"
+              className="text-muted-foreground"
+            >
               Grosor
             </label>
             <input
@@ -457,7 +562,10 @@ export function PropertiesPanel({
               value={element.strokeWidth ?? 3}
               onChange={(e) => {
                 const v = Number(e.target.value);
-                if (!Number.isNaN(v)) onUpdateElement(element.id, { strokeWidth: Math.max(1, Math.min(30, v)) });
+                if (!Number.isNaN(v))
+                  onUpdateElement(element.id, {
+                    strokeWidth: Math.max(1, Math.min(30, v)),
+                  });
               }}
               className={inputCn}
             />
@@ -467,14 +575,21 @@ export function PropertiesPanel({
             <select
               id="prop-brush-style"
               value={element.brushStyle ?? "round"}
-              onChange={(e) => onUpdateElement(element.id, { brushStyle: e.target.value as "round" | "square" | "marker" })}
+              onChange={(e) =>
+                onUpdateElement(element.id, {
+                  brushStyle: e.target.value as "round" | "square" | "marker",
+                })
+              }
               className={inputCn}
             >
               <option value="round">Redondo (suave)</option>
               <option value="square">Cuadrado (corte)</option>
               <option value="marker">Marker (grueso)</option>
             </select>
-            <label htmlFor="prop-brush-texture" className="text-muted-foreground">
+            <label
+              htmlFor="prop-brush-texture"
+              className="text-muted-foreground"
+            >
               Textura (URL)
             </label>
             <input
@@ -482,7 +597,11 @@ export function PropertiesPanel({
               type="url"
               placeholder="Opcional"
               value={element.brushTexture ?? ""}
-              onChange={(e) => onUpdateElement(element.id, { brushTexture: e.target.value || undefined })}
+              onChange={(e) =>
+                onUpdateElement(element.id, {
+                  brushTexture: e.target.value || undefined,
+                })
+              }
               className={inputCn}
             />
           </div>

@@ -7,7 +7,7 @@ import { LANDING_INSTAGRAM_EMBED_SHORTCODES } from "@/config/landing-images";
  */
 const INSTAGRAM_PROFILE = "https://www.instagram.com/buxxep/";
 
-const CONTAINER = "max-w-6xl mx-auto px-4 sm:px-6";
+const CONTAINER = "max-w-7xl mx-auto px-4 sm:px-6";
 
 /** Marco más bajo; el iframe interior sigue siendo más alto y se recorta con overflow hidden. */
 const CARD_FRAME_H = "h-[400px] sm:h-[420px]";

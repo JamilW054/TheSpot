@@ -14,7 +14,10 @@ export function formatDOPFromCents(cents: number): string {
 /** Interpreta totales ya formateados (EUR/DOP/RD$, coma o punto decimal) para KPIs. */
 export function parseFormattedCurrencyToNumber(formatted: string): number {
   if (!formatted || typeof formatted !== "string") return 0;
-  let s = formatted.replace(/\u00a0/g, " ").trim().replace(/\s/g, "");
+  let s = formatted
+    .replace(/\u00a0/g, " ")
+    .trim()
+    .replace(/\s/g, "");
   s = s.replace(/RD\$/gi, "").replace(/€|\$/g, "").replace(/£/g, "").trim();
 
   const hasComma = s.includes(",");

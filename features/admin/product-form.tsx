@@ -8,13 +8,7 @@ import {
   type AdminProductActionState,
 } from "@/lib/actions/products-admin";
 import { Input } from "@/components/ui/input";
-import {
-  ImagePlus,
-  Loader2,
-  Save,
-  Trash2,
-  X,
-} from "lucide-react";
+import { ImagePlus, Loader2, Save, Trash2, X } from "lucide-react";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -33,14 +27,9 @@ function tagsDefault(initial?: ProductRow): string {
   return "";
 }
 
-export function ProductForm({
-  mode,
-  categories,
-  initial,
-}: ProductFormProps) {
+export function ProductForm({ mode, categories, initial }: ProductFormProps) {
   const router = useRouter();
-  const actionFn =
-    mode === "create" ? adminCreateProduct : adminUpdateProduct;
+  const actionFn = mode === "create" ? adminCreateProduct : adminUpdateProduct;
   const [state, formAction] = useActionState<
     AdminProductActionState | undefined,
     FormData
@@ -185,7 +174,9 @@ export function ProductForm({
       {mode === "edit" && initial?.slug ? (
         <p className="text-xs text-muted-foreground">
           URL del artículo:{" "}
-          <span className="font-mono text-foreground">/catalogo/{initial.slug}</span>{" "}
+          <span className="font-mono text-foreground">
+            /catalogo/{initial.slug}
+          </span>{" "}
           (se asigna al crear; no cambia al editar)
         </p>
       ) : mode === "create" ? (
@@ -232,7 +223,8 @@ export function ProductForm({
           className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         />
         <p className="text-xs text-muted-foreground">
-          Se guardan en minúsculas; influyen en la URL solo al crear el artículo.
+          Se guardan en minúsculas; influyen en la URL solo al crear el
+          artículo.
         </p>
       </div>
 
@@ -285,9 +277,7 @@ export function ProductForm({
       <div className="flex flex-wrap gap-3">
         <button
           type="submit"
-          aria-label={
-            mode === "create" ? "Crear artículo" : "Guardar cambios"
-          }
+          aria-label={mode === "create" ? "Crear artículo" : "Guardar cambios"}
           title={mode === "create" ? "Crear artículo" : "Guardar cambios"}
           className="inline-flex size-10 items-center justify-center rounded-md bg-primary text-primary-foreground transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         >

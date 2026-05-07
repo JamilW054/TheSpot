@@ -9,18 +9,28 @@ export interface CatalogQueryParts {
   orden?: CatalogOrden;
   etiqueta?: string;
   precio?: CatalogPrecio;
+  busqueda?: string;
 }
 
-const ORDEN_SET = new Set<string>(["recientes", "precio-menor", "precio-mayor", "az"]);
+const ORDEN_SET = new Set<string>([
+  "recientes",
+  "precio-menor",
+  "precio-mayor",
+  "az",
+]);
 
 const PRECIO_SET = new Set<string>(["economico", "medio", "premium"]);
 
-export function parseCatalogOrden(v: string | undefined): CatalogOrden | undefined {
+export function parseCatalogOrden(
+  v: string | undefined,
+): CatalogOrden | undefined {
   if (!v || !ORDEN_SET.has(v)) return undefined;
   return v as CatalogOrden;
 }
 
-export function parseCatalogPrecio(v: string | undefined): CatalogPrecio | undefined {
+export function parseCatalogPrecio(
+  v: string | undefined,
+): CatalogPrecio | undefined {
   if (!v || !PRECIO_SET.has(v)) return undefined;
   return v as CatalogPrecio;
 }
@@ -31,6 +41,7 @@ export function catalogQueryHref(parts: CatalogQueryParts): string {
   if (parts.orden) p.set("orden", parts.orden);
   if (parts.etiqueta) p.set("etiqueta", parts.etiqueta);
   if (parts.precio) p.set("precio", parts.precio);
+  if (parts.busqueda) p.set("q", parts.busqueda);
   const q = p.toString();
   return q ? `/catalogo?${q}` : "/catalogo";
 }
@@ -43,9 +54,10 @@ export function catalogMergeHref(
   const cur = new URLSearchParams(sp.toString());
   (Object.keys(patch) as (keyof CatalogQueryParts)[]).forEach((key) => {
     if (!(key in patch)) return;
+    const urlKey = key === "busqueda" ? "q" : key;
     const val = patch[key];
-    if (val === null || val === undefined || val === "") cur.delete(key);
-    else cur.set(key, val);
+    if (val === null || val === undefined || val === "") cur.delete(urlKey);
+    else cur.set(urlKey, val);
   });
   const q = cur.toString();
   return q ? `/catalogo?${q}` : "/catalogo";
@@ -72,11 +84,13 @@ export function catalogFiltersFromRecord(
   const precio = parseCatalogPrecio(first("precio"));
   const etiquetaRaw = first("etiqueta")?.trim().toLowerCase();
   const categoriaRaw = first("categoria")?.trim();
+  const busquedaRaw = first("q")?.trim();
   return {
     ...(categoriaRaw ? { categoria: categoriaRaw } : {}),
     ...(orden ? { orden } : {}),
     ...(etiquetaRaw ? { etiqueta: etiquetaRaw } : {}),
     ...(precio ? { precio } : {}),
+    ...(busquedaRaw ? { busqueda: busquedaRaw } : {}),
   };
 }
 

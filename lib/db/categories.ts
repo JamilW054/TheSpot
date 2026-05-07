@@ -7,23 +7,28 @@ export interface CategoryRow {
   sort_order: number;
   /** Miniatura opcional para la rejilla del catálogo (URL pública). */
   image_url?: string | null;
+  /** Referencia a la categoría padre — null para categorías raíz. */
+  parent_id?: string | null;
 }
 
-function isLikelyMissingImageUrlColumn(error: {
+/** Detecta cualquier error de columna no encontrada en PostgREST (PGRST204). */
+function isMissingColumnError(error: {
   message?: string;
   code?: string;
 }): boolean {
   const msg = (error.message ?? "").toLowerCase();
   return (
     error.code === "PGRST204" ||
-    (msg.includes("image_url") &&
-      (msg.includes("column") ||
-        msg.includes("schema cache") ||
-        msg.includes("could not find")))
+    msg.includes("could not find") ||
+    msg.includes("schema cache") ||
+    (msg.includes("column") && msg.includes("categories"))
   );
 }
 
-async function withCatalogFallback<T>(fn: () => Promise<T>, fallback: T): Promise<T> {
+async function withCatalogFallback<T>(
+  fn: () => Promise<T>,
+  fallback: T,
+): Promise<T> {
   try {
     return await fn();
   } catch (e) {
@@ -35,80 +40,105 @@ async function withCatalogFallback<T>(fn: () => Promise<T>, fallback: T): Promis
 }
 
 /** Una categoría por id (admin / service). */
-export async function getCategoryAdminById(id: string): Promise<CategoryRow | null> {
+export async function getCategoryAdminById(
+  id: string,
+): Promise<CategoryRow | null> {
   const s = id.trim();
   if (!s) return null;
   const supabase = createServiceClient();
+
   const full = await supabase
     .from("categories")
-    .select("id, slug, name, sort_order, image_url")
+    .select("id, slug, name, sort_order, parent_id, image_url")
     .eq("id", s)
     .maybeSingle();
-  let error = full.error;
-  let row = full.data as CategoryRow | null;
-  if (error && isLikelyMissingImageUrlColumn(error)) {
+
+  if (!full.error) return full.data as CategoryRow | null;
+
+  if (isMissingColumnError(full.error)) {
     const base = await supabase
       .from("categories")
-      .select("id, slug, name, sort_order")
+      .select("id, slug, name, sort_order, parent_id")
       .eq("id", s)
       .maybeSingle();
-    error = base.error;
-    row = (base.data ?? null) as CategoryRow | null;
+    if (base.error) throw new Error(base.error.message);
+    return (base.data ?? null) as CategoryRow | null;
   }
-  if (error) throw new Error(error.message);
-  return row;
+
+  throw new Error(full.error.message);
 }
 
 export async function getCategoriesForAdmin(): Promise<CategoryRow[]> {
   const supabase = createServiceClient();
+
   const full = await supabase
     .from("categories")
-    .select("id, slug, name, sort_order, image_url")
+    .select("id, slug, name, sort_order, parent_id, image_url")
     .order("sort_order", { ascending: true });
-  let error = full.error;
-  let rows = (full.data ?? []) as CategoryRow[];
-  if (error && isLikelyMissingImageUrlColumn(error)) {
+
+  if (!full.error) return (full.data ?? []) as CategoryRow[];
+
+  if (isMissingColumnError(full.error)) {
     const base = await supabase
       .from("categories")
-      .select("id, slug, name, sort_order")
+      .select("id, slug, name, sort_order, parent_id")
       .order("sort_order", { ascending: true });
-    error = base.error;
-    rows = (base.data ?? []) as CategoryRow[];
+    if (base.error) throw new Error(base.error.message);
+    return (base.data ?? []) as CategoryRow[];
   }
-  if (error) throw new Error(error.message);
-  return rows;
+
+  throw new Error(full.error.message);
 }
 
 /**
  * Catálogo público: única fuente de verdad es Supabase (`public.categories`).
- * Cliente anon + RLS; miniatura opcional en `image_url`, fallback de imagen vía productos en la UI.
+ * Intenta con `image_url` y `parent_id`; si la columna no existe hace fallback
+ * progresivo hasta quedarse solo con los campos garantizados.
  */
 export async function getCategoriesPublic(): Promise<CategoryRow[]> {
   return withCatalogFallback(async () => {
     const supabase = await createClient();
+
+    // 1st attempt: full columns
     const full = await supabase
       .from("categories")
-      .select("id, slug, name, sort_order, image_url")
+      .select("id, slug, name, sort_order, parent_id, image_url")
       .order("sort_order", { ascending: true });
-    let error = full.error;
-    let rows = (full.data ?? []) as CategoryRow[];
-    if (error && isLikelyMissingImageUrlColumn(error)) {
-      const base = await supabase
+
+    if (!full.error) return (full.data ?? []) as CategoryRow[];
+
+    // 2nd attempt: without image_url (column might not exist yet)
+    if (isMissingColumnError(full.error)) {
+      const noImg = await supabase
         .from("categories")
-        .select("id, slug, name, sort_order")
+        .select("id, slug, name, sort_order, parent_id")
         .order("sort_order", { ascending: true });
-      error = base.error;
-      rows = (base.data ?? []) as CategoryRow[];
+
+      if (!noImg.error) return (noImg.data ?? []) as CategoryRow[];
+
+      // 3rd attempt: minimum guaranteed columns
+      if (isMissingColumnError(noImg.error)) {
+        const minimal = await supabase
+          .from("categories")
+          .select("id, slug, name, sort_order")
+          .order("sort_order", { ascending: true });
+        if (minimal.error) throw new Error(minimal.error.message);
+        return (minimal.data ?? []) as CategoryRow[];
+      }
+
+      throw new Error(noImg.error.message);
     }
-    if (error) throw new Error(error.message);
-    return rows;
+
+    throw new Error(full.error.message);
   }, []);
 }
 
 /**
  * Primera imagen de portada por categoría (producto publicado con menor sort_order).
  */
-export async function getCategoryCoverByCategoryId(): Promise<Record<string, string>> {
+export async function getCategoryCoverByCategoryId(): Promise<
+  Record<string, string>
+> {
   return withCatalogFallback(async () => {
     const supabase = await createClient();
     const { data, error } = await supabase

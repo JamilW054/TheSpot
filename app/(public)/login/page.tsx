@@ -26,7 +26,9 @@ function LoginForm() {
       !redirectTo.startsWith("//") &&
       redirectTo.length < 500;
     if (user.role === "admin") {
-      router.replace(safeRedirect && redirectTo.startsWith("/admin") ? redirectTo : "/admin");
+      router.replace(
+        safeRedirect && redirectTo.startsWith("/admin") ? redirectTo : "/admin",
+      );
     } else {
       router.replace(safeRedirect ? redirectTo : "/mis-disenos");
     }
@@ -44,7 +46,11 @@ function LoginForm() {
     try {
       await login(trimmedEmail, trimmedPassword);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudo iniciar sesión. Inténtalo de nuevo.");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "No se pudo iniciar sesión. Inténtalo de nuevo.",
+      );
     }
   }
 
@@ -107,7 +113,13 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="flex flex-1 items-center justify-center text-muted-foreground">Cargando…</div>}>
+    <Suspense
+      fallback={
+        <div className="flex flex-1 items-center justify-center text-muted-foreground">
+          Cargando…
+        </div>
+      }
+    >
       <LoginForm />
     </Suspense>
   );

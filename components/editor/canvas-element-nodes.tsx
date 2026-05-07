@@ -10,7 +10,11 @@ function PathPreview({ el }: { el: CanvasElement }) {
   try {
     points = JSON.parse(el.pathData) as [number, number][];
   } catch {
-    return <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">Trazo</div>;
+    return (
+      <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">
+        Trazo
+      </div>
+    );
   }
   if (points.length < 2) return null;
   const ox = el.x;
@@ -25,8 +29,19 @@ function PathPreview({ el }: { el: CanvasElement }) {
   const lineCap = style === "square" ? "butt" : "round";
   const lineJoin = style === "square" ? "miter" : "round";
   return (
-    <svg className="h-full w-full overflow-visible" viewBox={`0 0 ${el.width} ${el.height}`} preserveAspectRatio="none">
-      <path d={d} fill="none" stroke={stroke} strokeWidth={strokeWidth} strokeLinecap={lineCap} strokeLinejoin={lineJoin} />
+    <svg
+      className="h-full w-full overflow-visible"
+      viewBox={`0 0 ${el.width} ${el.height}`}
+      preserveAspectRatio="none"
+    >
+      <path
+        d={d}
+        fill="none"
+        stroke={stroke}
+        strokeWidth={strokeWidth}
+        strokeLinecap={lineCap}
+        strokeLinejoin={lineJoin}
+      />
     </svg>
   );
 }
@@ -55,7 +70,8 @@ function ImagePlaceholderIcon({ className }: { className?: string }) {
 
 function ShapeContent({ el }: { el: CanvasElement }) {
   if (el.type !== "shape") return null;
-  const kind: ShapeKind = el.shapeKind ?? (el.content === "circle" ? "circle" : "rect");
+  const kind: ShapeKind =
+    el.shapeKind ?? (el.content === "circle" ? "circle" : "rect");
   const fill = el.fillColor ?? "#6366f1";
   const stroke = el.shapeStrokeColor ?? "#4f46e5";
   const strokeW = el.shapeStrokeWidth ?? 2;
@@ -77,7 +93,11 @@ function ShapeContent({ el }: { el: CanvasElement }) {
     const w = el.width;
     const h = el.height;
     return (
-      <svg className="h-full w-full" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none">
+      <svg
+        className="h-full w-full"
+        viewBox={`0 0 ${w} ${h}`}
+        preserveAspectRatio="none"
+      >
         <polygon
           points={`${w / 2},0 ${w},${h} 0,${h}`}
           fill={fill}
@@ -99,10 +119,22 @@ function ShapeContent({ el }: { el: CanvasElement }) {
       const a = (i * Math.PI) / 5 - Math.PI / 2;
       points.push([cx + r * Math.cos(a), cy + r * Math.sin(a)]);
     }
-    const d = points.map(([x, y], i) => `${i === 0 ? "M" : "L"} ${x} ${y}`).join(" ") + " Z";
+    const d =
+      points.map(([x, y], i) => `${i === 0 ? "M" : "L"} ${x} ${y}`).join(" ") +
+      " Z";
     return (
-      <svg className="h-full w-full" viewBox={`0 0 ${el.width} ${el.height}`} preserveAspectRatio="none">
-        <path d={d} fill={fill} stroke={stroke} strokeWidth={strokeW} style={{ opacity }} />
+      <svg
+        className="h-full w-full"
+        viewBox={`0 0 ${el.width} ${el.height}`}
+        preserveAspectRatio="none"
+      >
+        <path
+          d={d}
+          fill={fill}
+          stroke={stroke}
+          strokeWidth={strokeW}
+          style={{ opacity }}
+        />
       </svg>
     );
   }
@@ -118,7 +150,8 @@ export function ElementContent({ el }: { el: CanvasElement }) {
         fontSize: el.fontSize ?? 14,
         fontFamily: el.fontFamily ?? "inherit",
         color: el.textColor ?? "#111",
-        letterSpacing: el.letterSpacing != null ? `${el.letterSpacing}px` : undefined,
+        letterSpacing:
+          el.letterSpacing != null ? `${el.letterSpacing}px` : undefined,
         lineHeight: el.lineHeight ?? 1.2,
         textAlign: el.textAlign ?? "left",
       }}
@@ -157,7 +190,11 @@ interface DraggableElementProps {
   onSelect: (id: string) => void;
 }
 
-function DraggableElement({ element, isSelected, onSelect }: DraggableElementProps) {
+function DraggableElement({
+  element,
+  isSelected,
+  onSelect,
+}: DraggableElementProps) {
   const isLocked = element.locked === true;
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: element.id,
@@ -204,11 +241,17 @@ function DraggableElement({ element, isSelected, onSelect }: DraggableElementPro
         </div>
       )}
       {isLocked && (
-        <div className="flex shrink-0 items-center justify-center self-start rounded-bl bg-muted/30 p-0.5 text-muted-foreground" title="Bloqueado">
+        <div
+          className="flex shrink-0 items-center justify-center self-start rounded-bl bg-muted/30 p-0.5 text-muted-foreground"
+          title="Bloqueado"
+        >
           <Lock className="size-3.5" />
         </div>
       )}
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col" onClick={handleClick}>
+      <div
+        className="flex min-h-0 min-w-0 flex-1 flex-col"
+        onClick={handleClick}
+      >
         <ElementContent el={element} />
       </div>
     </div>

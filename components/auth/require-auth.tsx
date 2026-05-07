@@ -10,7 +10,10 @@ interface RequireAuthProps {
   requireAdmin?: boolean;
 }
 
-export function RequireAuth({ children, requireAdmin = false }: RequireAuthProps) {
+export function RequireAuth({
+  children,
+  requireAdmin = false,
+}: RequireAuthProps) {
   const router = useRouter();
   const { user, isLoading } = useAuth();
 
@@ -28,7 +31,10 @@ export function RequireAuth({ children, requireAdmin = false }: RequireAuthProps
   if (isLoading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <div className="h-8 w-8 animate-pulse rounded-full bg-muted" aria-hidden />
+        <div
+          className="h-8 w-8 animate-pulse rounded-full bg-muted"
+          aria-hidden
+        />
       </div>
     );
   }

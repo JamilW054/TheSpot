@@ -24,7 +24,10 @@ export function CanvasEditor({
       className="relative flex flex-1 min-w-0 flex-col border border-dashed border-border bg-muted/20"
       aria-label="Área de diseño"
     >
-      <CanvasDropZone id={CANVAS_DROPPABLE_ID} onBackgroundClick={onClearSelection}>
+      <CanvasDropZone
+        id={CANVAS_DROPPABLE_ID}
+        onBackgroundClick={onClearSelection}
+      >
         <CanvasElementNodes
           elements={elements}
           selectedId={selectedId}

@@ -79,7 +79,9 @@ function DesignZoneContent({
                 {el.content != null && el.content !== "" ? (
                   el.content
                 ) : (
-                  <span className="text-muted-foreground">Escribe tu texto</span>
+                  <span className="text-muted-foreground">
+                    Escribe tu texto
+                  </span>
                 )}
               </span>
             ) : el.type === "shape" ? (
@@ -146,8 +148,10 @@ export function MockupPanel({
   const [scale, setScale] = useState(1);
 
   const handleRotate = () => setRotationY((prev) => prev + ROTATION_STEP);
-  const handleZoomIn = () => setScale((prev) => Math.min(prev + ZOOM_STEP, MAX_SCALE));
-  const handleZoomOut = () => setScale((prev) => Math.max(prev - ZOOM_STEP, MIN_SCALE));
+  const handleZoomIn = () =>
+    setScale((prev) => Math.min(prev + ZOOM_STEP, MAX_SCALE));
+  const handleZoomOut = () =>
+    setScale((prev) => Math.max(prev - ZOOM_STEP, MIN_SCALE));
   const handleReset = () => {
     setRotationY(0);
     setScale(1);
@@ -163,7 +167,11 @@ export function MockupPanel({
 
   return (
     <div className="mt-1 flex flex-col gap-4">
-      <ul className="grid grid-cols-2 gap-2.5" role="list" aria-label="Lista de prendas">
+      <ul
+        className="grid grid-cols-2 gap-2.5"
+        role="list"
+        aria-label="Lista de prendas"
+      >
         {mockups.map((mockup) => {
           const isSelected = mockup.id === selectedMockup?.id;
           return (
@@ -187,19 +195,25 @@ export function MockupPanel({
                     {mockup.category}
                   </span>
                 </div>
-                <span className="truncate px-2.5 py-2 text-xs font-medium text-foreground">{mockup.name}</span>
+                <span className="truncate px-2.5 py-2 text-xs font-medium text-foreground">
+                  {mockup.name}
+                </span>
               </button>
             </li>
           );
         })}
       </ul>
 
-      <section aria-label="Vista previa del mockup" className="flex flex-col gap-3">
+      <section
+        aria-label="Vista previa del mockup"
+        className="flex flex-col gap-3"
+      >
         <h3 className="editor-section-title">Vista previa</h3>
         {selectedMockup != null ? (
           <>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Así se verán los elementos del canvas sobre la referencia de la prenda. La vista grande está en el centro del editor.
+              Así se verán los elementos del canvas sobre la referencia de la
+              prenda. La vista grande está en el centro del editor.
             </p>
             <div
               className="rounded border border-border bg-muted/20 overflow-hidden min-h-[140px] flex items-center justify-center"
@@ -220,7 +234,10 @@ export function MockupPanel({
                       className="max-h-48 w-auto max-w-full object-contain select-none block"
                       draggable={false}
                     />
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none" aria-hidden>
+                    <div
+                      className="absolute inset-0 flex items-center justify-center pointer-events-none"
+                      aria-hidden
+                    >
                       <div
                         className="relative overflow-hidden bg-transparent rounded"
                         style={{
@@ -259,7 +276,11 @@ export function MockupPanel({
                 )}
               </div>
             </div>
-            <div className="flex flex-col gap-3" role="group" aria-label="Controles de vista previa">
+            <div
+              className="flex flex-col gap-3"
+              role="group"
+              aria-label="Controles de vista previa"
+            >
               <div className="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
@@ -300,7 +321,10 @@ export function MockupPanel({
                 </button>
               </div>
               <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-2 items-center text-xs">
-                <label htmlFor="mockup-rotation" className="text-muted-foreground min-w-0">
+                <label
+                  htmlFor="mockup-rotation"
+                  className="text-muted-foreground min-w-0"
+                >
                   Rotación
                 </label>
                 <input
@@ -317,7 +341,10 @@ export function MockupPanel({
                   aria-valuenow={((rotationY % 360) + 360) % 360}
                   aria-valuetext={`${((rotationY % 360) + 360) % 360} grados`}
                 />
-                <label htmlFor="mockup-zoom" className="text-muted-foreground min-w-0">
+                <label
+                  htmlFor="mockup-zoom"
+                  className="text-muted-foreground min-w-0"
+                >
                   Zoom
                 </label>
                 <input
@@ -337,7 +364,9 @@ export function MockupPanel({
               </div>
             </div>
             <div className="rounded-xl border border-border/80 bg-gradient-to-br from-muted/30 to-muted/10 p-3">
-              <label className="mb-2 block text-xs font-medium text-foreground">Color de la prenda</label>
+              <label className="mb-2 block text-xs font-medium text-foreground">
+                Color de la prenda
+              </label>
               <div className="flex items-center gap-3">
                 <GarmentColorPicker
                   value={garmentColor}
@@ -347,7 +376,9 @@ export function MockupPanel({
                 <input
                   type="text"
                   value={garmentColor}
-                  onChange={(e) => onGarmentColorChange?.(e.target.value.trim() || "#ffffff")}
+                  onChange={(e) =>
+                    onGarmentColorChange?.(e.target.value.trim() || "#ffffff")
+                  }
                   className="h-9 w-24 rounded-lg border border-border bg-background px-2.5 font-mono text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
                   placeholder="#ffffff"
                   aria-label="Código hex del color"

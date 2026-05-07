@@ -24,7 +24,8 @@ const FAVICON_PATH = "/favicon.jpg";
 const DEFAULT_TITLE = "Buxxep — Moda atemporal, alma moderna. Streetwear.";
 const DEFAULT_DESCRIPTION =
   "Diseña y compra ropa personalizada. Camisetas, hoodies y streetwear con tu estilo. Editor visual, calidad y envíos. Moda urbana en República Dominicana.";
-const OG_IMAGE_ALT = "Buxxep — Moda atemporal, alma moderna. Ropa personalizada y streetwear";
+const OG_IMAGE_ALT =
+  "Buxxep — Moda atemporal, alma moderna. Ropa personalizada y streetwear";
 
 const ogImage = {
   url: OG_IMAGE_PATH,

@@ -9,7 +9,10 @@ export function getGiveawayGoalPurchases(): number {
     process.env.GIVEAWAY_GOAL_PURCHASES ??
     process.env.NEXT_PUBLIC_GIVEAWAY_GOAL_PURCHASES;
   if (raw == null || String(raw).trim() === "") return DEFAULT_GOAL;
-  const n = Number.parseInt(String(raw).replace(/\./g, "").replace(/,/g, ""), 10);
+  const n = Number.parseInt(
+    String(raw).replace(/\./g, "").replace(/,/g, ""),
+    10,
+  );
   return Number.isFinite(n) && n > 0 ? n : DEFAULT_GOAL;
 }
 

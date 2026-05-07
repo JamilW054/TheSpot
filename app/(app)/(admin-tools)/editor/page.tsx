@@ -15,7 +15,14 @@ import {
  * - ?draft=id: carga un borrador guardado localmente (lista en Mis diseños).
  */
 interface EditorPageProps {
-  searchParams: Promise<{ design?: string; copy?: string; product?: string; draft?: string }> | { design?: string; copy?: string; product?: string; draft?: string };
+  searchParams:
+    | Promise<{
+        design?: string;
+        copy?: string;
+        product?: string;
+        draft?: string;
+      }>
+    | { design?: string; copy?: string; product?: string; draft?: string };
 }
 
 export default async function EditorPage({ searchParams }: EditorPageProps) {
@@ -25,12 +32,18 @@ export default async function EditorPage({ searchParams }: EditorPageProps) {
   const productId = resolved?.product ?? null;
   const draftId = resolved?.draft ?? null;
 
-  const [mockups, designById, designBySlug, catalogProduct] = await Promise.all([
-    getMockups(),
-    designIdParam || copyId ? getDesignById(designIdParam ?? copyId ?? "") : Promise.resolve(null),
-    designIdParam || copyId ? getDesignBySlug(designIdParam ?? copyId ?? "") : Promise.resolve(null),
-    productId ? getProductById(productId) : Promise.resolve(null),
-  ]);
+  const [mockups, designById, designBySlug, catalogProduct] = await Promise.all(
+    [
+      getMockups(),
+      designIdParam || copyId
+        ? getDesignById(designIdParam ?? copyId ?? "")
+        : Promise.resolve(null),
+      designIdParam || copyId
+        ? getDesignBySlug(designIdParam ?? copyId ?? "")
+        : Promise.resolve(null),
+      productId ? getProductById(productId) : Promise.resolve(null),
+    ],
+  );
 
   const design = designById ?? designBySlug ?? null;
   const isCopy = copyId != null;

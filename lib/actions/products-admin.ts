@@ -68,10 +68,8 @@ async function pickUniqueProductSlug(
     const c = `${base}-${n}`.slice(0, 96);
     if (await trySlug(c)) return c;
   }
-  const fallback = `${base}-${randomUUID().replace(/-/g, "").slice(0, 10)}`.slice(
-    0,
-    96,
-  );
+  const fallback =
+    `${base}-${randomUUID().replace(/-/g, "").slice(0, 10)}`.slice(0, 96);
   return fallback;
 }
 
@@ -118,8 +116,7 @@ export async function adminCreateProduct(
     const category_id = parseCategoryId(formData);
     const slug = await pickUniqueProductSlug(supabase, name, tags);
 
-    const description =
-      formData.get("description")?.toString().trim() || null;
+    const description = formData.get("description")?.toString().trim() || null;
     const model_path = await getDefaultProductModelPath(supabase);
 
     const price_cents = parsePriceDopToCents(
@@ -154,7 +151,9 @@ export async function adminCreateProduct(
 
     if (insErr) {
       if (insErr.code === "23505") {
-        return { error: "Conflicto al generar la URL del artículo. Vuelve a intentar." };
+        return {
+          error: "Conflicto al generar la URL del artículo. Vuelve a intentar.",
+        };
       }
       return { error: insErr.message ?? "No se pudo crear el producto." };
     }
@@ -217,8 +216,7 @@ export async function adminUpdateProduct(
     const tags = parseTagsFromForm(formData);
     const category_id = parseCategoryId(formData);
 
-    const description =
-      formData.get("description")?.toString().trim() || null;
+    const description = formData.get("description")?.toString().trim() || null;
 
     const price_cents = parsePriceDopToCents(
       formData.get("price_dop")?.toString() ?? "",
@@ -239,10 +237,7 @@ export async function adminUpdateProduct(
           .from("products")
           .update({ base_texture_id: null })
           .eq("id", id);
-        await supabase
-          .from("textures")
-          .delete()
-          .eq("id", prev.base_texture_id);
+        await supabase.from("textures").delete().eq("id", prev.base_texture_id);
         nextBaseTextureId = null;
       } else if (cover_image_url && prev.base_texture_id) {
         await supabase
@@ -310,7 +305,10 @@ export async function adminDeleteProduct(productId: string): Promise<void> {
       "No se puede eliminar: hay pedidos que incluyen este producto.",
     );
   }
-  const { error } = await supabase.from("products").delete().eq("id", productId);
+  const { error } = await supabase
+    .from("products")
+    .delete()
+    .eq("id", productId);
   if (error) throw new Error(error.message);
   revalidatePath("/admin/catalogo");
   revalidatePath("/catalogo");

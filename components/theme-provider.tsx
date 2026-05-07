@@ -100,7 +100,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
           typeof window !== "undefined" &&
           window.matchMedia("(prefers-color-scheme: dark)").matches),
     }),
-    [theme, setTheme]
+    [theme, setTheme],
   );
 
   return (

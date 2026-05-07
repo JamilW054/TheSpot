@@ -23,7 +23,8 @@ function openDb(): Promise<IDBDatabase> {
 
 /** Generate storage key: textura_<projectName>.<ext> */
 export function getTextureKey(projectName: string, extension: string): string {
-  const safe = projectName.replace(/[^a-zA-Z0-9-_]/g, "-").slice(0, 64) || "proyecto";
+  const safe =
+    projectName.replace(/[^a-zA-Z0-9-_]/g, "-").slice(0, 64) || "proyecto";
   const ext = extension.startsWith(".") ? extension : `.${extension}`;
   return `textura_${safe}${ext}`;
 }
@@ -36,7 +37,7 @@ export interface StoredTexture {
 
 export async function saveTexture(
   projectName: string,
-  file: File
+  file: File,
 ): Promise<string> {
   const ext = file.name.split(".").pop() ?? "png";
   const key = getTextureKey(projectName, ext);
@@ -65,7 +66,8 @@ export async function loadTexture(projectName: string): Promise<string | null> {
     const keys = store.getAllKeys();
     keys.onsuccess = () => {
       const keyList = keys.result as string[];
-      const safe = projectName.replace(/[^a-zA-Z0-9-_]/g, "-").slice(0, 64) || "proyecto";
+      const safe =
+        projectName.replace(/[^a-zA-Z0-9-_]/g, "-").slice(0, 64) || "proyecto";
       const match = keyList.find((k) => k.startsWith(`textura_${safe}`));
       if (!match) {
         db.close();
@@ -124,7 +126,8 @@ export async function deleteTexture(projectName: string): Promise<void> {
     const req = store.getAllKeys();
     req.onsuccess = () => {
       const keys = req.result as string[];
-      const safe = projectName.replace(/[^a-zA-Z0-9-_]/g, "-").slice(0, 64) || "proyecto";
+      const safe =
+        projectName.replace(/[^a-zA-Z0-9-_]/g, "-").slice(0, 64) || "proyecto";
       const prefix = `textura_${safe}`;
       const match = keys.find((k) => k.startsWith(prefix));
       if (match) store.delete(match);
@@ -166,7 +169,7 @@ export async function listTextureKeys(): Promise<string[]> {
  * Returns null if no texture is stored for this project.
  */
 export async function getTextureForExport(
-  projectName: string
+  projectName: string,
 ): Promise<{ blob: Blob; filename: string } | null> {
   const db = await openDb();
   return new Promise((resolve, reject) => {
@@ -175,7 +178,8 @@ export async function getTextureForExport(
     const keys = store.getAllKeys();
     keys.onsuccess = () => {
       const keyList = keys.result as string[];
-      const safe = projectName.replace(/[^a-zA-Z0-9-_]/g, "-").slice(0, 64) || "proyecto";
+      const safe =
+        projectName.replace(/[^a-zA-Z0-9-_]/g, "-").slice(0, 64) || "proyecto";
       const match = keyList.find((k) => k.startsWith(`textura_${safe}`));
       if (!match) {
         db.close();

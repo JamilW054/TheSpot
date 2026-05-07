@@ -1,8 +1,7 @@
 import type { HTMLAttributes } from "react";
 
 const variantStyles = {
-  default:
-    "bg-muted text-muted-foreground border-border",
+  default: "bg-muted text-muted-foreground border-border",
   success:
     "bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-700",
   warning:

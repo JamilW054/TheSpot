@@ -32,9 +32,15 @@ export function OrderStatusContent() {
         <p className="mb-4 text-xs font-medium uppercase tracking-wider text-muted-foreground">
           Consultar por número de pedido
         </p>
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4 sm:flex-row sm:items-end">
+        <form
+          onSubmit={handleSubmit}
+          className="flex flex-col gap-4 sm:flex-row sm:items-end"
+        >
           <div className="min-w-0 flex-1">
-            <label htmlFor="order-id" className="block text-sm font-medium text-foreground">
+            <label
+              htmlFor="order-id"
+              className="block text-sm font-medium text-foreground"
+            >
               Número de pedido
             </label>
             <input
@@ -61,7 +67,10 @@ export function OrderStatusContent() {
         )}
         <p className="mt-4 text-sm text-muted-foreground">
           ¿Tienes cuenta?{" "}
-          <Link href="/login" className="font-medium text-foreground hover:text-primary transition-colors">
+          <Link
+            href="/login"
+            className="font-medium text-foreground hover:text-primary transition-colors"
+          >
             Inicia sesión
           </Link>{" "}
           para ver tus pedidos en un solo lugar.

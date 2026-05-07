@@ -7,7 +7,10 @@ import type { EditorTool } from "@/config/editor-tools";
 import { EDITOR_TOOLS } from "@/config/editor-tools";
 import { Button } from "@/components/ui/button";
 
-const ICON_BY_NAME: Record<string, React.ComponentType<{ className?: string }>> = {
+const ICON_BY_NAME: Record<
+  string,
+  React.ComponentType<{ className?: string }>
+> = {
   Image,
   Type,
   Square,
@@ -91,7 +94,8 @@ export function EditorSidebar({ onAddImageFromFile }: EditorSidebarProps) {
           </>
         ) : null}
         <p className="text-xs text-muted-foreground">
-          Arrastra una herramienta al canvas. Todo se incluye en tu diseño y la vista previa.
+          Arrastra una herramienta al canvas. Todo se incluye en tu diseño y la
+          vista previa.
         </p>
       </div>
     </aside>

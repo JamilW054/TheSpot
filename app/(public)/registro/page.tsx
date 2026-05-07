@@ -46,88 +46,97 @@ export default function RegistroPage() {
       const result = await register(trimmedEmail, trimmedPassword, trimmedName);
       if (result.needsEmailConfirmation) {
         setError(null);
-        setSuccess("Cuenta creada. Revisa tu correo para confirmar el email y luego inicia sesión.");
+        setSuccess(
+          "Cuenta creada. Revisa tu correo para confirmar el email y luego inicia sesión.",
+        );
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudo crear la cuenta. Inténtalo de nuevo.");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "No se pudo crear la cuenta. Inténtalo de nuevo.",
+      );
     }
   }
 
   return (
     <div className="flex flex-1 flex-col items-center justify-center">
       <div className="mx-auto max-w-md w-full py-8">
-      <h1 className="mb-2 text-xl font-semibold text-foreground sm:text-2xl">
-        Crear cuenta
-      </h1>
-      <p className="text-muted-foreground text-sm mb-8">
-        Regístrate con tu nombre, email y contraseña.
-      </p>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <Input
-          label="Nombre"
-          type="text"
-          placeholder="Tu nombre"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          disabled={isLoading}
-          autoComplete="name"
-        />
-        <Input
-          label="Email"
-          type="email"
-          placeholder="tu@email.com"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          disabled={isLoading}
-          autoComplete="email"
-        />
-        <Input
-          label="Contraseña"
-          type="password"
-          placeholder="••••••••"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          disabled={isLoading}
-          autoComplete="new-password"
-        />
-        <Input
-          label="Repetir contraseña (opcional)"
-          type="password"
-          placeholder="••••••••"
-          value={passwordConfirm}
-          onChange={(e) => setPasswordConfirm(e.target.value)}
-          disabled={isLoading}
-          autoComplete="new-password"
-        />
-        {error ? (
-          <p role="alert" className="text-sm text-destructive">
-            {error}
-          </p>
-        ) : null}
-        {success ? (
-          <p role="status" className="text-sm text-green-600 dark:text-green-400">
-            {success}
-          </p>
-        ) : null}
-        <Button
-          type="submit"
-          variant="primary"
-          size="lg"
-          className="w-full"
-          disabled={isLoading}
-        >
-          {isLoading ? "Creando cuenta…" : "Registrarse"}
-        </Button>
-      </form>
-      <p className="mt-6 text-center text-sm text-muted-foreground">
-        ¿Ya tienes cuenta?{" "}
-        <Link
-          href="/login"
-          className="font-medium text-primary hover:underline"
-        >
-          Inicia sesión
-        </Link>
-      </p>
+        <h1 className="mb-2 text-xl font-semibold text-foreground sm:text-2xl">
+          Crear cuenta
+        </h1>
+        <p className="text-muted-foreground text-sm mb-8">
+          Regístrate con tu nombre, email y contraseña.
+        </p>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <Input
+            label="Nombre"
+            type="text"
+            placeholder="Tu nombre"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            disabled={isLoading}
+            autoComplete="name"
+          />
+          <Input
+            label="Email"
+            type="email"
+            placeholder="tu@email.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            disabled={isLoading}
+            autoComplete="email"
+          />
+          <Input
+            label="Contraseña"
+            type="password"
+            placeholder="••••••••"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            disabled={isLoading}
+            autoComplete="new-password"
+          />
+          <Input
+            label="Repetir contraseña (opcional)"
+            type="password"
+            placeholder="••••••••"
+            value={passwordConfirm}
+            onChange={(e) => setPasswordConfirm(e.target.value)}
+            disabled={isLoading}
+            autoComplete="new-password"
+          />
+          {error ? (
+            <p role="alert" className="text-sm text-destructive">
+              {error}
+            </p>
+          ) : null}
+          {success ? (
+            <p
+              role="status"
+              className="text-sm text-green-600 dark:text-green-400"
+            >
+              {success}
+            </p>
+          ) : null}
+          <Button
+            type="submit"
+            variant="primary"
+            size="lg"
+            className="w-full"
+            disabled={isLoading}
+          >
+            {isLoading ? "Creando cuenta…" : "Registrarse"}
+          </Button>
+        </form>
+        <p className="mt-6 text-center text-sm text-muted-foreground">
+          ¿Ya tienes cuenta?{" "}
+          <Link
+            href="/login"
+            className="font-medium text-primary hover:underline"
+          >
+            Inicia sesión
+          </Link>
+        </p>
       </div>
     </div>
   );

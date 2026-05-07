@@ -18,7 +18,7 @@ const SLUG_ID_SUFFIX = /-(d|l)(\d{2})$/i;
  */
 export function slugify(
   text: string,
-  options: { maxLength?: number } = {}
+  options: { maxLength?: number } = {},
 ): string {
   const { maxLength = SLUG_BASE_MAX_LENGTH } = options;
   const base = text

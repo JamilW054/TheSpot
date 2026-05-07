@@ -22,7 +22,9 @@ export interface ProductRow {
   categories?: { slug: string } | { slug: string }[] | null;
 }
 
-function categorySlugFromRow(categories: ProductRow["categories"]): string | null {
+function categorySlugFromRow(
+  categories: ProductRow["categories"],
+): string | null {
   if (!categories) return null;
   const c = Array.isArray(categories) ? categories[0] : categories;
   return c?.slug ?? null;

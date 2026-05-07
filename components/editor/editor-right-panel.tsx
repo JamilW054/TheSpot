@@ -19,7 +19,10 @@ export interface EditorRightPanelProps {
   selectedId: string | null;
   elements: CanvasElement[];
   onSelectElement: (id: string) => void;
-  onMoveLayer: (id: string, direction: import("./layers-panel").LayerMoveDirection) => void;
+  onMoveLayer: (
+    id: string,
+    direction: import("./layers-panel").LayerMoveDirection,
+  ) => void;
   onUpdateElement: (id: string, partial: CanvasElementPatch) => void;
   onClearSelection: () => void;
   projectName?: string;
@@ -36,7 +39,11 @@ export interface EditorRightPanelProps {
   onExportDesignJson?: () => void;
   /** Cuando el pincel está activo, dibujar en el canvas 2D termina un trazo */
   activeTool?: string;
-  onPathStrokeComplete?: (points: PathPoint[], strokeColor?: string, strokeWidth?: number) => void;
+  onPathStrokeComplete?: (
+    points: PathPoint[],
+    strokeColor?: string,
+    strokeWidth?: number,
+  ) => void;
   /** Tab activo: diseño 2D o lista */
   rightPanelTab?: EditorPanelTab;
   onRightPanelTabChange?: (tab: EditorPanelTab) => void;
@@ -119,7 +126,10 @@ export function EditorRightPanel({
 
   useEffect(() => {
     if (!selectedId) return;
-    designSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    designSectionRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "nearest",
+    });
   }, [selectedId]);
 
   useEffect(() => {
@@ -142,7 +152,10 @@ export function EditorRightPanel({
     const rect = el.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 400;
     const y = ((e.clientY - rect.top) / rect.height) * 300;
-    return { x: Math.max(0, Math.min(400, x)), y: Math.max(0, Math.min(300, y)) };
+    return {
+      x: Math.max(0, Math.min(400, x)),
+      y: Math.max(0, Math.min(300, y)),
+    };
   };
 
   const handleBrushPointerDown = (e: React.PointerEvent) => {
@@ -174,7 +187,11 @@ export function EditorRightPanel({
       className="editor-panel scrollbar-hide flex w-80 shrink-0 flex-col overflow-y-auto border-l border-border px-5 py-4"
       aria-label="Prendas y elementos"
     >
-      <CollapsibleSection title="Prendas" open={prendasOpen} onToggle={() => setPrendasOpen(!prendasOpen)}>
+      <CollapsibleSection
+        title="Prendas"
+        open={prendasOpen}
+        onToggle={() => setPrendasOpen(!prendasOpen)}
+      >
         <MockupPanel
           mockups={mockups}
           elements={elements}
@@ -206,7 +223,11 @@ export function EditorRightPanel({
             className="origin-top-left relative"
             style={{ width: 400, height: 300, transform: "scale(0.8)" }}
           >
-            <CanvasDropZone id={CANVAS_DROPPABLE_ID_2D} onBackgroundClick={onClearSelection} compact>
+            <CanvasDropZone
+              id={CANVAS_DROPPABLE_ID_2D}
+              onBackgroundClick={onClearSelection}
+              compact
+            >
               <CanvasElementNodes
                 elements={elements}
                 selectedId={selectedId}
@@ -221,7 +242,11 @@ export function EditorRightPanel({
                 onPointerMove={handleBrushPointerMove}
                 onPointerUp={handleBrushPointerUp}
                 onPointerLeave={() => {
-                  if (drawingPoints && drawingPoints.length >= 2 && onPathStrokeComplete) {
+                  if (
+                    drawingPoints &&
+                    drawingPoints.length >= 2 &&
+                    onPathStrokeComplete
+                  ) {
                     onPathStrokeComplete(drawingPoints);
                   }
                   setDrawingPoints(null);

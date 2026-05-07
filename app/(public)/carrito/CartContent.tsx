@@ -22,15 +22,27 @@ export function CartContent({ products }: { products: CatalogProduct[] }) {
     return (
       <div className="rounded-3xl border border-border bg-card p-16 sm:p-20 text-center">
         <div className="mx-auto flex size-20 items-center justify-center rounded-full bg-muted/50 text-muted-foreground">
-          <svg className="size-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+          <svg
+            className="size-10"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden
+          >
             <circle cx="9" cy="21" r="1" />
             <circle cx="20" cy="21" r="1" />
             <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
           </svg>
         </div>
-        <h2 className="mt-8 text-xl font-semibold text-foreground">Tu carrito está vacío</h2>
+        <h2 className="mt-8 text-xl font-semibold text-foreground">
+          Tu carrito está vacío
+        </h2>
         <p className="mt-3 text-sm text-muted-foreground max-w-sm mx-auto leading-relaxed">
-          Añade productos desde el catálogo y vuelve aquí para finalizar tu pedido.
+          Añade productos desde el catálogo y vuelve aquí para finalizar tu
+          pedido.
         </p>
         <Link
           href="/catalogo"
@@ -86,10 +98,15 @@ export function CartContent({ products }: { products: CatalogProduct[] }) {
                     {product.name}
                   </Link>
                   {item.designId ? (
-                    <span className="inline-block text-xs font-medium text-muted-foreground">Diseño personalizado</span>
+                    <span className="inline-block text-xs font-medium text-muted-foreground">
+                      Diseño personalizado
+                    </span>
                   ) : null}
                   <p className="text-sm text-muted-foreground tabular-nums">
-                    {product.price} <span className="text-foreground/80">× {item.quantity}</span>
+                    {product.price}{" "}
+                    <span className="text-foreground/80">
+                      × {item.quantity}
+                    </span>
                   </p>
                 </div>
 
@@ -97,16 +114,30 @@ export function CartContent({ products }: { products: CatalogProduct[] }) {
                   <div className="flex items-center rounded-lg border border-border bg-muted/20">
                     <button
                       type="button"
-                      onClick={() => updateQuantity(item.productId, item.quantity - 1, item.designId)}
+                      onClick={() =>
+                        updateQuantity(
+                          item.productId,
+                          item.quantity - 1,
+                          item.designId,
+                        )
+                      }
                       className="flex h-9 w-9 items-center justify-center text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                       aria-label="Reducir cantidad"
                     >
                       −
                     </button>
-                    <span className="min-w-9 text-center text-sm font-medium tabular-nums">{item.quantity}</span>
+                    <span className="min-w-9 text-center text-sm font-medium tabular-nums">
+                      {item.quantity}
+                    </span>
                     <button
                       type="button"
-                      onClick={() => updateQuantity(item.productId, item.quantity + 1, item.designId)}
+                      onClick={() =>
+                        updateQuantity(
+                          item.productId,
+                          item.quantity + 1,
+                          item.designId,
+                        )
+                      }
                       className="flex h-9 w-9 items-center justify-center text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                       aria-label="Aumentar cantidad"
                     >
@@ -122,7 +153,16 @@ export function CartContent({ products }: { products: CatalogProduct[] }) {
                     className="flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-destructive"
                     aria-label="Quitar del carrito"
                   >
-                    <svg className="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                    <svg
+                      className="size-4"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden
+                    >
                       <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                       <line x1="10" y1="11" x2="10" y2="17" />
                       <line x1="14" y1="11" x2="14" y2="17" />
@@ -140,7 +180,14 @@ export function CartContent({ products }: { products: CatalogProduct[] }) {
             href="/catalogo"
             className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
           >
-            <svg className="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+            <svg
+              className="size-4"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              aria-hidden
+            >
               <path d="M19 12H5M12 19l-7-7 7-7" />
             </svg>
             Seguir comprando

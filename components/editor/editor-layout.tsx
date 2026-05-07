@@ -11,7 +11,10 @@ import {
   useSensors,
 } from "@dnd-kit/core";
 import type { Mockup } from "@/types";
-import { buildDesignExportPayload, downloadDesignJson } from "@/lib/design-export";
+import {
+  buildDesignExportPayload,
+  downloadDesignJson,
+} from "@/lib/design-export";
 import {
   getCurrentDraftFromLocal,
   getDraftFromLocal,
@@ -77,7 +80,11 @@ function createTextElement(x: number, y: number): CanvasElement {
   };
 }
 
-function createImageElement(x: number, y: number, content?: string): CanvasElement {
+function createImageElement(
+  x: number,
+  y: number,
+  content?: string,
+): CanvasElement {
   return {
     id: crypto.randomUUID(),
     ...DEFAULT_IMAGE_ELEMENT,
@@ -87,7 +94,11 @@ function createImageElement(x: number, y: number, content?: string): CanvasEleme
   };
 }
 
-function createShapeElement(x: number, y: number, shapeKind?: CanvasElement["shapeKind"]): CanvasElement {
+function createShapeElement(
+  x: number,
+  y: number,
+  shapeKind?: CanvasElement["shapeKind"],
+): CanvasElement {
   return {
     id: crypto.randomUUID(),
     ...DEFAULT_SHAPE_ELEMENT,
@@ -104,7 +115,7 @@ const DEFAULT_STROKE_WIDTH = 3;
 function createPathElement(
   points: [number, number][],
   strokeColor = DEFAULT_STROKE_COLOR,
-  strokeWidth = DEFAULT_STROKE_WIDTH
+  strokeWidth = DEFAULT_STROKE_WIDTH,
 ): CanvasElement {
   if (points.length === 0) {
     return {
@@ -180,14 +191,18 @@ export function EditorLayout({
 
   const [elements, setElements] = useState<CanvasElement[]>(initialElements);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [selectedMockup, setSelectedMockupState] = useState<Mockup | null>(() => {
-    if (mockups.length === 0) return null;
-    if (initialMockupModelPath) {
-      const byPath = mockups.find((m) => m.modelPath === initialMockupModelPath);
-      if (byPath) return byPath;
-    }
-    return mockups[0] ?? null;
-  });
+  const [selectedMockup, setSelectedMockupState] = useState<Mockup | null>(
+    () => {
+      if (mockups.length === 0) return null;
+      if (initialMockupModelPath) {
+        const byPath = mockups.find(
+          (m) => m.modelPath === initialMockupModelPath,
+        );
+        if (byPath) return byPath;
+      }
+      return mockups[0] ?? null;
+    },
+  );
   const setSelectedMockup = useCallback((m: Mockup | null) => {
     setSelectedMockupState(m);
   }, []);
@@ -195,9 +210,14 @@ export function EditorLayout({
   const [garmentColor, setGarmentColor] = useState("#ffffff");
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
   const [activeTool, setActiveTool] = useState<string>("move");
-  const [centerViewMode, setCenterViewMode] = useState<CenterViewMode>("preview");
-  const [rightPanelTab, setRightPanelTab] = useState<"design" | "nodes">("design");
-  const [pendingFocusTextId, setPendingFocusTextId] = useState<string | null>(null);
+  const [centerViewMode, setCenterViewMode] =
+    useState<CenterViewMode>("preview");
+  const [rightPanelTab, setRightPanelTab] = useState<"design" | "nodes">(
+    "design",
+  );
+  const [pendingFocusTextId, setPendingFocusTextId] = useState<string | null>(
+    null,
+  );
   const [designTextureUrl, setDesignTextureUrl] = useState<string | null>(null);
   const objectUrlsByElementId = useRef<Map<string, string>>(new Map());
   const historyPast = useRef<CanvasElement[][]>([]);
@@ -269,13 +289,7 @@ export function EditorLayout({
       });
     }, AUTO_SAVE_DEBOUNCE_MS);
     return () => clearTimeout(t);
-  }, [
-    designId,
-    elements,
-    texture3dUrl,
-    garmentColor,
-    initialProductId,
-  ]);
+  }, [designId, elements, texture3dUrl, garmentColor, initialProductId]);
 
   const activeDragElement = activeDragId
     ? elements.find((el) => el.id === activeDragId)
@@ -313,16 +327,25 @@ export function EditorLayout({
         return Promise.resolve(null);
       }
     }
-    return fetch(url).then((r) => r.blob()).catch(() => null);
+    return fetch(url)
+      .then((r) => r.blob())
+      .catch(() => null);
   }, [effectiveTexture3d]);
 
-  const handleAddImageFromFile = useCallback((file: File) => {
-    pushHistory(elements);
-    const url = URL.createObjectURL(file);
-    const el = createImageElement(DEFAULT_IMAGE_POS.x, DEFAULT_IMAGE_POS.y, url);
-    objectUrlsByElementId.current.set(el.id, url);
-    setElements((prev) => [...prev, el]);
-  }, [elements, pushHistory]);
+  const handleAddImageFromFile = useCallback(
+    (file: File) => {
+      pushHistory(elements);
+      const url = URL.createObjectURL(file);
+      const el = createImageElement(
+        DEFAULT_IMAGE_POS.x,
+        DEFAULT_IMAGE_POS.y,
+        url,
+      );
+      objectUrlsByElementId.current.set(el.id, url);
+      setElements((prev) => [...prev, el]);
+    },
+    [elements, pushHistory],
+  );
 
   useEffect(() => {
     const ids = new Set(elements.map((el) => el.id));
@@ -344,43 +367,49 @@ export function EditorLayout({
     };
   }, []);
 
-  const handleUpdateElement = useCallback((id: string, partial: CanvasElementPatch) => {
-    pushHistory(elements);
-    setElements((prev) =>
-      prev.map((el) => (el.id === id ? { ...el, ...partial } : el))
-    );
-  }, [elements, pushHistory]);
+  const handleUpdateElement = useCallback(
+    (id: string, partial: CanvasElementPatch) => {
+      pushHistory(elements);
+      setElements((prev) =>
+        prev.map((el) => (el.id === id ? { ...el, ...partial } : el)),
+      );
+    },
+    [elements, pushHistory],
+  );
 
-  const handleMoveLayer = useCallback((id: string, direction: "up" | "down" | "front" | "back") => {
-    pushHistory(elements);
-    setElements((prev) => {
-      const i = prev.findIndex((el) => el.id === id);
-      if (i === -1) return prev;
-      if (direction === "front") {
-        if (i === prev.length - 1) return prev;
-        const next = prev.filter((_, idx) => idx !== i);
-        next.push(prev[i]!);
-        return next;
-      }
-      if (direction === "back") {
-        if (i === 0) return prev;
-        const next = prev.filter((_, idx) => idx !== i);
-        next.unshift(prev[i]!);
-        return next;
-      }
-      if (direction === "up" && i < prev.length - 1) {
-        const next = [...prev];
-        [next[i], next[i + 1]] = [next[i + 1]!, next[i]!];
-        return next;
-      }
-      if (direction === "down" && i > 0) {
-        const next = [...prev];
-        [next[i - 1], next[i]] = [next[i]!, next[i - 1]!];
-        return next;
-      }
-      return prev;
-    });
-  }, [elements, pushHistory]);
+  const handleMoveLayer = useCallback(
+    (id: string, direction: "up" | "down" | "front" | "back") => {
+      pushHistory(elements);
+      setElements((prev) => {
+        const i = prev.findIndex((el) => el.id === id);
+        if (i === -1) return prev;
+        if (direction === "front") {
+          if (i === prev.length - 1) return prev;
+          const next = prev.filter((_, idx) => idx !== i);
+          next.push(prev[i]!);
+          return next;
+        }
+        if (direction === "back") {
+          if (i === 0) return prev;
+          const next = prev.filter((_, idx) => idx !== i);
+          next.unshift(prev[i]!);
+          return next;
+        }
+        if (direction === "up" && i < prev.length - 1) {
+          const next = [...prev];
+          [next[i], next[i + 1]] = [next[i + 1]!, next[i]!];
+          return next;
+        }
+        if (direction === "down" && i > 0) {
+          const next = [...prev];
+          [next[i - 1], next[i]] = [next[i]!, next[i - 1]!];
+          return next;
+        }
+        return prev;
+      });
+    },
+    [elements, pushHistory],
+  );
 
   const handleDragStart = useCallback((event: DragStartEvent) => {
     if (event.active.data.current?.kind === "element") {
@@ -388,74 +417,102 @@ export function EditorLayout({
     }
   }, []);
 
-  const handleDragEnd = useCallback((event: DragEndEvent) => {
-    setActiveDragId(null);
-    const { active, over } = event;
-    const isCanvasDrop = over && (over.id === CANVAS_DROPPABLE_ID || over.id === CANVAS_DROPPABLE_ID_2D);
-    if (!over || !isCanvasDrop) return;
+  const handleDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      setActiveDragId(null);
+      const { active, over } = event;
+      const isCanvasDrop =
+        over &&
+        (over.id === CANVAS_DROPPABLE_ID || over.id === CANVAS_DROPPABLE_ID_2D);
+      if (!over || !isCanvasDrop) return;
 
-    const translated = active.rect.current.translated;
-    const overRect = over.rect;
-    if (!translated || !overRect) return;
+      const translated = active.rect.current.translated;
+      const overRect = over.rect;
+      if (!translated || !overRect) return;
 
-    const px = translated.left - overRect.left;
-    const py = translated.top - overRect.top;
-    const w = overRect.width || 1;
-    const h = overRect.height || 1;
-    const xRaw = (px / w) * LOGICAL_WIDTH;
-    const yRaw = (py / h) * LOGICAL_HEIGHT;
-    const xSnap = snapToGrid(xRaw, GRID_SIZE);
-    const ySnap = snapToGrid(yRaw, GRID_SIZE);
-    const xClamp = Math.max(0, Math.min(LOGICAL_WIDTH - 20, xSnap));
-    const yClamp = Math.max(0, Math.min(LOGICAL_HEIGHT - 20, ySnap));
+      const px = translated.left - overRect.left;
+      const py = translated.top - overRect.top;
+      const w = overRect.width || 1;
+      const h = overRect.height || 1;
+      const xRaw = (px / w) * LOGICAL_WIDTH;
+      const yRaw = (py / h) * LOGICAL_HEIGHT;
+      const xSnap = snapToGrid(xRaw, GRID_SIZE);
+      const ySnap = snapToGrid(yRaw, GRID_SIZE);
+      const xClamp = Math.max(0, Math.min(LOGICAL_WIDTH - 20, xSnap));
+      const yClamp = Math.max(0, Math.min(LOGICAL_HEIGHT - 20, ySnap));
 
-    const isExistingElement = active.data.current?.kind === "element";
-    const dragType = active.data.current?.type as CanvasElementType | undefined;
-    const shapeKind = active.data.current?.shapeKind as CanvasElement["shapeKind"] | undefined;
+      const isExistingElement = active.data.current?.kind === "element";
+      const dragType = active.data.current?.type as
+        | CanvasElementType
+        | undefined;
+      const shapeKind = active.data.current?.shapeKind as
+        | CanvasElement["shapeKind"]
+        | undefined;
 
-    if (isExistingElement && typeof active.id === "string") {
-      const el = elements.find((e) => e.id === active.id);
-      if (el?.locked) return;
+      if (isExistingElement && typeof active.id === "string") {
+        const el = elements.find((e) => e.id === active.id);
+        if (el?.locked) return;
+        pushHistory(elements);
+        setElements((prev) =>
+          prev.map((el) =>
+            el.id === active.id ? { ...el, x: xClamp, y: yClamp } : el,
+          ),
+        );
+        return;
+      }
+
       pushHistory(elements);
-      setElements((prev) =>
-        prev.map((el) =>
-          el.id === active.id ? { ...el, x: xClamp, y: yClamp } : el
-        )
-      );
-      return;
-    }
+      if (dragType === "image") {
+        setElements((prev) => [...prev, createImageElement(xClamp, yClamp)]);
+      } else if (dragType === "shape") {
+        setElements((prev) => [
+          ...prev,
+          createShapeElement(xClamp, yClamp, shapeKind),
+        ]);
+      } else if (dragType === "text") {
+        const newText = createTextElement(xClamp, yClamp);
+        setElements((prev) => [...prev, newText]);
+        setSelectedId(newText.id);
+        setRightPanelTab("design");
+        setPendingFocusTextId(newText.id);
+      } else if (dragType === "path") {
+        setElements((prev) => [
+          ...prev,
+          createPathElement([
+            [xClamp, yClamp],
+            [xClamp + 30, yClamp + 20],
+          ]),
+        ]);
+      }
+    },
+    [elements, pushHistory],
+  );
 
-    pushHistory(elements);
-    if (dragType === "image") {
-      setElements((prev) => [...prev, createImageElement(xClamp, yClamp)]);
-    } else if (dragType === "shape") {
-      setElements((prev) => [...prev, createShapeElement(xClamp, yClamp, shapeKind)]);
-    } else if (dragType === "text") {
-      const newText = createTextElement(xClamp, yClamp);
-      setElements((prev) => [...prev, newText]);
-      setSelectedId(newText.id);
-      setRightPanelTab("design");
-      setPendingFocusTextId(newText.id);
-    } else if (dragType === "path") {
+  const handlePathStrokeComplete = useCallback(
+    (
+      points: [number, number][],
+      strokeColor?: string,
+      strokeWidth?: number,
+    ) => {
+      if (points.length < 2) return;
+      pushHistory(elements);
       setElements((prev) => [
         ...prev,
-        createPathElement([[xClamp, yClamp], [xClamp + 30, yClamp + 20]]),
+        createPathElement(
+          points,
+          strokeColor ?? DEFAULT_STROKE_COLOR,
+          strokeWidth ?? DEFAULT_STROKE_WIDTH,
+        ),
       ]);
-    }
-  }, [elements, pushHistory]);
-
-  const handlePathStrokeComplete = useCallback((points: [number, number][], strokeColor?: string, strokeWidth?: number) => {
-    if (points.length < 2) return;
-    pushHistory(elements);
-    setElements((prev) => [
-      ...prev,
-      createPathElement(points, strokeColor ?? DEFAULT_STROKE_COLOR, strokeWidth ?? DEFAULT_STROKE_WIDTH),
-    ]);
-  }, [elements, pushHistory]);
+    },
+    [elements, pushHistory],
+  );
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } })
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 200, tolerance: 5 },
+    }),
   );
 
   useEffect(() => {
@@ -463,7 +520,12 @@ export function EditorLayout({
       if (!selectedId) return;
       const el = elements.find((elem) => elem.id === selectedId);
       if (!el || el.locked) return;
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || (e.target as HTMLElement).isContentEditable) return;
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement ||
+        (e.target as HTMLElement).isContentEditable
+      )
+        return;
       const step = e.shiftKey ? KEYBOARD_STEP_LARGE : KEYBOARD_STEP;
       let dx = 0;
       let dy = 0;
@@ -479,11 +541,17 @@ export function EditorLayout({
             elem.id === selectedId
               ? {
                   ...elem,
-                  x: Math.max(0, Math.min(LOGICAL_WIDTH - elem.width, elem.x + dx)),
-                  y: Math.max(0, Math.min(LOGICAL_HEIGHT - elem.height, elem.y + dy)),
+                  x: Math.max(
+                    0,
+                    Math.min(LOGICAL_WIDTH - elem.width, elem.x + dx),
+                  ),
+                  y: Math.max(
+                    0,
+                    Math.min(LOGICAL_HEIGHT - elem.height, elem.y + dy),
+                  ),
                 }
-              : elem
-          )
+              : elem,
+          ),
         );
       }
     };
@@ -500,11 +568,7 @@ export function EditorLayout({
     if (!canvas) return Promise.resolve(null);
     return new Promise((resolve) => {
       try {
-        canvas.toBlob(
-          (blob) => resolve(blob ?? null),
-          "image/png",
-          0.92
-        );
+        canvas.toBlob((blob) => resolve(blob ?? null), "image/png", 0.92);
       } catch {
         resolve(null);
       }
@@ -564,28 +628,28 @@ export function EditorLayout({
             }}
           />
           <EditorRightPanel
-          selectedId={selectedId}
-          elements={elements}
-          onSelectElement={setSelectedId}
-          onMoveLayer={handleMoveLayer}
-          onUpdateElement={handleUpdateElement}
-          onClearSelection={() => setSelectedId(null)}
-          projectName={projectName}
-          selectedMockup={selectedMockup}
-          onSelectMockup={setSelectedMockup}
-          mockups={mockups}
-          onTexture3dChange={setTexture3dUrl}
-          garmentColor={garmentColor}
-          onGarmentColorChange={setGarmentColor}
-          getCanvasAsBlob={getCanvasAsBlob}
-          getEffectiveTextureBlob={getEffectiveTextureBlob}
-          onExportDesignJson={handleExportDesignJson}
-          activeTool={activeTool}
-          onPathStrokeComplete={handlePathStrokeComplete}
-          rightPanelTab={rightPanelTab}
-          onRightPanelTabChange={setRightPanelTab}
-          pendingFocusTextId={pendingFocusTextId}
-          onFocusTextDone={() => setPendingFocusTextId(null)}
+            selectedId={selectedId}
+            elements={elements}
+            onSelectElement={setSelectedId}
+            onMoveLayer={handleMoveLayer}
+            onUpdateElement={handleUpdateElement}
+            onClearSelection={() => setSelectedId(null)}
+            projectName={projectName}
+            selectedMockup={selectedMockup}
+            onSelectMockup={setSelectedMockup}
+            mockups={mockups}
+            onTexture3dChange={setTexture3dUrl}
+            garmentColor={garmentColor}
+            onGarmentColorChange={setGarmentColor}
+            getCanvasAsBlob={getCanvasAsBlob}
+            getEffectiveTextureBlob={getEffectiveTextureBlob}
+            onExportDesignJson={handleExportDesignJson}
+            activeTool={activeTool}
+            onPathStrokeComplete={handlePathStrokeComplete}
+            rightPanelTab={rightPanelTab}
+            onRightPanelTabChange={setRightPanelTab}
+            pendingFocusTextId={pendingFocusTextId}
+            onFocusTextDone={() => setPendingFocusTextId(null)}
           />
         </div>
       </div>

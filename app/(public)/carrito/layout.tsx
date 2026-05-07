@@ -3,9 +3,5 @@ export default function CarritoLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <div className="-mt-6 sm:-mt-8">
-      {children}
-    </div>
-  );
+  return <div className="-mt-6 sm:-mt-8">{children}</div>;
 }

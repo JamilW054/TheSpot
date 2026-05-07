@@ -54,7 +54,7 @@ function resolveCatalogImageRaw(product: CatalogProduct): string | null {
     (cover.startsWith("http://") ||
       cover.startsWith("https://") ||
       cover.startsWith("/"));
-  const raw = coverIsUrl ? cover : (base || cover);
+  const raw = coverIsUrl ? cover : base || cover;
   if (!raw) return null;
   return toTextureLoadUrl(raw);
 }
@@ -63,7 +63,9 @@ function resolveCatalogImageRaw(product: CatalogProduct): string | null {
  * URL para mostrar portada/vista en catálogo: directa a CDN cuando es posible (más rápido).
  * Orígenes desconocidos siguen usando `/api/texture` por compatibilidad.
  */
-export function getCatalogDisplayImageUrl(product: CatalogProduct): string | null {
+export function getCatalogDisplayImageUrl(
+  product: CatalogProduct,
+): string | null {
   const loadUrl = resolveCatalogImageRaw(product);
   if (!loadUrl) return null;
   if (loadUrl.startsWith("/")) return loadUrl;

@@ -5,13 +5,21 @@ import { createClient } from "@/lib/supabase/server";
 
 export default async function MisDisenosPage() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   const designs = await getDesigns(user?.id ?? undefined);
   return (
-    <PageLayout title="Mis diseños" description="Tus diseños guardados en la cuenta y borradores locales del editor.">
+    <PageLayout
+      title="Mis diseños"
+      description="Tus diseños guardados en la cuenta y borradores locales del editor."
+    >
       <DraftCardsList />
       <section aria-labelledby="saved-heading">
-        <h2 id="saved-heading" className="text-lg font-semibold text-foreground mb-3">
+        <h2
+          id="saved-heading"
+          className="text-lg font-semibold text-foreground mb-3"
+        >
           Guardados en la nube
         </h2>
         <div className="grid grid-cols-2 gap-4 sm:gap-5 md:grid-cols-3 lg:grid-cols-4">

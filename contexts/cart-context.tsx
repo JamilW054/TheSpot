@@ -41,9 +41,17 @@ function saveCart(items: CartItem[]) {
 interface CartContextValue {
   items: CartItem[];
   itemCount: number;
-  addItem: (productId: string, quantity?: number, designId?: string | null) => void;
+  addItem: (
+    productId: string,
+    quantity?: number,
+    designId?: string | null,
+  ) => void;
   removeItem: (productId: string, designId?: string | null) => void;
-  updateQuantity: (productId: string, quantity: number, designId?: string | null) => void;
+  updateQuantity: (
+    productId: string,
+    quantity: number,
+    designId?: string | null,
+  ) => void;
   clearCart: () => void;
   getQuantity: (productId: string, designId?: string | null) => number;
 }
@@ -78,34 +86,46 @@ export function CartProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener("storage", onStorage);
   }, []);
 
-  const addItem = useCallback((productId: string, quantity = 1, designId?: string | null) => {
-    setItems((prev) => {
+  const addItem = useCallback(
+    (productId: string, quantity = 1, designId?: string | null) => {
+      setItems((prev) => {
+        const key = `${productId}:${designId ?? ""}`;
+        const i = prev.findIndex((it) => cartItemKey(it) === key);
+        if (i >= 0) {
+          const next = [...prev];
+          next[i] = { ...next[i]!, quantity: next[i]!.quantity + quantity };
+          return next;
+        }
+        return [
+          ...prev,
+          { productId, quantity, designId: designId ?? undefined },
+        ];
+      });
+    },
+    [],
+  );
+
+  const removeItem = useCallback(
+    (productId: string, designId?: string | null) => {
       const key = `${productId}:${designId ?? ""}`;
-      const i = prev.findIndex((it) => cartItemKey(it) === key);
-      if (i >= 0) {
-        const next = [...prev];
-        next[i] = { ...next[i]!, quantity: next[i]!.quantity + quantity };
-        return next;
+      setItems((prev) => prev.filter((it) => cartItemKey(it) !== key));
+    },
+    [],
+  );
+
+  const updateQuantity = useCallback(
+    (productId: string, quantity: number, designId?: string | null) => {
+      if (quantity < 1) {
+        removeItem(productId, designId);
+        return;
       }
-      return [...prev, { productId, quantity, designId: designId ?? undefined }];
-    });
-  }, []);
-
-  const removeItem = useCallback((productId: string, designId?: string | null) => {
-    const key = `${productId}:${designId ?? ""}`;
-    setItems((prev) => prev.filter((it) => cartItemKey(it) !== key));
-  }, []);
-
-  const updateQuantity = useCallback((productId: string, quantity: number, designId?: string | null) => {
-    if (quantity < 1) {
-      removeItem(productId, designId);
-      return;
-    }
-    const key = `${productId}:${designId ?? ""}`;
-    setItems((prev) =>
-      prev.map((it) => (cartItemKey(it) === key ? { ...it, quantity } : it))
-    );
-  }, [removeItem]);
+      const key = `${productId}:${designId ?? ""}`;
+      setItems((prev) =>
+        prev.map((it) => (cartItemKey(it) === key ? { ...it, quantity } : it)),
+      );
+    },
+    [removeItem],
+  );
 
   const clearCart = useCallback(() => setItems([]), []);
 
@@ -115,12 +135,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
       const it = items.find((i) => cartItemKey(i) === key);
       return it?.quantity ?? 0;
     },
-    [items]
+    [items],
   );
 
   const itemCount = useMemo(
     () => items.reduce((acc, it) => acc + it.quantity, 0),
-    [items]
+    [items],
   );
 
   const value = useMemo<CartContextValue>(
@@ -133,7 +153,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
       clearCart,
       getQuantity,
     }),
-    [items, itemCount, addItem, removeItem, updateQuantity, clearCart, getQuantity]
+    [
+      items,
+      itemCount,
+      addItem,
+      removeItem,
+      updateQuantity,
+      clearCart,
+      getQuantity,
+    ],
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

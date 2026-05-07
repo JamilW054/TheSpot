@@ -50,6 +50,7 @@ async function withNetworkFallback<T>(
   }
 }
 
+import type { CatalogOrden, CatalogPrecio } from "@/lib/catalog-query";
 import { formatDOPFromCents } from "@/lib/format-currency";
 import type {
   CatalogProduct,
@@ -61,10 +62,6 @@ import type {
   Pedido,
 } from "@/types";
 import { type BaseModelRow, rowToMockup } from "./base-models";
-import { type DesignRow, rowToDesign } from "./designs";
-import { type LineaRow, rowToLinea } from "./lineas";
-import { type OrderRow, rowToPedido, statusMap } from "./orders";
-import type { CatalogOrden, CatalogPrecio } from "@/lib/catalog-query";
 import {
   type CategoryRow,
   getCategoriesForAdmin,
@@ -72,6 +69,9 @@ import {
   getCategoryAdminById,
   getCategoryCoverByCategoryId,
 } from "./categories";
+import { type DesignRow, rowToDesign } from "./designs";
+import { type LineaRow, rowToLinea } from "./lineas";
+import { type OrderRow, rowToPedido, statusMap } from "./orders";
 import { type ProductRow, rowToCatalogProduct } from "./products";
 
 export {
@@ -98,6 +98,7 @@ export interface GetProductsOptions {
   orden?: CatalogOrden;
   etiqueta?: string;
   precio?: CatalogPrecio;
+  busqueda?: string;
 }
 
 /** Etiquetas distintas en productos publicados (para filtros del catálogo). */
@@ -142,6 +143,11 @@ export async function getProducts(
     const tag = options?.etiqueta?.trim().toLowerCase();
     if (tag) {
       query = query.contains("tags", [tag]);
+    }
+
+    const busqueda = options?.busqueda?.trim();
+    if (busqueda) {
+      query = query.ilike("name", `%${busqueda}%`);
     }
 
     const band = options?.precio;

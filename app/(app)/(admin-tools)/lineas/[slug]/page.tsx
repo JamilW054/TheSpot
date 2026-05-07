@@ -24,14 +24,16 @@ export default async function LineaDetailPage({ params }: PageProps) {
 
   const galleryImages = [linea.coverImage, ...linea.gallery];
   const productLabel =
-    linea.items === 1 ? "1 producto en la línea" : `${linea.items} productos en la línea`;
+    linea.items === 1
+      ? "1 producto en la línea"
+      : `${linea.items} productos en la línea`;
 
   const productNames =
     (linea.products?.length ?? 0) > 0
       ? linea.products
       : Array.from(
           { length: Math.min(Math.max(linea.items, 3), 6) },
-          (_, i) => `Producto ${i + 1}`
+          (_, i) => `Producto ${i + 1}`,
         );
 
   return (

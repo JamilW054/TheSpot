@@ -16,10 +16,7 @@ export interface AppShellProps {
   onLogout?: () => void;
 }
 
-const SHELL_HOME: Record<
-  AppShellVariant,
-  { href: string; label: string }
-> = {
+const SHELL_HOME: Record<AppShellVariant, { href: string; label: string }> = {
   app: { href: "/mis-disenos", label: "Buxxep" },
   admin: { href: "/admin", label: "Buxxep Admin" },
 };
@@ -73,7 +70,9 @@ export function AppShell({
         <main
           className={`flex-1 min-w-0 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-6 sm:pb-6 ${isEditor ? "scrollbar-hide overflow-hidden" : ""}`}
         >
-          {isEditor ? children : (
+          {isEditor ? (
+            children
+          ) : (
             <div className="mx-auto w-full min-w-0 max-w-5xl">{children}</div>
           )}
         </main>

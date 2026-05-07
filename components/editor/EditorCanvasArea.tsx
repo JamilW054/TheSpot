@@ -46,17 +46,25 @@ function FlatTexturePreview({
     >
       {textureUrl ? (
         // eslint-disable-next-line @next/next/no-img-element -- data URLs and blob URLs from texture pipeline
-        <img src={textureUrl} alt="" className="max-h-[min(520px,70vh)] max-w-full object-contain shadow-md" />
+        <img
+          src={textureUrl}
+          alt=""
+          className="max-h-[min(520px,70vh)] max-w-full object-contain shadow-md"
+        />
       ) : (
         <p className="max-w-sm text-center text-sm text-muted-foreground">
-          Añade elementos al diseño o sube una textura base en Prendas para ver la vista previa.
+          Añade elementos al diseño o sube una textura base en Prendas para ver
+          la vista previa.
         </p>
       )}
     </div>
   );
 }
 
-export const EditorCanvasArea = forwardRef<HTMLDivElement, EditorCanvasAreaProps>(function EditorCanvasArea(
+export const EditorCanvasArea = forwardRef<
+  HTMLDivElement,
+  EditorCanvasAreaProps
+>(function EditorCanvasArea(
   {
     elements: _elements,
     selectedId: _selectedId,
@@ -66,13 +74,17 @@ export const EditorCanvasArea = forwardRef<HTMLDivElement, EditorCanvasAreaProps
     onCenterViewModeChange,
     texturePreview = null,
   },
-  ref
+  ref,
 ) {
   return (
     <main
       ref={ref}
       className="editor-canvas-grid relative flex flex-1 min-w-0 flex-col overflow-hidden border-r border-border"
-      aria-label={centerViewMode === "nodes" ? "Nodos de textura" : "Vista previa del diseño"}
+      aria-label={
+        centerViewMode === "nodes"
+          ? "Nodos de textura"
+          : "Vista previa del diseño"
+      }
     >
       {onCenterViewModeChange && (
         <div

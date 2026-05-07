@@ -1,12 +1,29 @@
 "use client";
 
 import { useDraggable } from "@dnd-kit/core";
-import { Circle, FolderOpen, Image, Menu, Move, Pencil, Plus, Redo2, Square, Star, Triangle, Type, Upload } from "lucide-react";
+import {
+  Circle,
+  FolderOpen,
+  Image,
+  Menu,
+  Move,
+  Pencil,
+  Plus,
+  Redo2,
+  Square,
+  Star,
+  Triangle,
+  Type,
+  Upload,
+} from "lucide-react";
 import { useRef } from "react";
 import type { EditorTool } from "@/config/editor-tools";
 import { EDITOR_TOOLS } from "@/config/editor-tools";
 
-const ICON_BY_NAME: Record<string, React.ComponentType<{ className?: string }>> = {
+const ICON_BY_NAME: Record<
+  string,
+  React.ComponentType<{ className?: string }>
+> = {
   Image,
   Type,
   Square,
@@ -38,7 +55,10 @@ function DraggableToolButton({
     data: { type: tool.type, shapeKind: tool.shapeKind },
   });
   const Icon = tool.iconName ? ICON_BY_NAME[tool.iconName] : null;
-  const title = tool.tooltip ?? TOOL_TITLES[tool.type] ?? `${tool.label}. Arrastra al canvas.${tool.shortcut ? ` (${tool.shortcut})` : ""}`;
+  const title =
+    tool.tooltip ??
+    TOOL_TITLES[tool.type] ??
+    `${tool.label}. Arrastra al canvas.${tool.shortcut ? ` (${tool.shortcut})` : ""}`;
 
   return (
     <button

@@ -88,14 +88,14 @@ export function TextureUploadPanel({
         setLoading(false);
       }
     },
-    [projectName, onTextureChange, previewUrl]
+    [projectName, onTextureChange, previewUrl],
   );
 
   const handleRemove = useCallback(async () => {
-      if (previewUrl) {
-        if (previewUrl.startsWith("blob:")) URL.revokeObjectURL(previewUrl);
-        setPreviewUrl(null);
-      }
+    if (previewUrl) {
+      if (previewUrl.startsWith("blob:")) URL.revokeObjectURL(previewUrl);
+      setPreviewUrl(null);
+    }
     onTextureChange(null);
     setError(null);
     try {
@@ -124,7 +124,9 @@ export function TextureUploadPanel({
       }
       const result = await getTextureForExport(projectName);
       if (!result) {
-        setError("No hay textura para exportar. Añade elementos en 2D o sube una imagen.");
+        setError(
+          "No hay textura para exportar. Añade elementos en 2D o sube una imagen.",
+        );
         return;
       }
       const url = URL.createObjectURL(result.blob);
@@ -147,17 +149,24 @@ export function TextureUploadPanel({
     setError(null);
     try {
       const [effectiveBlob, canvasBlob] = await Promise.all([
-        getEffectiveTextureBlob?.() ?? getTextureForExport(projectName).then((r) => r?.blob ?? null),
+        getEffectiveTextureBlob?.() ??
+          getTextureForExport(projectName).then((r) => r?.blob ?? null),
         getCanvasAsBlob(),
       ]);
       if (!effectiveBlob) {
-        setError("No hay textura para exportar. Añade elementos en 2D o sube una imagen.");
+        setError(
+          "No hay textura para exportar. Añade elementos en 2D o sube una imagen.",
+        );
         return;
       }
       const zip = new JSZip();
-      zip.file(`textura_${projectSlug}_1024x1024.png`, effectiveBlob, { binary: true });
+      zip.file(`textura_${projectSlug}_1024x1024.png`, effectiveBlob, {
+        binary: true,
+      });
       // Prefiere captura del canvas si existe; si no, la textura con diseño aplicado
-      zip.file("camiseta_con_diseno.png", canvasBlob ?? effectiveBlob, { binary: true });
+      zip.file("camiseta_con_diseno.png", canvasBlob ?? effectiveBlob, {
+        binary: true,
+      });
       const zipBlob = await zip.generateAsync({ type: "blob" });
       const url = URL.createObjectURL(zipBlob);
       const a = document.createElement("a");
@@ -185,10 +194,13 @@ export function TextureUploadPanel({
     <div className="mt-3 flex flex-col gap-3">
       <h3 className="editor-section-title">Textura de la prenda</h3>
       <p className="text-xs leading-relaxed text-muted-foreground">
-        Aplica una imagen como textura completa. Puedes subir un archivo o pegar una URL.
+        Aplica una imagen como textura completa. Puedes subir un archivo o pegar
+        una URL.
       </p>
       <div className="flex flex-col gap-2">
-        <label className="text-muted-foreground text-xs">Pegar URL de imagen</label>
+        <label className="text-muted-foreground text-xs">
+          Pegar URL de imagen
+        </label>
         <div className="flex gap-2">
           <input
             type="url"
@@ -287,7 +299,12 @@ export function TextureUploadPanel({
               )}
             </div>
             <p className="text-xs text-muted-foreground">
-              ZIP: textura 1024×1024 + captura de vista previa o textura con diseño (<code className="rounded bg-muted/60 px-1 font-mono">diseno_{projectSlug}.zip</code>).
+              ZIP: textura 1024×1024 + captura de vista previa o textura con
+              diseño (
+              <code className="rounded bg-muted/60 px-1 font-mono">
+                diseno_{projectSlug}.zip
+              </code>
+              ).
             </p>
           </div>
         )}

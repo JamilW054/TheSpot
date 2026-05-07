@@ -56,7 +56,10 @@ export function CatalogFilterChips({
     "inline-flex items-center gap-1.5 rounded-full border border-border/90 bg-muted/45 px-3 py-1.5 text-xs font-medium text-foreground shadow-sm transition-colors hover:border-primary/45 hover:bg-primary/10";
 
   return (
-    <div className="mb-6 flex flex-wrap items-center gap-2" aria-label="Filtros activos">
+    <div
+      className="mb-6 flex flex-wrap items-center gap-2"
+      aria-label="Filtros activos"
+    >
       <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
         Activos
       </span>

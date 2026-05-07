@@ -66,7 +66,7 @@ export function getCurrentDraftFromLocal(): EditorDraftFull | null {
 export function getAllDraftMetaFromLocal(): EditorDraftMeta[] {
   const list = safeParse<EditorDraftMeta[]>(KEY_LIST, []);
   return list.sort(
-    (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+    (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
   );
 }
 
@@ -77,7 +77,9 @@ export function getDraftFromLocal(id: string): EditorDraftFull | null {
 
 /** Elimina un borrador local. */
 export function removeDraftFromLocal(id: string): void {
-  const list = safeParse<EditorDraftMeta[]>(KEY_LIST, []).filter((d) => d.id !== id);
+  const list = safeParse<EditorDraftMeta[]>(KEY_LIST, []).filter(
+    (d) => d.id !== id,
+  );
   safeSet(KEY_LIST, list);
   if (typeof window !== "undefined") {
     try {

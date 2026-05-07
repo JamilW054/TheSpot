@@ -12,7 +12,13 @@ import {
   Grid3X3,
 } from "lucide-react";
 
-export type TextureNodeType = "color" | "image" | "uv" | "mix" | "math" | "output";
+export type TextureNodeType =
+  | "color"
+  | "image"
+  | "uv"
+  | "mix"
+  | "math"
+  | "output";
 
 export interface TextureNode {
   id: string;
@@ -50,10 +56,24 @@ const NODE_DEFS: {
   label: string;
   icon: React.ReactNode;
   outputs: number;
-  inputs?: { slot: number; label: string; kind: "color" | "texture" | "float" }[];
+  inputs?: {
+    slot: number;
+    label: string;
+    kind: "color" | "texture" | "float";
+  }[];
 }[] = [
-  { type: "color", label: "Color", icon: <Palette className="size-4" />, outputs: 1 },
-  { type: "image", label: "Imagen", icon: <Image className="size-4" />, outputs: 1 },
+  {
+    type: "color",
+    label: "Color",
+    icon: <Palette className="size-4" />,
+    outputs: 1,
+  },
+  {
+    type: "image",
+    label: "Imagen",
+    icon: <Image className="size-4" />,
+    outputs: 1,
+  },
   { type: "uv", label: "UV", icon: <Grid3X3 className="size-4" />, outputs: 1 },
   {
     type: "mix",
@@ -92,18 +112,35 @@ const SLOT_DY = 26;
 function hexToRgb(hex: string): [number, number, number] {
   const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   if (!m) return [1, 1, 1];
-  return [parseInt(m[1]!, 16) / 255, parseInt(m[2]!, 16) / 255, parseInt(m[3]!, 16) / 255];
+  return [
+    parseInt(m[1]!, 16) / 255,
+    parseInt(m[2]!, 16) / 255,
+    parseInt(m[3]!, 16) / 255,
+  ];
 }
 
 function rgbToHex(r: number, g: number, b: number): string {
-  return "#" + [r, g, b].map((x) => Math.round(Math.max(0, Math.min(1, x)) * 255).toString(16).padStart(2, "0")).join("");
+  return (
+    "#" +
+    [r, g, b]
+      .map((x) =>
+        Math.round(Math.max(0, Math.min(1, x)) * 255)
+          .toString(16)
+          .padStart(2, "0"),
+      )
+      .join("")
+  );
 }
 
 function blendColors(hexA: string, hexB: string, factor: number): string {
   const [r1, g1, b1] = hexToRgb(hexA);
   const [r2, g2, b2] = hexToRgb(hexB);
   const t = Math.max(0, Math.min(1, factor));
-  return rgbToHex(r1 * (1 - t) + r2 * t, g1 * (1 - t) + g2 * t, b1 * (1 - t) + b2 * t);
+  return rgbToHex(
+    r1 * (1 - t) + r2 * t,
+    g1 * (1 - t) + g2 * t,
+    b1 * (1 - t) + b2 * t,
+  );
 }
 
 export interface TextureNodesPanelProps {
@@ -128,7 +165,10 @@ export function TextureNodesPanel({
   ]);
   const [connections, setConnections] = useState<TextureConnection[]>([]);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
-  const [dragFrom, setDragFrom] = useState<{ nodeId: string; slot: number } | null>(null);
+  const [dragFrom, setDragFrom] = useState<{
+    nodeId: string;
+    slot: number;
+  } | null>(null);
   const [dragPos, setDragPos] = useState<[number, number] | null>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
 
@@ -154,27 +194,43 @@ export function TextureNodesPanel({
     setNodes((prev) => prev.map((n) => (n.id === id ? { ...n, ...patch } : n)));
   }, []);
 
-  const addConnection = useCallback((fromNodeId: string, fromSlot: number, toNodeId: string, toSlot: number) => {
-    setConnections((prev) => {
-      const exists = prev.some(
-        (c) => c.toNodeId === toNodeId && c.toSlot === toSlot
-      );
-      if (exists) {
-        return prev.filter((c) => !(c.toNodeId === toNodeId && c.toSlot === toSlot));
-      }
-      return [
-        ...prev,
-        { id: `c-${Date.now()}`, fromNodeId, fromSlot, toNodeId, toSlot },
-      ];
-    });
-  }, []);
+  const addConnection = useCallback(
+    (
+      fromNodeId: string,
+      fromSlot: number,
+      toNodeId: string,
+      toSlot: number,
+    ) => {
+      setConnections((prev) => {
+        const exists = prev.some(
+          (c) => c.toNodeId === toNodeId && c.toSlot === toSlot,
+        );
+        if (exists) {
+          return prev.filter(
+            (c) => !(c.toNodeId === toNodeId && c.toSlot === toSlot),
+          );
+        }
+        return [
+          ...prev,
+          { id: `c-${Date.now()}`, fromNodeId, fromSlot, toNodeId, toSlot },
+        ];
+      });
+    },
+    [],
+  );
 
   const removeConnection = useCallback((toNodeId: string, toSlot: number) => {
-    setConnections((prev) => prev.filter((c) => !(c.toNodeId === toNodeId && c.toSlot === toSlot)));
+    setConnections((prev) =>
+      prev.filter((c) => !(c.toNodeId === toNodeId && c.toSlot === toSlot)),
+    );
   }, []);
 
   const getSocketXY = useCallback(
-    (nodeId: string, slotIndex: number, isOutput: boolean): [number, number] => {
+    (
+      nodeId: string,
+      slotIndex: number,
+      isOutput: boolean,
+    ): [number, number] => {
       const node = nodes.find((n) => n.id === nodeId);
       if (!node) return [0, 0];
       const def = NODE_DEFS.find((d) => d.type === node.type);
@@ -186,7 +242,7 @@ export function TextureNodesPanel({
       const y = ny + SOCKET_R;
       return [x, y];
     },
-    [nodes]
+    [nodes],
   );
 
   const getNodeOutputValue = useCallback(
@@ -196,8 +252,12 @@ export function TextureNodesPanel({
       if (node.type === "color") return node.color ?? "#ffffff";
       if (node.type === "image") return node.imageUrl ?? null;
       if (node.type === "mix") {
-        const connA = connections.find((c) => c.toNodeId === nodeId && c.toSlot === 0);
-        const connB = connections.find((c) => c.toNodeId === nodeId && c.toSlot === 1);
+        const connA = connections.find(
+          (c) => c.toNodeId === nodeId && c.toSlot === 0,
+        );
+        const connB = connections.find(
+          (c) => c.toNodeId === nodeId && c.toSlot === 1,
+        );
         const valA = connA ? getNodeOutputValue(connA.fromNodeId) : null;
         const valB = connB ? getNodeOutputValue(connB.fromNodeId) : null;
         const hexA = valA && /^#/.test(valA) ? valA : "#808080";
@@ -208,7 +268,7 @@ export function TextureNodesPanel({
       if (node.type === "uv") return null;
       return null;
     },
-    [nodes, connections]
+    [nodes, connections],
   );
 
   const getNodeOutputTexture = useCallback(
@@ -218,14 +278,19 @@ export function TextureNodesPanel({
       if (node.type === "image") return node.imageUrl ?? null;
       return null;
     },
-    [nodes]
+    [nodes],
   );
 
   useEffect(() => {
     const outputNode = nodes.find((n) => n.type === "output");
-    if (!outputNode || (!onMaterialColorChange && !onMaterialTextureChange)) return;
-    const connColor = connections.find((c) => c.toNodeId === outputNode.id && c.toSlot === 0);
-    const connMap = connections.find((c) => c.toNodeId === outputNode.id && c.toSlot === 1);
+    if (!outputNode || (!onMaterialColorChange && !onMaterialTextureChange))
+      return;
+    const connColor = connections.find(
+      (c) => c.toNodeId === outputNode.id && c.toSlot === 0,
+    );
+    const connMap = connections.find(
+      (c) => c.toNodeId === outputNode.id && c.toSlot === 1,
+    );
     if (onMaterialColorChange) {
       if (connColor) {
         const val = getNodeOutputValue(connColor.fromNodeId);
@@ -258,7 +323,7 @@ export function TextureNodesPanel({
       const rect = canvasRef.current.getBoundingClientRect();
       setDragPos([e.clientX - rect.left, e.clientY - rect.top]);
     },
-    [dragFrom]
+    [dragFrom],
   );
 
   const handleCanvasMouseUp = useCallback(() => {
@@ -266,14 +331,17 @@ export function TextureNodesPanel({
     setDragPos(null);
   }, []);
 
-  const handleOutputMouseDown = useCallback((nodeId: string, slot: number) => (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setDragFrom({ nodeId, slot });
-    if (canvasRef.current) {
-      const rect = canvasRef.current.getBoundingClientRect();
-      setDragPos([e.clientX - rect.left, e.clientY - rect.top]);
-    }
-  }, []);
+  const handleOutputMouseDown = useCallback(
+    (nodeId: string, slot: number) => (e: React.MouseEvent) => {
+      e.stopPropagation();
+      setDragFrom({ nodeId, slot });
+      if (canvasRef.current) {
+        const rect = canvasRef.current.getBoundingClientRect();
+        setDragPos([e.clientX - rect.left, e.clientY - rect.top]);
+      }
+    },
+    [],
+  );
 
   const handleInputMouseUp = useCallback(
     (toNodeId: string, toSlot: number) => (e: React.MouseEvent) => {
@@ -284,7 +352,7 @@ export function TextureNodesPanel({
         setDragPos(null);
       }
     },
-    [dragFrom, addConnection]
+    [dragFrom, addConnection],
   );
 
   const handleInputRightClick = useCallback(
@@ -292,7 +360,7 @@ export function TextureNodesPanel({
       e.preventDefault();
       removeConnection(toNodeId, toSlot);
     },
-    [removeConnection]
+    [removeConnection],
   );
 
   function getNodeColor(type: TextureNodeType): string {
@@ -322,7 +390,8 @@ export function TextureNodesPanel({
       onMouseUp={handleCanvasMouseUp}
     >
       <p className="shrink-0 text-xs text-muted-foreground">
-        Arrastra desde un círculo de salida hasta una entrada del Material. Las conexiones actualizan color y textura de la prenda en la vista previa.
+        Arrastra desde un círculo de salida hasta una entrada del Material. Las
+        conexiones actualizan color y textura de la prenda en la vista previa.
       </p>
 
       <div className="flex flex-wrap gap-2 shrink-0">
@@ -344,7 +413,10 @@ export function TextureNodesPanel({
         ref={canvasRef}
         className={`scrollbar-hide relative overflow-hidden rounded-xl border border-border bg-[linear-gradient(rgba(0,0,0,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.03)_1px,transparent_1px)] bg-[size:16px_16px] dark:bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] ${fullView ? "flex-1 min-h-[260px]" : "min-h-[320px]"}`}
       >
-        <svg className="absolute inset-0 size-full pointer-events-none overflow-visible" aria-hidden>
+        <svg
+          className="absolute inset-0 size-full pointer-events-none overflow-visible"
+          aria-hidden
+        >
           <defs>
             <marker
               id="node-arrow"
@@ -355,7 +427,12 @@ export function TextureNodesPanel({
               orient="auto"
               markerUnits="strokeWidth"
             >
-              <path d="M0,0 L0,6 L9,3 Z" fill="currentColor" className="text-primary" opacity={0.9} />
+              <path
+                d="M0,0 L0,6 L9,3 Z"
+                fill="currentColor"
+                className="text-primary"
+                opacity={0.9}
+              />
             </marker>
           </defs>
           {connections.map((c) => {
@@ -376,31 +453,40 @@ export function TextureNodesPanel({
               />
             );
           })}
-          {dragFrom && dragPos && canvasRef.current && (() => {
-            const [x1, y1] = getSocketXY(dragFrom.nodeId, dragFrom.slot, true);
-            const rect = canvasRef.current.getBoundingClientRect();
-            const x2 = dragPos[0];
-            const y2 = dragPos[1];
-            const mx = (x1 + x2) / 2;
-            const path = `M ${x1} ${y1} C ${mx} ${y1}, ${mx} ${y2}, ${x2} ${y2}`;
-            return (
-              <path
-                d={path}
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={2}
-                strokeDasharray="6 4"
-                className="text-primary opacity-80"
-              />
-            );
-          })()}
+          {dragFrom &&
+            dragPos &&
+            canvasRef.current &&
+            (() => {
+              const [x1, y1] = getSocketXY(
+                dragFrom.nodeId,
+                dragFrom.slot,
+                true,
+              );
+              const rect = canvasRef.current.getBoundingClientRect();
+              const x2 = dragPos[0];
+              const y2 = dragPos[1];
+              const mx = (x1 + x2) / 2;
+              const path = `M ${x1} ${y1} C ${mx} ${y1}, ${mx} ${y2}, ${x2} ${y2}`;
+              return (
+                <path
+                  d={path}
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  strokeDasharray="6 4"
+                  className="text-primary opacity-80"
+                />
+              );
+            })()}
         </svg>
 
         {nodes.map((node) => {
           const def = NODE_DEFS.find((n) => n.type === node.type);
           const inputSlots = def?.inputs ?? [];
           const outputCount = def?.outputs ?? 0;
-          const rows = Math.max(inputSlots.length, outputCount) + (inputSlots.length && outputCount ? 1 : 0);
+          const rows =
+            Math.max(inputSlots.length, outputCount) +
+            (inputSlots.length && outputCount ? 1 : 0);
           const height = NODE_HEADER_H + Math.max(1, rows) * SLOT_DY + 16;
 
           return (
@@ -409,9 +495,14 @@ export function TextureNodesPanel({
               role="button"
               tabIndex={0}
               onClick={() => setSelectedNodeId(node.id)}
-              onKeyDown={(e) => e.key === "Delete" && setNodes((p) => p.filter((n) => n.id !== node.id))}
+              onKeyDown={(e) =>
+                e.key === "Delete" &&
+                setNodes((p) => p.filter((n) => n.id !== node.id))
+              }
               className={`absolute rounded-xl border-2 bg-gradient-to-br shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-primary/50 ${getNodeColor(node.type)} ${
-                selectedNodeId === node.id ? "ring-2 ring-primary scale-[1.02]" : "hover:shadow-xl"
+                selectedNodeId === node.id
+                  ? "ring-2 ring-primary scale-[1.02]"
+                  : "hover:shadow-xl"
               }`}
               style={{
                 left: node.x,
@@ -422,11 +513,15 @@ export function TextureNodesPanel({
             >
               <div className="flex items-center gap-2 px-3 py-2 border-b border-border/50 rounded-t-xl bg-black/5 dark:bg-white/5">
                 {def?.icon}
-                <span className="text-xs font-semibold text-foreground truncate">{def?.label ?? node.type}</span>
+                <span className="text-xs font-semibold text-foreground truncate">
+                  {def?.label ?? node.type}
+                </span>
               </div>
               <div className="p-2 space-y-1">
                 {inputSlots.map((inp) => {
-                  const conn = connections.find((c) => c.toNodeId === node.id && c.toSlot === inp.slot);
+                  const conn = connections.find(
+                    (c) => c.toNodeId === node.id && c.toSlot === inp.slot,
+                  );
                   return (
                     <div key={inp.slot} className="flex items-center gap-2">
                       <button
@@ -437,8 +532,14 @@ export function TextureNodesPanel({
                         onContextMenu={handleInputRightClick(node.id, inp.slot)}
                         onClick={(e) => e.stopPropagation()}
                       />
-                      <span className="text-[10px] text-muted-foreground">{inp.label}</span>
-                      {conn && <span className="text-[10px] text-primary truncate">conectado</span>}
+                      <span className="text-[10px] text-muted-foreground">
+                        {inp.label}
+                      </span>
+                      {conn && (
+                        <span className="text-[10px] text-primary truncate">
+                          conectado
+                        </span>
+                      )}
                     </div>
                   );
                 })}
@@ -451,7 +552,9 @@ export function TextureNodesPanel({
                     <input
                       type="color"
                       value={node.color ?? "#ffffff"}
-                      onChange={(e) => updateNode(node.id, { color: e.target.value })}
+                      onChange={(e) =>
+                        updateNode(node.id, { color: e.target.value })
+                      }
                       className="size-8 cursor-pointer rounded border border-border bg-transparent"
                       onClick={(e) => e.stopPropagation()}
                       aria-label="Color"
@@ -464,7 +567,9 @@ export function TextureNodesPanel({
                     type="url"
                     placeholder="URL imagen"
                     value={node.imageUrl ?? ""}
-                    onChange={(e) => updateNode(node.id, { imageUrl: e.target.value })}
+                    onChange={(e) =>
+                      updateNode(node.id, { imageUrl: e.target.value })
+                    }
                     className="w-full rounded border border-border bg-background px-2 py-1 text-xs text-foreground"
                     onClick={(e) => e.stopPropagation()}
                   />
@@ -477,19 +582,27 @@ export function TextureNodesPanel({
                       max={1}
                       step={0.01}
                       value={node.factor ?? 0.5}
-                      onChange={(e) => updateNode(node.id, { factor: Number(e.target.value) })}
+                      onChange={(e) =>
+                        updateNode(node.id, { factor: Number(e.target.value) })
+                      }
                       className="flex-1 h-1.5 rounded"
                       onClick={(e) => e.stopPropagation()}
                       aria-label="Factor de mezcla"
                       title="Factor A/B"
                     />
-                    <span className="text-[10px] w-6">{(node.factor ?? 0.5).toFixed(2)}</span>
+                    <span className="text-[10px] w-6">
+                      {(node.factor ?? 0.5).toFixed(2)}
+                    </span>
                   </div>
                 )}
                 {node.type === "math" && (
                   <select
                     value={node.mathOp ?? "add"}
-                    onChange={(e) => updateNode(node.id, { mathOp: e.target.value as "add" | "multiply" })}
+                    onChange={(e) =>
+                      updateNode(node.id, {
+                        mathOp: e.target.value as "add" | "multiply",
+                      })
+                    }
                     className="w-full rounded border border-border bg-background px-2 py-1 text-xs"
                     onClick={(e) => e.stopPropagation()}
                     aria-label="Operación matemática"
@@ -507,7 +620,11 @@ export function TextureNodesPanel({
                         type="number"
                         step={0.1}
                         value={node.scaleX ?? 1}
-                        onChange={(e) => updateNode(node.id, { scaleX: Number(e.target.value) })}
+                        onChange={(e) =>
+                          updateNode(node.id, {
+                            scaleX: Number(e.target.value),
+                          })
+                        }
                         className="w-12 rounded border border-border bg-background px-1"
                         onClick={(e) => e.stopPropagation()}
                         aria-label="Escala X UV"
@@ -520,7 +637,11 @@ export function TextureNodesPanel({
                         type="number"
                         step={0.1}
                         value={node.scaleY ?? 1}
-                        onChange={(e) => updateNode(node.id, { scaleY: Number(e.target.value) })}
+                        onChange={(e) =>
+                          updateNode(node.id, {
+                            scaleY: Number(e.target.value),
+                          })
+                        }
                         className="w-12 rounded border border-border bg-background px-1"
                         onClick={(e) => e.stopPropagation()}
                         aria-label="Escala Y UV"
@@ -533,7 +654,11 @@ export function TextureNodesPanel({
                         type="number"
                         step={0.01}
                         value={node.offsetX ?? 0}
-                        onChange={(e) => updateNode(node.id, { offsetX: Number(e.target.value) })}
+                        onChange={(e) =>
+                          updateNode(node.id, {
+                            offsetX: Number(e.target.value),
+                          })
+                        }
                         className="w-12 rounded border border-border bg-background px-1"
                         onClick={(e) => e.stopPropagation()}
                         aria-label="Offset X UV"
@@ -546,7 +671,11 @@ export function TextureNodesPanel({
                         type="number"
                         step={0.01}
                         value={node.offsetY ?? 0}
-                        onChange={(e) => updateNode(node.id, { offsetY: Number(e.target.value) })}
+                        onChange={(e) =>
+                          updateNode(node.id, {
+                            offsetY: Number(e.target.value),
+                          })
+                        }
                         className="w-12 rounded border border-border bg-background px-1"
                         onClick={(e) => e.stopPropagation()}
                         aria-label="Offset Y UV"
@@ -576,7 +705,8 @@ export function TextureNodesPanel({
       </div>
 
       <p className="shrink-0 text-[11px] text-muted-foreground italic">
-        Conecta Color o Mix al Base Color del Material; Imagen al Map. Los cambios se reflejan en la textura de la vista previa.
+        Conecta Color o Mix al Base Color del Material; Imagen al Map. Los
+        cambios se reflejan en la textura de la vista previa.
       </p>
     </div>
   );

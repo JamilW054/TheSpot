@@ -8,7 +8,12 @@ function isAllowedOrigin(url: string): boolean {
     const host = u.hostname.toLowerCase();
     if (host === "localhost" || host === "127.0.0.1") return true;
     // Bloquear IPs privadas
-    if (/^127\.|^10\.|^172\.(1[6-9]|2\d|3[01])\.|^192\.168\.|^169\.254\.|^::1$|^fc00:/i.test(host)) return false;
+    if (
+      /^127\.|^10\.|^172\.(1[6-9]|2\d|3[01])\.|^192\.168\.|^169\.254\.|^::1$|^fc00:/i.test(
+        host,
+      )
+    )
+      return false;
     if (/^\d+\.\d+\.\d+\.\d+$/.test(host)) return true;
     return true;
   } catch {
@@ -30,14 +35,18 @@ export async function GET(request: NextRequest) {
       next: { revalidate: 86_400 },
     });
     if (!res.ok) {
-      return NextResponse.json({ error: "Image fetch failed" }, { status: 502 });
+      return NextResponse.json(
+        { error: "Image fetch failed" },
+        { status: 502 },
+      );
     }
     const contentType = res.headers.get("content-type") ?? "image/png";
     const blob = await res.blob();
     return new NextResponse(blob, {
       headers: {
         "Content-Type": contentType,
-        "Cache-Control": "public, max-age=86400, s-maxage=86400, stale-while-revalidate=604800",
+        "Cache-Control":
+          "public, max-age=86400, s-maxage=86400, stale-while-revalidate=604800",
       },
     });
   } catch (e) {

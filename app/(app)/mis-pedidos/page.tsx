@@ -11,7 +11,10 @@ const STATUS_LABELS: Record<string, string> = {
 export default async function MisPedidosPage() {
   const orders = await getOrders();
   return (
-    <PageLayout title="Mis pedidos" description="Consulta el estado de tus pedidos y el detalle de cada uno.">
+    <PageLayout
+      title="Mis pedidos"
+      description="Consulta el estado de tus pedidos y el detalle de cada uno."
+    >
       {orders.length === 0 ? (
         <div className="rounded-2xl border border-border bg-card p-10 text-center">
           <p className="text-muted-foreground">Aún no tienes pedidos.</p>
@@ -30,9 +33,15 @@ export default async function MisPedidosPage() {
                 href={`/mis-pedidos/${order.id}`}
                 className="block rounded-2xl border border-border bg-card p-5 shadow-sm transition-all hover:border-primary/30 hover:shadow-md"
               >
-                <span className="font-mono text-xs text-muted-foreground">{order.id.slice(0, 8)}…</span>
-                <p className="mt-2 text-lg font-semibold text-foreground">{order.total}</p>
-                <p className="mt-1 text-sm text-muted-foreground">{order.createdAt}</p>
+                <span className="font-mono text-xs text-muted-foreground">
+                  {order.id.slice(0, 8)}…
+                </span>
+                <p className="mt-2 text-lg font-semibold text-foreground">
+                  {order.total}
+                </p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {order.createdAt}
+                </p>
                 <span className="mt-3 inline-block rounded-lg border border-border bg-muted/50 px-3 py-1.5 text-xs font-medium text-foreground">
                   {STATUS_LABELS[order.estado] ?? order.estado}
                 </span>

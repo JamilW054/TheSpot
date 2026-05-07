@@ -12,7 +12,12 @@ interface LandingHeroCardProps {
   style?: React.CSSProperties;
 }
 
-export function LandingHeroCard({ img, alt, className, style }: LandingHeroCardProps) {
+export function LandingHeroCard({
+  img,
+  alt,
+  className,
+  style,
+}: LandingHeroCardProps) {
   const [src, setSrc] = useState(img);
   const [failed, setFailed] = useState(false);
 
@@ -24,7 +29,10 @@ export function LandingHeroCard({ img, alt, className, style }: LandingHeroCardP
   };
 
   return (
-    <div className={`overflow-hidden ${className} shrink-0 shadow-lg`} style={style}>
+    <div
+      className={`overflow-hidden ${className} shrink-0 shadow-lg`}
+      style={style}
+    >
       <Image
         src={src}
         alt={alt}

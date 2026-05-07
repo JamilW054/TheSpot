@@ -1,12 +1,17 @@
 import { PublicFooter, PublicNavbar } from "@/components/layout";
+import { getCategoriesPublic } from "@/lib/db/categories";
 
-export default function PublicLayout({
+export default async function PublicLayout({
   children,
-}: { children: React.ReactNode }) {
+}: {
+  children: React.ReactNode;
+}) {
+  const categories = await getCategoriesPublic();
+
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground">
-      <PublicNavbar />
-      <main className="flex min-h-0 w-full min-w-0 flex-1 flex-col pt-24 sm:pt-26">
+      <PublicNavbar categories={categories} />
+      <main className="flex min-h-0 w-full min-w-0 flex-1 flex-col pt-20 sm:pt-26">
         {children}
       </main>
       <PublicFooter />

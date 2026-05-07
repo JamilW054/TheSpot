@@ -114,7 +114,7 @@ export function Navbar({
           <>
             {displayName ? (
               <span
-                className="hidden text-sm text-muted-foreground truncate sm:inline max-w-[200px]"
+                className="hidden text-sm text-muted-foreground truncate sm:inline max-w-50"
                 title={displayName}
               >
                 Hola, {displayName}

@@ -11,7 +11,12 @@ export interface CanvasDropZoneProps {
   compact?: boolean;
 }
 
-export function CanvasDropZone({ id, children, onBackgroundClick, compact }: CanvasDropZoneProps) {
+export function CanvasDropZone({
+  id,
+  children,
+  onBackgroundClick,
+  compact,
+}: CanvasDropZoneProps) {
   const { setNodeRef, isOver } = useDroppable({ id });
 
   return (

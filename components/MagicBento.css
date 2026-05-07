@@ -22,7 +22,7 @@
   flex-direction: column;
   justify-content: space-between;
   position: relative;
-  aspect-ratio: 4/3;
+  aspect-ratio: 4 / 3;
   min-height: 200px;
   width: 100%;
   max-width: 100%;
@@ -57,7 +57,12 @@
 .magic-bento-card__bg-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to top, rgba(10, 10, 14, 0.92) 0%, rgba(10, 10, 14, 0.5) 45%, rgba(10, 10, 14, 0.2) 100%);
+  background: linear-gradient(
+    to top,
+    rgba(10, 10, 14, 0.92) 0%,
+    rgba(10, 10, 14, 0.5) 45%,
+    rgba(10, 10, 14, 0.2) 100%
+  );
   z-index: 1;
 }
 
@@ -161,7 +166,7 @@
 
 /* Border glow effect — borde fino */
 .magic-bento-card--border-glow::after {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
   padding: 2px;
@@ -202,7 +207,7 @@
 }
 
 .particle::before {
-  content: '';
+  content: "";
   position: absolute;
   top: -2px;
   left: -2px;

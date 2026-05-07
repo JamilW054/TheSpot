@@ -33,6 +33,8 @@ export interface StaggeredMenuProps {
   closeAriaLabel?: string;
   /** Extra controls shown before the menu toggle (e.g. cart link). */
   headerTrailing?: ReactNode;
+  /** Content rendered absolutely centered in the header bar. */
+  headerCenter?: ReactNode;
   onMenuOpen?: () => void;
   onMenuClose?: () => void;
 }

@@ -16,7 +16,9 @@ const CHECKOUT_PATH = "/carrito/checkout";
 
 export default async function CheckoutPage() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) {
     redirect(`/login?redirect=${encodeURIComponent(CHECKOUT_PATH)}`);
   }
@@ -28,7 +30,16 @@ export default async function CheckoutPage() {
           href="/carrito"
           className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
-          <svg className="size-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+          <svg
+            className="size-4 shrink-0"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden
+          >
             <path d="M19 12H5M12 19l-7-7 7-7" />
           </svg>
           Volver al carrito
@@ -36,7 +47,10 @@ export default async function CheckoutPage() {
       </nav>
 
       <header className="mb-6 sm:mb-8" aria-labelledby="checkout-title">
-        <h1 id="checkout-title" className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl lg:text-4xl">
+        <h1
+          id="checkout-title"
+          className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl lg:text-4xl"
+        >
           Finalizar compra
         </h1>
         <p className="mt-2 text-sm text-muted-foreground max-w-lg">

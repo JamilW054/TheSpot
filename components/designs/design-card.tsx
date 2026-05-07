@@ -11,7 +11,10 @@ export interface DesignCardProps {
 
 export function DesignCard({ design }: DesignCardProps) {
   return (
-    <Link href={`/mis-disenos/${design.slug}`} className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-lg">
+    <Link
+      href={`/mis-disenos/${design.slug}`}
+      className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-lg"
+    >
       <Card className="overflow-hidden transition-shadow hover:shadow-md h-full flex flex-col">
         <div className="relative aspect-4/3 w-full bg-muted overflow-hidden">
           {design.coverImage?.trim() ? (

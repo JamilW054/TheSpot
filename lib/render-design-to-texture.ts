@@ -28,7 +28,7 @@ function loadImage(src: string): Promise<HTMLImageElement> {
  */
 export async function renderElementsToTextureUrl(
   elements: CanvasElement[],
-  baseTextureUrl: string | null
+  baseTextureUrl: string | null,
 ): Promise<string | null> {
   const canvas = document.createElement("canvas");
   canvas.width = DESIGN_TEXTURE_WIDTH;
@@ -84,14 +84,20 @@ export async function renderElementsToTextureUrl(
       let ty = y + pad;
       const lines = text.split("\n");
       for (const line of lines) {
-        const lx = align === "center" ? x + w / 2 : align === "right" ? x + w - pad : x + pad;
+        const lx =
+          align === "center"
+            ? x + w / 2
+            : align === "right"
+              ? x + w - pad
+              : x + pad;
         ctx.fillText(line, lx, ty);
         ty += lineHeight;
       }
       ctx.restore();
     } else if (el.type === "shape") {
       ctx.save();
-      const kind = el.shapeKind ?? (el.content === "circle" ? "circle" : "rect");
+      const kind =
+        el.shapeKind ?? (el.content === "circle" ? "circle" : "rect");
       const fill = el.fillColor ?? "#6366f1";
       const stroke = el.shapeStrokeColor ?? "#4f46e5";
       const strokeW = el.shapeStrokeWidth ?? 2;

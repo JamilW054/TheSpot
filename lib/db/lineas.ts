@@ -19,7 +19,7 @@ export interface ProductLineaRow {
 export function rowToLinea(
   row: LineaRow,
   productCount: number,
-  productNames?: string[]
+  productNames?: string[],
 ): Linea {
   const gallery = Array.isArray(row.gallery) ? (row.gallery as string[]) : [];
   return {

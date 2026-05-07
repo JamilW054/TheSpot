@@ -35,7 +35,7 @@ export function CatalogSupabaseDebugLog({
         slug: p.slug,
         coverImage: p.coverImage,
         baseTextureUrl: p.baseTextureUrl ?? "(no definido)",
-      }))
+      })),
     );
     console.groupEnd();
   }, [products, categoriesCount]);
