@@ -270,7 +270,7 @@ export default async function PublicPage() {
 
       {/* ─── 5. DISEÑOS EN TELA ──────────────────────────────────────── */}
       {clothSlice.length > 0 && (
-        <section className="hidden sm:block w-full border-t border-border bg-muted/15" aria-labelledby="sec-cloths">
+        <section className="w-full border-t border-border bg-muted/15" aria-labelledby="sec-cloths">
           {/* Header contenido */}
           <div className={`${C} pt-16 sm:pt-20 pb-8`}>
             <ScrollReveal>
