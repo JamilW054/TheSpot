@@ -3,7 +3,13 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AddToCartButton } from "@/components/catalog/AddToCartButton";
 import { CatalogProductViewerWithDesign } from "@/components/catalog/CatalogProductViewerWithDesign";
+import { ProductReviews } from "@/components/catalog/ProductReviews";
 import { getProductBySlug } from "@/lib/db";
+import {
+  getProductReviews,
+  getUserReviewForProduct,
+} from "@/lib/db/reviews";
+import { createClient } from "@/lib/supabase/server";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -31,6 +37,16 @@ export default async function CatalogProductPage({ params }: PageProps) {
   if (!product) {
     notFound();
   }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const [reviews, userExistingReview] = await Promise.all([
+    getProductReviews(product.id),
+    getUserReviewForProduct(product.id),
+  ]);
 
   return (
     <article className="min-h-0 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-16 sm:pb-20 pt-4 sm:pt-6">
@@ -125,6 +141,16 @@ export default async function CatalogProductPage({ params }: PageProps) {
             Ver todos los productos
           </Link>
         </section>
+      </div>
+
+      <div className="mt-12 border-t border-border pt-8">
+        <ProductReviews
+          productId={product.id}
+          productSlug={slug}
+          reviews={reviews}
+          currentUserId={user?.id ?? null}
+          userExistingReview={userExistingReview}
+        />
       </div>
     </article>
   );

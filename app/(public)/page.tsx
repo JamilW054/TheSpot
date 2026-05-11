@@ -34,12 +34,12 @@ const MODEL_ACTITUD = "/people/modelo-actitud.png";
 const TICKER_ITEMS = [
   { id: "t1", text: "NUEVA COLECCIÓN 2025" },
   { id: "t2", text: "ENVÍO A TODO EL PAÍS" },
-  { id: "t3", text: "PERSONALIZA TU PRENDA" },
-  { id: "t4", text: "50% COLECCIÓN HOMBRE" },
-  { id: "t5", text: "PAGOS 100% SEGUROS" },
-  { id: "t6", text: "DISEÑA EN MINUTOS" },
-  { id: "t7", text: "50% COLECCIÓN MUJER" },
-  { id: "t8", text: "EDITA · PERSONALIZA · COMPRA" },
+  { id: "t3", text: "50% COLECCIÓN HOMBRE" },
+  { id: "t4", text: "PAGOS 100% SEGUROS" },
+  { id: "t5", text: "50% COLECCIÓN MUJER" },
+  { id: "t6", text: "ENVÍOS RÁPIDOS Y SEGUROS" },
+  { id: "t7", text: "PRENDAS DE CALIDAD" },
+  { id: "t8", text: "EXPLORA · ELIGE · COMPRA" },
 ];
 
 const C = "max-w-7xl mx-auto px-4 sm:px-6";
@@ -257,36 +257,29 @@ export default async function PublicPage() {
               >
                 Ver colección →
               </Link>
-              <Link
-                href="/editor"
-                className="inline-flex items-center justify-center rounded-xl border border-white/30 text-white px-7 py-3 text-sm font-semibold hover:bg-white/10 transition-colors"
-              >
-                Diseñar
-              </Link>
             </div>
           </ScrollReveal>
         </div>
       </section>
 
-      {/* ─── 5. DISEÑOS EN TELA ──────────────────────────────────────── */}
+      {/* ─── 5. MODELOS EN TELA ──────────────────────────────────────── */}
       {clothSlice.length > 0 && (
         <section className="w-full border-t border-border bg-muted/15" aria-labelledby="sec-cloths">
-          {/* Header contenido */}
           <div className={`${C} pt-16 sm:pt-20 pb-8`}>
             <ScrollReveal>
               <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-primary">
-                    Buxxep · Diseños
+                    Buxxep · Colección
                   </p>
                   <h2
                     id="sec-cloths"
                     className="mt-1 text-2xl sm:text-4xl font-black uppercase tracking-tight text-foreground"
                   >
-                    Diseños en <span className="landing-wavy-underline">tela</span>
+                    Prendas <span className="landing-wavy-underline">reales</span>
                   </h2>
                   <p className="mt-2 max-w-xl text-sm leading-snug text-muted-foreground">
-                    Piezas y estampados Buxxep que puedes llevar al editor o comprar en el catálogo.
+                    Modelos con nuestras prendas tal como son. Elige la que más te guste y cómprala directo en el catálogo.
                   </p>
                 </div>
                 <Link
@@ -298,29 +291,21 @@ export default async function PublicPage() {
               </div>
             </ScrollReveal>
           </div>
-          {/* Grid de imágenes */}
           <div className={`${C} pb-8 sm:pb-12`}>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
               {clothSlice.map((src, i) => (
                 <ScrollReveal key={src} delay={i * 80} className="h-full">
-                  <Link href="/catalogo" className="group block h-full overflow-hidden relative rounded-2xl">
+                  <div className="block h-full overflow-hidden relative rounded-2xl">
                     <div className="relative w-full" style={{ minHeight: "70vh" }}>
                       <Image
                         src={src}
-                        alt={`Diseño de ropa Buxxep ${i + 1}`}
+                        alt={`Prenda Buxxep modelo ${i + 1}`}
                         fill
-                        className="object-cover object-center transition-transform duration-700 group-hover:scale-[1.03]"
+                        className="object-cover object-center"
                         sizes="(max-width:640px) 100vw, 33vw"
                       />
-                      <div className="absolute inset-0 bg-linear-to-t from-black/60 via-black/10 to-transparent" />
-                      <div className="absolute bottom-6 left-6 right-6 flex items-end justify-between">
-                        <span className="text-sm font-bold uppercase tracking-widest text-white">
-                          Look {String(i + 1).padStart(2, "0")}
-                        </span>
-                        <span className="text-white/80 text-xl leading-none" aria-hidden>→</span>
-                      </div>
                     </div>
-                  </Link>
+                  </div>
                 </ScrollReveal>
               ))}
             </div>
@@ -342,7 +327,7 @@ export default async function PublicPage() {
               Hecho para el día a día <span className="landing-wavy-underline">fuerte</span>
             </h2>
             <p className="mt-2 text-muted-foreground text-sm max-w-md">
-              Prendas que aguantan el ritmo. Personalízalas a tu gusto en el editor.
+              Prendas que aguantan el ritmo. Calidad real para el día a día.
             </p>
           </div>
         </ScrollReveal>
@@ -381,22 +366,22 @@ export default async function PublicPage() {
             {[
               {
                 step: "01",
-                title: "Elige prenda",
-                text: "Entra al catálogo, explora por categoría y selecciona la prenda que más te guste.",
+                title: "Elige tu prenda",
+                text: "Entra al catálogo, explora por categoria y encuentra la prenda que mas te guste. Sin complicaciones.",
                 href: "/catalogo",
-                cta: "Ver catálogo",
+                cta: "Ver catalogo",
               },
               {
                 step: "02",
-                title: "Diseña",
-                text: "Abre el editor y personaliza con texto, imágenes, formas y colores en segundos.",
-                href: "/editor",
-                cta: "Abrir editor",
+                title: "Añade al carrito",
+                text: "Selecciona la prenda y añadela al carrito con un solo clic. Rapido, sencillo y sin registros obligatorios.",
+                href: "/catalogo",
+                cta: "Comprar ahora",
               },
               {
                 step: "03",
-                title: "Compra",
-                text: "Añade al carrito, realiza tu pago de forma segura y recibe tu pedido en casa.",
+                title: "Paga con Azul",
+                text: "Completa tu compra de forma 100 % segura a traves de Azul, pasarela de pagos certificada para tarjetas dominicanas.",
                 href: "/carrito",
                 cta: "Ver carrito",
               },

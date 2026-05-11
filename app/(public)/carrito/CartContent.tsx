@@ -6,6 +6,8 @@ import type { CatalogProduct } from "@/types";
 import Image from "next/image";
 import Link from "next/link";
 
+const MIN_ORDER_CENTS = Number(process.env.NEXT_PUBLIC_MIN_ORDER_CENTS ?? "0");
+
 function isExternalImage(src: string): boolean {
   return (
     src.includes("placehold.co") ||
@@ -201,20 +203,41 @@ export function CartContent({ products }: { products: CatalogProduct[] }) {
           <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
             Resumen del pedido
           </h2>
-          <div className="mt-4 border-t border-border pt-4">
+          <div className="mt-4 border-t border-border pt-4 space-y-2">
             <div className="flex items-baseline justify-between gap-4">
               <span className="text-sm text-muted-foreground">Total</span>
               <span className="text-2xl font-bold tabular-nums text-primary">
                 {formatDOPFromCents(totalCents)}
               </span>
             </div>
+            {MIN_ORDER_CENTS > 0 && totalCents < MIN_ORDER_CENTS && (
+              <div className="rounded-lg bg-amber-500/10 border border-amber-500/30 px-3 py-2.5">
+                <p className="text-xs text-amber-600 dark:text-amber-400 font-medium leading-snug">
+                  Monto mínimo de compra:{" "}
+                  <span className="font-bold">{formatDOPFromCents(MIN_ORDER_CENTS)}</span>
+                </p>
+                <p className="text-xs text-amber-600/80 dark:text-amber-400/80 mt-0.5">
+                  Te faltan {formatDOPFromCents(MIN_ORDER_CENTS - totalCents)} para continuar.
+                </p>
+              </div>
+            )}
           </div>
-          <Link
-            href="/carrito/checkout"
-            className="mt-6 flex w-full items-center justify-center rounded-xl bg-primary px-6 py-3.5 text-base font-semibold text-primary-foreground shadow-sm transition-all hover:opacity-90 hover:shadow"
-          >
-            Finalizar compra
-          </Link>
+          {MIN_ORDER_CENTS > 0 && totalCents < MIN_ORDER_CENTS ? (
+            <button
+              type="button"
+              disabled
+              className="mt-6 flex w-full items-center justify-center rounded-xl bg-muted px-6 py-3.5 text-base font-semibold text-muted-foreground cursor-not-allowed opacity-60"
+            >
+              Finalizar compra
+            </button>
+          ) : (
+            <Link
+              href="/carrito/checkout"
+              className="mt-6 flex w-full items-center justify-center rounded-xl bg-primary px-6 py-3.5 text-base font-semibold text-primary-foreground shadow-sm transition-all hover:opacity-90 hover:shadow"
+            >
+              Finalizar compra
+            </Link>
+          )}
           <p className="mt-3 text-center text-xs text-muted-foreground">
             Pago seguro en el siguiente paso
           </p>

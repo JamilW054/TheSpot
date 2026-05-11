@@ -129,6 +129,18 @@ export interface CatalogProduct {
   categorySlug: string | null;
 }
 
+/** Reseña de un cliente sobre un producto. */
+export interface ProductReview {
+  id: string;
+  productId: string;
+  userId: string;
+  /** Display name from profiles.name (joined on fetch). */
+  userName: string | null;
+  rating: number;
+  body: string | null;
+  createdAt: string;
+}
+
 /** Línea del carrito: producto + cantidad; opcionalmente diseño personalizado. */
 export interface CartItem {
   productId: string;
