@@ -16,6 +16,8 @@ export interface ProductRow {
   category_id?: string | null;
   /** Etiquetas en minúsculas (columna `tags` en DB). */
   tags?: string[] | null;
+  /** Tallas disponibles (columna `sizes` en DB). */
+  sizes?: string[] | null;
   /** Join con textures: url de la textura base (objeto o array según Supabase) */
   textures?: { url: string } | { url: string }[] | null;
   /** Join opcional con categories (PostgREST puede devolver objeto o array de un elemento). */
@@ -49,5 +51,6 @@ export function rowToCatalogProduct(row: ProductRow): CatalogProduct {
     coverImage: row.cover_image_url ?? "",
     ...(baseTextureUrl != null && { baseTextureUrl }),
     categorySlug: categorySlugFromRow(row.categories),
+    sizes: row.sizes ?? [],
   };
 }

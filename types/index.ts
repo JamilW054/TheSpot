@@ -127,6 +127,8 @@ export interface CatalogProduct {
   baseTextureUrl?: string | null;
   /** Slug de categoría asociada en DB (null si sin categoría). */
   categorySlug: string | null;
+  /** Tallas disponibles para este producto (ej. ["XS","S","M","L","XL","XXL"]). */
+  sizes: string[];
 }
 
 /** Reseña de un cliente sobre un producto. */
@@ -145,6 +147,8 @@ export interface ProductReview {
 export interface CartItem {
   productId: string;
   quantity: number;
+  /** Talla seleccionada por el usuario (null si el producto no tiene tallas). */
+  size?: string | null;
   /** Si viene del editor, id del diseño personalizado (opcional). */
   designId?: string | null;
 }

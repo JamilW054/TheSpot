@@ -21,6 +21,8 @@ interface ProductFormProps {
   initial?: ProductRow;
 }
 
+const ALL_SIZES = ["XS", "S", "M", "L", "XL", "XXL"] as const;
+
 function tagsDefault(initial?: ProductRow): string {
   const t = initial?.tags;
   if (Array.isArray(t) && t.length > 0) return t.join(", ");
@@ -205,6 +207,23 @@ export function ProductForm({ mode, categories, initial }: ProductFormProps) {
             </option>
           ))}
         </select>
+      </div>
+
+      <div className="space-y-1.5">
+        <p className="text-sm font-medium text-foreground">Tallas disponibles</p>
+        <div className="flex flex-wrap gap-3">
+          {ALL_SIZES.map((s) => (
+            <label key={s} className="flex cursor-pointer items-center gap-1.5 text-sm font-medium">
+              <input
+                type="checkbox"
+                name={`size_${s}`}
+                defaultChecked={initial?.sizes?.includes(s) ?? false}
+                className="size-4 rounded border-border"
+              />
+              {s}
+            </label>
+          ))}
+        </div>
       </div>
 
       <div className="space-y-1.5">

@@ -34,6 +34,12 @@ function parseTagsFromForm(formData: FormData): string[] {
   return out;
 }
 
+const VALID_SIZES = ["XS", "S", "M", "L", "XL", "XXL"];
+
+function parseSizesFromForm(formData: FormData): string[] {
+  return VALID_SIZES.filter((s) => formData.get(`size_${s}`) === "on");
+}
+
 function parseCategoryId(formData: FormData): string | null {
   const v = formData.get("category_id")?.toString().trim() ?? "";
   return v.length > 0 ? v : null;
@@ -113,6 +119,7 @@ export async function adminCreateProduct(
     if (!name) throw new Error("El nombre es obligatorio.");
 
     const tags = parseTagsFromForm(formData);
+    const sizes = parseSizesFromForm(formData);
     const category_id = parseCategoryId(formData);
     const slug = await pickUniqueProductSlug(supabase, name, tags);
 
@@ -143,6 +150,7 @@ export async function adminCreateProduct(
         sort_order,
         category_id,
         tags,
+        sizes,
         default_design_id: null,
         base_texture_id: null,
       })
@@ -214,6 +222,7 @@ export async function adminUpdateProduct(
     if (!name) throw new Error("El nombre es obligatorio.");
 
     const tags = parseTagsFromForm(formData);
+    const sizes = parseSizesFromForm(formData);
     const category_id = parseCategoryId(formData);
 
     const description = formData.get("description")?.toString().trim() || null;
@@ -269,6 +278,7 @@ export async function adminUpdateProduct(
       sort_order,
       category_id,
       tags,
+      sizes,
     };
     if (nextBaseTextureId !== undefined) {
       patch.base_texture_id = nextBaseTextureId;

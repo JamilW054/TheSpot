@@ -104,20 +104,10 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#0a0a0e" },
-  ],
+  themeColor: "#0a0a0e",
 };
 
-const themeScript = `
-(function() {
-  var key = 'buxxep-theme';
-  var stored = localStorage.getItem(key);
-  var isDark = stored === 'dark' || (stored !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-  document.documentElement.classList.toggle('dark', isDark);
-})();
-`;
+const themeScript = `document.documentElement.classList.add('dark');`;
 
 export default function RootLayout({
   children,
@@ -125,7 +115,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" suppressHydrationWarning>
+    <html lang="es" className="dark" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         suppressHydrationWarning
