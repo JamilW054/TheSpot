@@ -8,7 +8,13 @@ export interface ReviewRow {
   rating: number;
   body: string | null;
   created_at: string;
-  profiles: { name: string | null } | null;
+  profiles: { name: string | null } | { name: string | null }[] | null;
+}
+
+function profileName(profiles: ReviewRow["profiles"]): string | null {
+  if (!profiles) return null;
+  const p = Array.isArray(profiles) ? profiles[0] : profiles;
+  return p?.name ?? null;
 }
 
 export function rowToReview(row: ReviewRow): ProductReview {
@@ -16,7 +22,7 @@ export function rowToReview(row: ReviewRow): ProductReview {
     id: row.id,
     productId: row.product_id,
     userId: row.user_id,
-    userName: row.profiles?.name ?? null,
+    userName: profileName(row.profiles),
     rating: row.rating,
     body: row.body,
     createdAt: row.created_at,

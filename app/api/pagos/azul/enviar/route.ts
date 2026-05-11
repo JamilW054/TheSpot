@@ -107,7 +107,7 @@ export async function POST(request: Request) {
     currencyCode: process.env.AZUL_CURRENCY_CODE?.trim() ?? "$",
     orderNumber,
     amount,
-    itbis,
+    ITBIS: itbis,
     approvedUrl,
     declinedUrl,
     cancelUrl,
