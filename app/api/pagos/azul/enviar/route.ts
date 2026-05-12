@@ -135,6 +135,8 @@ export async function POST(request: Request) {
     CustomField1Label: "orderId",
     CustomField1Value: orderNumber,
     UseCustomField2: "0",
+    CustomField2Label: "",
+    CustomField2Value: "",
     AuthHash: authHash,
     ShowTransactionResult: "0",
   };

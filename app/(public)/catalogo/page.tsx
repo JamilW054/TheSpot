@@ -2,7 +2,6 @@ import { Suspense } from "react";
 import { Search } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { AdminEditorLink } from "@/components/auth";
 import { AddToCartButton } from "@/components/catalog/AddToCartButton";
 import { CatalogFilterChips } from "@/components/catalog/CatalogFilterChips";
 import { CatalogMobileFilters } from "@/components/catalog/CatalogMobileFilters";
@@ -311,12 +310,6 @@ export default async function CatalogPage({ searchParams }: PageProps) {
                   >
                     Ver
                   </Link>
-                  <AdminEditorLink
-                    href={`/editor?product=${product.id}`}
-                    className="flex-1 inline-flex items-center justify-center rounded-md border border-border/80 bg-transparent px-2 py-1.5 text-[10px] font-medium text-foreground transition-colors hover:bg-muted/60 sm:text-xs"
-                  >
-                    Diseñar
-                  </AdminEditorLink>
                 </div>
               </div>
             </article>
