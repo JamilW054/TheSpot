@@ -80,7 +80,7 @@ export function PublicFooter() {
         <div className="mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs text-muted-foreground">
           <div className="flex flex-wrap items-center gap-2">
             <Link
-              href="/catalogo"
+              href="/terminos"
               className="hover:text-foreground transition-colors"
             >
               Términos y condiciones
@@ -89,10 +89,28 @@ export function PublicFooter() {
               •
             </span>
             <Link
-              href="/catalogo"
+              href="/privacidad"
               className="hover:text-foreground transition-colors"
             >
               Política de privacidad
+            </Link>
+            <span className="opacity-60" aria-hidden>
+              •
+            </span>
+            <Link
+              href="/cookies"
+              className="hover:text-foreground transition-colors"
+            >
+              Cookies
+            </Link>
+            <span className="opacity-60" aria-hidden>
+              •
+            </span>
+            <Link
+              href="/devoluciones"
+              className="hover:text-foreground transition-colors"
+            >
+              Devoluciones
             </Link>
           </div>
           <p>
