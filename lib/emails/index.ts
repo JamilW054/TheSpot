@@ -1,24 +1,8 @@
 import { Resend } from "resend";
-import {
-  bienvenidaEmailHtml,
-  bienvenidaEmailText,
-  type BienvenidaEmailData,
-} from "./templates/bienvenida";
-import {
-  compraEmailHtml,
-  compraEmailText,
-  type CompraEmailData,
-} from "./templates/compra";
-import {
-  otpEmailHtml,
-  otpEmailText,
-  type OtpEmailData,
-} from "./templates/otp";
-import {
-  resetPasswordEmailHtml,
-  resetPasswordEmailText,
-  type ResetPasswordEmailData,
-} from "./templates/reset-password";
+import { bienvenidaEmailHtml, bienvenidaEmailText, type BienvenidaEmailData } from "./templates/bienvenida";
+import { compraEmailHtml, compraEmailText, type CompraEmailData } from "./templates/compra";
+import { otpEmailHtml, otpEmailText, type OtpEmailData } from "./templates/otp";
+import { resetPasswordEmailHtml, resetPasswordEmailText, type ResetPasswordEmailData } from "./templates/reset-password";
 
 function getResend(): Resend {
   const key = process.env.RESEND_API_KEY;
@@ -26,11 +10,10 @@ function getResend(): Resend {
   return new Resend(key);
 }
 
-const FROM = process.env.RESEND_FROM ?? "Buxxep <noreply@buxxep.vercel.app>";
+const FROM = process.env.RESEND_FROM ?? "Buxxep <onboarding@resend.dev>";
 
 export async function sendOtpEmail(to: string, data: OtpEmailData) {
-  const resend = getResend();
-  return resend.emails.send({
+  return getResend().emails.send({
     from: FROM,
     to,
     subject: `${data.code} — Tu código de verificación Buxxep`,
@@ -40,8 +23,7 @@ export async function sendOtpEmail(to: string, data: OtpEmailData) {
 }
 
 export async function sendBienvenidaEmail(to: string, data: BienvenidaEmailData) {
-  const resend = getResend();
-  return resend.emails.send({
+  return getResend().emails.send({
     from: FROM,
     to,
     subject: "¡Bienvenido a Buxxep! 🎨",
@@ -51,8 +33,7 @@ export async function sendBienvenidaEmail(to: string, data: BienvenidaEmailData)
 }
 
 export async function sendCompraEmail(to: string, data: CompraEmailData) {
-  const resend = getResend();
-  return resend.emails.send({
+  return getResend().emails.send({
     from: FROM,
     to,
     subject: `Pedido confirmado #${data.orderNumber} — Buxxep`,
@@ -62,8 +43,7 @@ export async function sendCompraEmail(to: string, data: CompraEmailData) {
 }
 
 export async function sendResetPasswordEmail(to: string, data: ResetPasswordEmailData) {
-  const resend = getResend();
-  return resend.emails.send({
+  return getResend().emails.send({
     from: FROM,
     to,
     subject: "Restablece tu contraseña — Buxxep",

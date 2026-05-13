@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { sendOtpEmail, sendBienvenidaEmail, sendCompraEmail } from "@/lib/emails";
 
-const TEST_TO = "stepbizarre21@gmail.com";
+const TEST_TO = "lacretalasemilla@gmail.com";
 
 export async function GET() {
   if (process.env.NODE_ENV === "production") {
