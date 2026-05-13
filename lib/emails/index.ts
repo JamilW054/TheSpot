@@ -14,6 +14,11 @@ import {
   otpEmailText,
   type OtpEmailData,
 } from "./templates/otp";
+import {
+  resetPasswordEmailHtml,
+  resetPasswordEmailText,
+  type ResetPasswordEmailData,
+} from "./templates/reset-password";
 
 function getResend(): Resend {
   const key = process.env.RESEND_API_KEY;
@@ -53,5 +58,16 @@ export async function sendCompraEmail(to: string, data: CompraEmailData) {
     subject: `Pedido confirmado #${data.orderNumber} — Buxxep`,
     html: compraEmailHtml(data),
     text: compraEmailText(data),
+  });
+}
+
+export async function sendResetPasswordEmail(to: string, data: ResetPasswordEmailData) {
+  const resend = getResend();
+  return resend.emails.send({
+    from: FROM,
+    to,
+    subject: "Restablece tu contraseña — Buxxep",
+    html: resetPasswordEmailHtml(data),
+    text: resetPasswordEmailText(data),
   });
 }
