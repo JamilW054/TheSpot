@@ -95,12 +95,15 @@ export async function adminCreateCategory(
     const sort_order = parseSortOrder(formData);
     const image_url = normalizeCategoryImageUrl(formData.get("image_url"));
 
+    const size_preset_id = formData.get("size_preset_id")?.toString().trim() || null;
+
     const { error } = await supabase.from("categories").insert({
       slug,
       name,
       sort_order,
       image_url,
       parent_id: null,
+      size_preset_id,
     });
     if (error) throw new Error(error.message);
 
@@ -132,6 +135,8 @@ export async function adminUpdateCategory(
     const sort_order = parseSortOrder(formData);
     const image_url = normalizeCategoryImageUrl(formData.get("image_url"));
 
+    const size_preset_id = formData.get("size_preset_id")?.toString().trim() || null;
+
     const { error } = await supabase
       .from("categories")
       .update({
@@ -139,6 +144,7 @@ export async function adminUpdateCategory(
         name,
         sort_order,
         image_url,
+        size_preset_id,
       })
       .eq("id", id);
     if (error) throw new Error(error.message);

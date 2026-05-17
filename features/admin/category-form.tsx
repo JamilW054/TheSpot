@@ -17,6 +17,7 @@ import {
   adminUpdateCategory,
 } from "@/lib/actions/categories-admin";
 import type { CategoryRow } from "@/lib/db/categories";
+import type { SizePresetRow } from "@/lib/db/size-presets";
 
 const MAX_IMAGE_URL_LEN = 2048;
 
@@ -46,9 +47,10 @@ function SectionLabel({ children }: { children: ReactNode }) {
 interface CategoryFormProps {
   mode: "create" | "edit";
   initial?: CategoryRow;
+  sizePresets?: SizePresetRow[];
 }
 
-export function CategoryForm({ mode, initial }: CategoryFormProps) {
+export function CategoryForm({ mode, initial, sizePresets = [] }: CategoryFormProps) {
   const router = useRouter();
   const fileInputId = useId();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -151,6 +153,31 @@ export function CategoryForm({ mode, initial }: CategoryFormProps) {
                 . Si el slug ya existe, se añade un sufijo.
               </p>
             </div>
+            <div className="sm:col-span-2">
+              <label
+                htmlFor="category-size_preset_id"
+                className="mb-1.5 block text-sm font-medium text-foreground"
+              >
+                Tipo de talla
+              </label>
+              <select
+                id="category-size_preset_id"
+                name="size_preset_id"
+                defaultValue={initial?.size_preset_id ?? ""}
+                className="h-11 w-full rounded-lg border border-border bg-background px-3 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+              >
+                <option value="">Sin tallas definidas</option>
+                {sizePresets.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name} ({p.sizes.join(", ")})
+                  </option>
+                ))}
+              </select>
+              <p className="mt-1.5 text-xs text-muted-foreground">
+                Las tallas disponibles al crear productos de esta categoría.
+              </p>
+            </div>
+
             <div className="sm:max-w-[160px]">
               <Input
                 label="Orden"

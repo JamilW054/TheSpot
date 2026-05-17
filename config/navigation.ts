@@ -93,6 +93,12 @@ export const ADMIN_NAV: NavItem[] = [
     adminSection: "Catálogo",
   },
   {
+    label: "Tipos de talla",
+    href: "/admin/tallas",
+    icon: "Ruler",
+    adminSection: "Catálogo",
+  },
+  {
     label: "Nuevo artículo",
     href: "/admin/catalogo/nuevo",
     icon: "PlusCircle",

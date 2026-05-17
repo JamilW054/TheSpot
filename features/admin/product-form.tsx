@@ -2,14 +2,15 @@
 
 import type { CategoryRow } from "@/lib/db/categories";
 import type { ProductRow } from "@/lib/db/products";
+import type { SizePresetRow } from "@/lib/db/size-presets";
 import {
   adminCreateProduct,
   adminUpdateProduct,
   type AdminProductActionState,
 } from "@/lib/actions/products-admin";
 import { Input } from "@/components/ui/input";
-import { ImagePlus, Loader2, Save, Trash2, X } from "lucide-react";
-import { useActionState, useEffect, useRef, useState } from "react";
+import { ImagePlus, Loader2, Ruler, Save, Trash2, X } from "lucide-react";
+import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 const iconBtn =
@@ -18,10 +19,9 @@ const iconBtn =
 interface ProductFormProps {
   mode: "create" | "edit";
   categories: CategoryRow[];
+  sizePresets: SizePresetRow[];
   initial?: ProductRow;
 }
-
-const ALL_SIZES = ["XS", "S", "M", "L", "XL", "XXL"] as const;
 
 function tagsDefault(initial?: ProductRow): string {
   const t = initial?.tags;
@@ -29,7 +29,7 @@ function tagsDefault(initial?: ProductRow): string {
   return "";
 }
 
-export function ProductForm({ mode, categories, initial }: ProductFormProps) {
+export function ProductForm({ mode, categories, sizePresets, initial }: ProductFormProps) {
   const router = useRouter();
   const actionFn = mode === "create" ? adminCreateProduct : adminUpdateProduct;
   const [state, formAction] = useActionState<
@@ -40,6 +40,17 @@ export function ProductForm({ mode, categories, initial }: ProductFormProps) {
   const [coverUrl, setCoverUrl] = useState(initial?.cover_image_url ?? "");
   const [uploadBusy, setUploadBusy] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  const [selectedCategoryId, setSelectedCategoryId] = useState(
+    initial?.category_id ?? "",
+  );
+
+  const presetSizes = useMemo(() => {
+    const cat = categories.find((c) => c.id === selectedCategoryId);
+    if (!cat?.size_preset_id) return null;
+    const preset = sizePresets.find((p) => p.id === cat.size_preset_id);
+    return preset?.sizes ?? null;
+  }, [selectedCategoryId, categories, sizePresets]);
 
   useEffect(() => {
     if (state?.ok) {
@@ -197,7 +208,8 @@ export function ProductForm({ mode, categories, initial }: ProductFormProps) {
         <select
           id="product-category_id"
           name="category_id"
-          defaultValue={initial?.category_id ?? ""}
+          value={selectedCategoryId}
+          onChange={(e) => setSelectedCategoryId(e.target.value)}
           className="h-10 w-full rounded-md border border-border bg-background px-3 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         >
           <option value="">Sin categoría</option>
@@ -211,19 +223,33 @@ export function ProductForm({ mode, categories, initial }: ProductFormProps) {
 
       <div className="space-y-1.5">
         <p className="text-sm font-medium text-foreground">Tallas disponibles</p>
-        <div className="flex flex-wrap gap-3">
-          {ALL_SIZES.map((s) => (
-            <label key={s} className="flex cursor-pointer items-center gap-1.5 text-sm font-medium">
-              <input
-                type="checkbox"
-                name={`size_${s}`}
-                defaultChecked={initial?.sizes?.includes(s) ?? false}
-                className="size-4 rounded border-border"
-              />
-              {s}
-            </label>
-          ))}
-        </div>
+        {presetSizes ? (
+          <div className="flex flex-wrap gap-3">
+            {presetSizes.map((s) => (
+              <label key={s} className="flex cursor-pointer items-center gap-1.5 text-sm font-medium">
+                <input
+                  type="checkbox"
+                  name={`size_${s}`}
+                  defaultChecked={initial?.sizes?.includes(s) ?? false}
+                  className="size-4 rounded border-border"
+                />
+                {s}
+              </label>
+            ))}
+          </div>
+        ) : selectedCategoryId ? (
+          <p className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Ruler className="size-4 shrink-0" aria-hidden />
+            Esta categoría no tiene un tipo de talla asignado.{" "}
+            <a href="/admin/tallas" className="underline underline-offset-2 hover:text-foreground">
+              Configúralo aquí
+            </a>
+          </p>
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            Selecciona una categoría para ver las tallas disponibles.
+          </p>
+        )}
       </div>
 
       <div className="space-y-1.5">
