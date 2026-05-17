@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui";
 
 const CODE_LENGTH = 6;
 const RESEND_COOLDOWN = 60;
 
-export default function VerificarPage() {
+function VerificarContent() {
   const router = useRouter();
   const params = useSearchParams();
   const email = params.get("email") ?? "";
@@ -194,5 +194,13 @@ export default function VerificarPage() {
 
       </div>
     </div>
+  );
+}
+
+export default function VerificarPage() {
+  return (
+    <Suspense>
+      <VerificarContent />
+    </Suspense>
   );
 }
