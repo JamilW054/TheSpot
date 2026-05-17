@@ -176,10 +176,12 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 function LegalNav({ current }: { current: string }) {
   const links = [
-    { href: "/terminos", label: "Términos" },
-    { href: "/privacidad", label: "Privacidad" },
-    { href: "/cookies", label: "Cookies" },
+    { href: "/terminos",     label: "Términos" },
+    { href: "/privacidad",   label: "Privacidad" },
+    { href: "/cookies",      label: "Cookies" },
     { href: "/devoluciones", label: "Devoluciones" },
+    { href: "/entrega",      label: "Entrega" },
+    { href: "/seguridad",    label: "Seguridad" },
   ];
   return (
     <div className="mt-12 border-t border-border pt-8">
