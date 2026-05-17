@@ -9,6 +9,8 @@ export interface CategoryRow {
   image_url?: string | null;
   /** Referencia a la categoría padre — null para categorías raíz. */
   parent_id?: string | null;
+  /** Preset de tallas asignado a esta categoría. */
+  size_preset_id?: string | null;
 }
 
 /** Detecta cualquier error de columna no encontrada en PostgREST (PGRST204). */
@@ -49,7 +51,7 @@ export async function getCategoryAdminById(
 
   const full = await supabase
     .from("categories")
-    .select("id, slug, name, sort_order, parent_id, image_url")
+    .select("id, slug, name, sort_order, parent_id, image_url, size_preset_id")
     .eq("id", s)
     .maybeSingle();
 
@@ -73,7 +75,7 @@ export async function getCategoriesForAdmin(): Promise<CategoryRow[]> {
 
   const full = await supabase
     .from("categories")
-    .select("id, slug, name, sort_order, parent_id, image_url")
+    .select("id, slug, name, sort_order, parent_id, image_url, size_preset_id")
     .order("sort_order", { ascending: true });
 
   if (!full.error) return (full.data ?? []) as CategoryRow[];

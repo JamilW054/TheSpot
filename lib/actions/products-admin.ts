@@ -34,10 +34,11 @@ function parseTagsFromForm(formData: FormData): string[] {
   return out;
 }
 
-const VALID_SIZES = ["XS", "S", "M", "L", "XL", "XXL"];
-
 function parseSizesFromForm(formData: FormData): string[] {
-  return VALID_SIZES.filter((s) => formData.get(`size_${s}`) === "on");
+  const prefix = "size_";
+  return Array.from(formData.keys())
+    .filter((k) => k.startsWith(prefix) && formData.get(k) === "on")
+    .map((k) => k.slice(prefix.length));
 }
 
 function parseCategoryId(formData: FormData): string | null {
