@@ -1,6 +1,23 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+const PROTECTED_PREFIXES = [
+  "/admin",
+  "/mis-disenos",
+  "/mis-pedidos",
+  "/editor",
+  "/guia",
+  "/lineas",
+  "/recursos",
+  "/soporte",
+];
+
+function isProtectedPath(pathname: string): boolean {
+  return PROTECTED_PREFIXES.some(
+    (p) => pathname === p || pathname.startsWith(`${p}/`),
+  );
+}
+
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
@@ -25,8 +42,17 @@ export async function middleware(request: NextRequest) {
     },
   );
 
-  // Refresca el token de acceso si está por vencer. No remover.
-  await supabase.auth.getUser();
+  // Refresca el token si está por vencer. No remover — crítico para SSR y Server Actions.
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  // Redirige al login si la ruta requiere auth y no hay sesión válida.
+  if (!user && isProtectedPath(request.nextUrl.pathname)) {
+    const loginUrl = new URL("/login", request.url);
+    loginUrl.searchParams.set("next", request.nextUrl.pathname);
+    return NextResponse.redirect(loginUrl);
+  }
 
   return supabaseResponse;
 }
