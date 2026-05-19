@@ -66,6 +66,7 @@ export function CheckoutContent({ products }: { products: CatalogProduct[] }) {
       productId: it.productId,
       quantity: it.quantity,
       designId: it.designId ?? null,
+      size: it.size ?? null,
     }));
     const result = await createOrderAction(shipping, orderItems);
     setLoading(false);

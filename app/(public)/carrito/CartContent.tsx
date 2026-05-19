@@ -75,7 +75,7 @@ export function CartContent({ products }: { products: CatalogProduct[] }) {
             totalCents += lineTotal;
             return (
               <li
-                key={`${item.productId}:${item.designId ?? ""}`}
+                key={`${item.productId}:${item.designId ?? ""}:${item.size ?? ""}`}
                 className="group flex flex-col gap-4 rounded-2xl border border-border bg-card p-4 shadow-sm transition-shadow hover:shadow-md sm:flex-row sm:items-center sm:gap-6 sm:p-5"
               >
                 <Link
@@ -99,11 +99,18 @@ export function CartContent({ products }: { products: CatalogProduct[] }) {
                   >
                     {product.name}
                   </Link>
-                  {item.designId ? (
-                    <span className="inline-block text-xs font-medium text-muted-foreground">
-                      Diseño personalizado
-                    </span>
-                  ) : null}
+                  <div className="flex flex-wrap items-center gap-2">
+                    {item.size ? (
+                      <span className="inline-flex items-center rounded-md border border-border bg-muted/40 px-2 py-0.5 text-xs font-semibold uppercase tracking-wide text-foreground">
+                        {item.size}
+                      </span>
+                    ) : null}
+                    {item.designId ? (
+                      <span className="inline-block text-xs font-medium text-muted-foreground">
+                        Diseño personalizado
+                      </span>
+                    ) : null}
+                  </div>
                   <p className="text-sm text-muted-foreground tabular-nums">
                     {product.price}{" "}
                     <span className="text-foreground/80">
@@ -121,6 +128,7 @@ export function CartContent({ products }: { products: CatalogProduct[] }) {
                           item.productId,
                           item.quantity - 1,
                           item.designId,
+                          item.size,
                         )
                       }
                       className="flex h-9 w-9 items-center justify-center text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
@@ -138,6 +146,7 @@ export function CartContent({ products }: { products: CatalogProduct[] }) {
                           item.productId,
                           item.quantity + 1,
                           item.designId,
+                          item.size,
                         )
                       }
                       className="flex h-9 w-9 items-center justify-center text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
@@ -151,7 +160,7 @@ export function CartContent({ products }: { products: CatalogProduct[] }) {
                   </p>
                   <button
                     type="button"
-                    onClick={() => removeItem(item.productId, item.designId)}
+                    onClick={() => removeItem(item.productId, item.designId, item.size)}
                     className="flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-destructive"
                     aria-label="Quitar del carrito"
                   >

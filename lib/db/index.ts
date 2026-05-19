@@ -671,6 +671,7 @@ export interface CreateOrderItem {
   productId: string;
   quantity: number;
   designId?: string | null;
+  size?: string | null;
 }
 
 /** Shipping data for order creation. */
@@ -739,6 +740,7 @@ export async function createOrder(
       design_id: item.designId ?? null,
       quantity: item.quantity,
       unit_price_cents: product.priceCents,
+      size: item.size ?? null,
     });
     if (itemError) throw toError(itemError);
   }
