@@ -10,6 +10,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { useAdminFeedback } from "@/contexts/admin-feedback-context";
 import { Input } from "@/components/ui/input";
 import {
   type AdminCategoryActionState,
@@ -52,6 +53,7 @@ interface CategoryFormProps {
 
 export function CategoryForm({ mode, initial, sizePresets = [] }: CategoryFormProps) {
   const router = useRouter();
+  const { showSuccess, showError } = useAdminFeedback();
   const fileInputId = useId();
   const fileRef = useRef<HTMLInputElement>(null);
   const actionFn =
@@ -67,12 +69,20 @@ export function CategoryForm({ mode, initial, sizePresets = [] }: CategoryFormPr
 
   const urlError = validateCategoryImageUrlInput(imageUrl);
 
+  const seenState = useRef<typeof state>(undefined);
   useEffect(() => {
-    if (state?.ok) {
-      router.replace("/admin/categorias");
-      router.refresh();
+    if (!state || state === seenState.current) return;
+    seenState.current = state;
+    if (state.ok) {
+      const label = mode === "create" ? "Categoría creada correctamente." : "Categoría guardada correctamente.";
+      showSuccess(label, () => {
+        router.replace("/admin/categorias");
+        router.refresh();
+      });
+    } else if (state.error) {
+      showError(state.error);
     }
-  }, [state?.ok, router]);
+  }, [state, mode, showSuccess, showError, router]);
 
   async function uploadFile(file: File) {
     setUploadBusy(true);
@@ -114,15 +124,6 @@ export function CategoryForm({ mode, initial, sizePresets = [] }: CategoryFormPr
       ) : null}
 
       <input type="hidden" name="image_url" value={imageUrl.trim()} />
-
-      {state?.error ? (
-        <div
-          className="rounded-lg border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive"
-          role="alert"
-        >
-          {state.error}
-        </div>
-      ) : null}
 
       <section>
         <SectionLabel>Datos</SectionLabel>

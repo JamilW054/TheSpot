@@ -108,6 +108,22 @@ export default async function CatalogProductPage({ params }: PageProps) {
             {product.description}
           </p>
 
+          {product.sizes && product.sizes.length > 0 && (
+            <div className="mt-4">
+              <p className="text-sm font-medium text-foreground mb-2">Tallas disponibles</p>
+              <div className="flex flex-wrap gap-2">
+                {product.sizes.map((size) => (
+                  <span
+                    key={size}
+                    className="inline-flex items-center justify-center rounded-md border border-border bg-muted/40 px-2.5 py-1 text-xs font-semibold text-foreground"
+                  >
+                    {size}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="mt-6 sm:mt-8 rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
             <div className="px-4 py-3 border-b border-border bg-muted/20">
               <span className="text-sm font-medium text-foreground">

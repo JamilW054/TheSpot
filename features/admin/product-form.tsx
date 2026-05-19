@@ -9,6 +9,7 @@ import {
   type AdminProductActionState,
 } from "@/lib/actions/products-admin";
 import { Input } from "@/components/ui/input";
+import { useAdminFeedback } from "@/contexts/admin-feedback-context";
 import { ImagePlus, Loader2, Ruler, Save, Trash2, X } from "lucide-react";
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -31,6 +32,7 @@ function tagsDefault(initial?: ProductRow): string {
 
 export function ProductForm({ mode, categories, sizePresets, initial }: ProductFormProps) {
   const router = useRouter();
+  const { showSuccess, showError } = useAdminFeedback();
   const actionFn = mode === "create" ? adminCreateProduct : adminUpdateProduct;
   const [state, formAction] = useActionState<
     AdminProductActionState | undefined,
@@ -52,12 +54,20 @@ export function ProductForm({ mode, categories, sizePresets, initial }: ProductF
     return preset?.sizes ?? null;
   }, [selectedCategoryId, categories, sizePresets]);
 
+  const seenState = useRef<typeof state>(undefined);
   useEffect(() => {
-    if (state?.ok) {
-      router.replace("/admin/catalogo");
-      router.refresh();
+    if (!state || state === seenState.current) return;
+    seenState.current = state;
+    if (state.ok) {
+      const label = mode === "create" ? "Producto creado correctamente." : "Producto guardado correctamente.";
+      showSuccess(label, () => {
+        router.replace("/admin/catalogo");
+        router.refresh();
+      });
+    } else if (state.error) {
+      showError(state.error);
     }
-  }, [state?.ok, router]);
+  }, [state, mode, showSuccess, showError, router]);
 
   const priceDopDefault =
     initial != null ? (initial.price_cents / 100).toFixed(2) : "";
@@ -102,15 +112,6 @@ export function ProductForm({ mode, categories, sizePresets, initial }: ProductF
       ) : null}
 
       <input type="hidden" name="cover_image_url" value={coverUrl} />
-
-      {state?.error ? (
-        <p
-          className="rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-2 text-sm text-destructive"
-          role="alert"
-        >
-          {state.error}
-        </p>
-      ) : null}
 
       <div className="rounded-xl border border-border bg-card p-4">
         <p className="mb-3 text-sm font-medium text-foreground">

@@ -88,10 +88,10 @@ export {
 };
 
 const productCatalogSelect =
-  "id, slug, name, description, price_cents, model_path, cover_image_url, default_design_id, published, sort_order, category_id, tags, textures!base_texture_id(url), categories(slug)";
+  "id, slug, name, description, price_cents, model_path, cover_image_url, default_design_id, published, sort_order, category_id, tags, sizes, textures!base_texture_id(url), categories(slug)";
 
 const productCatalogSelectCategoryFiltered =
-  "id, slug, name, description, price_cents, model_path, cover_image_url, default_design_id, published, sort_order, category_id, tags, textures!base_texture_id(url), categories!inner(slug)";
+  "id, slug, name, description, price_cents, model_path, cover_image_url, default_design_id, published, sort_order, category_id, tags, sizes, textures!base_texture_id(url), categories!inner(slug)";
 
 export interface GetProductsOptions {
   categorySlug?: string;
@@ -223,7 +223,7 @@ export async function getProductsAdmin(): Promise<ProductRow[]> {
     const { data, error } = await supabase
       .from("products")
       .select(
-        "id, slug, name, description, price_cents, model_path, cover_image_url, base_texture_id, default_design_id, published, sort_order, category_id, tags, textures!base_texture_id(url)",
+        "id, slug, name, description, price_cents, model_path, cover_image_url, base_texture_id, default_design_id, published, sort_order, category_id, tags, sizes, textures!base_texture_id(url)",
       )
       .order("sort_order", { ascending: true });
     if (error) throw toError(error);
@@ -242,7 +242,7 @@ export async function getProductAdminBySlug(
     const { data, error } = await supabase
       .from("products")
       .select(
-        "id, slug, name, description, price_cents, model_path, cover_image_url, base_texture_id, default_design_id, published, sort_order, category_id, tags, textures!base_texture_id(url)",
+        "id, slug, name, description, price_cents, model_path, cover_image_url, base_texture_id, default_design_id, published, sort_order, category_id, tags, sizes, textures!base_texture_id(url)",
       )
       .eq("slug", s)
       .maybeSingle();

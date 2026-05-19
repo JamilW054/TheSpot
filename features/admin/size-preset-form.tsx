@@ -2,7 +2,7 @@
 
 import { Loader2, Save, X } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 import {
   type SizePresetActionState,
@@ -10,6 +10,7 @@ import {
   adminUpdateSizePreset,
 } from "@/lib/actions/size-presets-admin";
 import type { SizePresetRow } from "@/lib/db/size-presets";
+import { useAdminFeedback } from "@/contexts/admin-feedback-context";
 
 interface SizePresetFormProps {
   mode: "create" | "edit";
@@ -18,6 +19,7 @@ interface SizePresetFormProps {
 
 export function SizePresetForm({ mode, initial }: SizePresetFormProps) {
   const router = useRouter();
+  const { showSuccess, showError } = useAdminFeedback();
   const actionFn = mode === "create" ? adminCreateSizePreset : adminUpdateSizePreset;
   const [state, formAction, pending] = useActionState<
     SizePresetActionState | undefined,
@@ -33,26 +35,25 @@ export function SizePresetForm({ mode, initial }: SizePresetFormProps) {
     .map((s) => s.trim())
     .filter(Boolean);
 
+  const seenState = useRef<typeof state>(undefined);
   useEffect(() => {
-    if (state?.ok) {
-      router.replace("/admin/tallas");
-      router.refresh();
+    if (!state || state === seenState.current) return;
+    seenState.current = state;
+    if (state.ok) {
+      const label = mode === "create" ? "Tipo de talla creado correctamente." : "Tipo de talla guardado correctamente.";
+      showSuccess(label, () => {
+        router.replace("/admin/tallas");
+        router.refresh();
+      });
+    } else if (state.error) {
+      showError(state.error);
     }
-  }, [state?.ok, router]);
+  }, [state, mode, showSuccess, showError, router]);
 
   return (
     <form action={formAction} className="space-y-8">
       {mode === "edit" && initial ? (
         <input type="hidden" name="preset_id" value={initial.id} />
-      ) : null}
-
-      {state?.error ? (
-        <div
-          className="rounded-lg border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive"
-          role="alert"
-        >
-          {state.error}
-        </div>
       ) : null}
 
       <div className="rounded-xl border border-border bg-card p-6 sm:p-8 space-y-6">
