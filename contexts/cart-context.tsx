@@ -14,7 +14,7 @@ import type { CartItem } from "@/types";
 const STORAGE_KEY = "buxxep-cart";
 
 function cartItemKey(item: CartItem): string {
-  return `${item.productId}:${item.designId ?? ""}`;
+  return `${item.productId}:${item.designId ?? ""}:${item.size ?? ""}`;
 }
 
 function loadCart(): CartItem[] {
@@ -45,15 +45,17 @@ interface CartContextValue {
     productId: string,
     quantity?: number,
     designId?: string | null,
+    size?: string | null,
   ) => void;
-  removeItem: (productId: string, designId?: string | null) => void;
+  removeItem: (productId: string, designId?: string | null, size?: string | null) => void;
   updateQuantity: (
     productId: string,
     quantity: number,
     designId?: string | null,
+    size?: string | null,
   ) => void;
   clearCart: () => void;
-  getQuantity: (productId: string, designId?: string | null) => number;
+  getQuantity: (productId: string, designId?: string | null, size?: string | null) => number;
 }
 
 const CartContext = createContext<CartContextValue | null>(null);
@@ -87,9 +89,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const addItem = useCallback(
-    (productId: string, quantity = 1, designId?: string | null) => {
+    (productId: string, quantity = 1, designId?: string | null, size?: string | null) => {
       setItems((prev) => {
-        const key = `${productId}:${designId ?? ""}`;
+        const key = `${productId}:${designId ?? ""}:${size ?? ""}`;
         const i = prev.findIndex((it) => cartItemKey(it) === key);
         if (i >= 0) {
           const next = [...prev];
@@ -98,7 +100,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
         }
         return [
           ...prev,
-          { productId, quantity, designId: designId ?? undefined },
+          {
+            productId,
+            quantity,
+            designId: designId ?? undefined,
+            size: size ?? undefined,
+          },
         ];
       });
     },
@@ -106,20 +113,20 @@ export function CartProvider({ children }: { children: ReactNode }) {
   );
 
   const removeItem = useCallback(
-    (productId: string, designId?: string | null) => {
-      const key = `${productId}:${designId ?? ""}`;
+    (productId: string, designId?: string | null, size?: string | null) => {
+      const key = `${productId}:${designId ?? ""}:${size ?? ""}`;
       setItems((prev) => prev.filter((it) => cartItemKey(it) !== key));
     },
     [],
   );
 
   const updateQuantity = useCallback(
-    (productId: string, quantity: number, designId?: string | null) => {
+    (productId: string, quantity: number, designId?: string | null, size?: string | null) => {
       if (quantity < 1) {
-        removeItem(productId, designId);
+        removeItem(productId, designId, size);
         return;
       }
-      const key = `${productId}:${designId ?? ""}`;
+      const key = `${productId}:${designId ?? ""}:${size ?? ""}`;
       setItems((prev) =>
         prev.map((it) => (cartItemKey(it) === key ? { ...it, quantity } : it)),
       );
@@ -130,8 +137,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const clearCart = useCallback(() => setItems([]), []);
 
   const getQuantity = useCallback(
-    (productId: string, designId?: string | null) => {
-      const key = `${productId}:${designId ?? ""}`;
+    (productId: string, designId?: string | null, size?: string | null) => {
+      const key = `${productId}:${designId ?? ""}:${size ?? ""}`;
       const it = items.find((i) => cartItemKey(i) === key);
       return it?.quantity ?? 0;
     },
