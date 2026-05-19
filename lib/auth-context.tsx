@@ -119,7 +119,28 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_OUT" && typeof window !== "undefined") {
+        const PROTECTED = [
+          "/admin",
+          "/mis-disenos",
+          "/mis-pedidos",
+          "/editor",
+          "/guia",
+          "/lineas",
+          "/recursos",
+          "/soporte",
+        ];
+        const onProtected = PROTECTED.some(
+          (p) =>
+            window.location.pathname === p ||
+            window.location.pathname.startsWith(`${p}/`),
+        );
+        if (onProtected) {
+          window.location.replace("/login");
+          return;
+        }
+      }
       void enrichUserFromProfile(supabase, session).then((u) => {
         if (!cancelled) setUser(u);
       });

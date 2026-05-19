@@ -17,14 +17,20 @@ function isSchemaCacheError(e: { code?: string; message?: string }): boolean {
 }
 
 export async function getSizePresetsForAdmin(): Promise<SizePresetRow[]> {
-  const supabase = createServiceClient();
-  const { data, error } = await supabase
-    .from("size_presets")
-    .select("id, name, sizes, sort_order")
-    .order("sort_order", { ascending: true });
-  if (!error) return (data ?? []) as SizePresetRow[];
-  if (isSchemaCacheError(error)) return [];
-  throw new Error(error.message);
+  try {
+    const supabase = createServiceClient();
+    const { data, error } = await supabase
+      .from("size_presets")
+      .select("id, name, sizes, sort_order")
+      .order("sort_order", { ascending: true });
+    if (!error) return (data ?? []) as SizePresetRow[];
+    if (isSchemaCacheError(error)) return [];
+    console.error("[getSizePresetsForAdmin]", error.message);
+    return [];
+  } catch (e) {
+    console.error("[getSizePresetsForAdmin]", e);
+    return [];
+  }
 }
 
 export async function getSizePresetById(
