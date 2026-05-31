@@ -4,9 +4,7 @@ import { formatDOPFromCents } from "@/lib/format-currency";
 export interface OrderRow {
   id: string;
   user_id: string | null;
-  session_id: string | null;
   status: string;
-  shipping_name: string | null;
   total_cents: number;
   created_at: string;
 }
@@ -22,7 +20,7 @@ export function rowToPedido(row: OrderRow, itemsCount: number): Pedido {
   const totalFormatted = formatDOPFromCents(row.total_cents);
   return {
     id: row.id,
-    cliente: row.shipping_name ?? "—",
+    cliente: "—",
     items: itemsCount,
     total: totalFormatted,
     estado: statusMap[row.status] ?? "pendiente",

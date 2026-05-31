@@ -18,48 +18,11 @@ function slugify(input: string): string {
   return (s.slice(0, 96) || "articulo").toLowerCase();
 }
 
-function parseTagsFromForm(formData: FormData): string[] {
-  const raw = formData.get("tags")?.toString() ?? "";
-  const parts = raw.split(/[,;\n]+/);
-  const seen = new Set<string>();
-  const out: string[] = [];
-  for (const p of parts) {
-    const t = p.trim().toLowerCase().replace(/\s+/g, " ");
-    if (!t || t.length > 48) continue;
-    if (seen.has(t)) continue;
-    seen.add(t);
-    out.push(t);
-    if (out.length >= 24) break;
-  }
-  return out;
-}
-
-function parseSizesFromForm(formData: FormData): string[] {
-  const prefix = "size_";
-  return Array.from(formData.keys())
-    .filter((k) => k.startsWith(prefix) && formData.get(k) === "on")
-    .map((k) => k.slice(prefix.length));
-}
-
-function parseCategoryId(formData: FormData): string | null {
-  const v = formData.get("category_id")?.toString().trim() ?? "";
-  return v.length > 0 ? v : null;
-}
-
 async function pickUniqueProductSlug(
   supabase: ReturnType<typeof createServiceClient>,
   name: string,
-  tags: string[],
 ): Promise<string> {
   const base = slugify(name) || "articulo";
-  const tagBits = tags
-    .slice(0, 3)
-    .map((t) => slugify(t))
-    .filter((s) => s.length > 0);
-  const primary =
-    tagBits.length > 0
-      ? `${base}-${tagBits.join("-")}`.replace(/-+/g, "-").slice(0, 96)
-      : base.slice(0, 96);
 
   const trySlug = async (candidate: string) => {
     const { data } = await supabase
@@ -70,42 +33,64 @@ async function pickUniqueProductSlug(
     return data == null;
   };
 
-  if (await trySlug(primary)) return primary;
+  if (await trySlug(base)) return base;
   for (let n = 2; n <= 200; n++) {
     const c = `${base}-${n}`.slice(0, 96);
     if (await trySlug(c)) return c;
   }
-  const fallback =
-    `${base}-${randomUUID().replace(/-/g, "").slice(0, 10)}`.slice(0, 96);
-  return fallback;
-}
-
-async function getDefaultProductModelPath(
-  supabase: ReturnType<typeof createServiceClient>,
-): Promise<string> {
-  const { data, error } = await supabase
-    .from("base_models")
-    .select("path")
-    .order("path", { ascending: true })
-    .limit(1)
-    .maybeSingle();
-  if (error) throw new Error(error.message);
-  const path = (data as { path?: string } | null)?.path?.trim();
-  if (!path) {
-    throw new Error(
-      "Falta configuración: añade al menos una fila en la tabla base_models.",
-    );
-  }
-  return path;
+  return `${base}-${randomUUID().replace(/-/g, "").slice(0, 10)}`.slice(0, 96);
 }
 
 function parsePriceDopToCents(raw: string): number {
   const t = raw.trim().replace(/\s/g, "").replace(",", ".");
   const n = Number.parseFloat(t);
-  if (!Number.isFinite(n) || n < 0) {
-    throw new Error("Precio inválido.");
-  }
+  if (!Number.isFinite(n) || n < 0) throw new Error("Precio inválido.");
   return Math.round(n * 100);
+}
+
+function parseOptionalPriceDopToCents(raw: string): number | null {
+  const trimmed = raw.trim();
+  if (!trimmed || trimmed === "0" || trimmed === "0.00") return null;
+  return parsePriceDopToCents(trimmed);
+}
+
+async function upsertCoverMedia(
+  supabase: ReturnType<typeof createServiceClient>,
+  productId: string,
+  coverUrl: string | null,
+  altText: string,
+): Promise<void> {
+  if (!coverUrl) {
+    await supabase
+      .from("product_media")
+      .delete()
+      .eq("product_id", productId)
+      .eq("is_cover", true);
+    return;
+  }
+
+  const { data: existing } = await supabase
+    .from("product_media")
+    .select("id")
+    .eq("product_id", productId)
+    .eq("is_cover", true)
+    .maybeSingle();
+
+  if (existing) {
+    await supabase
+      .from("product_media")
+      .update({ url: coverUrl, alt_text: altText })
+      .eq("id", (existing as { id: string }).id);
+  } else {
+    await supabase.from("product_media").insert({
+      product_id: productId,
+      url: coverUrl,
+      media_type: "img",
+      alt_text: altText,
+      sort_order: 0,
+      is_cover: true,
+    });
+  }
 }
 
 export async function adminCreateProduct(
@@ -119,24 +104,19 @@ export async function adminCreateProduct(
     const name = formData.get("name")?.toString().trim() ?? "";
     if (!name) throw new Error("El nombre es obligatorio.");
 
-    const tags = parseTagsFromForm(formData);
-    const sizes = parseSizesFromForm(formData);
-    const category_id = parseCategoryId(formData);
-    const slug = await pickUniqueProductSlug(supabase, name, tags);
-
+    const slug = await pickUniqueProductSlug(supabase, name);
     const description = formData.get("description")?.toString().trim() || null;
-    const model_path = await getDefaultProductModelPath(supabase);
 
-    const price_cents = parsePriceDopToCents(
-      formData.get("price_dop")?.toString() ?? "",
+    const base_price_cents = parsePriceDopToCents(
+      formData.get("base_price_dop")?.toString() ?? "",
     );
-    const published = formData.get("published") === "on";
-    const sort_order = Math.max(
-      0,
-      Math.round(Number(formData.get("sort_order")?.toString() || "0")),
+    const original_price_cents = parseOptionalPriceDopToCents(
+      formData.get("original_price_dop")?.toString() ?? "",
     );
-    const cover_image_url =
-      formData.get("cover_image_url")?.toString().trim() || null;
+
+    const is_active = formData.get("is_active") === "on";
+    const is_customizable = formData.get("is_customizable") === "on";
+    const cover_url = formData.get("cover_image_url")?.toString().trim() || null;
 
     const { data: inserted, error: insErr } = await supabase
       .from("products")
@@ -144,55 +124,32 @@ export async function adminCreateProduct(
         slug,
         name,
         description,
-        price_cents,
-        model_path,
-        cover_image_url,
-        published,
-        sort_order,
-        category_id,
-        tags,
-        sizes,
-        default_design_id: null,
-        base_texture_id: null,
+        base_price_cents,
+        original_price_cents,
+        is_active,
+        is_customizable,
       })
       .select("id")
       .single();
 
     if (insErr) {
       if (insErr.code === "23505") {
-        return {
-          error: "Conflicto al generar la URL del artículo. Vuelve a intentar.",
-        };
+        return { error: "Conflicto al generar la URL. Vuelve a intentar." };
       }
       return { error: insErr.message ?? "No se pudo crear el producto." };
     }
 
     const productId = (inserted as { id: string }).id;
 
-    if (cover_image_url) {
-      const { data: tex, error: texErr } = await supabase
-        .from("textures")
-        .insert({
-          source: "buxxep",
-          url: cover_image_url,
-          product_id: productId,
-        })
-        .select("id")
-        .single();
-      if (!texErr && tex) {
-        await supabase
-          .from("products")
-          .update({ base_texture_id: (tex as { id: string }).id })
-          .eq("id", productId);
-      }
+    if (cover_url) {
+      await upsertCoverMedia(supabase, productId, cover_url, name);
     }
 
     revalidatePath("/admin/catalogo");
     revalidatePath("/catalogo");
     return { ok: true };
   } catch (e) {
-    const msg = e instanceof Error ? e.message : "Error desconocido.";
-    return { error: msg };
+    return { error: e instanceof Error ? e.message : "Error desconocido." };
   }
 }
 
@@ -208,98 +165,50 @@ export async function adminUpdateProduct(
 
     const { data: prevRow, error: prevErr } = await supabase
       .from("products")
-      .select("slug, cover_image_url, base_texture_id")
+      .select("slug")
       .eq("id", id)
       .single();
     if (prevErr || !prevRow) throw new Error("Producto no encontrado.");
-
-    const prev = prevRow as {
-      slug: string;
-      cover_image_url: string | null;
-      base_texture_id: string | null;
-    };
+    const prevSlug = (prevRow as { slug: string }).slug;
 
     const name = formData.get("name")?.toString().trim() ?? "";
     if (!name) throw new Error("El nombre es obligatorio.");
 
-    const tags = parseTagsFromForm(formData);
-    const sizes = parseSizesFromForm(formData);
-    const category_id = parseCategoryId(formData);
-
     const description = formData.get("description")?.toString().trim() || null;
-
-    const price_cents = parsePriceDopToCents(
-      formData.get("price_dop")?.toString() ?? "",
+    const base_price_cents = parsePriceDopToCents(
+      formData.get("base_price_dop")?.toString() ?? "",
     );
-    const published = formData.get("published") === "on";
-    const sort_order = Math.max(
-      0,
-      Math.round(Number(formData.get("sort_order")?.toString() || "0")),
+    const original_price_cents = parseOptionalPriceDopToCents(
+      formData.get("original_price_dop")?.toString() ?? "",
     );
-    const cover_image_url =
-      formData.get("cover_image_url")?.toString().trim() || null;
-
-    let nextBaseTextureId: string | null | undefined = undefined;
-
-    if (cover_image_url !== prev.cover_image_url) {
-      if (!cover_image_url && prev.base_texture_id) {
-        await supabase
-          .from("products")
-          .update({ base_texture_id: null })
-          .eq("id", id);
-        await supabase.from("textures").delete().eq("id", prev.base_texture_id);
-        nextBaseTextureId = null;
-      } else if (cover_image_url && prev.base_texture_id) {
-        await supabase
-          .from("textures")
-          .update({ url: cover_image_url })
-          .eq("id", prev.base_texture_id);
-      } else if (cover_image_url && !prev.base_texture_id) {
-        const { data: tex, error: texErr } = await supabase
-          .from("textures")
-          .insert({
-            source: "buxxep",
-            url: cover_image_url,
-            product_id: id,
-          })
-          .select("id")
-          .single();
-        if (!texErr && tex) {
-          nextBaseTextureId = (tex as { id: string }).id;
-        }
-      }
-    }
-
-    const patch: Record<string, unknown> = {
-      name,
-      description,
-      price_cents,
-      cover_image_url,
-      published,
-      sort_order,
-      category_id,
-      tags,
-      sizes,
-    };
-    if (nextBaseTextureId !== undefined) {
-      patch.base_texture_id = nextBaseTextureId;
-    }
+    const is_active = formData.get("is_active") === "on";
+    const is_customizable = formData.get("is_customizable") === "on";
+    const cover_url = formData.get("cover_image_url")?.toString().trim() || null;
 
     const { error: updErr } = await supabase
       .from("products")
-      .update(patch)
+      .update({
+        name,
+        description,
+        base_price_cents,
+        original_price_cents,
+        is_active,
+        is_customizable,
+      })
       .eq("id", id);
+
     if (updErr) {
       return { error: updErr.message ?? "No se pudo actualizar." };
     }
 
+    await upsertCoverMedia(supabase, id, cover_url, name);
+
     revalidatePath("/admin/catalogo");
     revalidatePath("/catalogo");
-    revalidatePath(`/catalogo/${prev.slug}`);
+    revalidatePath(`/catalogo/${prevSlug}`);
     return { ok: true };
   } catch (e) {
-    const msg = e instanceof Error ? e.message : "Error desconocido.";
-    return { error: msg };
+    return { error: e instanceof Error ? e.message : "Error desconocido." };
   }
 }
 

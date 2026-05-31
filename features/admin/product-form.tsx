@@ -1,36 +1,37 @@
 "use client";
 
-import type { CategoryRow } from "@/lib/db/categories";
 import type { ProductRow } from "@/lib/db/products";
-import type { SizePresetRow } from "@/lib/db/size-presets";
+import { coverImageFromMedia } from "@/lib/db/products";
 import {
   adminCreateProduct,
   adminUpdateProduct,
   type AdminProductActionState,
 } from "@/lib/actions/products-admin";
-import { Input } from "@/components/ui/input";
 import { useAdminFeedback } from "@/contexts/admin-feedback-context";
-import { ImagePlus, Loader2, Ruler, Save, Trash2, X } from "lucide-react";
-import { useActionState, useEffect, useMemo, useRef, useState } from "react";
+import {
+  ArrowLeft,
+  Image as ImageIcon,
+  Loader2,
+  Package,
+  Save,
+  Tag,
+  Trash2,
+  Wand2,
+} from "lucide-react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-
-const iconBtn =
-  "inline-flex size-10 shrink-0 items-center justify-center rounded-md border-2 border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50";
 
 interface ProductFormProps {
   mode: "create" | "edit";
-  categories: CategoryRow[];
-  sizePresets: SizePresetRow[];
   initial?: ProductRow;
 }
 
-function tagsDefault(initial?: ProductRow): string {
-  const t = initial?.tags;
-  if (Array.isArray(t) && t.length > 0) return t.join(", ");
-  return "";
+function priceDopDefault(cents: number | null | undefined): string {
+  if (cents == null || cents === 0) return "";
+  return (cents / 100).toFixed(2);
 }
 
-export function ProductForm({ mode, categories, sizePresets, initial }: ProductFormProps) {
+export function ProductForm({ mode, initial }: ProductFormProps) {
   const router = useRouter();
   const { showSuccess, showError } = useAdminFeedback();
   const actionFn = mode === "create" ? adminCreateProduct : adminUpdateProduct;
@@ -39,38 +40,31 @@ export function ProductForm({ mode, categories, sizePresets, initial }: ProductF
     FormData
   >(actionFn, undefined);
 
-  const [coverUrl, setCoverUrl] = useState(initial?.cover_image_url ?? "");
+  const initialCover = initial
+    ? coverImageFromMedia(initial.product_media)
+    : "";
+  const [coverUrl, setCoverUrl] = useState(initialCover);
   const [uploadBusy, setUploadBusy] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
-
-  const [selectedCategoryId, setSelectedCategoryId] = useState(
-    initial?.category_id ?? "",
-  );
-
-  const presetSizes = useMemo(() => {
-    const cat = categories.find((c) => c.id === selectedCategoryId);
-    if (!cat?.size_preset_id) return null;
-    const preset = sizePresets.find((p) => p.id === cat.size_preset_id);
-    return preset?.sizes ?? null;
-  }, [selectedCategoryId, categories, sizePresets]);
 
   const seenState = useRef<typeof state>(undefined);
   useEffect(() => {
     if (!state || state === seenState.current) return;
     seenState.current = state;
     if (state.ok) {
-      const label = mode === "create" ? "Producto creado correctamente." : "Producto guardado correctamente.";
-      showSuccess(label, () => {
-        router.replace("/admin/catalogo");
-        router.refresh();
-      });
+      showSuccess(
+        mode === "create"
+          ? "Producto creado correctamente."
+          : "Producto guardado correctamente.",
+        () => {
+          router.replace("/admin/catalogo");
+          router.refresh();
+        },
+      );
     } else if (state.error) {
       showError(state.error);
     }
   }, [state, mode, showSuccess, showError, router]);
-
-  const priceDopDefault =
-    initial != null ? (initial.price_cents / 100).toFixed(2) : "";
 
   async function onPickFile(file: File) {
     setUploadBusy(true);
@@ -91,14 +85,10 @@ export function ProductForm({ mode, categories, sizePresets, initial }: ProductF
         throw new Error(body.error ?? `Error ${res.status}`);
       }
       const u = typeof body.url === "string" ? body.url : "";
-      if (!u) {
-        throw new Error(
-          "R2 no devolvió URL pública. Configura R2_PUBLIC_BASE_URL y vuelve a subir.",
-        );
-      }
+      if (!u) throw new Error("R2 no devolvió URL pública.");
       setCoverUrl(u);
     } catch (e) {
-      alert(e instanceof Error ? e.message : "Error al subir la imagen.");
+      showError(e instanceof Error ? e.message : "Error al subir la imagen.");
     } finally {
       setUploadBusy(false);
       if (fileRef.current) fileRef.current.value = "";
@@ -106,33 +96,41 @@ export function ProductForm({ mode, categories, sizePresets, initial }: ProductF
   }
 
   return (
-    <form action={formAction} className="space-y-6">
+    <form action={formAction} className="space-y-5">
       {mode === "edit" && initial ? (
         <input type="hidden" name="product_id" value={initial.id} />
       ) : null}
-
       <input type="hidden" name="cover_image_url" value={coverUrl} />
 
-      <div className="rounded-xl border border-border bg-card p-4">
-        <p className="mb-3 text-sm font-medium text-foreground">
-          Imagen del producto (R2)
-        </p>
-        <div className="flex flex-wrap items-start gap-4">
-          <div className="flex min-h-28 min-w-28 items-center justify-center overflow-hidden rounded-lg border border-dashed border-border bg-muted/30">
+      {/* ── Imagen portada ── */}
+      <section className="rounded-2xl border border-zinc-700/70 bg-zinc-900/60 p-5">
+        <div className="mb-4 flex items-center gap-2">
+          <ImageIcon className="size-4 text-zinc-500" aria-hidden />
+          <h2 className="text-sm font-semibold text-zinc-200">
+            Imagen de portada
+          </h2>
+        </div>
+
+        <div className="flex flex-wrap items-start gap-5">
+          <div className="relative flex size-32 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-zinc-700/60 bg-zinc-800/60">
             {coverUrl ? (
-              // biome-ignore lint/performance/noImgElement: preview URL dinámica R2
+              // biome-ignore lint/performance/noImgElement: preview R2
               <img
                 src={coverUrl}
-                alt=""
-                className="max-h-40 max-w-full object-contain"
+                alt="Portada del producto"
+                className="size-full object-cover"
               />
             ) : (
-              <span className="px-2 text-center text-xs text-muted-foreground">
-                Sin imagen
-              </span>
+              <div className="flex flex-col items-center gap-1.5 px-3 text-center">
+                <ImageIcon className="size-6 text-zinc-600" aria-hidden />
+                <span className="text-[10px] leading-tight text-zinc-600">
+                  Sin imagen
+                </span>
+              </div>
             )}
           </div>
-          <div className="flex flex-wrap gap-2">
+
+          <div className="flex flex-col gap-3">
             <input
               ref={fileRef}
               type="file"
@@ -147,195 +145,199 @@ export function ProductForm({ mode, categories, sizePresets, initial }: ProductF
             />
             <button
               type="button"
-              className={iconBtn}
-              aria-label="Subir imagen"
               disabled={uploadBusy}
               onClick={() => fileRef.current?.click()}
+              className="inline-flex items-center gap-2 rounded-xl border border-zinc-600/70 bg-zinc-800 px-4 py-2.5 text-sm font-medium text-zinc-200 transition-colors hover:border-zinc-500 hover:bg-zinc-700 disabled:opacity-50"
             >
               {uploadBusy ? (
-                <Loader2 className="size-5 animate-spin" aria-hidden />
+                <Loader2 className="size-4 animate-spin" aria-hidden />
               ) : (
-                <ImagePlus className="size-5" aria-hidden />
+                <ImageIcon className="size-4" aria-hidden />
               )}
+              {uploadBusy ? "Subiendo…" : "Subir imagen"}
             </button>
             {coverUrl ? (
               <button
                 type="button"
-                className={iconBtn}
-                aria-label="Quitar imagen"
                 disabled={uploadBusy}
                 onClick={() => setCoverUrl("")}
+                className="inline-flex items-center gap-2 rounded-xl border border-red-800/40 bg-red-900/20 px-4 py-2.5 text-sm font-medium text-red-400 transition-colors hover:bg-red-900/30 disabled:opacity-50"
               >
-                <Trash2 className="size-5" aria-hidden />
+                <Trash2 className="size-4" aria-hidden />
+                Quitar imagen
               </button>
             ) : null}
+            <p className="text-xs text-zinc-600">
+              PNG, JPEG o WebP · máx. 5 MB
+            </p>
           </div>
         </div>
-        <p className="mt-2 text-xs text-muted-foreground">
-          PNG, JPEG o WebP (máx. 5 MB). Se usa como portada y textura base del
-          catálogo.
-        </p>
-      </div>
+      </section>
 
-      <Input
-        label="Nombre"
-        name="name"
-        required
-        defaultValue={initial?.name ?? ""}
-        placeholder="Ej. Camiseta básica"
-      />
+      {/* ── Información básica ── */}
+      <section className="rounded-2xl border border-zinc-700/70 bg-zinc-900/60 p-5">
+        <div className="mb-4 flex items-center gap-2">
+          <Package className="size-4 text-zinc-500" aria-hidden />
+          <h2 className="text-sm font-semibold text-zinc-200">
+            Información básica
+          </h2>
+        </div>
 
-      {mode === "edit" && initial?.slug ? (
-        <p className="text-xs text-muted-foreground">
-          URL del artículo:{" "}
-          <span className="font-mono text-foreground">
-            /catalogo/{initial.slug}
-          </span>{" "}
-          (se asigna al crear; no cambia al editar)
-        </p>
-      ) : mode === "create" ? (
-        <p className="text-xs text-muted-foreground">
-          La URL pública se genera sola a partir del nombre y las etiquetas.
-        </p>
-      ) : null}
-
-      <div className="space-y-1.5">
-        <label
-          htmlFor="product-category_id"
-          className="text-sm font-medium text-foreground"
-        >
-          Categoría
-        </label>
-        <select
-          id="product-category_id"
-          name="category_id"
-          value={selectedCategoryId}
-          onChange={(e) => setSelectedCategoryId(e.target.value)}
-          className="h-10 w-full rounded-md border border-border bg-background px-3 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-        >
-          <option value="">Sin categoría</option>
-          {categories.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div className="space-y-1.5">
-        <p className="text-sm font-medium text-foreground">Tallas disponibles</p>
-        {presetSizes ? (
-          <div className="flex flex-wrap gap-3">
-            {presetSizes.map((s) => (
-              <label key={s} className="flex cursor-pointer items-center gap-1.5 text-sm font-medium">
-                <input
-                  type="checkbox"
-                  name={`size_${s}`}
-                  defaultChecked={initial?.sizes?.includes(s) ?? false}
-                  className="size-4 rounded border-border"
-                />
-                {s}
-              </label>
-            ))}
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <label
+              htmlFor="pf-name"
+              className="text-xs font-medium uppercase tracking-wider text-zinc-400"
+            >
+              Nombre <span className="text-red-400">*</span>
+            </label>
+            <input
+              id="pf-name"
+              name="name"
+              required
+              defaultValue={initial?.name ?? ""}
+              placeholder="Ej. Camiseta básica"
+              className="h-10 w-full rounded-xl border border-zinc-700/60 bg-zinc-800/70 px-4 text-sm text-zinc-100 placeholder:text-zinc-600 transition-colors focus:border-primary/60 focus:outline-none focus:ring-2 focus:ring-primary/20"
+            />
           </div>
-        ) : selectedCategoryId ? (
-          <p className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Ruler className="size-4 shrink-0" aria-hidden />
-            Esta categoría no tiene un tipo de talla asignado.{" "}
-            <a href="/admin/tallas" className="underline underline-offset-2 hover:text-foreground">
-              Configúralo aquí
-            </a>
-          </p>
-        ) : (
-          <p className="text-sm text-muted-foreground">
-            Selecciona una categoría para ver las tallas disponibles.
-          </p>
-        )}
-      </div>
 
-      <div className="space-y-1.5">
-        <label
-          htmlFor="product-tags"
-          className="text-sm font-medium text-foreground"
-        >
-          Etiquetas
-        </label>
-        <textarea
-          id="product-tags"
-          name="tags"
-          rows={2}
-          defaultValue={tagsDefault(initial)}
-          placeholder="verano, básicos, unisex (separadas por coma)"
-          className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-        />
-        <p className="text-xs text-muted-foreground">
-          Se guardan en minúsculas; influyen en la URL solo al crear el
-          artículo.
-        </p>
-      </div>
+          {mode === "edit" && initial?.slug ? (
+            <p className="flex items-center gap-1.5 text-xs text-zinc-600">
+              <span className="font-mono text-zinc-500">/catalogo/{initial.slug}</span>
+              <span>· El slug no cambia al editar</span>
+            </p>
+          ) : mode === "create" ? (
+            <p className="text-xs text-zinc-600">
+              La URL se genera automáticamente del nombre al crear.
+            </p>
+          ) : null}
 
-      <div className="space-y-1.5">
-        <label
-          htmlFor="product-description"
-          className="text-sm font-medium text-foreground"
-        >
-          Descripción
-        </label>
-        <textarea
-          id="product-description"
-          name="description"
-          rows={4}
-          defaultValue={initial?.description ?? ""}
-          className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-          placeholder="Detalle del artículo"
-        />
-      </div>
+          <div className="space-y-1.5">
+            <label
+              htmlFor="pf-description"
+              className="text-xs font-medium uppercase tracking-wider text-zinc-400"
+            >
+              Descripción
+            </label>
+            <textarea
+              id="pf-description"
+              name="description"
+              rows={4}
+              defaultValue={initial?.description ?? ""}
+              placeholder="Detalle del artículo…"
+              className="w-full resize-none rounded-xl border border-zinc-700/60 bg-zinc-800/70 px-4 py-3 text-sm text-zinc-100 placeholder:text-zinc-600 transition-colors focus:border-primary/60 focus:outline-none focus:ring-2 focus:ring-primary/20"
+            />
+          </div>
+        </div>
+      </section>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Input
-          label="Precio (DOP)"
-          name="price_dop"
-          type="text"
-          inputMode="decimal"
-          required
-          defaultValue={priceDopDefault}
-          placeholder="0.00"
-        />
-        <Input
-          label="Orden"
-          name="sort_order"
-          type="number"
-          min={0}
-          defaultValue={initial?.sort_order ?? 0}
-        />
-      </div>
+      {/* ── Precios ── */}
+      <section className="rounded-2xl border border-zinc-700/70 bg-zinc-900/60 p-5">
+        <div className="mb-4 flex items-center gap-2">
+          <Tag className="size-4 text-zinc-500" aria-hidden />
+          <h2 className="text-sm font-semibold text-zinc-200">Precios</h2>
+        </div>
 
-      <label className="flex cursor-pointer items-center gap-2 text-sm font-medium">
-        <input
-          type="checkbox"
-          name="published"
-          defaultChecked={initial?.published ?? true}
-          className="size-4 rounded border-border"
-        />
-        Publicado en la tienda
-      </label>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-1.5">
+            <label
+              htmlFor="pf-base-price"
+              className="text-xs font-medium uppercase tracking-wider text-zinc-400"
+            >
+              Precio base (DOP) <span className="text-red-400">*</span>
+            </label>
+            <div className="relative">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-zinc-500">
+                RD$
+              </span>
+              <input
+                id="pf-base-price"
+                name="base_price_dop"
+                type="text"
+                inputMode="decimal"
+                required
+                defaultValue={priceDopDefault(initial?.base_price_cents)}
+                placeholder="0.00"
+                className="h-10 w-full rounded-xl border border-zinc-700/60 bg-zinc-800/70 pl-11 pr-4 text-sm text-zinc-100 placeholder:text-zinc-600 transition-colors focus:border-primary/60 focus:outline-none focus:ring-2 focus:ring-primary/20"
+              />
+            </div>
+          </div>
 
-      <div className="flex flex-wrap gap-3">
+          <div className="space-y-1.5">
+            <label
+              htmlFor="pf-original-price"
+              className="text-xs font-medium uppercase tracking-wider text-zinc-400"
+            >
+              Precio original (DOP)
+              <span className="ml-2 font-normal normal-case text-zinc-600">
+                opcional, para descuento
+              </span>
+            </label>
+            <div className="relative">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-zinc-500">
+                RD$
+              </span>
+              <input
+                id="pf-original-price"
+                name="original_price_dop"
+                type="text"
+                inputMode="decimal"
+                defaultValue={priceDopDefault(initial?.original_price_cents)}
+                placeholder="0.00"
+                className="h-10 w-full rounded-xl border border-zinc-700/60 bg-zinc-800/70 pl-11 pr-4 text-sm text-zinc-100 placeholder:text-zinc-600 transition-colors focus:border-primary/60 focus:outline-none focus:ring-2 focus:ring-primary/20"
+              />
+            </div>
+            <p className="text-xs text-zinc-600">
+              Si se especifica, se muestra tachado junto al precio base.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Configuración ── */}
+      <section className="rounded-2xl border border-zinc-700/70 bg-zinc-900/60 p-5">
+        <div className="mb-4 flex items-center gap-2">
+          <Wand2 className="size-4 text-zinc-500" aria-hidden />
+          <h2 className="text-sm font-semibold text-zinc-200">Configuración</h2>
+        </div>
+
+        <div className="space-y-3">
+          <label className="flex cursor-pointer items-center justify-between rounded-xl border border-zinc-700/50 bg-zinc-800/40 px-4 py-3 transition-colors hover:bg-zinc-800/60">
+            <div>
+              <p className="text-sm font-medium text-zinc-200">
+                Activo en la tienda
+              </p>
+              <p className="text-xs text-zinc-500">
+                Visible para los clientes en el catálogo público.
+              </p>
+            </div>
+            <input
+              type="checkbox"
+              name="is_active"
+              defaultChecked={initial?.is_active ?? true}
+              className="size-5 cursor-pointer rounded border-zinc-600 accent-primary"
+            />
+          </label>
+
+        </div>
+      </section>
+
+      {/* ── Acciones ── */}
+      <div className="flex flex-wrap items-center gap-3 pt-1">
         <button
           type="submit"
-          aria-label={mode === "create" ? "Crear artículo" : "Guardar cambios"}
-          title={mode === "create" ? "Crear artículo" : "Guardar cambios"}
-          className="inline-flex size-10 items-center justify-center rounded-md bg-primary text-primary-foreground transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
         >
-          <Save className="size-5" aria-hidden />
+          <Save className="size-4" aria-hidden />
+          {mode === "create" ? "Crear artículo" : "Guardar cambios"}
         </button>
         <button
           type="button"
-          className={`${iconBtn} size-10`}
-          aria-label="Cancelar"
           onClick={() => router.push("/admin/catalogo")}
+          className="inline-flex items-center gap-2 rounded-xl border border-zinc-700/60 bg-zinc-800/60 px-5 py-2.5 text-sm font-medium text-zinc-300 transition-colors hover:bg-zinc-700/60"
         >
-          <X className="size-5" aria-hidden />
+          <ArrowLeft className="size-4" aria-hidden />
+          Cancelar
         </button>
       </div>
     </form>

@@ -72,7 +72,10 @@ import {
 import { type DesignRow, rowToDesign } from "./designs";
 import { type LineaRow, rowToLinea } from "./lineas";
 import { type OrderRow, rowToPedido, statusMap } from "./orders";
-import { type ProductRow, rowToCatalogProduct } from "./products";
+import {
+  type ProductRow,
+  rowToCatalogProduct,
+} from "./products";
 
 export {
   formatGiveawayNumber,
@@ -88,10 +91,7 @@ export {
 };
 
 const productCatalogSelect =
-  "id, slug, name, description, price_cents, model_path, cover_image_url, default_design_id, published, sort_order, category_id, tags, sizes, textures!base_texture_id(url), categories(slug)";
-
-const productCatalogSelectCategoryFiltered =
-  "id, slug, name, description, price_cents, model_path, cover_image_url, default_design_id, published, sort_order, category_id, tags, sizes, textures!base_texture_id(url), categories!inner(slug)";
+  "id, slug, name, description, base_price_cents, original_price_cents, is_active, is_customizable, product_media(url,media_type,alt_text,sort_order,is_cover)";
 
 export interface GetProductsOptions {
   categorySlug?: string;
@@ -103,24 +103,7 @@ export interface GetProductsOptions {
 
 /** Etiquetas distintas en productos publicados (para filtros del catálogo). */
 export async function getPublishedCatalogTags(): Promise<string[]> {
-  return withNetworkFallback(async () => {
-    const supabase = await createClient();
-    const { data, error } = await supabase
-      .from("products")
-      .select("tags")
-      .eq("published", true);
-    if (error) throw toError(error);
-    const set = new Set<string>();
-    for (const row of data ?? []) {
-      const tags = (row as { tags?: string[] | null }).tags;
-      if (!tags) continue;
-      for (const t of tags) {
-        const x = t?.trim().toLowerCase();
-        if (x) set.add(x);
-      }
-    }
-    return Array.from(set).sort((a, b) => a.localeCompare(b));
-  }, []);
+  return [];
 }
 
 export async function getProducts(
@@ -128,22 +111,11 @@ export async function getProducts(
 ): Promise<CatalogProduct[]> {
   return withNetworkFallback(async () => {
     const supabase = await createClient();
-    const slug = options?.categorySlug?.trim();
-    const select =
-      slug !== undefined && slug !== ""
-        ? productCatalogSelectCategoryFiltered
-        : productCatalogSelect;
 
-    let query = supabase.from("products").select(select).eq("published", true);
-
-    if (slug !== undefined && slug !== "") {
-      query = query.eq("categories.slug", slug);
-    }
-
-    const tag = options?.etiqueta?.trim().toLowerCase();
-    if (tag) {
-      query = query.contains("tags", [tag]);
-    }
+    let query = supabase
+      .from("products")
+      .select(productCatalogSelect)
+      .eq("is_active", true);
 
     const busqueda = options?.busqueda?.trim();
     if (busqueda) {
@@ -152,24 +124,22 @@ export async function getProducts(
 
     const band = options?.precio;
     if (band === "economico") {
-      query = query.lt("price_cents", 2400);
+      query = query.lt("base_price_cents", 2400);
     } else if (band === "medio") {
-      query = query.gte("price_cents", 2400).lt("price_cents", 2700);
+      query = query.gte("base_price_cents", 2400).lt("base_price_cents", 2700);
     } else if (band === "premium") {
-      query = query.gte("price_cents", 2700);
+      query = query.gte("base_price_cents", 2700);
     }
 
     const orden = options?.orden;
-    if (orden === "recientes") {
-      query = query.order("sort_order", { ascending: false });
-    } else if (orden === "precio-menor") {
-      query = query.order("price_cents", { ascending: true });
+    if (orden === "precio-menor") {
+      query = query.order("base_price_cents", { ascending: true });
     } else if (orden === "precio-mayor") {
-      query = query.order("price_cents", { ascending: false });
+      query = query.order("base_price_cents", { ascending: false });
     } else if (orden === "az") {
       query = query.order("name", { ascending: true });
     } else {
-      query = query.order("sort_order", { ascending: true });
+      query = query.order("created_at", { ascending: false });
     }
 
     const { data, error } = await query;
@@ -186,7 +156,7 @@ export async function getProductBySlug(
     const { data, error } = await supabase
       .from("products")
       .select(productCatalogSelect)
-      .eq("published", true)
+      .eq("is_active", true)
       .eq("slug", slug)
       .single();
     if (error) {
@@ -205,7 +175,7 @@ export async function getProductById(
     const { data, error } = await supabase
       .from("products")
       .select(productCatalogSelect)
-      .eq("published", true)
+      .eq("is_active", true)
       .eq("id", id)
       .single();
     if (error) {
@@ -216,22 +186,23 @@ export async function getProductById(
   }, null);
 }
 
-/** Catálogo completo para admin (incluye no publicados). Service role. */
+const productAdminSelect =
+  "id, slug, name, description, base_price_cents, original_price_cents, is_active, is_customizable, created_at, product_media(url,media_type,alt_text,sort_order,is_cover)";
+
+/** Catálogo completo para admin (incluye inactivos). Service role. */
 export async function getProductsAdmin(): Promise<ProductRow[]> {
   return withNetworkFallback(async () => {
     const supabase = createServiceClient();
     const { data, error } = await supabase
       .from("products")
-      .select(
-        "id, slug, name, description, price_cents, model_path, cover_image_url, base_texture_id, default_design_id, published, sort_order, category_id, tags, sizes, textures!base_texture_id(url)",
-      )
-      .order("sort_order", { ascending: true });
+      .select(productAdminSelect)
+      .order("created_at", { ascending: false });
     if (error) throw toError(error);
     return (data ?? []) as ProductRow[];
   }, []);
 }
 
-/** Producto por slug sin filtrar por published (admin). */
+/** Producto por slug sin filtrar por is_active (admin). */
 export async function getProductAdminBySlug(
   slug: string,
 ): Promise<ProductRow | null> {
@@ -241,9 +212,7 @@ export async function getProductAdminBySlug(
     const supabase = createServiceClient();
     const { data, error } = await supabase
       .from("products")
-      .select(
-        "id, slug, name, description, price_cents, model_path, cover_image_url, base_texture_id, default_design_id, published, sort_order, category_id, tags, sizes, textures!base_texture_id(url)",
-      )
+      .select(productAdminSelect)
       .eq("slug", s)
       .maybeSingle();
     if (error) throw toError(error);
@@ -268,9 +237,8 @@ export async function getFacturasPedidosPagadosAdmin(): Promise<
     const { data, error } = await supabase
       .from("orders")
       .select(
-        "id, shipping_name, total_cents, created_at, payment_status, paid_at",
+        "id, total_cents, created_at",
       )
-      .eq("payment_status", "paid")
       .order("created_at", { ascending: false });
     if (error) throw toError(error);
     const rows = data ?? [];
@@ -282,22 +250,14 @@ export async function getFacturasPedidosPagadosAdmin(): Promise<
         hour: "2-digit",
         minute: "2-digit",
       });
-    type PaidRow = {
-      id: string;
-      shipping_name: string | null;
-      total_cents: number;
-      created_at: string;
-      paid_at: string | null;
-    };
-    return (rows as PaidRow[]).map((row) => {
-      return {
-        id: row.id,
-        cliente: row.shipping_name ?? "—",
-        total: formatDOPFromCents(row.total_cents),
-        fechaPedido: fmt(row.created_at),
-        fechaPago: row.paid_at ? fmt(row.paid_at) : null,
-      };
-    });
+    type PaidRow = { id: string; total_cents: number; created_at: string };
+    return (rows as PaidRow[]).map((row) => ({
+      id: row.id,
+      cliente: "—",
+      total: formatDOPFromCents(row.total_cents),
+      fechaPedido: fmt(row.created_at),
+      fechaPago: null,
+    }));
   }, []);
 }
 
@@ -463,7 +423,7 @@ export async function getOrders(): Promise<Pedido[]> {
     const { data, error } = await supabase
       .from("orders")
       .select(
-        "id, user_id, session_id, status, shipping_name, total_cents, created_at",
+        "id, user_id, status, total_cents, created_at",
       )
       .order("created_at", { ascending: false });
     if (error) throw toError(error);
@@ -478,7 +438,7 @@ export async function getOrdersAdmin(): Promise<Pedido[]> {
     const { data, error } = await supabase
       .from("orders")
       .select(
-        "id, user_id, session_id, status, shipping_name, total_cents, created_at",
+        "id, user_id, status, total_cents, created_at",
       )
       .order("created_at", { ascending: false });
     if (error) throw toError(error);
@@ -524,12 +484,16 @@ export async function getOrderPaymentSnapshotByOrderNumber(
     const supabase = createServiceClient();
     const { data, error } = await supabase
       .from("orders")
-      .select("id, total_cents, payment_provider, payment_status")
+      .select("id, total_cents")
       .eq("id", id)
       .maybeSingle();
     if (error || !data) return null;
-    const row = data as OrderPaymentSnapshot;
-    return row;
+    return {
+      id: (data as { id: string }).id,
+      total_cents: (data as { total_cents: number }).total_cents,
+      payment_provider: null,
+      payment_status: "pending",
+    };
   } catch {
     return null;
   }
@@ -552,22 +516,10 @@ export async function updateOrderPaymentStatusFromGateway(
 ): Promise<void> {
   const supabase = createServiceClient();
   const approved = params.paymentStatus === "paid";
-  const patch: Record<string, unknown> = {
-    payment_provider: params.provider,
-    payment_status: params.paymentStatus,
-    azul_transaction_id: params.transactionId,
-    azul_authorization_code: params.authorizationCode,
-    azul_response_code: params.responseCode,
-    azul_rrn: params.rrn,
-    payment_raw_response: params.rawResponse,
-  };
-  if (approved) {
-    patch.status = "paid";
-    patch.paid_at = new Date().toISOString();
-  }
+  if (!approved) return;
   const { error } = await supabase
     .from("orders")
-    .update(patch)
+    .update({ status: "paid" })
     .eq("id", params.orderId);
   if (error) throw toError(error);
 }
@@ -583,25 +535,18 @@ export async function getOrderStatusById(
     const { data: orderRow, error: orderError } = await supabase
       .from("orders")
       .select(
-        "id, status, total_cents, created_at, shipping_name, payment_status, payment_provider, paid_at, azul_transaction_id, azul_authorization_code, azul_response_code",
+        "id, status, total_cents, created_at",
       )
       .eq("id", id)
       .single();
 
     if (orderError || !orderRow) return null;
-    const o = orderRow as OrderRow & {
-      payment_status?: string | null;
-      payment_provider?: string | null;
-      paid_at?: string | null;
-      azul_transaction_id?: string | null;
-      azul_authorization_code?: string | null;
-      azul_response_code?: string | null;
-    };
+    const o = orderRow as OrderRow;
 
     const { data: itemsData } = await supabase
       .from("order_items")
       .select(
-        "quantity, unit_price_cents, design_id, products(name, slug, cover_image_url), designs(name, cover_image_url)",
+        "quantity, unit_price_cents, design_id, products(name, slug), designs(name, cover_image_url)",
       )
       .eq("order_id", id);
 
@@ -609,16 +554,8 @@ export async function getOrderStatusById(
       quantity: number;
       unit_price_cents: number;
       design_id: string | null;
-      products?: {
-        name: string;
-        slug: string;
-        cover_image_url: string | null;
-      } | null;
-      product?: {
-        name: string;
-        slug: string;
-        cover_image_url: string | null;
-      } | null;
+      products?: { name: string; slug: string } | null;
+      product?: { name: string; slug: string } | null;
       designs?: { name: string; cover_image_url: string | null } | null;
       design?: { name: string; cover_image_url: string | null } | null;
     };
@@ -628,7 +565,7 @@ export async function getOrderStatusById(
       return {
         productName: product?.name ?? "Producto",
         productSlug: product?.slug ?? "",
-        coverImageUrl: product?.cover_image_url ?? "",
+        coverImageUrl: "",
         designName: row.design_id
           ? (design?.name ?? "Diseño personalizado")
           : null,
@@ -652,14 +589,14 @@ export async function getOrderStatusById(
         hour: "2-digit",
         minute: "2-digit",
       }),
-      shippingName: o.shipping_name,
+      shippingName: null,
       items,
-      paymentStatus: coercePaymentStatus(o.payment_status ?? undefined),
-      paymentProvider: o.payment_provider ?? null,
-      paidAt: o.paid_at ?? null,
-      azulTransactionId: o.azul_transaction_id ?? null,
-      azulAuthorizationCode: o.azul_authorization_code ?? null,
-      azulResponseCode: o.azul_response_code ?? null,
+      paymentStatus: "pending" as OrderPaymentStatus,
+      paymentProvider: null,
+      paidAt: null,
+      azulTransactionId: null,
+      azulAuthorizationCode: null,
+      azulResponseCode: null,
     };
   } catch {
     return null;
@@ -708,18 +645,8 @@ export async function createOrder(
     .from("orders")
     .insert({
       user_id: user.id,
-      session_id: null,
       status: "pending",
-      shipping_name: shipping.name.trim(),
-      shipping_email: shipping.email.trim(),
-      shipping_address: shipping.address.trim(),
-      shipping_phone: shipping.phone?.trim() ?? null,
-      shipping_city: shipping.city?.trim() ?? null,
-      shipping_postal_code: shipping.postalCode?.trim() ?? null,
-      shipping_country: shipping.country?.trim() ?? null,
       total_cents: 0,
-      payment_status: "pending",
-      payment_provider: null,
     })
     .select("id")
     .single();

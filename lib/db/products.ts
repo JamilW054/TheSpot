@@ -1,56 +1,46 @@
 import type { CatalogProduct } from "@/types";
 import { formatDOPFromCents } from "@/lib/format-currency";
 
+export interface ProductMediaRow {
+  url: string;
+  media_type: string;
+  alt_text: string | null;
+  sort_order: number;
+  is_cover: boolean;
+}
+
 export interface ProductRow {
   id: string;
   slug: string;
   name: string;
   description: string | null;
-  price_cents: number;
-  model_path: string;
-  cover_image_url: string | null;
-  base_texture_id?: string | null;
-  default_design_id: string | null;
-  published: boolean;
-  sort_order: number;
-  category_id?: string | null;
-  /** Etiquetas en minúsculas (columna `tags` en DB). */
-  tags?: string[] | null;
-  /** Tallas disponibles (columna `sizes` en DB). */
-  sizes?: string[] | null;
-  /** Join con textures: url de la textura base (objeto o array según Supabase) */
-  textures?: { url: string } | { url: string }[] | null;
-  /** Join opcional con categories (PostgREST puede devolver objeto o array de un elemento). */
-  categories?: { slug: string } | { slug: string }[] | null;
+  base_price_cents: number;
+  original_price_cents: number | null;
+  is_active: boolean;
+  is_customizable: boolean;
+  created_at?: string;
+  updated_at?: string;
+  product_media?: ProductMediaRow[] | null;
 }
 
-function categorySlugFromRow(
-  categories: ProductRow["categories"],
-): string | null {
-  if (!categories) return null;
-  const c = Array.isArray(categories) ? categories[0] : categories;
-  return c?.slug ?? null;
-}
-
-function textureUrlFromRow(textures: ProductRow["textures"]): string | null {
-  if (!textures) return null;
-  const t = Array.isArray(textures) ? textures[0] : textures;
-  return t?.url ?? null;
+export function coverImageFromMedia(
+  media: ProductMediaRow[] | null | undefined,
+): string {
+  if (!media || media.length === 0) return "";
+  const cover = media.find((m) => m.is_cover) ?? media[0];
+  return cover?.url ?? "";
 }
 
 export function rowToCatalogProduct(row: ProductRow): CatalogProduct {
-  const baseTextureUrl = textureUrlFromRow(row.textures);
   return {
     id: row.id,
     slug: row.slug,
     name: row.name,
     description: row.description ?? "",
-    price: formatDOPFromCents(row.price_cents),
-    priceCents: row.price_cents,
-    modelPath: row.model_path ?? null,
-    coverImage: row.cover_image_url ?? "",
-    ...(baseTextureUrl != null && { baseTextureUrl }),
-    categorySlug: categorySlugFromRow(row.categories),
-    sizes: row.sizes ?? [],
+    price: formatDOPFromCents(row.base_price_cents),
+    priceCents: row.base_price_cents,
+    coverImage: coverImageFromMedia(row.product_media),
+    categorySlug: null,
+    sizes: [],
   };
 }

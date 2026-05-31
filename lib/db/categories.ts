@@ -136,29 +136,11 @@ export async function getCategoriesPublic(): Promise<CategoryRow[]> {
 }
 
 /**
- * Primera imagen de portada por categoría (producto publicado con menor sort_order).
+ * Imágenes de portada por categoría. Las columnas category_id y cover_image_url
+ * se movieron al nuevo schema; retorna vacío hasta que se implemente la relación.
  */
 export async function getCategoryCoverByCategoryId(): Promise<
   Record<string, string>
 > {
-  return withCatalogFallback(async () => {
-    const supabase = await createClient();
-    const { data, error } = await supabase
-      .from("products")
-      .select("category_id, cover_image_url, sort_order")
-      .eq("published", true)
-      .not("category_id", "is", null)
-      .order("sort_order", { ascending: true });
-    if (error) throw new Error(error.message);
-    const map: Record<string, string> = {};
-    for (const row of data ?? []) {
-      const r = row as {
-        category_id: string;
-        cover_image_url: string | null;
-      };
-      const url = r.cover_image_url?.trim();
-      if (url && map[r.category_id] === undefined) map[r.category_id] = url;
-    }
-    return map;
-  }, {});
+  return {};
 }
