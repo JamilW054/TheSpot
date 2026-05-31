@@ -50,11 +50,6 @@ export const APP_NAV: NavItem[] = [
   },
   { label: "Mis diseños", href: "/mis-disenos", icon: "LayoutGrid" },
   { label: "Mis pedidos", href: "/mis-pedidos", icon: "Package" },
-  { label: "Editor", href: "/editor", icon: "PenSquare", adminOnly: true },
-  { label: "Líneas de ropa", href: "/lineas", icon: "Shirt", adminOnly: true },
-  { label: "Guía", href: "/guia", icon: "BookOpen", adminOnly: true },
-  { label: "Recursos", href: "/recursos", icon: "FolderOpen", adminOnly: true },
-  { label: "Soporte", href: "/soporte", icon: "HelpCircle", adminOnly: true },
 ];
 
 /**
@@ -103,30 +98,6 @@ export const ADMIN_NAV: NavItem[] = [
     href: "/admin/catalogo/nuevo",
     icon: "PlusCircle",
     adminSection: "Catálogo",
-  },
-  {
-    label: "Editor",
-    href: "/editor",
-    icon: "PenSquare",
-    adminSection: "Estudio",
-  },
-  {
-    label: "Líneas de ropa",
-    href: "/lineas",
-    icon: "Shirt",
-    adminSection: "Estudio",
-  },
-  {
-    label: "Guía",
-    href: "/guia",
-    icon: "BookOpen",
-    adminSection: "Estudio",
-  },
-  {
-    label: "Recursos",
-    href: "/recursos",
-    icon: "FolderOpen",
-    adminSection: "Estudio",
   },
   {
     label: "Reportes",
