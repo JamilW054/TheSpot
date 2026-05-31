@@ -341,7 +341,7 @@ export function AdminDashboardClient({
           </div>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-4 lg:sticky lg:top-4 lg:self-start">
           <div className="rounded-2xl border border-zinc-700/80 bg-zinc-900/80 p-4 shadow-sm">
             <div className="mb-3 flex items-center justify-between">
               <h3 className="text-sm font-semibold text-zinc-100">
