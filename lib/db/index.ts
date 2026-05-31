@@ -267,7 +267,7 @@ export async function getDesigns(userId?: string | null): Promise<Design[]> {
     let query = supabase
       .from("designs")
       .select(
-        "id, name, slug, description, user_id, source, model_path, garment_color_hex, canvas_elements, cover_image_url, gallery, created_at, updated_at",
+        "id, name, description, user_id, source, created_at, updated_at",
       )
       .order("updated_at", { ascending: false });
     if (userId) {
@@ -287,7 +287,7 @@ export async function getDesignById(id: string): Promise<Design | null> {
     const { data, error } = await supabase
       .from("designs")
       .select(
-        "id, name, slug, description, user_id, source, model_path, garment_color_hex, canvas_elements, cover_image_url, gallery, created_at, updated_at",
+        "id, name, description, user_id, source, created_at, updated_at",
       )
       .eq("id", id)
       .single();
@@ -299,22 +299,8 @@ export async function getDesignById(id: string): Promise<Design | null> {
   }, null);
 }
 
-export async function getDesignBySlug(slug: string): Promise<Design | null> {
-  return withNetworkFallback(async () => {
-    const supabase = await createClient();
-    const { data, error } = await supabase
-      .from("designs")
-      .select(
-        "id, name, slug, description, user_id, source, model_path, garment_color_hex, canvas_elements, cover_image_url, gallery, created_at, updated_at",
-      )
-      .eq("slug", slug)
-      .single();
-    if (error) {
-      if (error.code === "PGRST116") return null;
-      throw toError(error);
-    }
-    return data ? rowToDesign(data as DesignRow) : null;
-  }, null);
+export async function getDesignBySlug(id: string): Promise<Design | null> {
+  return getDesignById(id);
 }
 
 export async function getLineas(): Promise<Linea[]> {
@@ -546,7 +532,7 @@ export async function getOrderStatusById(
     const { data: itemsData } = await supabase
       .from("order_items")
       .select(
-        "quantity, unit_price_cents, design_id, products(name, slug), designs(name, cover_image_url)",
+        "quantity, unit_price_cents, design_id, products(name, slug), designs(name)",
       )
       .eq("order_id", id);
 
@@ -556,8 +542,8 @@ export async function getOrderStatusById(
       design_id: string | null;
       products?: { name: string; slug: string } | null;
       product?: { name: string; slug: string } | null;
-      designs?: { name: string; cover_image_url: string | null } | null;
-      design?: { name: string; cover_image_url: string | null } | null;
+      designs?: { name: string } | null;
+      design?: { name: string } | null;
     };
     const items = (itemsData ?? []).map((row: ItemRow) => {
       const product = row.products ?? row.product;
@@ -569,10 +555,7 @@ export async function getOrderStatusById(
         designName: row.design_id
           ? (design?.name ?? "Diseño personalizado")
           : null,
-        designCoverImageUrl:
-          row.design_id && design?.cover_image_url
-            ? design.cover_image_url
-            : null,
+        designCoverImageUrl: null,
         quantity: row.quantity,
         unitPriceCents: row.unit_price_cents,
       };
