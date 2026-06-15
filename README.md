@@ -1,6 +1,6 @@
-# Buxxep
+# Buxxep Web
 
-Plataforma de diseño y tienda de ropa: landing pública, zona de usuario con editor de diseños (canvas con arrastrar y soltar) y panel de admin
+Plataforma de diseño y tienda de ropa: landing pública, zona de usuario con editor de diseños (canvas con arrastrar y soltar) y panel de admin.
 
 
 ## Stack
@@ -77,4 +77,4 @@ Abre [http://localhost:3000](http://localhost:3000)
 
 ## Licencia
 
-Ver [licencia](./LICENSE)
+Ver [licencia](./LICENSE).

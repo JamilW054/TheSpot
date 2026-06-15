@@ -102,17 +102,8 @@ function parseVariants(formData: FormData): VariantInput[] {
 async function pickUniqueProductSlug(
   supabase: ServiceClient,
   name: string,
-  tags: string[],
 ): Promise<string> {
   const base = slugify(name) || "articulo";
-  const tagBits = tags
-    .slice(0, 3)
-    .map((t) => slugify(t))
-    .filter((s) => s.length > 0);
-  const primary =
-    tagBits.length > 0
-      ? `${base}-${tagBits.join("-")}`.replace(/-+/g, "-").slice(0, 96)
-      : base.slice(0, 96);
 
   const trySlug = async (candidate: string) => {
     const { data } = await supabase
@@ -123,7 +114,7 @@ async function pickUniqueProductSlug(
     return data == null;
   };
 
-  if (await trySlug(primary)) return primary;
+  if (await trySlug(base)) return base;
   for (let n = 2; n <= 200; n++) {
     const c = `${base}-${n}`.slice(0, 96);
     if (await trySlug(c)) return c;
@@ -335,6 +326,51 @@ function readProductFields(formData: FormData) {
   };
 }
 
+function parseOptionalPriceDopToCents(raw: string): number | null {
+  const trimmed = raw.trim();
+  if (!trimmed || trimmed === "0" || trimmed === "0.00") return null;
+  return parsePriceDopToCents(trimmed);
+}
+
+async function upsertCoverMedia(
+  supabase: ReturnType<typeof createServiceClient>,
+  productId: string,
+  coverUrl: string | null,
+  altText: string,
+): Promise<void> {
+  if (!coverUrl) {
+    await supabase
+      .from("product_media")
+      .delete()
+      .eq("product_id", productId)
+      .eq("is_cover", true);
+    return;
+  }
+
+  const { data: existing } = await supabase
+    .from("product_media")
+    .select("id")
+    .eq("product_id", productId)
+    .eq("is_cover", true)
+    .maybeSingle();
+
+  if (existing) {
+    await supabase
+      .from("product_media")
+      .update({ url: coverUrl, alt_text: altText })
+      .eq("id", (existing as { id: string }).id);
+  } else {
+    await supabase.from("product_media").insert({
+      product_id: productId,
+      url: coverUrl,
+      media_type: "img",
+      alt_text: altText,
+      sort_order: 0,
+      is_cover: true,
+    });
+  }
+}
+
 export async function adminCreateProduct(
   _prev: AdminProductActionState | undefined,
   formData: FormData,
@@ -364,9 +400,7 @@ export async function adminCreateProduct(
 
     if (insErr) {
       if (insErr.code === "23505") {
-        return {
-          error: "Conflicto al generar la URL del artículo. Vuelve a intentar.",
-        };
+        return { error: "Conflicto al generar la URL. Vuelve a intentar." };
       }
       return { error: insErr.message ?? "No se pudo crear el producto." };
     }
@@ -431,9 +465,11 @@ export async function adminUpdateProduct(
     await syncProductTags(supabase, id, f.tags);
     await syncVariants(supabase, id, prev.slug, f.base_price_cents, f.variants, f.warehouse_id);
 
+    await upsertCoverMedia(supabase, id, cover_url, name);
+
     revalidatePath("/admin/catalogo");
     revalidatePath("/catalogo");
-    revalidatePath(`/catalogo/${prev.slug}`);
+    revalidatePath(`/catalogo/${prevSlug}`);
     return { ok: true };
   } catch (e) {
     return { error: e instanceof Error ? e.message : "Error desconocido." };

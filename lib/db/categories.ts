@@ -136,7 +136,8 @@ export async function getCategoriesPublic(): Promise<CategoryRow[]> {
 }
 
 /**
- * Primera imagen de portada por categoría (producto publicado con menor sort_order).
+ * Imágenes de portada por categoría. Las columnas category_id y cover_image_url
+ * se movieron al nuevo schema; retorna vacío hasta que se implemente la relación.
  */
 export async function getCategoryCoverByCategoryId(): Promise<
   Record<string, string>

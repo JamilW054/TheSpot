@@ -30,6 +30,14 @@ export interface ProductTagJoinRow {
     | null;
 }
 
+export interface ProductMediaRow {
+  url: string;
+  media_type: string;
+  alt_text: string | null;
+  sort_order: number;
+  is_cover: boolean;
+}
+
 export interface ProductRow {
   id: string;
   slug: string;

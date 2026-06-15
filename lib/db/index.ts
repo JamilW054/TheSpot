@@ -253,7 +253,7 @@ export async function getProductsAdmin(): Promise<AdminProductRow[]> {
   }, []);
 }
 
-/** Producto por slug sin filtrar por published (admin). */
+/** Producto por slug sin filtrar por is_active (admin). */
 export async function getProductAdminBySlug(
   slug: string,
 ): Promise<AdminProductRow | null> {
@@ -290,7 +290,6 @@ export async function getFacturasPedidosPagadosAdmin(): Promise<
       .select(
         "id, shipping_address, contact_email, total_cents, created_at, payment_status, payment_transactions(paid_at)",
       )
-      .eq("payment_status", "paid")
       .order("created_at", { ascending: false });
     if (error) throw toError(error);
     const rows = data ?? [];

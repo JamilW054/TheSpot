@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2, Save, X } from "lucide-react";
+import { ArrowLeft, Loader2, Save } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
@@ -59,26 +59,18 @@ export function SizePresetForm({ mode, initial, onSuccess, onCancel }: SizePrese
   }, [state, mode, showSuccess, showError, router, onSuccess]);
 
   return (
-    <form action={formAction} className="space-y-8">
+    <form action={formAction} className="space-y-5">
       {mode === "edit" && initial ? (
         <input type="hidden" name="preset_id" value={initial.id} />
       ) : null}
 
-      <div className="rounded-xl border border-border bg-card p-6 sm:p-8 space-y-6">
-        <Input
-          label="Nombre del tipo de talla"
-          name="name"
-          required
-          defaultValue={initial?.name ?? ""}
-          placeholder="Ej. Ropa, Calzado, Gorras, Accesorios"
-        />
-
-        <div className="space-y-2">
+      <section className="rounded-2xl border border-zinc-700/70 bg-zinc-900/60 p-5">
+        <div className="space-y-1.5">
           <label
-            htmlFor="sizes-input"
-            className="block text-sm font-medium text-foreground"
+            htmlFor="sp-name"
+            className="text-xs font-medium uppercase tracking-wider text-zinc-400"
           >
-            Tallas disponibles
+            Nombre <span className="text-red-400">*</span>
           </label>
           <input
             id="sizes-input"
@@ -126,30 +118,26 @@ export function SizePresetForm({ mode, initial, onSuccess, onCancel }: SizePrese
             defaultValue={initial?.sort_order ?? 0}
           />
         </div>
-      </div>
+      </section>
 
-      <footer className="flex flex-col-reverse gap-3 border-t border-border pt-8 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-wrap items-center gap-3 pt-1">
         <button
           type="button"
           onClick={() => (onCancel ? onCancel() : router.push("/admin/tallas"))}
           className="inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-transparent px-5 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
         >
-          <X className="size-4" aria-hidden />
-          Cancelar
+          {pending ? <Loader2 className="size-4 animate-spin" aria-hidden /> : <Save className="size-4" aria-hidden />}
+          {mode === "create" ? "Crear tipo" : "Guardar cambios"}
         </button>
         <button
-          type="submit"
-          disabled={pending}
-          className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-95 disabled:pointer-events-none disabled:opacity-50"
+          type="button"
+          onClick={() => router.push("/admin/tallas")}
+          className="inline-flex items-center gap-2 rounded-xl border border-zinc-700/60 bg-zinc-800/60 px-5 py-2.5 text-sm font-medium text-zinc-300 transition-colors hover:bg-zinc-700/60"
         >
-          {pending ? (
-            <Loader2 className="size-4 animate-spin" aria-hidden />
-          ) : (
-            <Save className="size-4" aria-hidden />
-          )}
-          {mode === "create" ? "Crear tipo de talla" : "Guardar cambios"}
+          <ArrowLeft className="size-4" aria-hidden />
+          Cancelar
         </button>
-      </footer>
+      </div>
     </form>
   );
 }

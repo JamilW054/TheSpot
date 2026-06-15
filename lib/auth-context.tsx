@@ -77,15 +77,10 @@ async function enrichUserFromProfile(
     .select("role")
     .eq("id", base.id)
     .maybeSingle();
-  const msg = error?.message ?? "";
-  if (
-    error?.code === "42703" ||
-    msg.includes("'role' column") ||
-    msg.includes("schema cache")
-  ) {
-    return base;
-  }
+  if (error) return base;
+  // role es smallint: 0 = admin, cualquier otro = client
   const pr = profile?.role;
+  const roleStr = pr === 0 ? "admin" : pr === 1 ? "client" : undefined;
   return {
     ...base,
     role: resolveUserRole(
@@ -163,7 +158,29 @@ export function AuthProvider({ children }: AuthProviderProps) {
       });
       if (error) {
         setIsLoading(false);
-        throw new Error(error.message ?? "No se pudo iniciar sesión.");
+        const raw = error.message ?? "";
+        const code = (error as { code?: string }).code ?? "";
+        let msg: string;
+        if (
+          raw.includes("Database error querying schema") ||
+          raw.includes("querying schema")
+        ) {
+          msg = `Error interno de base de datos (schema). Código: ${code || "db_schema"}. Contacta al administrador — el trigger handle_new_user puede estar roto o la tabla profiles tiene columnas incorrectas.`;
+        } else if (
+          raw.includes("Invalid login credentials") ||
+          raw.includes("invalid_credentials")
+        ) {
+          msg = "Correo o contraseña incorrectos.";
+        } else if (raw.includes("Email not confirmed")) {
+          msg = "El correo aún no está confirmado.";
+        } else if (raw.includes("Too many requests")) {
+          msg = "Demasiados intentos. Espera unos minutos.";
+        } else if (raw.includes("User not found")) {
+          msg = "No existe una cuenta con ese correo.";
+        } else {
+          msg = `Error al iniciar sesión: ${raw} (${code || "sin código"})`;
+        }
+        throw new Error(msg);
       }
       const u = await enrichUserFromProfile(supabase, data.session);
       setUser(u);

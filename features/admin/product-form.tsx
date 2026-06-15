@@ -262,7 +262,7 @@ export function ProductForm({
       if (!u) throw new Error("R2 no devolvió URL pública.");
       setMedia((prev) => [...prev, u]);
     } catch (e) {
-      alert(e instanceof Error ? e.message : "Error al subir la imagen.");
+      showError(e instanceof Error ? e.message : "Error al subir la imagen.");
     } finally {
       setUploadBusy(false);
       if (fileRef.current) fileRef.current.value = "";
@@ -369,11 +369,12 @@ export function ProductForm({
               aria-label="Añadir imagen"
               disabled={uploadBusy}
               onClick={() => fileRef.current?.click()}
+              className="inline-flex items-center gap-2 rounded-xl border border-zinc-600/70 bg-zinc-800 px-4 py-2.5 text-sm font-medium text-zinc-200 transition-colors hover:border-zinc-500 hover:bg-zinc-700 disabled:opacity-50"
             >
               {uploadBusy ? (
-                <Loader2 className="size-5 animate-spin" aria-hidden />
+                <Loader2 className="size-4 animate-spin" aria-hidden />
               ) : (
-                <ImagePlus className="size-5" aria-hidden />
+                <ImageIcon className="size-4" aria-hidden />
               )}
               <span className="text-[10px] font-medium">Añadir</span>
             </button>

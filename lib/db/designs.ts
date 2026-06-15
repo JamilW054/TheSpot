@@ -25,17 +25,12 @@ export const DESIGN_SELECT =
 function relativeTime(iso: string): string {
   const d = new Date(iso);
   const now = new Date();
-  const diffMs = now.getTime() - d.getTime();
-  const diffDays = Math.floor(diffMs / (24 * 60 * 60 * 1000));
+  const diffDays = Math.floor((now.getTime() - d.getTime()) / 86_400_000);
   if (diffDays === 0) return "Hoy";
   if (diffDays === 1) return "Ayer";
   if (diffDays < 7) return `Hace ${diffDays} días`;
   if (diffDays < 30) return `Hace ${Math.floor(diffDays / 7)} semana(s)`;
-  return d.toLocaleDateString("es-ES", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
+  return d.toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "numeric" });
 }
 
 export function rowToDesign(row: DesignRow): Design {

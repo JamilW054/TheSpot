@@ -29,6 +29,10 @@ export default async function AdminCatalogoPage({ searchParams }: PageProps) {
     .filter((w) => w.is_active)
     .map((w) => ({ id: w.id, name: w.name }));
 
+  const totalActivos = products.filter((p) => p.is_active).length;
+  const totalInactivos = products.length - totalActivos;
+  const totalPersonalizables = products.filter((p) => p.is_customizable).length;
+
   return (
     <PageLayout
       title="Catálogo"
