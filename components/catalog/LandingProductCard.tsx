@@ -118,8 +118,8 @@ export function LandingProductCard({ product, variant = "default" }: CardProps) 
           </div>
         </div>
 
-        {/* Info panel */}
-        <div className="flex flex-col gap-2 p-3 pointer-events-none">
+        {/* Info panel — relative z-10 so it sits above the z-5 full-card Link */}
+        <div className="relative z-10 flex flex-col gap-2 p-3 pointer-events-none">
           {product.brandName && (
             <p className="text-[9px] font-black uppercase tracking-[0.26em] text-muted-foreground leading-none">
               {product.brandName}
@@ -130,21 +130,22 @@ export function LandingProductCard({ product, variant = "default" }: CardProps) 
           </h2>
           {hasRating && <Stars avg={product.ratingAvg!} count={product.reviewCount} />}
 
-          <div className="flex items-center justify-between gap-2 pt-0.5">
-            <div className="flex items-baseline gap-1.5 min-w-0">
-              <span className="text-base font-black text-primary tabular-nums leading-none">
+          <div className="flex items-end justify-between gap-2 pt-0.5">
+            {/* Prices stacked so they never overflow on narrow columns */}
+            <div className="min-w-0">
+              <p className="text-sm font-black text-primary tabular-nums leading-none">
                 {product.price}
-              </span>
+              </p>
               {hasDiscount && (
-                <span className="text-[11px] text-muted-foreground line-through tabular-nums">
+                <p className="mt-0.5 text-[10px] text-muted-foreground line-through tabular-nums">
                   {product.originalPrice}
-                </span>
+                </p>
               )}
             </div>
             <button
               type="button"
               onClick={handleAddToCart}
-              className="pointer-events-auto flex shrink-0 items-center gap-1 rounded-xl bg-primary px-3 py-2 text-[11px] font-black text-primary-foreground transition-all hover:opacity-90 active:scale-95"
+              className="pointer-events-auto hidden sm:flex shrink-0 items-center gap-1 rounded-xl bg-primary px-3 py-2 text-[11px] font-black text-primary-foreground transition-all hover:opacity-90 active:scale-95"
             >
               <ShoppingBag className="size-3 shrink-0" aria-hidden />
               {justAdded ? "¡Listo!" : hasSizes ? "Ver" : "Añadir"}
@@ -193,8 +194,8 @@ export function LandingProductCard({ product, variant = "default" }: CardProps) 
           </div>
         </div>
 
-        {/* Info panel — fixed at bottom */}
-        <div className="shrink-0 flex flex-col gap-1.5 p-3 pointer-events-none border-t border-border/40">
+        {/* Info panel — fixed at bottom; relative z-10 so button is above the z-5 Link */}
+        <div className="relative z-10 shrink-0 flex flex-col gap-1.5 p-3 pointer-events-none border-t border-border/40">
           {product.brandName && (
             <p className="text-[9px] font-black uppercase tracking-[0.26em] text-muted-foreground leading-none">
               {product.brandName}
@@ -256,8 +257,8 @@ export function LandingProductCard({ product, variant = "default" }: CardProps) 
           )}
         </div>
 
-        {/* Info — right */}
-        <div className="flex flex-1 flex-col justify-between p-4 sm:p-5 pointer-events-none min-w-0">
+        {/* Info — right; relative z-10 so button is above the z-5 Link */}
+        <div className="relative z-10 flex flex-1 flex-col justify-between p-4 sm:p-5 pointer-events-none min-w-0">
           <div className="space-y-1.5">
             {product.brandName && (
               <p className="text-[9px] font-black uppercase tracking-[0.28em] text-muted-foreground">
