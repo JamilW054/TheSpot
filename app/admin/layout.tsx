@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { AdminViewportScrollbar } from "@/components/admin/AdminViewportScrollbar";
 import { RequireAuth } from "@/components/auth";
 import { AppShell } from "@/components/layout";

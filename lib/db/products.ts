@@ -11,6 +11,7 @@ import type { CatalogProduct } from "@/types";
 export interface ProductMediaRow {
   url: string;
   media_type?: string | null;
+  alt_text?: string | null;
   is_cover?: boolean | null;
   sort_order?: number | null;
 }
@@ -28,14 +29,6 @@ export interface ProductTagJoinRow {
     | { slug: string; name?: string }
     | { slug: string; name?: string }[]
     | null;
-}
-
-export interface ProductMediaRow {
-  url: string;
-  media_type: string;
-  alt_text: string | null;
-  sort_order: number;
-  is_cover: boolean;
 }
 
 export interface ProductRow {

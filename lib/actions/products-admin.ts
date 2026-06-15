@@ -379,7 +379,7 @@ export async function adminCreateProduct(
     await requireAdmin();
     const supabase = createServiceClient();
     const f = readProductFields(formData);
-    const slug = await pickUniqueProductSlug(supabase, f.name, f.tags);
+    const slug = await pickUniqueProductSlug(supabase, f.name);
 
     const { data: inserted, error: insErr } = await supabase
       .from("products")
@@ -465,11 +465,9 @@ export async function adminUpdateProduct(
     await syncProductTags(supabase, id, f.tags);
     await syncVariants(supabase, id, prev.slug, f.base_price_cents, f.variants, f.warehouse_id);
 
-    await upsertCoverMedia(supabase, id, cover_url, name);
-
     revalidatePath("/admin/catalogo");
     revalidatePath("/catalogo");
-    revalidatePath(`/catalogo/${prevSlug}`);
+    revalidatePath(`/catalogo/${prev.slug}`);
     return { ok: true };
   } catch (e) {
     return { error: e instanceof Error ? e.message : "Error desconocido." };
