@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { SelectMenu } from "@/components/ui/select-menu";
 import type {
   FilterEstado,
   Pedido,
@@ -127,18 +128,13 @@ export function PedidosTable({
                 aria-label="Buscar por ID o cliente"
               />
             </div>
-            <select
-              value={filterEstado}
-              onChange={(e) => setFilterEstado(e.target.value as FilterEstado)}
-              aria-label="Filtrar por estado"
-              className="h-10 rounded-md border border-border bg-background px-3 py-2 text-sm font-medium text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-            >
-              {FILTER_ESTADO_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
+            <div className="relative w-48 shrink-0">
+              <SelectMenu
+                value={filterEstado}
+                onChange={(v) => setFilterEstado(v as FilterEstado)}
+                options={FILTER_ESTADO_OPTIONS}
+              />
+            </div>
           </div>
           <div className="flex flex-wrap items-center gap-3 text-sm">
             {filtered.length > 0 && (
@@ -222,7 +218,7 @@ function PedidosTableBody({
     <>
       {/* Desktop: tabla */}
       <div className="hidden overflow-x-auto md:block">
-        <table className="w-full min-w-[600px] border-collapse text-left text-sm">
+        <table className="w-full min-w-150 border-collapse text-left text-sm">
           <thead>
             <tr className="border-b border-border bg-muted/50">
               <th scope="col" className="w-10 px-2 py-3">

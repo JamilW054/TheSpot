@@ -25,7 +25,7 @@ export async function requireAdmin(): Promise<{ userId: string }> {
       : profile?.role;
   const role = resolveUserRole(
     user.email,
-    typeof pr === "string" ? pr : undefined,
+    typeof pr === "string" || typeof pr === "number" ? pr : undefined,
   );
   if (role !== "admin") {
     throw new Error("No autorizado.");

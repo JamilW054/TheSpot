@@ -53,9 +53,15 @@ export default async function CartPage() {
 
       {/* Recommended products */}
       {featured.length > 0 && (
-        <section className="mt-16 border-t border-border pt-10" aria-labelledby="rec-title">
+        <section
+          className="mt-16 border-t border-border pt-10"
+          aria-labelledby="rec-title"
+        >
           <div className="mb-5 flex items-center justify-between gap-4">
-            <h2 id="rec-title" className="text-lg font-bold tracking-tight text-foreground sm:text-xl">
+            <h2
+              id="rec-title"
+              className="text-lg font-bold tracking-tight text-foreground sm:text-xl"
+            >
               También te puede gustar
             </h2>
             <Link

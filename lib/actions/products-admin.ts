@@ -7,6 +7,20 @@ import { createServiceClient } from "@/lib/supabase/server";
 
 export type AdminProductActionState = { ok?: true; error?: string };
 
+type ServiceClient = ReturnType<typeof createServiceClient>;
+
+/** Variante enviada desde el formulario (JSON). */
+interface VariantInput {
+  /** Talla (atributo principal); vacío para producto sin tallas (variante única). */
+  size: string;
+  sku?: string;
+  /** Precio en DOP; si vacío, hereda el precio base. */
+  priceDop?: string;
+  /** Existencias en el almacén por defecto. */
+  qty?: number;
+  active?: boolean;
+}
+
 function slugify(input: string): string {
   const s = input
     .normalize("NFD")
@@ -18,8 +32,75 @@ function slugify(input: string): string {
   return (s.slice(0, 96) || "articulo").toLowerCase();
 }
 
+function parseTagsFromForm(formData: FormData): string[] {
+  const raw = formData.get("tags")?.toString() ?? "";
+  const parts = raw.split(/[,;\n]+/);
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const p of parts) {
+    const t = p.trim().toLowerCase().replace(/\s+/g, " ");
+    if (!t || t.length > 48) continue;
+    if (seen.has(t)) continue;
+    seen.add(t);
+    out.push(t);
+    if (out.length >= 24) break;
+  }
+  return out;
+}
+
+function parseCategoryId(formData: FormData): string | null {
+  const v = formData.get("category_id")?.toString().trim() ?? "";
+  return v.length > 0 ? v : null;
+}
+
+function parsePriceDopToCents(raw: string): number {
+  const t = raw.trim().replace(/\s/g, "").replace(",", ".");
+  const n = Number.parseFloat(t);
+  if (!Number.isFinite(n) || n < 0) {
+    throw new Error("Precio inválido.");
+  }
+  return Math.round(n * 100);
+}
+
+function parseOptionalPriceCents(raw: string | undefined): number | null {
+  const t = (raw ?? "").trim();
+  if (!t) return null;
+  return parsePriceDopToCents(t);
+}
+
+function parseVariants(formData: FormData): VariantInput[] {
+  const raw = formData.get("variants_json")?.toString() ?? "[]";
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    return [];
+  }
+  if (!Array.isArray(parsed)) return [];
+  const out: VariantInput[] = [];
+  const seen = new Set<string>();
+  for (const v of parsed) {
+    if (typeof v !== "object" || v == null) continue;
+    const rec = v as Record<string, unknown>;
+    const size = typeof rec.size === "string" ? rec.size.trim() : "";
+    const key = size.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push({
+      size,
+      sku: typeof rec.sku === "string" ? rec.sku.trim() : undefined,
+      priceDop: typeof rec.priceDop === "string" ? rec.priceDop : undefined,
+      qty: Number.isFinite(Number(rec.qty))
+        ? Math.max(0, Math.round(Number(rec.qty)))
+        : 0,
+      active: rec.active !== false,
+    });
+  }
+  return out;
+}
+
 async function pickUniqueProductSlug(
-  supabase: ReturnType<typeof createServiceClient>,
+  supabase: ServiceClient,
   name: string,
 ): Promise<string> {
   const base = slugify(name) || "articulo";
@@ -41,11 +122,208 @@ async function pickUniqueProductSlug(
   return `${base}-${randomUUID().replace(/-/g, "").slice(0, 10)}`.slice(0, 96);
 }
 
-function parsePriceDopToCents(raw: string): number {
-  const t = raw.trim().replace(/\s/g, "").replace(",", ".");
-  const n = Number.parseFloat(t);
-  if (!Number.isFinite(n) || n < 0) throw new Error("Precio inválido.");
-  return Math.round(n * 100);
+/** Almacén por defecto para registrar inventario; crea "Principal" si no existe. */
+async function getDefaultWarehouseId(supabase: ServiceClient): Promise<string> {
+  const { data } = await supabase
+    .from("warehouses")
+    .select("id")
+    .eq("is_active", true)
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  const existing = (data as { id?: string } | null)?.id;
+  if (existing) return existing;
+  const { data: created, error } = await supabase
+    .from("warehouses")
+    .insert({ name: "Principal", country_code: "DO", is_active: true })
+    .select("id")
+    .single();
+  if (error) throw new Error(error.message);
+  return (created as { id: string }).id;
+}
+
+/** Garantiza que existan las etiquetas y devuelve sus ids por slug. */
+async function ensureTags(
+  supabase: ServiceClient,
+  slugs: string[],
+): Promise<string[]> {
+  if (slugs.length === 0) return [];
+  await supabase.from("tags").upsert(
+    slugs.map((slug) => ({ slug, name: slug })),
+    { onConflict: "slug", ignoreDuplicates: true },
+  );
+  const { data } = await supabase
+    .from("tags")
+    .select("id, slug")
+    .in("slug", slugs);
+  return (data ?? []).map((t: { id: string }) => t.id);
+}
+
+async function syncProductTags(
+  supabase: ServiceClient,
+  productId: string,
+  tagSlugs: string[],
+): Promise<void> {
+  const tagIds = await ensureTags(supabase, tagSlugs);
+  await supabase.from("product_tags").delete().eq("product_id", productId);
+  if (tagIds.length === 0) return;
+  await supabase
+    .from("product_tags")
+    .insert(tagIds.map((tag_id) => ({ product_id: productId, tag_id })));
+}
+
+/**
+ * Reemplaza la galería de imágenes (product_media) del producto. La primera
+ * imagen de la lista se marca como portada (is_cover).
+ */
+async function syncProductMedia(
+  supabase: ServiceClient,
+  productId: string,
+  urls: string[],
+): Promise<void> {
+  await supabase.from("product_media").delete().eq("product_id", productId);
+  const clean = urls.map((u) => u.trim()).filter(Boolean);
+  if (clean.length === 0) return;
+  await supabase.from("product_media").insert(
+    clean.map((url, i) => ({
+      product_id: productId,
+      url,
+      media_type: "image",
+      is_cover: i === 0,
+      sort_order: i,
+    })),
+  );
+}
+
+/** Lee la galería de imágenes desde el campo JSON `media_json`. */
+function parseMediaUrls(formData: FormData): string[] {
+  const raw = formData.get("media_json")?.toString() ?? "[]";
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((u): u is string => typeof u === "string");
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Reconcilia variantes por talla: actualiza las existentes, crea las nuevas y
+ * desactiva (soft) las que ya no se envían — preserva historial de pedidos/carrito.
+ */
+async function syncVariants(
+  supabase: ServiceClient,
+  productId: string,
+  productSlug: string,
+  basePriceCents: number,
+  variants: VariantInput[],
+  explicitWarehouseId?: string | null,
+): Promise<void> {
+  const { data: existingData } = await supabase
+    .from("product_variants")
+    .select("id, attributes, is_active")
+    .eq("product_id", productId);
+  const existing = (existingData ?? []) as {
+    id: string;
+    attributes: Record<string, unknown> | null;
+    is_active: boolean;
+  }[];
+
+  const sizeOf = (attrs: Record<string, unknown> | null) =>
+    typeof attrs?.size === "string" ? (attrs.size as string).toLowerCase() : "";
+  const bySize = new Map(existing.map((v) => [sizeOf(v.attributes), v]));
+
+  const warehouseId =
+    explicitWarehouseId?.trim() || (await getDefaultWarehouseId(supabase));
+  const submittedSizes = new Set(variants.map((v) => v.size.toLowerCase()));
+
+  let sort = 0;
+  for (const v of variants) {
+    const sizeKey = v.size.toLowerCase();
+    const priceCents = parseOptionalPriceCents(v.priceDop) ?? basePriceCents;
+    const attributes = v.size ? { size: v.size } : {};
+    const sku =
+      v.sku && v.sku.length > 0
+        ? v.sku
+        : `${productSlug}-${v.size || "u"}`
+            .toUpperCase()
+            .replace(/[^A-Z0-9-]/g, "");
+    const match = bySize.get(sizeKey);
+
+    let variantId: string;
+    if (match) {
+      variantId = match.id;
+      await supabase
+        .from("product_variants")
+        .update({
+          sku,
+          price_cents: priceCents,
+          attributes,
+          is_active: v.active !== false,
+          sort_order: sort,
+        })
+        .eq("id", variantId);
+    } else {
+      const { data: created, error } = await supabase
+        .from("product_variants")
+        .insert({
+          product_id: productId,
+          sku,
+          price_cents: priceCents,
+          attributes,
+          is_active: v.active !== false,
+          sort_order: sort,
+        })
+        .select("id")
+        .single();
+      if (error) throw new Error(error.message);
+      variantId = (created as { id: string }).id;
+    }
+
+    await supabase.from("inventory").upsert(
+      {
+        variant_id: variantId,
+        warehouse_id: warehouseId,
+        quantity: v.qty ?? 0,
+      },
+      { onConflict: "variant_id,warehouse_id" },
+    );
+    sort++;
+  }
+
+  // Desactiva variantes cuya talla ya no se envía.
+  for (const v of existing) {
+    if (!submittedSizes.has(sizeOf(v.attributes)) && v.is_active) {
+      await supabase
+        .from("product_variants")
+        .update({ is_active: false })
+        .eq("id", v.id);
+    }
+  }
+}
+
+function readProductFields(formData: FormData) {
+  const name = formData.get("name")?.toString().trim() ?? "";
+  if (!name) throw new Error("El nombre es obligatorio.");
+  return {
+    name,
+    description: formData.get("description")?.toString().trim() || null,
+    category_id: parseCategoryId(formData),
+    brand_id: formData.get("brand_id")?.toString().trim() || null,
+    linea_id: formData.get("linea_id")?.toString().trim() || null,
+    tags: parseTagsFromForm(formData),
+    base_price_cents: parsePriceDopToCents(
+      formData.get("price_dop")?.toString() ?? "",
+    ),
+    original_price_cents: parseOptionalPriceCents(
+      formData.get("original_price_dop")?.toString(),
+    ),
+    is_active: formData.get("published") === "on",
+    is_customizable: formData.get("is_customizable") === "on",
+    warehouse_id: formData.get("warehouse_id")?.toString().trim() || null,
+    media: parseMediaUrls(formData),
+    variants: parseVariants(formData),
+  };
 }
 
 function parseOptionalPriceDopToCents(raw: string): number | null {
@@ -100,36 +378,24 @@ export async function adminCreateProduct(
   try {
     await requireAdmin();
     const supabase = createServiceClient();
-
-    const name = formData.get("name")?.toString().trim() ?? "";
-    if (!name) throw new Error("El nombre es obligatorio.");
-
-    const slug = await pickUniqueProductSlug(supabase, name);
-    const description = formData.get("description")?.toString().trim() || null;
-
-    const base_price_cents = parsePriceDopToCents(
-      formData.get("base_price_dop")?.toString() ?? "",
-    );
-    const original_price_cents = parseOptionalPriceDopToCents(
-      formData.get("original_price_dop")?.toString() ?? "",
-    );
-
-    const is_active = formData.get("is_active") === "on";
-    const is_customizable = formData.get("is_customizable") === "on";
-    const cover_url = formData.get("cover_image_url")?.toString().trim() || null;
+    const f = readProductFields(formData);
+    const slug = await pickUniqueProductSlug(supabase, f.name, f.tags);
 
     const { data: inserted, error: insErr } = await supabase
       .from("products")
       .insert({
         slug,
-        name,
-        description,
-        base_price_cents,
-        original_price_cents,
-        is_active,
-        is_customizable,
+        name: f.name,
+        description: f.description,
+        category_id: f.category_id,
+        brand_id: f.brand_id,
+        linea_id: f.linea_id,
+        base_price_cents: f.base_price_cents,
+        original_price_cents: f.original_price_cents,
+        is_active: f.is_active,
+        is_customizable: f.is_customizable,
       })
-      .select("id")
+      .select("id, slug")
       .single();
 
     if (insErr) {
@@ -139,11 +405,17 @@ export async function adminCreateProduct(
       return { error: insErr.message ?? "No se pudo crear el producto." };
     }
 
-    const productId = (inserted as { id: string }).id;
-
-    if (cover_url) {
-      await upsertCoverMedia(supabase, productId, cover_url, name);
-    }
+    const product = inserted as { id: string; slug: string };
+    await syncProductMedia(supabase, product.id, f.media);
+    await syncProductTags(supabase, product.id, f.tags);
+    await syncVariants(
+      supabase,
+      product.id,
+      product.slug,
+      f.base_price_cents,
+      f.variants,
+      f.warehouse_id,
+    );
 
     revalidatePath("/admin/catalogo");
     revalidatePath("/catalogo");
@@ -169,37 +441,29 @@ export async function adminUpdateProduct(
       .eq("id", id)
       .single();
     if (prevErr || !prevRow) throw new Error("Producto no encontrado.");
-    const prevSlug = (prevRow as { slug: string }).slug;
+    const prev = prevRow as { slug: string };
 
-    const name = formData.get("name")?.toString().trim() ?? "";
-    if (!name) throw new Error("El nombre es obligatorio.");
-
-    const description = formData.get("description")?.toString().trim() || null;
-    const base_price_cents = parsePriceDopToCents(
-      formData.get("base_price_dop")?.toString() ?? "",
-    );
-    const original_price_cents = parseOptionalPriceDopToCents(
-      formData.get("original_price_dop")?.toString() ?? "",
-    );
-    const is_active = formData.get("is_active") === "on";
-    const is_customizable = formData.get("is_customizable") === "on";
-    const cover_url = formData.get("cover_image_url")?.toString().trim() || null;
+    const f = readProductFields(formData);
 
     const { error: updErr } = await supabase
       .from("products")
       .update({
-        name,
-        description,
-        base_price_cents,
-        original_price_cents,
-        is_active,
-        is_customizable,
+        name: f.name,
+        description: f.description,
+        category_id: f.category_id,
+        brand_id: f.brand_id,
+        linea_id: f.linea_id,
+        base_price_cents: f.base_price_cents,
+        original_price_cents: f.original_price_cents,
+        is_active: f.is_active,
+        is_customizable: f.is_customizable,
       })
       .eq("id", id);
+    if (updErr) return { error: updErr.message ?? "No se pudo actualizar." };
 
-    if (updErr) {
-      return { error: updErr.message ?? "No se pudo actualizar." };
-    }
+    await syncProductMedia(supabase, id, f.media);
+    await syncProductTags(supabase, id, f.tags);
+    await syncVariants(supabase, id, prev.slug, f.base_price_cents, f.variants, f.warehouse_id);
 
     await upsertCoverMedia(supabase, id, cover_url, name);
 
@@ -215,16 +479,26 @@ export async function adminUpdateProduct(
 export async function adminDeleteProduct(productId: string): Promise<void> {
   await requireAdmin();
   const supabase = createServiceClient();
-  const { count, error: cErr } = await supabase
-    .from("order_items")
-    .select("id", { count: "exact", head: true })
+
+  // Bloquea el borrado si alguna variante aparece en pedidos.
+  const { data: variants } = await supabase
+    .from("product_variants")
+    .select("id")
     .eq("product_id", productId);
-  if (cErr) throw new Error(cErr.message);
-  if ((count ?? 0) > 0) {
-    throw new Error(
-      "No se puede eliminar: hay pedidos que incluyen este producto.",
-    );
+  const variantIds = (variants ?? []).map((v: { id: string }) => v.id);
+  if (variantIds.length > 0) {
+    const { count, error: cErr } = await supabase
+      .from("order_items")
+      .select("id", { count: "exact", head: true })
+      .in("variant_id", variantIds);
+    if (cErr) throw new Error(cErr.message);
+    if ((count ?? 0) > 0) {
+      throw new Error(
+        "No se puede eliminar: hay pedidos que incluyen este producto.",
+      );
+    }
   }
+
   const { error } = await supabase
     .from("products")
     .delete()

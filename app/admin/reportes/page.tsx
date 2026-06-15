@@ -1,26 +1,25 @@
-"use client";
-
 import { BarChart2 } from "lucide-react";
 import Link from "next/link";
+import { PageLayout } from "@/components/layout";
 
 export default function AdminReportesPage() {
   return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-semibold tracking-tight text-zinc-100">
-        Reportes
-      </h1>
-      <div className="rounded-2xl border border-zinc-700/80 bg-zinc-900/80 p-8 text-center">
-        <BarChart2 className="mx-auto size-12 text-zinc-500" aria-hidden />
-        <p className="mt-3 text-sm text-zinc-400">
-          Próximamente: informes de pedidos, ingresos y actividad.
+    <PageLayout title="Reportes" description="Análisis de ventas, ingresos y actividad.">
+      <div className="rounded-[14px] border border-border bg-card px-6 py-16 text-center">
+        <div className="mx-auto flex size-14 items-center justify-center rounded-[14px] bg-muted">
+          <BarChart2 className="size-7 text-muted-foreground" aria-hidden />
+        </div>
+        <p className="mt-4 text-sm font-medium text-foreground">Próximamente</p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Informes de pedidos, ingresos y actividad de usuarios.
         </p>
         <Link
           href="/admin"
-          className="mt-4 inline-block text-sm font-medium text-primary hover:text-primary/80"
+          className="mt-5 inline-flex items-center gap-1.5 rounded-[10px] bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
         >
-          Volver al Dashboard
+          Volver al dashboard
         </Link>
       </div>
-    </div>
+    </PageLayout>
   );
 }

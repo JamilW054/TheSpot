@@ -5,10 +5,7 @@ import { AddToCartButton } from "@/components/catalog/AddToCartButton";
 import { CatalogProductViewerWithDesign } from "@/components/catalog/CatalogProductViewerWithDesign";
 import { ProductReviews } from "@/components/catalog/ProductReviews";
 import { getProductBySlug } from "@/lib/db";
-import {
-  getProductReviews,
-  getUserReviewForProduct,
-} from "@/lib/db/reviews";
+import { getProductReviews, getUserReviewForProduct } from "@/lib/db/reviews";
 import { createClient } from "@/lib/supabase/server";
 
 interface PageProps {

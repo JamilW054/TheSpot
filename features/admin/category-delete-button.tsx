@@ -1,7 +1,7 @@
 "use client";
 
-import { adminDeleteCategory } from "@/lib/actions/categories-admin";
 import { useRouter } from "next/navigation";
+import { adminDeleteCategory } from "@/lib/actions/categories-admin";
 import { ConfirmDeleteButton } from "./confirm-delete-button";
 
 interface CategoryDeleteButtonProps {

@@ -4,9 +4,9 @@
  * Output: public/banner/og.jpg
  */
 
-import sharp from "sharp";
-import { readFileSync, existsSync } from "fs";
+import { existsSync, readFileSync } from "fs";
 import { dirname, join } from "path";
+import sharp from "sharp";
 import { fileURLToPath } from "url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));

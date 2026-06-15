@@ -8,7 +8,7 @@ import { Resend } from "resend";
 
 const key = process.env.RESEND_API_KEY;
 if (!key) {
-  console.error("❌  RESEND_API_KEY not set");
+  console.error("RESEND_API_KEY not set");
   process.exit(1);
 }
 
@@ -19,10 +19,8 @@ const YEAR = new Date().getFullYear();
 // Helpers
 // ─────────────────────────────────────────────────────────────────────────────
 
-const TOP_BAR =
-  `<div style="height:4px;background:linear-gradient(90deg,#3cc8f7 0%,#5dd4f9 50%,#0e7fa3 100%);"></div>`;
-const BOT_BAR =
-  `<div style="height:2px;background:linear-gradient(90deg,#3cc8f7 0%,#5dd4f9 50%,#0e7fa3 100%);"></div>`;
+const TOP_BAR = `<div style="height:4px;background:linear-gradient(90deg,#3cc8f7 0%,#5dd4f9 50%,#0e7fa3 100%);"></div>`;
+const BOT_BAR = `<div style="height:2px;background:linear-gradient(90deg,#3cc8f7 0%,#5dd4f9 50%,#0e7fa3 100%);"></div>`;
 
 const LOGO = `
   <tr>
@@ -239,7 +237,11 @@ async function createAndPublish(
   name: string,
   subject: string,
   html: string,
-  variables: { key: string; type: "string" | "number"; fallbackValue?: string | number | null }[],
+  variables: {
+    key: string;
+    type: "string" | "number";
+    fallbackValue?: string | number | null;
+  }[],
 ) {
   console.log(`\n→ Creating "${name}"…`);
   const created = await resend.templates.create({
@@ -248,8 +250,16 @@ async function createAndPublish(
     html,
     variables: variables.map((v) =>
       v.type === "number"
-        ? { key: v.key, type: "number" as const, fallbackValue: (v.fallbackValue as number | null | undefined) }
-        : { key: v.key, type: "string" as const, fallbackValue: (v.fallbackValue as string | null | undefined) },
+        ? {
+            key: v.key,
+            type: "number" as const,
+            fallbackValue: v.fallbackValue as number | null | undefined,
+          }
+        : {
+            key: v.key,
+            type: "string" as const,
+            fallbackValue: v.fallbackValue as string | null | undefined,
+          },
     ),
   });
 
@@ -261,7 +271,9 @@ async function createAndPublish(
   const id = created.data.id;
   const published = await resend.templates.publish(id);
   if (published.error) {
-    console.warn(`  ⚠️  Created (${id}) but publish failed: ${published.error.message}`);
+    console.warn(
+      `  ⚠️  Created (${id}) but publish failed: ${published.error.message}`,
+    );
   } else {
     console.log(`  ✅  ID: ${id}`);
   }
@@ -297,7 +309,11 @@ ids.resetPassword = await createAndPublish(
   resetPasswordHtml,
   [
     { key: "name", type: "string", fallbackValue: "Usuario" },
-    { key: "reset_url", type: "string", fallbackValue: "https://buxxep.vercel.app" },
+    {
+      key: "reset_url",
+      type: "string",
+      fallbackValue: "https://buxxep.vercel.app",
+    },
     { key: "expires_in_minutes", type: "number", fallbackValue: 60 },
   ],
 );
@@ -306,5 +322,6 @@ console.log("\n─────────────────────�
 console.log("Add these to your .env:\n");
 if (ids.otp) console.log(`RESEND_TPL_OTP=${ids.otp}`);
 if (ids.bienvenida) console.log(`RESEND_TPL_BIENVENIDA=${ids.bienvenida}`);
-if (ids.resetPassword) console.log(`RESEND_TPL_RESET_PASSWORD=${ids.resetPassword}`);
+if (ids.resetPassword)
+  console.log(`RESEND_TPL_RESET_PASSWORD=${ids.resetPassword}`);
 console.log("─────────────────────────────────────────\n");

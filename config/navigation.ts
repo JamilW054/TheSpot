@@ -28,7 +28,7 @@ export const PUBLIC_NAV: NavItem[] = [
   { label: "Registro", href: "/registro" },
 ];
 
-/** App autenticada: clientes ven diseños y pedidos; rutas adminOnly llevan al panel u operaciones de tienda */
+/** App autenticada: clientes ven pedidos; rutas adminOnly llevan al panel */
 export const APP_NAV: NavItem[] = [
   {
     label: "Panel admin",
@@ -48,8 +48,8 @@ export const APP_NAV: NavItem[] = [
     icon: "Layers",
     adminOnly: true,
   },
-  { label: "Mis diseños", href: "/mis-disenos", icon: "LayoutGrid" },
   { label: "Mis pedidos", href: "/mis-pedidos", icon: "Package" },
+  { label: "Soporte", href: "/soporte", icon: "HelpCircle", adminOnly: true },
 ];
 
 /**
@@ -88,16 +88,64 @@ export const ADMIN_NAV: NavItem[] = [
     adminSection: "Catálogo",
   },
   {
+    label: "Subcategorías",
+    href: "/admin/subcategorias",
+    icon: "FolderTree",
+    adminSection: "Catálogo",
+  },
+  {
+    label: "Marcas",
+    href: "/admin/marcas",
+    icon: "Tag",
+    adminSection: "Catálogo",
+  },
+  {
     label: "Tipos de talla",
     href: "/admin/tallas",
     icon: "Ruler",
     adminSection: "Catálogo",
   },
   {
-    label: "Nuevo artículo",
-    href: "/admin/catalogo/nuevo",
-    icon: "PlusCircle",
+    label: "Líneas de ropa",
+    href: "/admin/lineas",
+    icon: "Shirt",
     adminSection: "Catálogo",
+  },
+  {
+    label: "Banners",
+    href: "/admin/banners",
+    icon: "Image",
+    adminSection: "Marketing",
+  },
+  {
+    label: "Cupones",
+    href: "/admin/cupones",
+    icon: "Ticket",
+    adminSection: "Marketing",
+  },
+  {
+    label: "Flash sales",
+    href: "/admin/flash-sales",
+    icon: "Zap",
+    adminSection: "Marketing",
+  },
+  {
+    label: "Notificaciones",
+    href: "/admin/notificaciones",
+    icon: "Bell",
+    adminSection: "Marketing",
+  },
+  {
+    label: "Métodos de envío",
+    href: "/admin/envios",
+    icon: "Truck",
+    adminSection: "Logística",
+  },
+  {
+    label: "Almacenes",
+    href: "/admin/almacenes",
+    icon: "Warehouse",
+    adminSection: "Logística",
   },
   {
     label: "Reportes",

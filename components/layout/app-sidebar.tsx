@@ -2,23 +2,26 @@
 
 import {
   BarChart2,
-  BookOpen,
+  Bell,
   FileText,
-  FolderOpen,
+  FolderTree,
   HelpCircle,
-  LayoutDashboard,
-  LayoutGrid,
+  Image as ImageIcon,
   Layers,
-  MessageCircle,
+  LayoutDashboard,
   Package,
   PanelLeftClose,
-  PenSquare,
   PlusCircle,
   Ruler,
   Settings,
   Shirt,
   ShoppingCart,
   Store,
+  Tag,
+  Ticket,
+  Truck,
+  Warehouse,
+  Zap,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -36,13 +39,8 @@ const NAV_BY_VARIANT: Record<SidebarVariant, NavItem[]> = {
 
 const APP_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   LayoutDashboard,
-  LayoutGrid,
   Layers,
   Package,
-  PenSquare,
-  Shirt,
-  BookOpen,
-  FolderOpen,
   HelpCircle,
   Store,
 };
@@ -58,12 +56,18 @@ const ADMIN_ICONS: Record<
   Layers,
   PlusCircle,
   Ruler,
-  PenSquare,
   Shirt,
-  BookOpen,
-  FolderOpen,
   BarChart2,
   Settings,
+  FolderTree,
+  Tag,
+  Image: ImageIcon,
+  Ticket,
+  Zap,
+  Bell,
+  Truck,
+  Warehouse,
+  HelpCircle,
 };
 
 function navItemActive(
@@ -134,16 +138,23 @@ export function AppSidebar({
           ${hiddenOnDesktop ? "md:-translate-x-full md:w-0 md:overflow-hidden md:border-r-0 md:shadow-none" : "md:translate-x-0"}
         `}
       >
-        <div className="scrollbar-hide flex flex-1 flex-col overflow-y-auto py-5 px-3">
-          <div className="flex items-center justify-between gap-2 px-3 mb-6">
-            <span className="text-[11px] font-medium uppercase tracking-widest text-muted-foreground">
-              {variant === "admin" ? "Admin" : "Navegación"}
-            </span>
+        <div className="scrollbar-hide flex flex-1 flex-col overflow-y-auto py-4 px-3">
+          <div className="flex items-center justify-between gap-2 px-2 mb-5">
+            <div className="flex flex-col">
+              <span className="text-[15px] font-semibold tracking-tight text-primary">
+                Buxxep
+              </span>
+              {variant === "admin" && (
+                <span className="text-[11px] text-muted-foreground">
+                  Panel admin
+                </span>
+              )}
+            </div>
             {onCollapsedChange && (
               <button
                 type="button"
                 onClick={() => onCollapsedChange(true)}
-                className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                className="rounded-[10px] p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
                 aria-label="Ocultar menú"
               >
                 <PanelLeftClose className="size-4" />
@@ -204,28 +215,18 @@ export function AppSidebar({
           </nav>
         </div>
 
-        <div className="border-t border-border p-3">
-          {variant === "admin" && (
-            <>
-              <div className="rounded-xl bg-muted/40 p-3">
-                <p className="text-xs italic text-muted-foreground">
-                  &ldquo;El trabajo de hoy era lo imposible de ayer.&rdquo;
-                </p>
-                <p className="mt-1 text-[10px] text-muted-foreground/80">
-                  — Robert H. Schuller
-                </p>
-              </div>
-              <Link
-                href="/soporte"
-                onClick={onClose}
-                className="mt-3 flex items-center justify-center gap-2 rounded-xl bg-muted/40 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-              >
-                <MessageCircle className="size-4" />
-                Soporte
-              </Link>
-            </>
-          )}
-        </div>
+        {variant === "admin" && (
+          <div className="border-t border-border p-3">
+            <Link
+              href="/soporte"
+              onClick={onClose}
+              className="flex items-center gap-2.5 rounded-[10px] px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            >
+              <HelpCircle className="size-4 shrink-0" />
+              Soporte
+            </Link>
+          </div>
+        )}
       </aside>
     </>
   );

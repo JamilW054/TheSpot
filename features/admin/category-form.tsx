@@ -10,8 +10,9 @@ import {
   useRef,
   useState,
 } from "react";
-import { useAdminFeedback } from "@/contexts/admin-feedback-context";
 import { Input } from "@/components/ui/input";
+import { SelectMenu } from "@/components/ui/select-menu";
+import { useAdminFeedback } from "@/contexts/admin-feedback-context";
 import {
   type AdminCategoryActionState,
   adminCreateCategory,
@@ -49,9 +50,17 @@ interface CategoryFormProps {
   mode: "create" | "edit";
   initial?: CategoryRow;
   sizePresets?: SizePresetRow[];
+  onSuccess?: () => void;
+  onCancel?: () => void;
 }
 
-export function CategoryForm({ mode, initial, sizePresets = [] }: CategoryFormProps) {
+export function CategoryForm({
+  mode,
+  initial,
+  sizePresets = [],
+  onSuccess,
+  onCancel,
+}: CategoryFormProps) {
   const router = useRouter();
   const { showSuccess, showError } = useAdminFeedback();
   const fileInputId = useId();
@@ -74,15 +83,22 @@ export function CategoryForm({ mode, initial, sizePresets = [] }: CategoryFormPr
     if (!state || state === seenState.current) return;
     seenState.current = state;
     if (state.ok) {
-      const label = mode === "create" ? "Categoría creada correctamente." : "Categoría guardada correctamente.";
+      const label =
+        mode === "create"
+          ? "Categoría creada correctamente."
+          : "Categoría guardada correctamente.";
       showSuccess(label, () => {
-        router.replace("/admin/categorias");
-        router.refresh();
+        if (onSuccess) {
+          onSuccess();
+        } else {
+          router.replace("/admin/categorias");
+          router.refresh();
+        }
       });
     } else if (state.error) {
       showError(state.error);
     }
-  }, [state, mode, showSuccess, showError, router]);
+  }, [state, mode, showSuccess, showError, router, onSuccess]);
 
   async function uploadFile(file: File) {
     setUploadBusy(true);
@@ -154,32 +170,27 @@ export function CategoryForm({ mode, initial, sizePresets = [] }: CategoryFormPr
                 . Si el slug ya existe, se añade un sufijo.
               </p>
             </div>
-            <div className="sm:col-span-2">
-              <label
-                htmlFor="category-size_preset_id"
-                className="mb-1.5 block text-sm font-medium text-foreground"
-              >
-                Tipo de talla
-              </label>
-              <select
+            <div className="sm:col-span-2 relative">
+              <SelectMenu
                 id="category-size_preset_id"
                 name="size_preset_id"
+                label="Tipo de talla"
                 defaultValue={initial?.size_preset_id ?? ""}
-                className="h-11 w-full rounded-lg border border-border bg-background px-3 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
-              >
-                <option value="">Sin tallas definidas</option>
-                {sizePresets.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name} ({p.sizes.join(", ")})
-                  </option>
-                ))}
-              </select>
+                placeholder="Sin tallas definidas"
+                options={[
+                  { value: "", label: "Sin tallas definidas" },
+                  ...sizePresets.map((p) => ({
+                    value: p.id,
+                    label: `${p.name} (${p.sizes.join(", ")})`,
+                  })),
+                ]}
+              />
               <p className="mt-1.5 text-xs text-muted-foreground">
                 Las tallas disponibles al crear productos de esta categoría.
               </p>
             </div>
 
-            <div className="sm:max-w-[160px]">
+            <div className="sm:max-w-40">
               <Input
                 label="Orden"
                 name="sort_order"
@@ -200,7 +211,7 @@ export function CategoryForm({ mode, initial, sizePresets = [] }: CategoryFormPr
               <span className="text-xs font-medium text-muted-foreground">
                 Vista previa
               </span>
-              <div className="aspect-square w-full max-w-[200px] overflow-hidden rounded-xl border border-border bg-muted">
+              <div className="aspect-square w-full max-w-50 overflow-hidden rounded-xl border border-border bg-muted">
                 {imageUrl.trim() ? (
                   // biome-ignore lint/performance/noImgElement: vista previa URL dinámica / R2
                   <img
@@ -353,7 +364,9 @@ export function CategoryForm({ mode, initial, sizePresets = [] }: CategoryFormPr
       <footer className="flex flex-col-reverse gap-3 border-t border-border pt-8 sm:flex-row sm:items-center sm:justify-between">
         <button
           type="button"
-          onClick={() => router.push("/admin/categorias")}
+          onClick={() =>
+            onCancel ? onCancel() : router.push("/admin/categorias")
+          }
           className="inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-transparent px-5 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
         >
           <X className="size-4" aria-hidden />

@@ -4,7 +4,11 @@ export interface OtpEmailData {
   expiresInMinutes: number;
 }
 
-export function otpEmailHtml({ name, code, expiresInMinutes }: OtpEmailData): string {
+export function otpEmailHtml({
+  name,
+  code,
+  expiresInMinutes,
+}: OtpEmailData): string {
   const digits = code.split("");
   const digitBoxes = digits
     .map(
@@ -125,6 +129,10 @@ export function otpEmailHtml({ name, code, expiresInMinutes }: OtpEmailData): st
 </html>`;
 }
 
-export function otpEmailText({ name, code, expiresInMinutes }: OtpEmailData): string {
+export function otpEmailText({
+  name,
+  code,
+  expiresInMinutes,
+}: OtpEmailData): string {
   return `BUXXEP — Código de verificación\n\nHola ${name},\n\nTu código es: ${code}\n\nExpira en ${expiresInMinutes} minutos. No lo compartas con nadie.\n\n— BUXXEP`;
 }
