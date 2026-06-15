@@ -55,6 +55,14 @@ const nextConfig: NextConfig = {
         hostname: "**.r2.dev",
         pathname: "/**",
       },
+      /**
+       * Comodín: permite cualquier host https/http para imágenes subidas desde
+       * orígenes arbitrarios (p. ej. URLs públicas de la app móvil tras subirlas).
+       * NOTA: no cubre `file://` (rutas locales del dispositivo) — esas deben
+       * subirse primero o renderizarse con `unoptimized`/`<img>`.
+       */
+      { protocol: "https", hostname: "**" },
+      { protocol: "http", hostname: "**" },
     ],
   },
 };

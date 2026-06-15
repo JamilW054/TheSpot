@@ -1,8 +1,20 @@
 import { Resend } from "resend";
-import { bienvenidaEmailHtml, bienvenidaEmailText, type BienvenidaEmailData } from "./templates/bienvenida";
-import { compraEmailHtml, compraEmailText, type CompraEmailData } from "./templates/compra";
-import { otpEmailHtml, otpEmailText, type OtpEmailData } from "./templates/otp";
-import { resetPasswordEmailHtml, resetPasswordEmailText, type ResetPasswordEmailData } from "./templates/reset-password";
+import {
+  type BienvenidaEmailData,
+  bienvenidaEmailHtml,
+  bienvenidaEmailText,
+} from "./templates/bienvenida";
+import {
+  type CompraEmailData,
+  compraEmailHtml,
+  compraEmailText,
+} from "./templates/compra";
+import { type OtpEmailData, otpEmailHtml, otpEmailText } from "./templates/otp";
+import {
+  type ResetPasswordEmailData,
+  resetPasswordEmailHtml,
+  resetPasswordEmailText,
+} from "./templates/reset-password";
 
 function getResend(): Resend {
   const key = process.env.RESEND_API_KEY;
@@ -22,7 +34,10 @@ export async function sendOtpEmail(to: string, data: OtpEmailData) {
   });
 }
 
-export async function sendBienvenidaEmail(to: string, data: BienvenidaEmailData) {
+export async function sendBienvenidaEmail(
+  to: string,
+  data: BienvenidaEmailData,
+) {
   return getResend().emails.send({
     from: FROM,
     to,
@@ -42,7 +57,10 @@ export async function sendCompraEmail(to: string, data: CompraEmailData) {
   });
 }
 
-export async function sendResetPasswordEmail(to: string, data: ResetPasswordEmailData) {
+export async function sendResetPasswordEmail(
+  to: string,
+  data: ResetPasswordEmailData,
+) {
   return getResend().emails.send({
     from: FROM,
     to,

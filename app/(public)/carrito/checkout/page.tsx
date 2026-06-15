@@ -1,8 +1,8 @@
+import Link from "next/link";
+import { redirect } from "next/navigation";
 import { getProducts } from "@/lib/db";
 import { createClient } from "@/lib/supabase/server";
 import { CheckoutContent } from "./CheckoutContent";
-import Link from "next/link";
-import { redirect } from "next/navigation";
 
 export const metadata = {
   title: "Checkout | Buxxep",

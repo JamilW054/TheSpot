@@ -87,8 +87,9 @@ async function main() {
   const { error: upsertErr } = await admin.from("profiles").upsert(
     {
       id: userId as string,
-      name: displayName,
-      role: "admin",
+      username: email.split("@")[0],
+      full_name: displayName,
+      role: 0,
     },
     { onConflict: "id" },
   );

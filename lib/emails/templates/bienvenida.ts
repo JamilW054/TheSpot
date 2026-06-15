@@ -3,7 +3,10 @@ export interface BienvenidaEmailData {
   email: string;
 }
 
-export function bienvenidaEmailHtml({ name, email }: BienvenidaEmailData): string {
+export function bienvenidaEmailHtml({
+  name,
+  email,
+}: BienvenidaEmailData): string {
   return `<!DOCTYPE html>
 <html lang="es">
 <head>
@@ -150,6 +153,9 @@ export function bienvenidaEmailHtml({ name, email }: BienvenidaEmailData): strin
 </html>`;
 }
 
-export function bienvenidaEmailText({ name, email }: BienvenidaEmailData): string {
+export function bienvenidaEmailText({
+  name,
+  email,
+}: BienvenidaEmailData): string {
   return `BUXXEP — Bienvenido al crew\n\nHey ${name},\n\nTu cuenta fue creada con: ${email}\n\nExplora el catálogo: https://buxxep.vercel.app/catalogo\n\n— BUXXEP · República Dominicana`;
 }

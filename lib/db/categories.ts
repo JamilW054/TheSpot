@@ -145,18 +145,30 @@ export async function getCategoryCoverByCategoryId(): Promise<
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("products")
-      .select("category_id, cover_image_url, sort_order")
-      .eq("published", true)
+      .select(
+        "category_id, created_at, product_media(url, is_cover, sort_order)",
+      )
+      .eq("is_active", true)
       .not("category_id", "is", null)
-      .order("sort_order", { ascending: true });
+      .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
     const map: Record<string, string> = {};
     for (const row of data ?? []) {
-      const r = row as {
+      const r = row as unknown as {
         category_id: string;
-        cover_image_url: string | null;
+        product_media:
+          | {
+              url: string;
+              is_cover: boolean | null;
+              sort_order: number | null;
+            }[]
+          | null;
       };
-      const url = r.cover_image_url?.trim();
+      const media = [...(r.product_media ?? [])].sort(
+        (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0),
+      );
+      const cover = media.find((m) => m.is_cover) ?? media[0];
+      const url = cover?.url?.trim();
       if (url && map[r.category_id] === undefined) map[r.category_id] = url;
     }
     return map;

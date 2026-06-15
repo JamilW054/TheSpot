@@ -1,9 +1,7 @@
 import type { HTMLAttributes } from "react";
 
 export interface PageLayoutProps extends HTMLAttributes<HTMLDivElement> {
-  /** Título de la página (se muestra como H1) */
   title: string;
-  /** Descripción opcional bajo el título */
   description?: string;
   children: React.ReactNode;
 }
@@ -17,12 +15,12 @@ export function PageLayout({
 }: PageLayoutProps) {
   return (
     <div className={`space-y-6 max-w-4xl ${className}`.trim()} {...props}>
-      <header>
-        <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl md:text-3xl">
+      <header className="space-y-0.5">
+        <h1 className="text-[22px] font-semibold tracking-tight text-foreground">
           {title}
         </h1>
         {description ? (
-          <p className="mt-1.5 text-sm text-muted-foreground">{description}</p>
+          <p className="text-[13px] text-muted-foreground">{description}</p>
         ) : null}
       </header>
       <div className="min-w-0">{children}</div>

@@ -10,6 +10,9 @@ const PROTECTED_PREFIXES = [
   "/lineas",
   "/recursos",
   "/soporte",
+  // Compra y lista de deseos: requieren sesión (los productos se ven sin login).
+  "/carrito",
+  "/favoritos",
 ];
 
 function isProtectedPath(pathname: string): boolean {

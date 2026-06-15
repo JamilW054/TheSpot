@@ -1,6 +1,11 @@
 import { createClient } from "@/lib/supabase/server";
 import type { ProductReview } from "@/types";
 
+interface ProfileName {
+  full_name: string | null;
+  username: string | null;
+}
+
 export interface ReviewRow {
   id: string;
   product_id: string;
@@ -8,13 +13,13 @@ export interface ReviewRow {
   rating: number;
   body: string | null;
   created_at: string;
-  profiles: { name: string | null } | { name: string | null }[] | null;
+  profiles: ProfileName | ProfileName[] | null;
 }
 
 function profileName(profiles: ReviewRow["profiles"]): string | null {
   if (!profiles) return null;
   const p = Array.isArray(profiles) ? profiles[0] : profiles;
-  return p?.name ?? null;
+  return p?.full_name ?? p?.username ?? null;
 }
 
 export function rowToReview(row: ReviewRow): ProductReview {
@@ -34,8 +39,10 @@ export async function getProductReviews(
 ): Promise<ProductReview[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
-    .from("product_reviews")
-    .select("id, product_id, user_id, rating, body, created_at, profiles(name)")
+    .from("reviews")
+    .select(
+      "id, product_id, user_id, rating, body, created_at, profiles(full_name, username)",
+    )
     .eq("product_id", productId)
     .order("created_at", { ascending: false });
   if (error) return [];
@@ -53,8 +60,10 @@ export async function getUserReviewForProduct(
   if (!user) return null;
 
   const { data, error } = await supabase
-    .from("product_reviews")
-    .select("id, product_id, user_id, rating, body, created_at, profiles(name)")
+    .from("reviews")
+    .select(
+      "id, product_id, user_id, rating, body, created_at, profiles(full_name, username)",
+    )
     .eq("product_id", productId)
     .eq("user_id", user.id)
     .maybeSingle();

@@ -13,14 +13,26 @@ function parseSizes(raw: string): string[] {
     .filter(Boolean);
 }
 
-function parseSortOrder(formData: FormData): number {
-  const n = Number.parseInt(formData.get("sort_order")?.toString() ?? "0", 10);
-  return Number.isFinite(n) ? n : 0;
-}
-
 function revalidate() {
   revalidatePath("/admin/tallas");
   revalidatePath("/admin/categorias");
+}
+
+/** Reemplaza las tallas (size_preset_items) de un preset. */
+async function replacePresetItems(
+  supabase: ReturnType<typeof createServiceClient>,
+  presetId: string,
+  sizes: string[],
+): Promise<void> {
+  await supabase.from("size_preset_items").delete().eq("preset_id", presetId);
+  if (sizes.length === 0) return;
+  const rows = sizes.map((label, i) => ({
+    preset_id: presetId,
+    label,
+    sort_order: i,
+  }));
+  const { error } = await supabase.from("size_preset_items").insert(rows);
+  if (error) throw new Error(error.message);
 }
 
 export async function adminCreateSizePreset(
@@ -33,13 +45,15 @@ export async function adminCreateSizePreset(
     if (!name) throw new Error("El nombre es obligatorio.");
     const sizes = parseSizes(formData.get("sizes")?.toString() ?? "");
     if (sizes.length === 0) throw new Error("Agrega al menos una talla.");
-    const sort_order = parseSortOrder(formData);
 
     const supabase = createServiceClient();
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from("size_presets")
-      .insert({ name, sizes, sort_order });
+      .insert({ name })
+      .select("id")
+      .single();
     if (error) throw new Error(error.message);
+    await replacePresetItems(supabase, (data as { id: string }).id, sizes);
 
     revalidate();
     return { ok: true };
@@ -60,14 +74,14 @@ export async function adminUpdateSizePreset(
     if (!name) throw new Error("El nombre es obligatorio.");
     const sizes = parseSizes(formData.get("sizes")?.toString() ?? "");
     if (sizes.length === 0) throw new Error("Agrega al menos una talla.");
-    const sort_order = parseSortOrder(formData);
 
     const supabase = createServiceClient();
     const { error } = await supabase
       .from("size_presets")
-      .update({ name, sizes, sort_order })
+      .update({ name })
       .eq("id", id);
     if (error) throw new Error(error.message);
+    await replacePresetItems(supabase, id, sizes);
 
     revalidate();
     return { ok: true };
@@ -79,10 +93,7 @@ export async function adminUpdateSizePreset(
 export async function adminDeleteSizePreset(id: string): Promise<void> {
   await requireAdmin();
   const supabase = createServiceClient();
-  const { error } = await supabase
-    .from("size_presets")
-    .delete()
-    .eq("id", id);
+  const { error } = await supabase.from("size_presets").delete().eq("id", id);
   if (error) throw new Error(error.message);
   revalidate();
 }

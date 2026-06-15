@@ -88,7 +88,10 @@ async function enrichUserFromProfile(
   const pr = profile?.role;
   return {
     ...base,
-    role: resolveUserRole(base.email, typeof pr === "string" ? pr : undefined),
+    role: resolveUserRole(
+      base.email,
+      typeof pr === "string" || typeof pr === "number" ? pr : undefined,
+    ),
   };
 }
 

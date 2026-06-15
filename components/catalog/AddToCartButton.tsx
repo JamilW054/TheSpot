@@ -1,7 +1,9 @@
 "use client";
 
-import { useCart } from "@/contexts/cart-context";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
+import { useCart } from "@/contexts/cart-context";
+import { useAuth } from "@/lib/auth-context";
 
 interface AddToCartButtonProps {
   productId: string;
@@ -22,6 +24,9 @@ export function AddToCartButton({
   children,
 }: AddToCartButtonProps) {
   const { addItem, getQuantity } = useCart();
+  const { user, isLoading } = useAuth();
+  const router = useRouter();
+  const pathname = usePathname();
   const [justAdded, setJustAdded] = useState(false);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [touched, setTouched] = useState(false);
@@ -31,6 +36,11 @@ export function AddToCartButton({
   const quantity = getQuantity(productId, designId, selectedSize);
 
   const handleClick = () => {
+    // Requiere sesión para comprar; los productos sí se ven sin login.
+    if (!isLoading && !user) {
+      router.push(`/login?next=${encodeURIComponent(pathname)}`);
+      return;
+    }
     if (hasSizes && !selectedSize) {
       setTouched(true);
       return;

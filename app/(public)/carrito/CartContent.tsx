@@ -1,10 +1,10 @@
 "use client";
 
-import { formatDOPFromCents } from "@/lib/format-currency";
-import { useCart } from "@/contexts/cart-context";
-import type { CatalogProduct } from "@/types";
 import Image from "next/image";
 import Link from "next/link";
+import { useCart } from "@/contexts/cart-context";
+import { formatDOPFromCents } from "@/lib/format-currency";
+import type { CatalogProduct } from "@/types";
 
 const MIN_ORDER_CENTS = Number(process.env.NEXT_PUBLIC_MIN_ORDER_CENTS ?? "0");
 
@@ -160,7 +160,9 @@ export function CartContent({ products }: { products: CatalogProduct[] }) {
                   </p>
                   <button
                     type="button"
-                    onClick={() => removeItem(item.productId, item.designId, item.size)}
+                    onClick={() =>
+                      removeItem(item.productId, item.designId, item.size)
+                    }
                     className="flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-destructive"
                     aria-label="Quitar del carrito"
                   >
@@ -223,10 +225,13 @@ export function CartContent({ products }: { products: CatalogProduct[] }) {
               <div className="rounded-lg bg-amber-500/10 border border-amber-500/30 px-3 py-2.5">
                 <p className="text-xs text-amber-600 dark:text-amber-400 font-medium leading-snug">
                   Monto mínimo de compra:{" "}
-                  <span className="font-bold">{formatDOPFromCents(MIN_ORDER_CENTS)}</span>
+                  <span className="font-bold">
+                    {formatDOPFromCents(MIN_ORDER_CENTS)}
+                  </span>
                 </p>
                 <p className="text-xs text-amber-600/80 dark:text-amber-400/80 mt-0.5">
-                  Te faltan {formatDOPFromCents(MIN_ORDER_CENTS - totalCents)} para continuar.
+                  Te faltan {formatDOPFromCents(MIN_ORDER_CENTS - totalCents)}{" "}
+                  para continuar.
                 </p>
               </div>
             )}

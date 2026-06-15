@@ -4,31 +4,32 @@ import { Loader2, Save, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
+import { useAdminFeedback } from "@/contexts/admin-feedback-context";
 import {
-  type SizePresetActionState,
   adminCreateSizePreset,
   adminUpdateSizePreset,
+  type SizePresetActionState,
 } from "@/lib/actions/size-presets-admin";
 import type { SizePresetRow } from "@/lib/db/size-presets";
-import { useAdminFeedback } from "@/contexts/admin-feedback-context";
 
 interface SizePresetFormProps {
   mode: "create" | "edit";
   initial?: SizePresetRow;
+  onSuccess?: () => void;
+  onCancel?: () => void;
 }
 
-export function SizePresetForm({ mode, initial }: SizePresetFormProps) {
+export function SizePresetForm({ mode, initial, onSuccess, onCancel }: SizePresetFormProps) {
   const router = useRouter();
   const { showSuccess, showError } = useAdminFeedback();
-  const actionFn = mode === "create" ? adminCreateSizePreset : adminUpdateSizePreset;
+  const actionFn =
+    mode === "create" ? adminCreateSizePreset : adminUpdateSizePreset;
   const [state, formAction, pending] = useActionState<
     SizePresetActionState | undefined,
     FormData
   >(actionFn, undefined);
 
-  const [sizesRaw, setSizesRaw] = useState(
-    initial?.sizes?.join(", ") ?? "",
-  );
+  const [sizesRaw, setSizesRaw] = useState(initial?.sizes?.join(", ") ?? "");
 
   const preview = sizesRaw
     .split(",")
@@ -40,15 +41,22 @@ export function SizePresetForm({ mode, initial }: SizePresetFormProps) {
     if (!state || state === seenState.current) return;
     seenState.current = state;
     if (state.ok) {
-      const label = mode === "create" ? "Tipo de talla creado correctamente." : "Tipo de talla guardado correctamente.";
+      const label =
+        mode === "create"
+          ? "Tipo de talla creado correctamente."
+          : "Tipo de talla guardado correctamente.";
       showSuccess(label, () => {
-        router.replace("/admin/tallas");
-        router.refresh();
+        if (onSuccess) {
+          onSuccess();
+        } else {
+          router.replace("/admin/tallas");
+          router.refresh();
+        }
       });
     } else if (state.error) {
       showError(state.error);
     }
-  }, [state, mode, showSuccess, showError, router]);
+  }, [state, mode, showSuccess, showError, router, onSuccess]);
 
   return (
     <form action={formAction} className="space-y-8">
@@ -85,7 +93,9 @@ export function SizePresetForm({ mode, initial }: SizePresetFormProps) {
             Separadas por coma. Ej:{" "}
             <span className="font-mono text-foreground/80">35, 36, 37, 38</span>{" "}
             o{" "}
-            <span className="font-mono text-foreground/80">S/M, M/L, Talla única</span>
+            <span className="font-mono text-foreground/80">
+              S/M, M/L, Talla única
+            </span>
           </p>
         </div>
 
@@ -107,7 +117,7 @@ export function SizePresetForm({ mode, initial }: SizePresetFormProps) {
           </div>
         ) : null}
 
-        <div className="sm:max-w-[160px]">
+        <div className="sm:max-w-40">
           <Input
             label="Orden"
             name="sort_order"
@@ -121,7 +131,7 @@ export function SizePresetForm({ mode, initial }: SizePresetFormProps) {
       <footer className="flex flex-col-reverse gap-3 border-t border-border pt-8 sm:flex-row sm:items-center sm:justify-between">
         <button
           type="button"
-          onClick={() => router.push("/admin/tallas")}
+          onClick={() => (onCancel ? onCancel() : router.push("/admin/tallas"))}
           className="inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-transparent px-5 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
         >
           <X className="size-4" aria-hidden />

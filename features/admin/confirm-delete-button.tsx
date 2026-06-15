@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
 import { AlertTriangle, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 const defaultTriggerCls =
   "inline-flex size-9 items-center justify-center rounded-md border-2 border-destructive/40 text-destructive transition-colors hover:bg-destructive/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50";
@@ -82,7 +82,10 @@ export function ConfirmDeleteButton({
           <div className="w-full max-w-sm rounded-xl border border-zinc-700 bg-zinc-900 p-6 shadow-2xl">
             <div className="mb-4 flex items-center gap-3">
               <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-destructive/15">
-                <AlertTriangle className="size-5 text-destructive" aria-hidden />
+                <AlertTriangle
+                  className="size-5 text-destructive"
+                  aria-hidden
+                />
               </div>
               <h2
                 id="confirm-delete-title"

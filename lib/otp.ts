@@ -15,10 +15,15 @@ export interface CreateOtpResult {
   expiresInMinutes: number;
 }
 
-export async function createOtp(email: string, purpose: string): Promise<CreateOtpResult> {
+export async function createOtp(
+  email: string,
+  purpose: string,
+): Promise<CreateOtpResult> {
   const supabase = await createServerClient();
   const code = generateCode();
-  const expiresAt = new Date(Date.now() + OTP_EXPIRES_MINUTES * 60 * 1000).toISOString();
+  const expiresAt = new Date(
+    Date.now() + OTP_EXPIRES_MINUTES * 60 * 1000,
+  ).toISOString();
 
   await supabase
     .from("otp_codes")
@@ -60,7 +65,8 @@ export async function verifyOtp(
 
   if (error || !data) return { success: false, reason: "invalid" };
   if (data.used) return { success: false, reason: "used" };
-  if (new Date(data.expires_at) < new Date()) return { success: false, reason: "expired" };
+  if (new Date(data.expires_at) < new Date())
+    return { success: false, reason: "expired" };
 
   await supabase.from("otp_codes").update({ used: true }).eq("id", data.id);
 

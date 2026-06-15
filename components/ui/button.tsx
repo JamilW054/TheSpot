@@ -4,19 +4,19 @@ import { forwardRef } from "react";
 
 const variantStyles = {
   primary:
-    "bg-primary text-primary-foreground hover:opacity-90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+    "bg-primary text-primary-foreground shadow-sm shadow-primary/20 hover:bg-primary/90 focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0",
   secondary:
-    "bg-secondary text-secondary-foreground hover:opacity-90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+    "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/90 focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0",
   outline:
-    "border-2 border-border bg-transparent hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+    "border border-border/80 bg-background hover:bg-muted/80 focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0",
   ghost:
-    "bg-transparent hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+    "bg-transparent hover:bg-muted/80 focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0",
 } as const;
 
 const sizeStyles = {
-  sm: "h-8 px-3 text-sm rounded-md",
-  md: "h-10 px-4 text-base rounded-md",
-  lg: "h-12 px-6 text-lg rounded-lg",
+  sm: "h-9 px-3 text-sm rounded-lg",
+  md: "h-11 px-4 text-sm rounded-xl",
+  lg: "h-12 px-6 text-base rounded-xl",
 } as const;
 
 export type ButtonVariant = keyof typeof variantStyles;
@@ -46,7 +46,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         type={type}
         disabled={disabled}
-        className={`inline-flex items-center justify-center font-medium transition-opacity disabled:opacity-50 disabled:pointer-events-none ${variantStyles[variant]} ${sizeStyles[size]} ${className}`.trim()}
+        className={`inline-flex items-center justify-center gap-2 font-medium transition-all disabled:pointer-events-none disabled:opacity-50 ${variantStyles[variant]} ${sizeStyles[size]} ${className}`.trim()}
         {...props}
       >
         {children}

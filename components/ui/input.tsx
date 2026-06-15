@@ -5,6 +5,7 @@ import { useId } from "react";
 export interface InputProps
   extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "size"> {
   label?: string;
+  help?: string;
   error?: string;
   /** Con borde por defecto; false para estilo sin borde (solo fondo sutil) */
   bordered?: boolean;
@@ -12,6 +13,7 @@ export interface InputProps
 
 export function Input({
   label,
+  help,
   error,
   bordered = true,
   id: idProp,
@@ -28,9 +30,9 @@ export function Input({
   const errorId = error ? `${id}-error` : undefined;
 
   const baseInput =
-    "w-full rounded-md bg-background font-medium transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:opacity-50 disabled:pointer-events-none";
+    "w-full rounded-xl bg-background/90 font-medium text-foreground shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0 disabled:pointer-events-none disabled:opacity-50";
   const borderStyle = bordered
-    ? "border border-border px-3 py-2"
+    ? "border border-border/80 px-3 py-2.5"
     : "border-0 border-b border-border bg-muted/30 px-2 py-1.5";
   const errorStyle = error
     ? "border-destructive focus-visible:ring-destructive"
@@ -62,6 +64,8 @@ export function Input({
         <p id={errorId} role="alert" className="text-sm text-destructive">
           {error}
         </p>
+      ) : help ? (
+        <p className="text-xs text-muted-foreground">{help}</p>
       ) : null}
     </div>
   );

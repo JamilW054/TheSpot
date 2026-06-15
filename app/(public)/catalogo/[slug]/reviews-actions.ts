@@ -1,11 +1,9 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { createClient } from "@/lib/supabase/server";
 
-export type ReviewActionResult =
-  | { ok: true }
-  | { ok: false; error: string };
+export type ReviewActionResult = { ok: true } | { ok: false; error: string };
 
 export async function submitReviewAction(
   productId: string,
@@ -28,18 +26,31 @@ export async function submitReviewAction(
 
   const trimmedBody = body.trim() || null;
 
-  const { error } = await supabase.from("product_reviews").upsert(
-    {
-      product_id: productId,
-      user_id: user.id,
-      rating,
-      body: trimmedBody,
-    },
-    { onConflict: "product_id,user_id" },
-  );
+  // El esquema nuevo no tiene índice único (product_id,user_id): upsert manual.
+  const { data: existing } = await supabase
+    .from("reviews")
+    .select("id")
+    .eq("product_id", productId)
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  const { error } = existing
+    ? await supabase
+        .from("reviews")
+        .update({ rating, body: trimmedBody })
+        .eq("id", (existing as { id: string }).id)
+    : await supabase.from("reviews").insert({
+        product_id: productId,
+        user_id: user.id,
+        rating,
+        body: trimmedBody,
+      });
 
   if (error) {
-    return { ok: false, error: "No se pudo guardar la reseña. Intenta de nuevo." };
+    return {
+      ok: false,
+      error: "No se pudo guardar la reseña. Intenta de nuevo.",
+    };
   }
 
   revalidatePath(`/catalogo/${productSlug}`);
@@ -60,7 +71,7 @@ export async function deleteReviewAction(
   }
 
   const { error } = await supabase
-    .from("product_reviews")
+    .from("reviews")
     .delete()
     .eq("product_id", productId)
     .eq("user_id", user.id);

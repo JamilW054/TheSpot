@@ -55,7 +55,7 @@ export async function POST(request: Request) {
       : profile?.role;
   const role = resolveUserRole(
     user.email,
-    typeof pr === "string" ? pr : undefined,
+    typeof pr === "string" || typeof pr === "number" ? pr : undefined,
   );
 
   if (requireAdminUpload() && role !== "admin") {

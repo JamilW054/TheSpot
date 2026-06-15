@@ -25,7 +25,16 @@ function formatPrice(cents: number, currency = "DOP"): string {
 }
 
 export function compraEmailHtml(data: CompraEmailData): string {
-  const { name, orderId, orderNumber, items, subtotal, shipping, total, currency = "DOP" } = data;
+  const {
+    name,
+    orderId,
+    orderNumber,
+    items,
+    subtotal,
+    shipping,
+    total,
+    currency = "DOP",
+  } = data;
   const fmt = (c: number) => formatPrice(c, currency);
 
   const itemRows = items
@@ -205,10 +214,21 @@ export function compraEmailHtml(data: CompraEmailData): string {
 }
 
 export function compraEmailText(data: CompraEmailData): string {
-  const { name, orderNumber, items, subtotal, shipping, total, currency = "DOP" } = data;
+  const {
+    name,
+    orderNumber,
+    items,
+    subtotal,
+    shipping,
+    total,
+    currency = "DOP",
+  } = data;
   const fmt = (c: number) => formatPrice(c, currency);
   const lines = items
-    .map((i) => `  - ${i.name}${i.size ? ` (${i.size})` : ""} x${i.quantity}: ${fmt(i.unitPrice * i.quantity)}`)
+    .map(
+      (i) =>
+        `  - ${i.name}${i.size ? ` (${i.size})` : ""} x${i.quantity}: ${fmt(i.unitPrice * i.quantity)}`,
+    )
     .join("\n");
   return `BUXXEP — Pedido confirmado #${orderNumber}\n\nHola ${name},\n\n${lines}\n\nSubtotal: ${fmt(subtotal)}\nEnvío: ${shipping === 0 ? "GRATIS" : fmt(shipping)}\nTOTAL: ${fmt(total)}\n\nhttps://buxxep.vercel.app/mis-disenos\n\n— BUXXEP`;
 }

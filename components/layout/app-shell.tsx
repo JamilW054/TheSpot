@@ -28,13 +28,13 @@ export function AppShell({
   onLogout,
 }: AppShellProps) {
   const pathname = usePathname();
-  const isEditor = pathname?.startsWith("/editor") ?? false;
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(isEditor);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: close sidebar on route change
   useEffect(() => {
-    if (isEditor) setSidebarCollapsed(true);
-  }, [isEditor]);
+    setSidebarOpen(false);
+  }, [pathname]);
 
   const { href: homeHref, label: homeLabel } = SHELL_HOME[variant];
 
@@ -67,14 +67,8 @@ export function AppShell({
           onLogout={onLogout}
           onMenuClick={() => setSidebarOpen(true)}
         />
-        <main
-          className={`flex-1 min-w-0 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-6 sm:pb-6 ${isEditor ? "scrollbar-hide overflow-hidden" : ""}`}
-        >
-          {isEditor ? (
-            children
-          ) : (
-            <div className="mx-auto w-full min-w-0 max-w-5xl">{children}</div>
-          )}
+        <main className="flex-1 min-w-0 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-6 sm:pb-6">
+          <div className="mx-auto w-full min-w-0 max-w-5xl">{children}</div>
         </main>
       </div>
     </div>

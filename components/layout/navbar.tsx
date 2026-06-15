@@ -73,14 +73,22 @@ export function Navbar({
 
   const displayName = user?.name ?? user?.email ?? null;
 
+  const initials = displayName
+    ? displayName
+        .split(" ")
+        .slice(0, 2)
+        .map((w) => w[0]?.toUpperCase() ?? "")
+        .join("")
+    : "?";
+
   return (
-    <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center justify-between gap-2 border-b border-border bg-background/95 px-3 supports-backdrop-filter:bg-background/60 sm:gap-4 sm:px-6">
+    <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center justify-between gap-2 border-b border-border bg-background/95 px-3 backdrop-blur-sm sm:gap-4 sm:px-5">
       <div className="flex min-w-0 items-center gap-2">
         {onMenuClick ? (
           <button
             type="button"
             onClick={onMenuClick}
-            className="md:hidden p-2 -ml-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring"
+            className="md:hidden -ml-1 rounded-[10px] p-2 text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
             aria-label="Abrir menú"
           >
             <MenuIcon />
@@ -88,7 +96,7 @@ export function Navbar({
         ) : null}
         <Link
           href={homeHref}
-          className="min-w-0 truncate rounded-md font-semibold text-foreground hover:opacity-90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          className="min-w-0 truncate rounded-[10px] text-[15px] font-semibold tracking-tight text-primary hover:opacity-80 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         >
           {homeLabelShort ? (
             <>
@@ -100,9 +108,10 @@ export function Navbar({
           )}
         </Link>
       </div>
-      <div className="flex min-w-0 items-center gap-1.5 sm:gap-3">
+
+      <div className="flex min-w-0 items-center gap-2">
         {!hideCart ? <CartNavLink /> : null}
-        {sessionRole === "admin" ? (
+        {sessionRole === "admin" && !hideCart ? (
           <Link
             href="/admin"
             className="hidden text-sm font-medium text-primary underline-offset-4 hover:underline sm:inline shrink-0"
@@ -111,26 +120,24 @@ export function Navbar({
           </Link>
         ) : null}
         {user ? (
-          <>
+          <div className="flex items-center gap-2">
             {displayName ? (
               <span
-                className="hidden text-sm text-muted-foreground truncate sm:inline max-w-50"
+                className="hidden max-w-40 truncate text-sm text-muted-foreground sm:inline"
                 title={displayName}
               >
-                Hola, {displayName}
+                {displayName}
               </span>
             ) : null}
-            <Button
+            <button
               type="button"
-              variant="outline"
-              size="sm"
               onClick={onLogout}
-              className="shrink-0"
+              title="Cerrar sesión"
+              className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/15 text-[12px] font-semibold text-primary transition-colors hover:bg-primary/25"
             >
-              <span className="sm:hidden">Salir</span>
-              <span className="hidden sm:inline">Cerrar sesión</span>
-            </Button>
-          </>
+              {initials}
+            </button>
+          </div>
         ) : (
           <Link href="/login">
             <Button type="button" variant="outline" size="sm">

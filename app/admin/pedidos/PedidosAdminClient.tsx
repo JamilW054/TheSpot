@@ -1,11 +1,11 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+import { useTransition } from "react";
 import { PageLayout } from "@/components/layout";
 import { PedidosTable } from "@/features/admin";
 import { adminSetOrdersStatus } from "@/lib/actions/orders-admin";
 import type { Pedido } from "@/types";
-import { useRouter } from "next/navigation";
-import { useTransition } from "react";
 
 export function PedidosAdminClient({ pedidos }: { pedidos: Pedido[] }) {
   const router = useRouter();

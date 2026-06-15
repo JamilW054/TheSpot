@@ -63,11 +63,7 @@ export function verifyAzulResponseSignature(
   payload: AzulReturnPayload,
   secretKey: string,
 ): boolean {
-  const sigRaw = (
-    payload.AuthHash ??
-    payload.Signature ??
-    ""
-  ).trim();
+  const sigRaw = (payload.AuthHash ?? payload.Signature ?? "").trim();
 
   if (!sigRaw || !secretKey) {
     return false;
