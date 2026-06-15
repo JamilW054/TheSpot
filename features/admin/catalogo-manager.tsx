@@ -13,11 +13,13 @@ import {
   type AdminProductRow,
 } from "@/lib/db/products";
 import { formatDOPFromCents } from "@/lib/format-currency";
+import type { CategoryRow } from "@/lib/db/categories";
+import type { SizePresetRow } from "@/lib/db/size-presets";
 
 interface Props {
   initialProducts: AdminProductRow[];
-  categories: { id: string; name: string; size_preset_id?: string | null }[];
-  sizePresets: { id: string; name: string; sizes: string[] }[];
+  categories: CategoryRow[];
+  sizePresets: SizePresetRow[];
   brands: { id: string; name: string }[];
   lineas: { id: string; name: string }[];
   warehouses: { id: string; name: string }[];
