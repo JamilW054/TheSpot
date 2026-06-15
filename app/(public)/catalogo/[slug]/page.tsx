@@ -1,8 +1,8 @@
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ChevronRight, ShieldCheck, Truck } from "lucide-react";
 import { AddToCartButton } from "@/components/catalog/AddToCartButton";
-import { CatalogProductViewerWithDesign } from "@/components/catalog/CatalogProductViewerWithDesign";
+import { ProductGallery } from "@/components/catalog/ProductGallery";
 import { ProductReviews } from "@/components/catalog/ProductReviews";
 import { getProductBySlug } from "@/lib/db";
 import { getProductReviews, getUserReviewForProduct } from "@/lib/db/reviews";
@@ -17,23 +17,19 @@ export async function generateMetadata({ params }: PageProps) {
   const product = await getProductBySlug(slug);
   if (!product) return { title: "Producto | Buxxep" };
   return {
-    title: `${product.name} | Catálogo Buxxep`,
+    title: `${product.name} | Buxxep`,
     description: product.description,
+    openGraph: {
+      images: product.coverImage ? [{ url: product.coverImage }] : [],
+    },
   };
-}
-
-/** placehold.co suele servir SVG; el resto (R2, Supabase, etc.) pasa por optimización de `next/image`. */
-function imageNeedsUnoptimized(src: string): boolean {
-  return src.includes("placehold.co");
 }
 
 export default async function CatalogProductPage({ params }: PageProps) {
   const { slug } = await params;
   const product = await getProductBySlug(slug);
 
-  if (!product) {
-    notFound();
-  }
+  if (!product) notFound();
 
   const supabase = await createClient();
   const {
@@ -45,111 +41,151 @@ export default async function CatalogProductPage({ params }: PageProps) {
     getUserReviewForProduct(product.id),
   ]);
 
+  const hasDiscount =
+    product.originalPriceCents != null &&
+    product.originalPriceCents > product.priceCents;
+
+  const discountPct = hasDiscount
+    ? Math.round(
+        ((product.originalPriceCents! - product.priceCents) /
+          product.originalPriceCents!) *
+          100,
+      )
+    : 0;
+
+  const gallery =
+    product.gallery.length > 0 ? product.gallery : [product.coverImage].filter(Boolean);
+
   return (
-    <article className="min-h-0 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-16 sm:pb-20 pt-4 sm:pt-6">
-      <nav className="mb-4 sm:mb-6" aria-label="Navegación">
-        <Link
-          href="/catalogo"
-          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <svg
-            className="size-4 shrink-0"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            aria-label="Volver al catálogo"
-          >
-            <title>Volver al catálogo</title>
-            <path d="M19 12H5M12 19l-7-7 7-7" />
-          </svg>
-          Catálogo
-        </Link>
-      </nav>
+    <div className="min-h-screen">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 pb-20 pt-6">
 
-      <div className="grid gap-6 sm:gap-8 lg:grid-cols-2 lg:gap-12 lg:items-start">
-        <section className="space-y-4 min-w-0" aria-label="Vista del producto">
-          <div className="relative aspect-square overflow-hidden rounded-2xl border border-border bg-muted/30 shadow-sm">
-            <Image
-              src={product.coverImage}
-              alt={product.name}
-              fill
-              className="object-cover object-top"
-              sizes="(max-width: 1024px) 100vw, 50vw"
-              priority
-              unoptimized={imageNeedsUnoptimized(product.coverImage)}
-            />
-          </div>
-          <div className="rounded-2xl border border-border bg-muted/20 overflow-hidden">
-            <p className="px-3 py-2 text-xs font-medium uppercase tracking-wider text-muted-foreground border-b border-border bg-muted/30">
-              Vista previa
-            </p>
-            <div className="aspect-square min-h-[240px] sm:min-h-[300px] w-full">
-              <CatalogProductViewerWithDesign
-                product={product}
-                design={null}
-                compact
-              />
-            </div>
-          </div>
-        </section>
-
-        <section className="flex flex-col min-w-0 lg:sticky lg:top-24">
-          <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl lg:text-3xl">
-            {product.name}
-          </h1>
-          <p className="mt-2 text-xl font-semibold text-primary sm:text-2xl">
-            {product.price}
-          </p>
-          <p className="mt-3 text-muted-foreground text-sm sm:text-base leading-relaxed">
-            {product.description}
-          </p>
-
-          <div className="mt-6 sm:mt-8 rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
-            <div className="px-4 py-3 border-b border-border bg-muted/20">
-              <span className="text-sm font-medium text-foreground">
-                Acciones
-              </span>
-            </div>
-            <div className="p-4 flex flex-col gap-3">
-              <AddToCartButton
-                productId={product.id}
-                sizes={product.sizes}
-                variant="primary"
-                className="w-full justify-center rounded-xl py-3.5 text-base font-medium"
-              />
-            </div>
-          </div>
-
-          <Link
-            href="/catalogo"
-            className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <svg
-              className="size-4"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              aria-label="Ver todos los productos"
-            >
-              <title>Ver todos los productos</title>
-              <path d="M19 12H5M12 19l-7-7 7-7" />
-            </svg>
-            Ver todos los productos
+        {/* ── Breadcrumb ── */}
+        <nav aria-label="Breadcrumb" className="mb-6 flex items-center gap-1.5 text-xs text-muted-foreground">
+          <Link href="/" className="hover:text-foreground transition-colors">
+            Inicio
           </Link>
-        </section>
-      </div>
+          <ChevronRight className="size-3 shrink-0" aria-hidden />
+          <Link href="/catalogo" className="hover:text-foreground transition-colors">
+            Catálogo
+          </Link>
+          {product.brandName && (
+            <>
+              <ChevronRight className="size-3 shrink-0" aria-hidden />
+              <span className="text-foreground font-medium">{product.brandName}</span>
+            </>
+          )}
+          <ChevronRight className="size-3 shrink-0" aria-hidden />
+          <span className="text-foreground font-medium truncate max-w-[160px]">{product.name}</span>
+        </nav>
 
-      <div className="mt-12 border-t border-border pt-8">
-        <ProductReviews
-          productId={product.id}
-          productSlug={slug}
-          reviews={reviews}
-          currentUserId={user?.id ?? null}
-          userExistingReview={userExistingReview}
-        />
+        {/* ── Main grid ── */}
+        <div className="grid gap-8 lg:grid-cols-[1fr_440px] lg:gap-12 lg:items-start">
+
+          {/* Left — Gallery */}
+          <ProductGallery images={gallery} name={product.name} />
+
+          {/* Right — Info sticky */}
+          <div className="flex flex-col gap-6 lg:sticky lg:top-24">
+
+            {/* Brand + name */}
+            <div>
+              {product.brandName && (
+                <p className="mb-2 text-xs font-semibold uppercase tracking-[0.15em] text-primary">
+                  {product.brandName}
+                </p>
+              )}
+              <h1 className="text-2xl font-bold leading-tight tracking-tight text-foreground sm:text-3xl">
+                {product.name}
+              </h1>
+            </div>
+
+            {/* Pricing */}
+            <div className="flex items-end gap-3">
+              <span className="text-3xl font-bold tracking-tight text-foreground">
+                {product.price}
+              </span>
+              {hasDiscount && (
+                <>
+                  <span className="text-lg text-muted-foreground line-through">
+                    {product.originalPrice}
+                  </span>
+                  <span className="inline-flex items-center rounded-full bg-primary/15 px-2 py-0.5 text-xs font-bold text-primary">
+                    -{discountPct}%
+                  </span>
+                </>
+              )}
+            </div>
+
+            {/* Divider */}
+            <div className="h-px bg-border" />
+
+            {/* Sizes + Add to cart */}
+            <AddToCartButton
+              productId={product.id}
+              sizes={product.sizes}
+              variant="primary"
+              className="w-full justify-center rounded-xl py-3.5 text-[15px] font-semibold"
+            />
+
+            {/* Divider */}
+            <div className="h-px bg-border" />
+
+            {/* Perks */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                <Truck className="size-4 shrink-0 text-primary" aria-hidden />
+                <span>Envío gratis en pedidos superiores a DOP 3,000</span>
+              </div>
+              <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                <ShieldCheck className="size-4 shrink-0 text-primary" aria-hidden />
+                <span>Pago seguro · Devoluciones en 30 días</span>
+              </div>
+            </div>
+
+            {/* Description */}
+            {product.description && (
+              <>
+                <div className="h-px bg-border" />
+                <div>
+                  <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">
+                    Descripción
+                  </p>
+                  <p className="text-sm leading-relaxed text-muted-foreground">
+                    {product.description}
+                  </p>
+                </div>
+              </>
+            )}
+
+            {/* Tags */}
+            {product.tags.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {product.tags.map((tag) => (
+                  <Link
+                    key={tag}
+                    href={`/catalogo?etiqueta=${tag}`}
+                    className="inline-flex items-center rounded-full border border-border px-3 py-1 text-xs font-medium text-muted-foreground transition-colors hover:border-primary/50 hover:text-primary"
+                  >
+                    {tag}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* ── Reviews ── */}
+        <div className="mt-16 border-t border-border pt-10">
+          <ProductReviews
+            productId={product.id}
+            productSlug={slug}
+            reviews={reviews}
+            currentUserId={user?.id ?? null}
+            userExistingReview={userExistingReview}
+          />
+        </div>
       </div>
-    </article>
+    </div>
   );
 }

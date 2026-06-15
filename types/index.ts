@@ -119,16 +119,25 @@ export interface CatalogProduct {
   price: string;
   /** Precio en céntimos para cálculos (total carrito, etc.). */
   priceCents: number;
+  /** Precio anterior tachado (cuando hay oferta). */
+  originalPrice?: string | null;
+  originalPriceCents?: number | null;
+  /** Nombre de la marca asociada. */
+  brandName?: string | null;
   /** Legacy en DB; la UI usa portada y texturas planas. */
   modelPath?: string | null;
   /** Imagen de portada para la ficha y el listado. */
   coverImage: string;
+  /** Todas las imágenes del producto ordenadas (cover primero). */
+  gallery: string[];
   /** URL de la textura base (tabla textures) para la vista previa. */
   baseTextureUrl?: string | null;
   /** Slug de categoría asociada en DB (null si sin categoría). */
   categorySlug: string | null;
   /** Tallas disponibles para este producto (ej. ["XS","S","M","L","XL","XXL"]). */
   sizes: string[];
+  /** Etiquetas del producto. */
+  tags: string[];
 }
 
 /** Reseña de un cliente sobre un producto. */

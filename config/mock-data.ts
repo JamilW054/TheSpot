@@ -317,7 +317,9 @@ const catalogProductRowsBase: Omit<
       "Camiseta de algodón con diseño único. Elige tu talla y personaliza el estampado en el editor.",
     priceCents: 2499,
     coverImage: unsplash("1521572163474-6864f9cf17ab", 600, 600),
+    gallery: [unsplash("1521572163474-6864f9cf17ab", 600, 600)],
     sizes: ["S", "M", "L", "XL"],
+    tags: [],
   },
   {
     id: "p02",
@@ -326,7 +328,9 @@ const catalogProductRowsBase: Omit<
       "Corte clásico para hombre. Añade texto, imágenes o dibujos con el pincel en la zona de diseño.",
     priceCents: 2699,
     coverImage: unsplash("1586790170083-2f9ceadc732d", 600, 600),
+    gallery: [unsplash("1586790170083-2f9ceadc732d", 600, 600)],
     sizes: ["S", "M", "L", "XL"],
+    tags: [],
   },
   {
     id: "p03",
@@ -335,7 +339,9 @@ const catalogProductRowsBase: Omit<
       "Sudadera con capucha. Personalízala en el editor con tu propio diseño.",
     priceCents: 4499,
     coverImage: unsplash("1556821840-3a63f95609a7", 600, 600),
+    gallery: [unsplash("1556821840-3a63f95609a7", 600, 600)],
     sizes: ["S", "M", "L", "XL", "XXL"],
+    tags: [],
   },
   {
     id: "p04",
@@ -343,7 +349,9 @@ const catalogProductRowsBase: Omit<
     description: "Bata cómoda para casa. Ideal para regalo personalizado.",
     priceCents: 3499,
     coverImage: unsplash("1615397587950-3cbb55f95b77", 600, 600),
+    gallery: [unsplash("1615397587950-3cbb55f95b77", 600, 600)],
     sizes: ["S", "M", "L", "XL"],
+    tags: [],
   },
   {
     id: "p05",
@@ -352,7 +360,9 @@ const catalogProductRowsBase: Omit<
       "Manga larga y tejido suave. Diseña tu propio estampado en el editor.",
     priceCents: 3299,
     coverImage: unsplash("1745695894760-600be9c8c307", 600, 600),
+    gallery: [unsplash("1745695894760-600be9c8c307", 600, 600)],
     sizes: ["XS", "S", "M", "L"],
+    tags: [],
   },
 ];
 

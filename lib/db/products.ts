@@ -50,6 +50,7 @@ export interface ProductRow {
   product_variants?: ProductVariantJoinRow[] | null;
   product_tags?: ProductTagJoinRow[] | null;
   categories?: { slug: string } | { slug: string }[] | null;
+  brands?: { name: string } | null;
 }
 
 /** Columnas (select PostgREST) para leer un producto de catálogo con sus joins. */
@@ -58,7 +59,8 @@ export const PRODUCT_CATALOG_SELECT =
   "product_media(url, media_type, is_cover, sort_order), " +
   "product_variants(id, price_cents, attributes, is_active, sort_order), " +
   "product_tags(tags(slug, name)), " +
-  "categories(slug)";
+  "categories(slug), " +
+  "brands(name)";
 
 /** Variante con datos completos para el admin (SKU, inventario). */
 export interface AdminVariantRow {
@@ -120,6 +122,19 @@ export function coverFromMedia(
   return cover?.url ?? "";
 }
 
+/** Galería ordenada: cover primero, resto por sort_order. */
+export function galleryFromMedia(
+  media: ProductMediaRow[] | null | undefined,
+): string[] {
+  if (!media || media.length === 0) return [];
+  const sorted = [...media].sort(
+    (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0),
+  );
+  const cover = sorted.find((m) => m.is_cover) ?? sorted[0];
+  const rest = sorted.filter((m) => m.url !== cover?.url);
+  return [cover, ...rest].map((m) => m?.url ?? "").filter(Boolean);
+}
+
 /** Precio efectivo: menor precio de variante activa, o el precio base. */
 export function effectivePriceCents(row: ProductRow): number {
   const variantPrices = (row.product_variants ?? [])
@@ -168,6 +183,7 @@ export function tagsFromRow(
 
 export function rowToCatalogProduct(row: ProductRow): CatalogProduct {
   const priceCents = effectivePriceCents(row);
+  const originalCents = toCents(row.original_price_cents ?? null);
   return {
     id: row.id,
     slug: row.slug,
@@ -175,9 +191,15 @@ export function rowToCatalogProduct(row: ProductRow): CatalogProduct {
     description: row.description ?? "",
     price: formatDOPFromCents(priceCents),
     priceCents,
+    originalPrice: originalCents > 0 ? formatDOPFromCents(originalCents) : null,
+    originalPriceCents: originalCents > 0 ? originalCents : null,
+    brandName: row.brands?.name ?? null,
     modelPath: null,
     coverImage: coverFromMedia(row.product_media),
+    gallery: galleryFromMedia(row.product_media),
+    baseTextureUrl: null,
     categorySlug: categorySlugFromRow(row.categories),
     sizes: sizesFromVariants(row.product_variants),
+    tags: tagsFromRow(row.product_tags),
   };
 }
