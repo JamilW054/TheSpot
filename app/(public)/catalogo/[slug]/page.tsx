@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ChevronRight, ShieldCheck, Truck } from "lucide-react";
 import { AddToCartButton } from "@/components/catalog/AddToCartButton";
 import { ProductGallery } from "@/components/catalog/ProductGallery";
+import { WishlistButton } from "@/components/catalog/WishlistButton";
 import { ProductReviews } from "@/components/catalog/ProductReviews";
 import { getProductBySlug } from "@/lib/db";
 import { getProductReviews, getUserReviewForProduct } from "@/lib/db/reviews";
@@ -121,12 +122,19 @@ export default async function CatalogProductPage({ params }: PageProps) {
             <div className="h-px bg-border" />
 
             {/* Sizes + Add to cart */}
-            <AddToCartButton
-              productId={product.id}
-              sizes={product.sizes}
-              variant="primary"
-              className="w-full justify-center rounded-xl py-3.5 text-[15px] font-semibold"
-            />
+            <div className="flex gap-3">
+              <AddToCartButton
+                productId={product.id}
+                sizes={product.sizes}
+                variant="primary"
+                className="flex-1 justify-center rounded-xl py-3.5 text-[15px] font-semibold"
+              />
+              <WishlistButton
+                productId={product.id}
+                size="md"
+                className="size-13 rounded-xl border border-border/60 bg-muted/30 hover:border-primary/50 shrink-0"
+              />
+            </div>
 
             {/* Divider */}
             <div className="h-px bg-border" />

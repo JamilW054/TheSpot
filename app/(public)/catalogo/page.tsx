@@ -2,11 +2,10 @@ import { Search } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
-import { AddToCartButton } from "@/components/catalog/AddToCartButton";
 import { CatalogFilterChips } from "@/components/catalog/CatalogFilterChips";
 import { CatalogMobileFilters } from "@/components/catalog/CatalogMobileFilters";
-import { CatalogProductViewerWithDesign } from "@/components/catalog/CatalogProductViewerWithDesign";
 import { CatalogSupabaseDebugLog } from "@/components/catalog/CatalogSupabaseDebugLog";
+import { ProductCard } from "@/components/catalog/ProductCard";
 import {
   CATALOG_PRECIO_LABELS,
   type CatalogPrecio,
@@ -308,51 +307,7 @@ export default async function CatalogPage({ searchParams }: PageProps) {
           </p>
         ) : null}
         {products.map((product) => (
-          <article
-            key={product.id}
-            className="group/card flex flex-col overflow-hidden rounded-xl border border-border/80 bg-card transition-[border-color,box-shadow] duration-200 hover:border-primary/40 hover:shadow-[0_8px_32px_-12px_rgba(60,200,247,0.22)]"
-          >
-            <Link
-              href={`/catalogo/${product.slug}`}
-              className="relative flex aspect-3/4 overflow-hidden bg-muted"
-            >
-              <div className="relative h-full w-full">
-                <CatalogProductViewerWithDesign
-                  product={product}
-                  design={null}
-                  compact
-                />
-              </div>
-            </Link>
-            <div className="flex flex-col gap-1.5 border-t border-border/60 p-2.5 sm:p-3">
-              <h2 className="text-xs font-semibold leading-tight text-card-foreground line-clamp-1 sm:text-sm">
-                <Link
-                  href={`/catalogo/${product.slug}`}
-                  className="hover:text-primary transition-colors"
-                >
-                  {product.name}
-                </Link>
-              </h2>
-              <div className="flex items-center justify-between gap-2">
-                <span className="tabular-nums text-sm font-bold text-primary">
-                  {product.price}
-                </span>
-                <AddToCartButton
-                  productId={product.id}
-                  variant="primary"
-                  className="inline-flex shrink-0 rounded-lg text-[10px] px-2 py-1 sm:text-xs sm:px-3 sm:py-1.5"
-                />
-              </div>
-              <div className="flex gap-1.5 pt-0.5">
-                <Link
-                  href={`/catalogo/${product.slug}`}
-                  className="flex-1 inline-flex items-center justify-center rounded-md border border-border/80 bg-transparent px-2 py-1.5 text-[10px] font-medium text-foreground transition-colors hover:bg-muted/60 sm:text-xs"
-                >
-                  Ver
-                </Link>
-              </div>
-            </div>
-          </article>
+          <ProductCard key={product.id} product={product} />
         ))}
       </section>
     </article>

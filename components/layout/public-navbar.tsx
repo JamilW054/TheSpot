@@ -1,6 +1,7 @@
 "use client";
 
 import { CartNavLink } from "@/components/layout/CartNavLink";
+import { WishlistNavLink } from "@/components/layout/WishlistNavLink";
 import { NavbarSearch } from "@/components/layout/NavbarSearch";
 import StaggeredMenu from "@/components/StaggeredMenu";
 import { ORDER_STATUS_PAGE } from "@/config/navigation";
@@ -52,7 +53,10 @@ export function PublicNavbar({ categories }: Props) {
       closeAriaLabel="Cerrar menú"
       headerCenter={<NavbarSearch categories={categories} />}
       headerTrailing={
-        <CartNavLink className="text-white/90 hover:bg-white/15 hover:text-white focus-visible:ring-white/40 focus-visible:ring-offset-0" />
+        <div className="flex items-center gap-0.5">
+          <WishlistNavLink className="text-white/90 hover:bg-white/15 hover:text-white focus-visible:ring-white/40 focus-visible:ring-offset-0" />
+          <CartNavLink className="text-white/90 hover:bg-white/15 hover:text-white focus-visible:ring-white/40 focus-visible:ring-offset-0" />
+        </div>
       }
     />
   );

@@ -240,6 +240,24 @@ export async function getProductById(
   }, null);
 }
 
+export async function getProductsByIds(
+  ids: string[],
+): Promise<CatalogProduct[]> {
+  if (ids.length === 0) return [];
+  return withNetworkFallback(async () => {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("products")
+      .select(productCatalogSelect)
+      .eq("is_active", true)
+      .in("id", ids);
+    if (error) throw toError(error);
+    return (data ?? []).map((row) =>
+      rowToCatalogProduct(row as unknown as ProductRow),
+    );
+  }, []);
+}
+
 /** Catálogo completo para admin (incluye no publicados). Service role. */
 export async function getProductsAdmin(): Promise<AdminProductRow[]> {
   return withNetworkFallback(async () => {
