@@ -2,11 +2,15 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronRight, ShieldCheck, Truck } from "lucide-react";
 import { AddToCartButton } from "@/components/catalog/AddToCartButton";
+import { ProductPageEnter } from "@/components/catalog/ProductPageEnter";
 import { ProductGallery } from "@/components/catalog/ProductGallery";
 import { WishlistButton } from "@/components/catalog/WishlistButton";
 import { ProductReviews } from "@/components/catalog/ProductReviews";
+import { StickyBuyBar } from "@/components/catalog/StickyBuyBar";
 import { getProductBySlug } from "@/lib/db";
 import { getProductReviews, getUserReviewForProduct } from "@/lib/db/reviews";
+import { getStockBySizeForProduct } from "@/lib/db/inventory";
+import { formatDOPFromCents } from "@/lib/format-currency";
 import { createClient } from "@/lib/supabase/server";
 
 interface PageProps {
@@ -37,9 +41,10 @@ export default async function CatalogProductPage({ params }: PageProps) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const [reviews, userExistingReview] = await Promise.all([
+  const [reviews, userExistingReview, stockBySize] = await Promise.all([
     getProductReviews(product.id),
     getUserReviewForProduct(product.id),
+    getStockBySizeForProduct(product.id),
   ]);
 
   const hasDiscount =
@@ -54,146 +59,209 @@ export default async function CatalogProductPage({ params }: PageProps) {
       )
     : 0;
 
+  const savingsFormatted = hasDiscount
+    ? formatDOPFromCents(product.originalPriceCents! - product.priceCents)
+    : "";
+
+  const totalStock = Object.values(stockBySize).reduce((s, n) => s + n, 0);
+  const isAvailable =
+    Object.keys(stockBySize).length === 0 || totalStock > 0;
+
+  const hasRating = product.ratingAvg != null && product.reviewCount > 0;
+  const ratingFull = hasRating ? Math.round(product.ratingAvg!) : 0;
+
   const gallery =
-    product.gallery.length > 0 ? product.gallery : [product.coverImage].filter(Boolean);
+    product.gallery.length > 0
+      ? product.gallery
+      : [product.coverImage].filter(Boolean);
 
   return (
-    <div className="min-h-screen">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 pb-20 pt-6">
+    <>
+      <ProductPageEnter>
+      <div className="min-h-screen pb-24 lg:pb-0">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 pt-6 pb-20">
 
-        {/* ── Breadcrumb ── */}
-        <nav aria-label="Breadcrumb" className="mb-6 flex items-center gap-1.5 text-xs text-muted-foreground">
-          <Link href="/" className="hover:text-foreground transition-colors">
-            Inicio
-          </Link>
-          <ChevronRight className="size-3 shrink-0" aria-hidden />
-          <Link href="/catalogo" className="hover:text-foreground transition-colors">
-            Catálogo
-          </Link>
-          {product.brandName && (
-            <>
-              <ChevronRight className="size-3 shrink-0" aria-hidden />
-              <span className="text-foreground font-medium">{product.brandName}</span>
-            </>
-          )}
-          <ChevronRight className="size-3 shrink-0" aria-hidden />
-          <span className="text-foreground font-medium truncate max-w-[160px]">{product.name}</span>
-        </nav>
+          {/* Breadcrumb */}
+          <nav
+            data-enter="nav"
+            aria-label="Breadcrumb"
+            className="mb-8 flex items-center gap-1.5 text-xs text-muted-foreground"
+          >
+            <Link href="/" className="hover:text-foreground transition-colors">
+              Inicio
+            </Link>
+            <ChevronRight className="size-3 shrink-0" aria-hidden />
+            <Link href="/catalogo" className="hover:text-foreground transition-colors">
+              Catálogo
+            </Link>
+            {product.brandName && (
+              <>
+                <ChevronRight className="size-3 shrink-0" aria-hidden />
+                <span>{product.brandName}</span>
+              </>
+            )}
+            <ChevronRight className="size-3 shrink-0" aria-hidden />
+            <span className="truncate max-w-40 text-foreground font-medium">
+              {product.name}
+            </span>
+          </nav>
 
-        {/* ── Main grid ── */}
-        <div className="grid gap-8 lg:grid-cols-[1fr_440px] lg:gap-12 lg:items-start">
+          {/* ── Main grid ── */}
+          <div className="grid gap-8 lg:grid-cols-[1fr_420px] lg:gap-14 lg:items-start">
 
-          {/* Left — Gallery */}
-          <ProductGallery images={gallery} name={product.name} />
+            {/* LEFT — Gallery, sticky on desktop */}
+            <div data-enter="gallery" className="lg:sticky lg:top-6 lg:self-start">
+              <ProductGallery images={gallery} name={product.name} />
+            </div>
 
-          {/* Right — Info sticky */}
-          <div className="flex flex-col gap-6 lg:sticky lg:top-24">
+            {/* RIGHT — Info panel, scrolls naturally with the page */}
+            <div data-enter="info" id="add-to-cart-section" className="flex flex-col gap-5 min-w-0">
 
-            {/* Brand + name */}
-            <div>
-              {product.brandName && (
-                <p className="mb-2 text-xs font-semibold uppercase tracking-[0.15em] text-primary">
-                  {product.brandName}
-                </p>
-              )}
-              <h1 className="text-2xl font-bold leading-tight tracking-tight text-foreground sm:text-3xl">
+              {/* Brand + availability badge */}
+              <div className="flex items-center justify-between gap-2">
+                {product.brandName ? (
+                  <p className="text-[10px] font-black uppercase tracking-[0.22em] text-muted-foreground">
+                    {product.brandName}
+                  </p>
+                ) : (
+                  <span />
+                )}
+                <span
+                  className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-bold leading-none ${
+                    isAvailable
+                      ? "bg-green-500/15 text-green-400"
+                      : "bg-destructive/15 text-destructive"
+                  }`}
+                >
+                  <span className="size-1.5 rounded-full bg-current" aria-hidden />
+                  {isAvailable ? "Disponible" : "Agotado"}
+                </span>
+              </div>
+
+              {/* Product name */}
+              <h1 className="text-2xl font-bold leading-tight tracking-tight text-foreground sm:text-[1.75rem]">
                 {product.name}
               </h1>
-            </div>
 
-            {/* Pricing */}
-            <div className="flex items-end gap-3">
-              <span className="text-3xl font-bold tracking-tight text-foreground">
-                {product.price}
-              </span>
-              {hasDiscount && (
-                <>
-                  <span className="text-lg text-muted-foreground line-through">
-                    {product.originalPrice}
+              {/* Stars + review count link */}
+              {hasRating && (
+                <div className="flex items-center gap-2">
+                  <span className="text-yellow-400 text-sm leading-none">
+                    {"★".repeat(ratingFull)}
+                    {"☆".repeat(5 - ratingFull)}
                   </span>
-                  <span className="inline-flex items-center rounded-full bg-primary/15 px-2 py-0.5 text-xs font-bold text-primary">
-                    -{discountPct}%
+                  <span className="text-sm font-bold text-foreground tabular-nums">
+                    {product.ratingAvg!.toFixed(1)}
                   </span>
-                </>
+                  <span className="text-muted-foreground/60 text-sm">·</span>
+                  <a
+                    href="#reviews"
+                    className="text-sm text-muted-foreground hover:text-primary transition-colors hover:underline underline-offset-2"
+                  >
+                    {product.reviewCount}{" "}
+                    {product.reviewCount === 1 ? "reseña" : "reseñas"}
+                  </a>
+                </div>
               )}
-            </div>
 
-            {/* Divider */}
-            <div className="h-px bg-border" />
+              {/* Price + discount + wishlist */}
+              <div className="flex items-start justify-between gap-3 flex-wrap">
+                <div>
+                  <p className="text-4xl font-black text-primary tabular-nums leading-none">
+                    {product.price}
+                  </p>
+                  {hasDiscount && (
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                      <span className="text-sm text-muted-foreground line-through tabular-nums">
+                        {product.originalPrice}
+                      </span>
+                      <span className="inline-flex items-center rounded-full bg-green-500/15 px-2.5 py-0.5 text-[11px] font-bold text-green-400">
+                        Ahorras {savingsFormatted}
+                      </span>
+                    </div>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 mt-0.5">
+                  {hasDiscount && (
+                    <span className="rounded-full bg-destructive/15 px-2.5 py-0.5 text-xs font-black text-destructive tabular-nums">
+                      -{discountPct}%
+                    </span>
+                  )}
+                  <WishlistButton
+                    productId={product.id}
+                    size="md"
+                    className="rounded-xl border border-border/60 bg-muted/30 hover:border-primary/50"
+                  />
+                </div>
+              </div>
 
-            {/* Sizes + Add to cart */}
-            <div className="flex gap-3">
+              <div className="h-px bg-border/60" />
+
+              {/* Sizes + Quantity + Add to cart */}
               <AddToCartButton
                 productId={product.id}
                 sizes={product.sizes}
+                stockBySize={stockBySize}
                 variant="primary"
-                className="flex-1 justify-center rounded-xl py-3.5 text-[15px] font-semibold"
+                className="w-full justify-center rounded-xl py-3.5 text-[15px] font-semibold"
               />
-              <WishlistButton
-                productId={product.id}
-                size="md"
-                className="size-13 rounded-xl border border-border/60 bg-muted/30 hover:border-primary/50 shrink-0"
-              />
-            </div>
 
-            {/* Divider */}
-            <div className="h-px bg-border" />
-
-            {/* Perks */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                <Truck className="size-4 shrink-0 text-primary" aria-hidden />
-                <span>Envío gratis en pedidos superiores a DOP 3,000</span>
+              {/* Perks card */}
+              <div className="divide-y divide-border/50 rounded-xl border border-border/50 bg-muted/20">
+                <div className="flex items-center gap-3 px-4 py-3 text-sm text-muted-foreground">
+                  <Truck className="size-4 shrink-0 text-primary" aria-hidden />
+                  <span>Envío gratis en pedidos superiores a DOP 3,000</span>
+                </div>
+                <div className="flex items-center gap-3 px-4 py-3 text-sm text-muted-foreground">
+                  <ShieldCheck className="size-4 shrink-0 text-primary" aria-hidden />
+                  <span>Pago seguro · Devoluciones en 30 días</span>
+                </div>
               </div>
-              <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                <ShieldCheck className="size-4 shrink-0 text-primary" aria-hidden />
-                <span>Pago seguro · Devoluciones en 30 días</span>
-              </div>
-            </div>
 
-            {/* Description */}
-            {product.description && (
-              <>
-                <div className="h-px bg-border" />
+              {/* Description */}
+              {product.description && (
                 <div>
-                  <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">
+                  <p className="mb-2 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">
                     Descripción
                   </p>
                   <p className="text-sm leading-relaxed text-muted-foreground">
                     {product.description}
                   </p>
                 </div>
-              </>
-            )}
+              )}
 
-            {/* Tags */}
-            {product.tags.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {product.tags.map((tag) => (
-                  <Link
-                    key={tag}
-                    href={`/catalogo?etiqueta=${tag}`}
-                    className="inline-flex items-center rounded-full border border-border px-3 py-1 text-xs font-medium text-muted-foreground transition-colors hover:border-primary/50 hover:text-primary"
-                  >
-                    {tag}
-                  </Link>
-                ))}
-              </div>
-            )}
+              {/* Tags */}
+              {product.tags.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {product.tags.map((tag) => (
+                    <Link
+                      key={tag}
+                      href={`/catalogo?etiqueta=${tag}`}
+                      className="inline-flex items-center rounded-full border border-border px-3 py-1 text-xs font-medium text-muted-foreground transition-colors hover:border-primary/50 hover:text-primary"
+                    >
+                      {tag}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
-        </div>
 
-        {/* ── Reviews ── */}
-        <div className="mt-16 border-t border-border pt-10">
-          <ProductReviews
-            productId={product.id}
-            productSlug={slug}
-            reviews={reviews}
-            currentUserId={user?.id ?? null}
-            userExistingReview={userExistingReview}
-          />
+          {/* ── Reviews — full width, below the grid, no inner scroll ── */}
+          <section id="reviews" className="mt-14 border-t border-border/60 pt-12">
+            <ProductReviews
+              productId={product.id}
+              productSlug={slug}
+              reviews={reviews}
+              currentUserId={user?.id ?? null}
+              userExistingReview={userExistingReview}
+            />
+          </section>
         </div>
       </div>
-    </div>
+      </ProductPageEnter>
+
+      <StickyBuyBar price={product.price} />
+    </>
   );
 }

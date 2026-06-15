@@ -1,25 +1,14 @@
 import { createClient } from "@/lib/supabase/server";
 import type { ProductReview } from "@/types";
 
-interface ProfileName {
-  full_name: string | null;
-  username: string | null;
-}
-
 export interface ReviewRow {
   id: string;
   product_id: string;
   user_id: string;
   rating: number;
+  title: string | null;
   body: string | null;
   created_at: string;
-  profiles: ProfileName | ProfileName[] | null;
-}
-
-function profileName(profiles: ReviewRow["profiles"]): string | null {
-  if (!profiles) return null;
-  const p = Array.isArray(profiles) ? profiles[0] : profiles;
-  return p?.full_name ?? p?.username ?? null;
 }
 
 export function rowToReview(row: ReviewRow): ProductReview {
@@ -27,12 +16,15 @@ export function rowToReview(row: ReviewRow): ProductReview {
     id: row.id,
     productId: row.product_id,
     userId: row.user_id,
-    userName: profileName(row.profiles),
+    userName: null,
     rating: row.rating,
-    body: row.body,
+    title: row.title ?? null,
+    body: row.body ?? null,
     createdAt: row.created_at,
   };
 }
+
+const REVIEW_SELECT = "id, product_id, user_id, rating, title, body, created_at";
 
 export async function getProductReviews(
   productId: string,
@@ -40,12 +32,14 @@ export async function getProductReviews(
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("reviews")
-    .select(
-      "id, product_id, user_id, rating, body, created_at, profiles(full_name, username)",
-    )
+    .select(REVIEW_SELECT)
     .eq("product_id", productId)
+    .is("deleted_at", null)
     .order("created_at", { ascending: false });
-  if (error) return [];
+  if (error) {
+    console.error("[getProductReviews]", error.message);
+    return [];
+  }
   return (data ?? []).map((row) => rowToReview(row as ReviewRow));
 }
 
@@ -61,12 +55,15 @@ export async function getUserReviewForProduct(
 
   const { data, error } = await supabase
     .from("reviews")
-    .select(
-      "id, product_id, user_id, rating, body, created_at, profiles(full_name, username)",
-    )
+    .select(REVIEW_SELECT)
     .eq("product_id", productId)
     .eq("user_id", user.id)
+    .is("deleted_at", null)
     .maybeSingle();
-  if (error || !data) return null;
+  if (error) {
+    console.error("[getUserReviewForProduct]", error.message);
+    return null;
+  }
+  if (!data) return null;
   return rowToReview(data as ReviewRow);
 }

@@ -10,6 +10,7 @@ import {
 
 interface WishlistContextValue {
   wishlistIds: Set<string>;
+  wishlistDates: Record<string, string>;
   toggleWishlist: (productId: string) => void;
   isInWishlist: (productId: string) => boolean;
   wishlistCount: number;
@@ -17,6 +18,7 @@ interface WishlistContextValue {
 
 const WishlistContext = createContext<WishlistContextValue>({
   wishlistIds: new Set(),
+  wishlistDates: {},
   toggleWishlist: () => {},
   isInWishlist: () => false,
   wishlistCount: 0,
@@ -24,37 +26,58 @@ const WishlistContext = createContext<WishlistContextValue>({
 
 const STORAGE_KEY = "buxxep_wishlist";
 
+function parseStorage(): Record<string, string> {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (!stored) return {};
+    const parsed = JSON.parse(stored);
+    // New format: { [id]: isoDate }
+    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+      return parsed as Record<string, string>;
+    }
+    // Legacy format: string[]
+    if (Array.isArray(parsed)) {
+      const now = new Date().toISOString();
+      return Object.fromEntries((parsed as string[]).map((id) => [id, now]));
+    }
+  } catch {}
+  return {};
+}
+
 export function WishlistProvider({ children }: { children: React.ReactNode }) {
-  const [ids, setIds] = useState<Set<string>>(new Set());
+  const [dates, setDates] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) setIds(new Set(JSON.parse(stored) as string[]));
-    } catch {}
+    setDates(parseStorage());
   }, []);
 
   const toggleWishlist = useCallback((productId: string) => {
-    setIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(productId)) next.delete(productId);
-      else next.add(productId);
+    setDates((prev) => {
+      const next = { ...prev };
+      if (next[productId]) {
+        delete next[productId];
+      } else {
+        next[productId] = new Date().toISOString();
+      }
       try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify([...next]));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
       } catch {}
       return next;
     });
   }, []);
 
+  const ids = new Set(Object.keys(dates));
+
   const isInWishlist = useCallback(
-    (productId: string) => ids.has(productId),
-    [ids],
+    (productId: string) => productId in dates,
+    [dates],
   );
 
   return (
     <WishlistContext.Provider
       value={{
         wishlistIds: ids,
+        wishlistDates: dates,
         toggleWishlist,
         isInWishlist,
         wishlistCount: ids.size,

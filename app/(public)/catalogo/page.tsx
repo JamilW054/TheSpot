@@ -293,7 +293,7 @@ export default async function CatalogPage({ searchParams }: PageProps) {
       <section
         id="lista-productos"
         aria-label="Productos"
-        className="max-w-7xl mx-auto w-full grid grid-cols-2 gap-2.5 sm:gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 px-3 sm:px-4 pb-16"
+        className="max-w-7xl mx-auto w-full grid grid-cols-2 gap-2.5 min-[480px]:grid-cols-3 sm:gap-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 px-3 sm:px-4 pb-16"
       >
         {products.length === 0 ? (
           <p className="col-span-full rounded-xl border border-dashed border-border/90 bg-muted/20 px-4 py-14 text-center text-sm text-muted-foreground">

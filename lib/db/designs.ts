@@ -1,4 +1,5 @@
 import type { CanvasElement, Design } from "@/types";
+import { formatDate } from "@/lib/format-date";
 
 /**
  * Esquema nuevo de `designs`: los elementos del canvas viven en `data` (jsonb)
@@ -30,7 +31,7 @@ function relativeTime(iso: string): string {
   if (diffDays === 1) return "Ayer";
   if (diffDays < 7) return `Hace ${diffDays} días`;
   if (diffDays < 30) return `Hace ${Math.floor(diffDays / 7)} semana(s)`;
-  return d.toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "numeric" });
+  return formatDate(iso);
 }
 
 export function rowToDesign(row: DesignRow): Design {

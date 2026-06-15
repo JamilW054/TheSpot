@@ -2,28 +2,46 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ShoppingCart } from "lucide-react";
+import { ShoppingBag } from "lucide-react";
 import { useCart } from "@/contexts/cart-context";
 import { useAuth } from "@/lib/auth-context";
+import { useWishlist } from "@/contexts/wishlist-context";
 import { useRouter, usePathname } from "next/navigation";
 import { useState } from "react";
-import { WishlistButton } from "./WishlistButton";
+import { Heart } from "lucide-react";
 import type { CatalogProduct } from "@/types";
-
-interface ProductCardProps {
-  product: CatalogProduct;
-}
 
 function imageNeedsUnoptimized(src: string): boolean {
   return src.includes("placehold.co") || src.includes("unsplash.com");
 }
 
-export function ProductCard({ product }: ProductCardProps) {
+function StarRow({ avg, count }: { avg: number; count: number }) {
+  const full = Math.round(avg);
+  return (
+    <div className="flex items-center gap-1">
+      <span className="text-yellow-400 text-[11px] leading-none">
+        {"★".repeat(full)}
+        {"☆".repeat(5 - full)}
+      </span>
+      <span className="text-[10px] font-semibold text-primary tabular-nums">
+        {avg.toFixed(1)}
+      </span>
+      <span className="text-[10px] text-muted-foreground tabular-nums">
+        ({count})
+      </span>
+    </div>
+  );
+}
+
+export function ProductCard({ product }: { product: CatalogProduct }) {
   const { addItem } = useCart();
   const { user, isLoading } = useAuth();
+  const { toggleWishlist, isInWishlist } = useWishlist();
   const router = useRouter();
   const pathname = usePathname();
   const [justAdded, setJustAdded] = useState(false);
+
+  const saved = isInWishlist(product.id);
 
   const hasDiscount =
     product.originalPriceCents != null &&
@@ -40,15 +58,19 @@ export function ProductCard({ product }: ProductCardProps) {
   const hasSizes = product.sizes.length > 0;
   const previewSizes = product.sizes.slice(0, 4);
   const extraSizes = product.sizes.length - 4;
+  const hasRating = product.ratingAvg != null && product.reviewCount > 0;
+
+  const href = `/catalogo/${product.slug}`;
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     if (!isLoading && !user) {
       router.push(`/login?next=${encodeURIComponent(pathname)}`);
       return;
     }
     if (hasSizes) {
-      router.push(`/catalogo/${product.slug}`);
+      router.push(href);
       return;
     }
     addItem(product.id, 1, null, null);
@@ -57,23 +79,30 @@ export function ProductCard({ product }: ProductCardProps) {
   };
 
   return (
-    <article className="group/card flex flex-col overflow-hidden rounded-2xl border border-white/[0.07] bg-[#111116] transition-all duration-300 hover:border-primary/30 hover:shadow-[0_16px_48px_-16px_rgba(60,200,247,0.18)]">
+    <article className="group/card relative flex flex-col overflow-hidden rounded-[14px] border border-border bg-card transition-all duration-300 hover:border-primary/40">
 
-      {/* Image area */}
+      {/* ── Image area ── */}
       <Link
-        href={`/catalogo/${product.slug}`}
-        className="relative block aspect-square overflow-hidden bg-gradient-to-br from-[#1c1c24] to-[#0e0e13]"
+        href={href}
+        className="relative block overflow-hidden bg-[#111116]"
+        style={{ aspectRatio: "3/4" }}
+        tabIndex={-1}
+        aria-hidden
       >
-        {/* Subtle radial glow */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_60%,rgba(60,200,247,0.08),transparent_70%)]" aria-hidden />
+        {/* Discount badge — red */}
+        {hasDiscount && (
+          <span className="absolute left-2.5 top-2.5 z-10 rounded-[26px] bg-destructive px-2 py-0.5 text-[10px] font-bold text-white tabular-nums">
+            -{discountPct}%
+          </span>
+        )}
 
         {product.coverImage ? (
           <Image
             src={product.coverImage}
             alt={product.name}
             fill
-            className="object-contain object-center p-4 transition-transform duration-500 group-hover/card:scale-105"
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
+            className="object-cover transition-transform duration-700 group-hover/card:scale-[1.04]"
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 22vw"
             unoptimized={imageNeedsUnoptimized(product.coverImage)}
           />
         ) : (
@@ -81,77 +110,91 @@ export function ProductCard({ product }: ProductCardProps) {
             Sin imagen
           </div>
         )}
-
-        {/* Discount badge */}
-        {hasDiscount && (
-          <span className="absolute left-2.5 top-2.5 inline-flex items-center rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold text-primary-foreground shadow-sm">
-            -{discountPct}%
-          </span>
-        )}
-
-        {/* Wishlist */}
-        <div className="absolute right-2.5 top-2.5">
-          <WishlistButton productId={product.id} size="sm" />
-        </div>
       </Link>
 
-      {/* Info area */}
-      <div className="flex flex-col gap-2 p-3">
+      {/* Wishlist button — absolute over image */}
+      <button
+        type="button"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          toggleWishlist(product.id);
+        }}
+        aria-label={saved ? "Quitar de favoritos" : "Guardar en favoritos"}
+        className="absolute right-2 top-2 z-10 flex size-8 items-center justify-center rounded-full bg-card/80 text-muted-foreground backdrop-blur-sm transition-all hover:bg-card hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+      >
+        <Heart
+          className="size-3.5"
+          fill={saved ? "currentColor" : "none"}
+          stroke={saved ? "none" : "currentColor"}
+          aria-hidden
+        />
+      </button>
+
+      {/* ── Info panel ── */}
+      <Link
+        href={href}
+        className="flex flex-col gap-1.5 p-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/50"
+        aria-label={product.name}
+      >
         {/* Brand */}
         {product.brandName && (
-          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-primary/80">
+          <p className="text-[9px] font-bold uppercase tracking-[0.22em] text-muted-foreground">
             {product.brandName}
           </p>
         )}
 
         {/* Name */}
-        <h2 className="text-sm font-bold leading-snug text-foreground line-clamp-2 group-hover/card:text-primary transition-colors">
-          <Link href={`/catalogo/${product.slug}`}>
-            {product.name}
-          </Link>
+        <h2 className="text-[13px] font-semibold leading-snug text-foreground line-clamp-1">
+          {product.name}
         </h2>
+
+        {/* Rating */}
+        {hasRating && (
+          <StarRow avg={product.ratingAvg!} count={product.reviewCount} />
+        )}
+
+        {/* Price */}
+        <div className="flex items-baseline gap-1.5">
+          <span className="text-sm font-black text-primary tabular-nums">
+            {product.price}
+          </span>
+          {hasDiscount && (
+            <span className="text-[11px] text-muted-foreground line-through tabular-nums">
+              {product.originalPrice}
+            </span>
+          )}
+        </div>
 
         {/* Sizes */}
         {hasSizes && (
-          <div className="flex flex-wrap gap-1">
+          <div className="flex flex-wrap gap-1 mt-0.5">
             {previewSizes.map((s) => (
               <span
                 key={s}
-                className="inline-flex items-center rounded-md border border-border/60 bg-muted/40 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground"
+                className="rounded-md border border-border bg-muted/30 px-1.5 py-0.5 text-[9px] font-semibold text-muted-foreground"
               >
                 {s}
               </span>
             ))}
             {extraSizes > 0 && (
-              <span className="inline-flex items-center rounded-md border border-border/60 bg-muted/40 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+              <span className="rounded-md border border-border bg-muted/30 px-1.5 py-0.5 text-[9px] font-semibold text-muted-foreground">
                 +{extraSizes}
               </span>
             )}
           </div>
         )}
 
-        {/* Price */}
-        <div className="flex items-baseline gap-1.5">
-          <span className="text-base font-bold text-foreground">
-            {product.price}
-          </span>
-          {hasDiscount && (
-            <span className="text-xs text-muted-foreground line-through">
-              {product.originalPrice}
-            </span>
-          )}
-        </div>
-
-        {/* Add to cart */}
+        {/* CTA */}
         <button
           type="button"
           onClick={handleAddToCart}
-          className="mt-0.5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary/10 border border-primary/20 px-3 py-2 text-xs font-semibold text-primary transition-all hover:bg-primary hover:text-primary-foreground hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+          className="mt-1.5 flex w-full items-center justify-center gap-1.5 rounded-[10px] bg-primary py-2 text-[11px] font-black text-primary-foreground transition-all duration-200 opacity-0 translate-y-1 group-hover/card:opacity-100 group-hover/card:translate-y-0 hover:opacity-90 active:scale-95"
         >
-          <ShoppingCart className="size-3.5" aria-hidden />
-          {justAdded ? "¡Añadido!" : hasSizes ? "Ver tallas" : "Añadir"}
+          <ShoppingBag className="size-3 shrink-0" aria-hidden />
+          {justAdded ? "¡Añadido!" : hasSizes ? "Comprar" : "Al carrito"}
         </button>
-      </div>
+      </Link>
     </article>
   );
 }

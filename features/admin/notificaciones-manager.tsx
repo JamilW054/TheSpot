@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Drawer } from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
 import { adminCreateNotification, adminDeleteNotification } from "@/lib/actions/admin-crud";
+import { formatDate, formatDateTime } from "@/lib/format-date";
 import { ResourceDeleteButton } from "./resource-delete-button";
 import { NotificationForm } from "./notification-form";
 
@@ -136,11 +137,7 @@ export function NotificacionesManager({ initialRows, users }: Props) {
                       )}
                     </td>
                     <td className="px-4 py-3 text-xs text-muted-foreground">
-                      {new Date(row.created_at).toLocaleDateString("es-ES", {
-                        day: "2-digit",
-                        month: "short",
-                        year: "numeric",
-                      })}
+                      {formatDate(row.created_at, { day: "2-digit", month: "short", year: "numeric" })}
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-1.5">
@@ -279,7 +276,7 @@ export function NotificacionesManager({ initialRows, users }: Props) {
                 { label: "Enlace", value: previewRow.link_path ?? "—" },
                 {
                   label: "Fecha",
-                  value: new Date(previewRow.created_at).toLocaleString("es-ES"),
+                  value: formatDateTime(previewRow.created_at),
                 },
               ].map(({ label, value }) => (
                 <div key={label}>

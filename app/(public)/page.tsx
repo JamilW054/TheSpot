@@ -2,6 +2,7 @@ import { readdir } from "fs/promises";
 import path from "node:path";
 import Image from "next/image";
 import Link from "next/link";
+import { LandingProductCard } from "@/components/catalog/LandingProductCard";
 import { GiveawayPromoSection } from "@/components/landing/GiveawayPromoSection";
 import { InstagramEmbeds } from "@/components/landing/InstagramEmbeds";
 import { ScrollReveal } from "@/components/landing/ScrollReveal";
@@ -54,7 +55,7 @@ export default async function PublicPage() {
     getCategoryCoverByCategoryId(),
   ]);
   const giveawayGoal = getGiveawayGoalPurchases();
-  const featured = products.slice(0, 8);
+  const featured = products.slice(0, 6);
   const clothSlice = clothDesigns.slice(0, 3);
 
   return (
@@ -122,7 +123,7 @@ export default async function PublicPage() {
                   className="group relative shrink-0 flex w-[30vw] sm:w-auto overflow-hidden rounded-2xl bg-muted/60 border border-border/60 hover:border-primary/40 transition-all duration-300 hover:shadow-[0_8px_32px_-10px_rgba(60,200,247,0.3)]"
                   style={{ aspectRatio: "2/3" }}
                 >
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
+                  <div className="absolute inset-0 bg-linear-to-t from-black/75 via-black/20 to-transparent" />
                   <div className="absolute inset-x-0 bottom-0 p-3">
                     <span className="block text-white text-[11px] font-bold uppercase tracking-widest leading-tight">
                       Todo
@@ -150,7 +151,7 @@ export default async function PublicPage() {
                           unoptimized={thumb.startsWith("http")}
                         />
                       )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/15 to-transparent" />
+                      <div className="absolute inset-0 bg-linear-to-t from-black/75 via-black/15 to-transparent" />
                       <div className="absolute inset-x-0 bottom-0 p-3">
                         <span className="block text-white text-[11px] font-bold leading-tight line-clamp-2">
                           {cat.name}
@@ -168,62 +169,86 @@ export default async function PublicPage() {
 
       {/* ─── 4. PRODUCTOS DESTACADOS ─────────────────────────────────── */}
       {featured.length > 0 && (
-        <section className={`${S} ${C} border-t border-border`} aria-labelledby="sec-featured">
-          <ScrollReveal>
-            <div className="flex items-end justify-between gap-4 mb-8">
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-primary">
-                  Buxxep · Tienda
-                </p>
-                <h2
-                  id="sec-featured"
-                  className="mt-1 text-xl sm:text-2xl font-black uppercase tracking-tight text-foreground"
-                >
-                  Productos <span className="landing-wavy-underline">destacados</span>
-                </h2>
-              </div>
-              <Link
-                href="/catalogo"
-                className="shrink-0 inline-flex items-center gap-1.5 rounded-lg border border-border/80 bg-background px-4 py-2 text-xs font-semibold text-foreground transition-colors hover:bg-muted"
-              >
-                Ver todo →
-              </Link>
-            </div>
-          </ScrollReveal>
-          <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-            {featured.map((product, i) => (
-              <ScrollReveal key={product.id} delay={i * 55}>
-                <Link
-                  href={`/catalogo/${product.slug}`}
-                  className="group flex flex-col overflow-hidden rounded-2xl border border-border/80 bg-card transition-all duration-200 hover:border-primary/40 hover:shadow-[0_12px_40px_-16px_rgba(60,200,247,0.3)] hover:-translate-y-0.5"
-                >
-                  <div className="relative aspect-3/4 overflow-hidden bg-muted">
-                    <Image
-                      src={product.coverImage}
-                      alt={product.name}
-                      fill
-                      className="object-cover transition-transform duration-500 group-hover:scale-[1.06]"
-                      sizes="(max-width:640px) 50vw,(max-width:1024px) 33vw,20vw"
-                      unoptimized={product.coverImage?.startsWith("http")}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  </div>
-                  <div className="flex flex-col gap-1 border-t border-border/60 p-2.5 sm:p-3">
-                    <span className="text-xs font-semibold leading-tight line-clamp-1 sm:text-sm group-hover:text-primary transition-colors">
-                      {product.name}
+        <section className="py-14 sm:py-20 border-t border-border" aria-labelledby="sec-featured">
+          <div className={C}>
+
+            {/* ── Section header ── */}
+            <ScrollReveal>
+              <div className="mb-7 sm:mb-10">
+                {/* Top row: badge + Ver-todo button (desktop) */}
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <span className="inline-flex items-center gap-1.5 rounded-[26px] border border-border bg-card px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-primary">
+                      <span className="size-1.5 rounded-full bg-primary" />
+                      Temporada 2025
                     </span>
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="tabular-nums text-sm font-bold text-primary">
-                        {product.price}
-                      </span>
-                      <span className="text-[10px] font-medium text-muted-foreground group-hover:text-primary transition-colors">
-                        Ver →
-                      </span>
-                    </div>
+                    <h2
+                      id="sec-featured"
+                      className="mt-2.5 text-[2rem] sm:text-[clamp(2rem,4.5vw,3rem)] font-black uppercase tracking-[-0.03em] text-foreground leading-[0.9]"
+                    >
+                      Productos<br />
+                      <span className="text-primary">Destacados</span>
+                    </h2>
                   </div>
-                </Link>
-              </ScrollReveal>
-            ))}
+                  <Link
+                    href="/catalogo"
+                    className="hidden sm:inline-flex shrink-0 group items-center gap-2 rounded-[10px] border border-border/80 bg-card px-5 py-2.5 text-sm font-semibold text-foreground transition-all hover:border-primary/40 hover:text-primary mt-1"
+                  >
+                    Ver todo
+                    <svg className="size-3.5 transition-transform group-hover:translate-x-0.5" viewBox="0 0 16 16" fill="none" aria-hidden>
+                      <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </Link>
+                </div>
+              </div>
+            </ScrollReveal>
+
+            {/* ── Mobile / tablet: responsive grid (< lg) ── */}
+            <div className="grid grid-cols-2 min-[520px]:grid-cols-3 gap-2.5 sm:gap-3 lg:hidden">
+              {featured.map((product, i) => (
+                <ScrollReveal key={product.id} delay={i * 40}>
+                  <LandingProductCard product={product} />
+                </ScrollReveal>
+              ))}
+            </div>
+
+            {/* Ver todo — mobile only (below grid) */}
+            <Link
+              href="/catalogo"
+              className="mt-5 flex items-center justify-center gap-1.5 sm:hidden text-sm font-semibold text-primary hover:underline underline-offset-2"
+            >
+              Ver todo el catálogo →
+            </Link>
+
+            {/* ── Desktop editorial layout (lg+) ── */}
+            <div className="hidden lg:flex flex-col gap-3">
+              {/* Row 1: hero (left 38%) + 2×2 grid (right) */}
+              <div
+                className="flex gap-3"
+                style={{ height: "clamp(420px, 42vw, 600px)" }}
+              >
+                <ScrollReveal className="w-[38%] shrink-0 h-full" delay={0}>
+                  <LandingProductCard product={featured[0]} variant="hero" />
+                </ScrollReveal>
+
+                {/* 2×2 grid — grid-rows-2 distributes height evenly */}
+                <div className="flex-1 grid grid-cols-2 grid-rows-2 gap-3">
+                  {featured.slice(1, 5).map((product, i) => (
+                    <ScrollReveal key={product.id} delay={(i + 1) * 60} className="h-full">
+                      <LandingProductCard product={product} variant="fill" />
+                    </ScrollReveal>
+                  ))}
+                </div>
+              </div>
+
+              {/* Row 2: wide card */}
+              {featured[5] && (
+                <ScrollReveal delay={280}>
+                  <LandingProductCard product={featured[5]} variant="wide" />
+                </ScrollReveal>
+              )}
+            </div>
+
           </div>
         </section>
       )}

@@ -4,6 +4,7 @@
  */
 
 import { createClient, createServiceClient } from "@/lib/supabase/server";
+import { formatDate, formatDateTime } from "@/lib/format-date";
 
 /** Convert Supabase/PostgREST error to a plain Error so Next.js and UI show a readable message. */
 function toError(err: {
@@ -312,13 +313,7 @@ export async function getFacturasPedidosPagadosAdmin(): Promise<
     if (error) throw toError(error);
     const rows = data ?? [];
     const fmt = (iso: string) =>
-      new Date(iso).toLocaleDateString("es-ES", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      });
+      formatDateTime(iso, { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
     type PaidRow = {
       id: string;
       shipping_address: ShippingAddress | null;
@@ -746,13 +741,7 @@ export async function getOrderStatusById(
       id: o.id,
       status: statusMap[o.status] ?? "pendiente",
       totalCents: o.total_cents,
-      createdAt: new Date(o.created_at).toLocaleDateString("es-ES", {
-        day: "2-digit",
-        month: "long",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
+      createdAt: formatDateTime(o.created_at, { day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" }),
       shippingName: customerNameFromOrder(o.shipping_address, o.contact_email),
       items,
       paymentStatus: coercePaymentStatus(o.payment_status ?? undefined),

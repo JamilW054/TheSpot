@@ -9,6 +9,7 @@ export async function submitReviewAction(
   productId: string,
   productSlug: string,
   rating: number,
+  title: string,
   body: string,
 ): Promise<ReviewActionResult> {
   if (rating < 1 || rating > 5) {
@@ -24,6 +25,7 @@ export async function submitReviewAction(
     return { ok: false, error: "Debes iniciar sesión para dejar una reseña." };
   }
 
+  const trimmedTitle = title.trim() || null;
   const trimmedBody = body.trim() || null;
 
   // El esquema nuevo no tiene índice único (product_id,user_id): upsert manual.
@@ -32,17 +34,19 @@ export async function submitReviewAction(
     .select("id")
     .eq("product_id", productId)
     .eq("user_id", user.id)
+    .is("deleted_at", null)
     .maybeSingle();
 
   const { error } = existing
     ? await supabase
         .from("reviews")
-        .update({ rating, body: trimmedBody })
+        .update({ rating, title: trimmedTitle, body: trimmedBody })
         .eq("id", (existing as { id: string }).id)
     : await supabase.from("reviews").insert({
         product_id: productId,
         user_id: user.id,
         rating,
+        title: trimmedTitle,
         body: trimmedBody,
       });
 

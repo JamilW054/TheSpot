@@ -138,6 +138,10 @@ export interface CatalogProduct {
   sizes: string[];
   /** Etiquetas del producto. */
   tags: string[];
+  /** Promedio de calificación (1-5). Null si sin reseñas. */
+  ratingAvg: number | null;
+  /** Cantidad total de reseñas. */
+  reviewCount: number;
 }
 
 /** Reseña de un cliente sobre un producto. */
@@ -145,9 +149,9 @@ export interface ProductReview {
   id: string;
   productId: string;
   userId: string;
-  /** Display name from profiles.name (joined on fetch). */
   userName: string | null;
   rating: number;
+  title: string | null;
   body: string | null;
   createdAt: string;
 }

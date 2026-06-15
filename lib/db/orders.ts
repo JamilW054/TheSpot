@@ -1,4 +1,5 @@
 import { formatDOPFromCents } from "@/lib/format-currency";
+import { formatDate } from "@/lib/format-date";
 import type { Pedido, PedidoEstado } from "@/types";
 
 /** Dirección de envío almacenada como JSONB en orders.shipping_address. */
@@ -59,10 +60,6 @@ export function rowToPedido(row: OrderRow, itemsCount: number): Pedido {
     items: itemsCount,
     total: formatDOPFromCents(row.total_cents),
     estado: statusMap[row.status] ?? "pendiente",
-    createdAt: new Date(row.created_at).toLocaleDateString("es-ES", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "2-digit",
-    }),
+    createdAt: formatDate(row.created_at, { day: "2-digit", month: "2-digit", year: "2-digit" }),
   };
 }

@@ -45,6 +45,7 @@ export default async function PagoExitosoPage({
     processedAt: Number.isNaN(paidDate.getTime())
       ? order.createdAt
       : paidDate.toLocaleString("es-DO", {
+          timeZone: "America/Santo_Domingo",
           day: "2-digit",
           month: "2-digit",
           year: "numeric",

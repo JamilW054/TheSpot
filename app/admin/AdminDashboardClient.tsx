@@ -20,6 +20,7 @@ import {
   parseFormattedCurrencyToNumber,
 } from "@/lib/format-currency";
 import type { Pedido } from "@/types";
+import { formatDate } from "@/lib/format-date";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -191,7 +192,7 @@ export function AdminDashboardClient({ initialPedidos }: AdminDashboardClientPro
 
   const recentPedidos = pedidos.slice(0, 10);
 
-  const today = new Date().toLocaleDateString("es-ES", {
+  const today = formatDate(new Date().toISOString(), {
     weekday: "long",
     day: "numeric",
     month: "long",

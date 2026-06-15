@@ -320,6 +320,8 @@ const catalogProductRowsBase: Omit<
     gallery: [unsplash("1521572163474-6864f9cf17ab", 600, 600)],
     sizes: ["S", "M", "L", "XL"],
     tags: [],
+    ratingAvg: null,
+    reviewCount: 0,
   },
   {
     id: "p02",
@@ -331,6 +333,8 @@ const catalogProductRowsBase: Omit<
     gallery: [unsplash("1586790170083-2f9ceadc732d", 600, 600)],
     sizes: ["S", "M", "L", "XL"],
     tags: [],
+    ratingAvg: null,
+    reviewCount: 0,
   },
   {
     id: "p03",
@@ -342,6 +346,8 @@ const catalogProductRowsBase: Omit<
     gallery: [unsplash("1556821840-3a63f95609a7", 600, 600)],
     sizes: ["S", "M", "L", "XL", "XXL"],
     tags: [],
+    ratingAvg: null,
+    reviewCount: 0,
   },
   {
     id: "p04",
@@ -352,6 +358,8 @@ const catalogProductRowsBase: Omit<
     gallery: [unsplash("1615397587950-3cbb55f95b77", 600, 600)],
     sizes: ["S", "M", "L", "XL"],
     tags: [],
+    ratingAvg: null,
+    reviewCount: 0,
   },
   {
     id: "p05",
@@ -363,6 +371,8 @@ const catalogProductRowsBase: Omit<
     gallery: [unsplash("1745695894760-600be9c8c307", 600, 600)],
     sizes: ["XS", "S", "M", "L"],
     tags: [],
+    ratingAvg: null,
+    reviewCount: 0,
   },
 ];
 

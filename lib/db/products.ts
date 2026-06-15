@@ -201,5 +201,7 @@ export function rowToCatalogProduct(row: ProductRow): CatalogProduct {
     categorySlug: categorySlugFromRow(row.categories),
     sizes: sizesFromVariants(row.product_variants),
     tags: tagsFromRow(row.product_tags),
+    ratingAvg: row.rating_avg != null ? Number(row.rating_avg) : null,
+    reviewCount: row.review_count ?? 0,
   };
 }
