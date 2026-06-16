@@ -151,11 +151,11 @@ export function WishlistCard({
         <div className="flex items-end justify-between gap-2 mt-auto pt-2">
           <div>
             <div className="flex items-baseline gap-1.5">
-              <span className="text-base font-black text-primary tabular-nums leading-none">
+              <span className="font-mono text-base font-black text-primary tabular-nums leading-none">
                 {product.price}
               </span>
               {hasDiscount && (
-                <span className="text-[11px] text-muted-foreground line-through tabular-nums">
+                <span className="font-mono text-[11px] text-muted-foreground line-through tabular-nums">
                   {product.originalPrice}
                 </span>
               )}

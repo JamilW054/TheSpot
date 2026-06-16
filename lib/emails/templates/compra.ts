@@ -166,7 +166,7 @@ export function compraEmailHtml(data: CompraEmailData): string {
               <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
                 <tr>
                   <td align="center">
-                    <a href="https://buxxep.vercel.app/mis-disenos" style="display:inline-block;background:#3cc8f7;color:#080808;font-size:13px;font-weight:800;text-decoration:none;padding:14px 40px;border-radius:8px;letter-spacing:2px;text-transform:uppercase;">
+                    <a href="https://buxxep.vercel.app/cuenta/pedidos" style="display:inline-block;background:#3cc8f7;color:#080808;font-size:13px;font-weight:800;text-decoration:none;padding:14px 40px;border-radius:8px;letter-spacing:2px;text-transform:uppercase;">
                       Ver mis pedidos →
                     </a>
                   </td>
@@ -230,5 +230,5 @@ export function compraEmailText(data: CompraEmailData): string {
         `  - ${i.name}${i.size ? ` (${i.size})` : ""} x${i.quantity}: ${fmt(i.unitPrice * i.quantity)}`,
     )
     .join("\n");
-  return `BUXXEP — Pedido confirmado #${orderNumber}\n\nHola ${name},\n\n${lines}\n\nSubtotal: ${fmt(subtotal)}\nEnvío: ${shipping === 0 ? "GRATIS" : fmt(shipping)}\nTOTAL: ${fmt(total)}\n\nhttps://buxxep.vercel.app/mis-disenos\n\n— BUXXEP`;
+  return `BUXXEP — Pedido confirmado #${orderNumber}\n\nHola ${name},\n\n${lines}\n\nSubtotal: ${fmt(subtotal)}\nEnvío: ${shipping === 0 ? "GRATIS" : fmt(shipping)}\nTOTAL: ${fmt(total)}\n\nhttps://buxxep.vercel.app/cuenta/pedidos\n\n— BUXXEP`;
 }

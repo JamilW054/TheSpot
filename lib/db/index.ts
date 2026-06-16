@@ -866,6 +866,45 @@ export async function createOrder(
   return { orderId };
 }
 
+export interface ShippingMethod {
+  id: string;
+  name: string;
+  description: string | null;
+  priceCents: number;
+  minDays: number | null;
+  maxDays: number | null;
+}
+
+export async function getShippingMethods(): Promise<ShippingMethod[]> {
+  return withNetworkFallback(async () => {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("shipping_methods")
+      .select("id, name, description, price_cents, min_days, max_days")
+      .eq("is_active", true)
+      .order("price_cents", { ascending: true });
+    if (error) throw toError(error);
+    return (data ?? []).map((row) => {
+      const r = row as {
+        id: string;
+        name: string;
+        description: string | null;
+        price_cents: number;
+        min_days: number | null;
+        max_days: number | null;
+      };
+      return {
+        id: r.id,
+        name: r.name,
+        description: r.description,
+        priceCents: r.price_cents,
+        minDays: r.min_days,
+        maxDays: r.max_days,
+      };
+    });
+  }, []);
+}
+
 /** Resuelve la variante de un producto para una talla dada (o la primera activa). */
 async function resolveVariantForOrder(
   supabase: Awaited<ReturnType<typeof createClient>>,

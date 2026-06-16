@@ -167,12 +167,12 @@ export default async function CatalogProductPage({ params }: PageProps) {
               {/* Price + discount + wishlist */}
               <div className="flex items-start justify-between gap-3 flex-wrap">
                 <div>
-                  <p className="text-4xl font-black text-primary tabular-nums leading-none">
+                  <p className="font-mono text-4xl font-black text-primary tabular-nums leading-none">
                     {product.price}
                   </p>
                   {hasDiscount && (
                     <div className="mt-2 flex flex-wrap items-center gap-2">
-                      <span className="text-sm text-muted-foreground line-through tabular-nums">
+                      <span className="font-mono text-sm text-muted-foreground line-through tabular-nums">
                         {product.originalPrice}
                       </span>
                       <span className="inline-flex items-center rounded-full bg-green-500/15 px-2.5 py-0.5 text-[11px] font-bold text-green-400">

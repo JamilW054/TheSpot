@@ -6,7 +6,7 @@ import { useAuth } from "@/lib/auth-context";
 
 interface RequireAuthProps {
   children: React.ReactNode;
-  /** Si es true, exige user.role === "admin" (según profiles.role en BD); si no, redirige a /mis-disenos */
+  /** Si es true, exige user.role === "admin" (según profiles.role en BD); si no, redirige a /cuenta */
   requireAdmin?: boolean;
 }
 
@@ -24,7 +24,7 @@ export function RequireAuth({
       return;
     }
     if (requireAdmin && user.role !== "admin") {
-      router.replace("/mis-disenos");
+      router.replace("/cuenta");
     }
   }, [user, isLoading, requireAdmin, router]);
 

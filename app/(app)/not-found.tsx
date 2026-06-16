@@ -1,15 +1,12 @@
-import { PageLayout } from "@/components/layout";
-import Link from "next/link";
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export default function AppNotFound() {
-  return (
-    <PageLayout title="Página no encontrada">
-      <p className="text-muted-foreground">
-        El recurso que buscas no existe o ha sido movido.
-      </p>
-      <Link href="/mis-disenos" className="text-primary hover:underline">
-        Volver a Mis diseños
-      </Link>
-    </PageLayout>
-  );
+  const router = useRouter();
+  useEffect(() => {
+    router.replace("/cuenta");
+  }, [router]);
+  return null;
 }

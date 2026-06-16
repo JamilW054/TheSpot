@@ -1,52 +1,34 @@
 import { NextResponse } from "next/server";
-import { createServiceClient } from "@/lib/supabase/server";
-import { sendResetPasswordEmail } from "@/lib/emails";
+import { createClient } from "@/lib/supabase/server";
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const email = typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
+    const email =
+      typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
 
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return NextResponse.json({ error: "Email inválido." }, { status: 400 });
     }
 
-    const baseUrl =
-      process.env.NEXT_PUBLIC_APP_URL?.trim() ??
-      new URL(request.url).origin;
+    // Usa el origin real de la request para que funcione en local y en producción
+    const origin = new URL(request.url).origin;
+    const redirectTo = `${origin}/auth/callback?next=/nueva-contrasena`;
 
-    const supabase = createServiceClient();
+    const supabase = await createClient();
 
-    const { data, error } = await supabase.auth.admin.generateLink({
-      type: "recovery",
-      email,
-      options: {
-        redirectTo: `${baseUrl}/auth/callback?next=/nueva-contrasena`,
-      },
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo,
     });
 
-    if (error || !data?.properties?.action_link) {
-      // Return success even if email not found — prevents user enumeration
-      return NextResponse.json({ ok: true });
+    if (error) {
+      console.error("[RESET-PASSWORD]", error.message);
     }
 
-    const resetUrl = data.properties.action_link;
-
-    const name =
-      (data.user?.user_metadata?.full_name as string | undefined) ??
-      (data.user?.user_metadata?.name as string | undefined) ??
-      email.split("@")[0];
-
-    await sendResetPasswordEmail(email, {
-      name,
-      resetUrl,
-      expiresInMinutes: 60,
-    });
-
+    // Siempre retorna ok — nunca revelar si el email existe
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error("[RESET-PASSWORD] Error:", error);
-    // Always return ok to prevent user enumeration
     return NextResponse.json({ ok: true });
   }
 }

@@ -17,7 +17,7 @@ export interface AppShellProps {
 }
 
 const SHELL_HOME: Record<AppShellVariant, { href: string; label: string }> = {
-  app: { href: "/mis-disenos", label: "Buxxep" },
+  app: { href: "/cuenta", label: "Buxxep" },
   admin: { href: "/admin", label: "Buxxep Admin" },
 };
 

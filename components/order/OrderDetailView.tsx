@@ -173,11 +173,11 @@ export function OrderDetailView({
                     <span className="text-foreground">{item.designName}</span>
                   </p>
                 )}
-                <p className="mt-1.5 text-sm text-muted-foreground tabular-nums">
+                <p className="mt-1.5 font-mono text-sm text-muted-foreground tabular-nums">
                   {formatDOPFromCents(item.unitPriceCents)} × {item.quantity}
                 </p>
               </div>
-              <p className="font-semibold tabular-nums text-foreground shrink-0 self-center">
+              <p className="font-mono text-sm font-semibold tabular-nums text-foreground shrink-0 self-center">
                 {formatDOPFromCents(item.unitPriceCents * item.quantity)}
               </p>
             </li>
@@ -189,7 +189,7 @@ export function OrderDetailView({
             <span className="text-sm font-medium text-muted-foreground">
               Total
             </span>
-            <span className="text-xl font-bold tabular-nums text-primary">
+            <span className="font-mono text-xl font-bold tabular-nums text-primary">
               {formatDOPFromCents(order.totalCents)}
             </span>
           </div>

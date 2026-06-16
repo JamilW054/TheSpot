@@ -36,6 +36,8 @@ export interface AuthContextValue {
     email: string,
     password: string,
     name: string,
+    username?: string,
+    phone?: string,
   ) => Promise<RegisterResult>;
   logout: () => void;
   isLoading: boolean;
@@ -121,8 +123,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (event === "SIGNED_OUT" && typeof window !== "undefined") {
         const PROTECTED = [
           "/admin",
-          "/mis-disenos",
-          "/mis-pedidos",
+          "/cuenta",
           "/editor",
           "/guia",
           "/lineas",
@@ -194,6 +195,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
       email: string,
       password: string,
       name: string,
+      username?: string,
+      phone?: string,
     ): Promise<RegisterResult> => {
       setIsLoading(true);
       const origin =
@@ -202,7 +205,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
         email,
         password,
         options: {
-          data: { full_name: name.trim() || undefined },
+          data: {
+            full_name: name.trim() || undefined,
+            username: username?.trim() || undefined,
+            phone: phone?.trim() || undefined,
+          },
           emailRedirectTo: `${origin}/auth/callback`,
         },
       });

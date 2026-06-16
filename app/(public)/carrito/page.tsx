@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { getProducts } from "@/lib/db";
+import { getProducts, getShippingMethods } from "@/lib/db";
 import { CartContent } from "./CartContent";
 
 export const metadata = {
@@ -10,12 +10,15 @@ export const metadata = {
 };
 
 export default async function CartPage() {
-  const products = await getProducts();
+  const [products, shippingMethods] = await Promise.all([
+    getProducts(),
+    getShippingMethods(),
+  ]);
 
   const featured = products.slice(0, 8);
 
   return (
-    <article className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-2 sm:pt-4 pb-16 sm:pb-20">
+    <article className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-2 sm:pt-4 pb-28 sm:pb-32 lg:pb-20">
       <nav className="mb-4 sm:mb-5" aria-label="Navegación">
         <Link
           href="/catalogo"
@@ -49,7 +52,7 @@ export default async function CartPage() {
         </p>
       </header>
 
-      <CartContent products={products} />
+      <CartContent products={products} shippingMethods={shippingMethods} />
 
       {/* Recommended products */}
       {featured.length > 0 && (
@@ -92,7 +95,7 @@ export default async function CartPage() {
                   <span className="text-xs font-semibold leading-tight text-card-foreground line-clamp-1 sm:text-sm group-hover:text-primary transition-colors">
                     {product.name}
                   </span>
-                  <span className="tabular-nums text-sm font-bold text-primary">
+                  <span className="font-mono tabular-nums text-sm font-bold text-primary">
                     {product.price}
                   </span>
                 </div>

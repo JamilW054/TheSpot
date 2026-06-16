@@ -48,8 +48,7 @@ export const APP_NAV: NavItem[] = [
     icon: "Layers",
     adminOnly: true,
   },
-  { label: "Mis pedidos", href: "/mis-pedidos", icon: "Package" },
-  { label: "Soporte", href: "/soporte", icon: "HelpCircle", adminOnly: true },
+  { label: "Mis pedidos", href: "/cuenta/pedidos", icon: "Package" },
 ];
 
 /**

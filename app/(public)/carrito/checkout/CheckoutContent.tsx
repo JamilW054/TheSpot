@@ -3,10 +3,12 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
+import { Star, Plus, Check } from "lucide-react";
 import { createOrderAction } from "@/app/(public)/carrito/checkout/actions";
 import { useCart } from "@/contexts/cart-context";
 import { formatDOPFromCents } from "@/lib/format-currency";
 import type { CatalogProduct } from "@/types";
+import type { Address } from "@/lib/db/addresses";
 
 function isExternalImage(src: string): boolean {
   return (
@@ -18,14 +20,111 @@ function isExternalImage(src: string): boolean {
 }
 
 const inputClass =
-  "mt-1.5 w-full rounded-xl border border-border bg-background px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors";
+  "h-11 w-full rounded-[10px] border border-border bg-background px-3 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors";
 
 const labelClass = "block text-sm font-medium text-foreground";
 
-export function CheckoutContent({ products }: { products: CatalogProduct[] }) {
+interface ShippingData {
+  name: string;
+  email: string;
+  address: string;
+  phone?: string;
+  city?: string;
+  postalCode?: string;
+  country?: string;
+}
+
+function shippingFromAddress(a: Address, email: string): ShippingData {
+  return {
+    name: a.fullName,
+    email,
+    address: [a.addressLine1, a.addressLine2].filter(Boolean).join(", "),
+    phone: a.phone ?? undefined,
+    city: a.city,
+    postalCode: a.postalCode,
+    country: a.countryCode,
+  };
+}
+
+function AddressRadioCard({
+  address,
+  selected,
+  onSelect,
+}: {
+  address: Address;
+  selected: boolean;
+  onSelect: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      className={`group w-full rounded-[14px] border p-4 text-left transition-all duration-150 ${
+        selected
+          ? "border-primary/60 bg-primary/5"
+          : "border-border bg-card hover:border-border/70 hover:bg-muted/20"
+      }`}
+    >
+      <div className="flex items-start gap-3">
+        <div
+          className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border transition-colors ${
+            selected
+              ? "border-primary bg-primary"
+              : "border-muted-foreground/40 group-hover:border-primary/50"
+          }`}
+        >
+          {selected && <Check className="size-2.5 text-primary-foreground" />}
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2 mb-1">
+            {address.label && (
+              <span className="rounded-full border border-border bg-muted/60 px-2 py-0.5 text-xs font-medium text-foreground">
+                {address.label}
+              </span>
+            )}
+            {address.isDefault && (
+              <span className="flex items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5 text-xs font-semibold text-primary">
+                <Star className="size-3 fill-primary" aria-hidden />
+                Predeterminada
+              </span>
+            )}
+          </div>
+          <p className="text-sm font-semibold text-foreground">
+            {address.fullName}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {address.addressLine1}
+            {address.addressLine2 && `, ${address.addressLine2}`}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {address.city}, {address.postalCode}
+          </p>
+          {address.phone && (
+            <p className="text-xs text-muted-foreground">{address.phone}</p>
+          )}
+        </div>
+      </div>
+    </button>
+  );
+}
+
+export function CheckoutContent({
+  products,
+  savedAddresses,
+}: {
+  products: CatalogProduct[];
+  savedAddresses: Address[];
+}) {
   const { items } = useCart();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const defaultAddress =
+    savedAddresses.find((a) => a.isDefault) ?? savedAddresses[0] ?? null;
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(
+    defaultAddress?.id ?? null,
+  );
+  const [useNewAddress, setUseNewAddress] = useState(savedAddresses.length === 0);
 
   const productMap = new Map(products.map((p) => [p.id, p]));
   let totalCents = 0;
@@ -34,34 +133,50 @@ export function CheckoutContent({ products }: { products: CatalogProduct[] }) {
     if (p) totalCents += p.priceCents * item.quantity;
   });
 
+  const selectedAddress =
+    !useNewAddress && selectedAddressId
+      ? (savedAddresses.find((a) => a.id === selectedAddressId) ?? null)
+      : null;
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
-    const checkoutForm = e.currentTarget;
-    const shipping = {
-      name: (
-        checkoutForm.querySelector("#checkout-name") as HTMLInputElement
-      ).value.trim(),
-      email: (
-        checkoutForm.querySelector("#checkout-email") as HTMLInputElement
-      ).value.trim(),
-      address: (
-        checkoutForm.querySelector("#checkout-address") as HTMLTextAreaElement
-      ).value.trim(),
-      phone: (
-        checkoutForm.querySelector("#checkout-phone") as HTMLInputElement
-      )?.value?.trim(),
-      city: (
-        checkoutForm.querySelector("#checkout-city") as HTMLInputElement
-      )?.value?.trim(),
-      postalCode: (
-        checkoutForm.querySelector("#checkout-postal") as HTMLInputElement
-      )?.value?.trim(),
-      country: (
-        checkoutForm.querySelector("#checkout-country") as HTMLInputElement
-      )?.value?.trim(),
-    };
+
+    let shipping: ShippingData;
+
+    if (selectedAddress) {
+      const emailInput = (
+        e.currentTarget.querySelector("#checkout-email") as HTMLInputElement | null
+      )?.value.trim() ?? "";
+      shipping = shippingFromAddress(selectedAddress, emailInput);
+    } else {
+      const checkoutForm = e.currentTarget;
+      shipping = {
+        name: (
+          checkoutForm.querySelector("#checkout-name") as HTMLInputElement
+        ).value.trim(),
+        email: (
+          checkoutForm.querySelector("#checkout-email") as HTMLInputElement
+        ).value.trim(),
+        address: (
+          checkoutForm.querySelector("#checkout-address") as HTMLTextAreaElement
+        ).value.trim(),
+        phone:
+          (checkoutForm.querySelector("#checkout-phone") as HTMLInputElement)?.value?.trim() ||
+          undefined,
+        city:
+          (checkoutForm.querySelector("#checkout-city") as HTMLInputElement)?.value?.trim() ||
+          undefined,
+        postalCode:
+          (checkoutForm.querySelector("#checkout-postal") as HTMLInputElement)?.value?.trim() ||
+          undefined,
+        country:
+          (checkoutForm.querySelector("#checkout-country") as HTMLInputElement)?.value?.trim() ||
+          undefined,
+      };
+    }
+
     const orderItems = items.map((it) => ({
       productId: it.productId,
       quantity: it.quantity,
@@ -88,7 +203,7 @@ export function CheckoutContent({ products }: { products: CatalogProduct[] }) {
 
   if (items.length === 0) {
     return (
-      <div className="rounded-2xl border border-border bg-card p-12 sm:p-16 text-center shadow-sm">
+      <div className="rounded-[14px] border border-border bg-card p-12 sm:p-16 text-center">
         <div className="mx-auto flex size-16 items-center justify-center rounded-full bg-muted/60 text-muted-foreground">
           <svg
             className="size-8"
@@ -114,7 +229,7 @@ export function CheckoutContent({ products }: { products: CatalogProduct[] }) {
         </p>
         <Link
           href="/catalogo"
-          className="mt-8 inline-flex items-center justify-center rounded-xl bg-primary px-8 py-3.5 text-sm font-semibold text-primary-foreground shadow-sm transition-all hover:opacity-90 hover:shadow"
+          className="mt-8 inline-flex items-center justify-center rounded-[10px] bg-primary px-8 py-3 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
         >
           Ir al catálogo
         </Link>
@@ -132,100 +247,169 @@ export function CheckoutContent({ products }: { products: CatalogProduct[] }) {
         <p className="mb-4 text-xs font-medium uppercase tracking-wider text-muted-foreground">
           Datos de envío
         </p>
-        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6 space-y-5">
-          <div>
-            <label htmlFor="checkout-name" className={labelClass}>
-              Nombre completo
-            </label>
-            <input
-              id="checkout-name"
-              type="text"
-              required
-              className={inputClass}
-              placeholder="Tu nombre"
-            />
-          </div>
-          <div>
-            <label htmlFor="checkout-email" className={labelClass}>
-              Email
-            </label>
-            <input
-              id="checkout-email"
-              type="email"
-              required
-              className={inputClass}
-              placeholder="tu@email.com"
-            />
-          </div>
-          <div>
-            <label htmlFor="checkout-address" className={labelClass}>
-              Dirección
-            </label>
-            <textarea
-              id="checkout-address"
-              required
-              rows={3}
-              className={inputClass}
-              placeholder="Calle, número, piso..."
-            />
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <label htmlFor="checkout-postal" className={labelClass}>
-                Código postal
-              </label>
-              <input
-                id="checkout-postal"
-                type="text"
-                className={inputClass}
-                placeholder="28001"
-              />
+
+        <div className="rounded-[14px] border border-border bg-card p-4 sm:p-5 space-y-5">
+          {/* Saved addresses */}
+          {savedAddresses.length > 0 && (
+            <div className="space-y-3">
+              <p className="text-sm font-semibold text-foreground">
+                Direcciones guardadas
+              </p>
+
+              {!useNewAddress && (
+                <div className="space-y-2">
+                  {savedAddresses.map((address) => (
+                    <AddressRadioCard
+                      key={address.id}
+                      address={address}
+                      selected={selectedAddressId === address.id}
+                      onSelect={() => {
+                        setSelectedAddressId(address.id);
+                        setUseNewAddress(false);
+                      }}
+                    />
+                  ))}
+                </div>
+              )}
+
+              <button
+                type="button"
+                onClick={() => {
+                  setUseNewAddress(!useNewAddress);
+                  if (!useNewAddress) setSelectedAddressId(null);
+                  else setSelectedAddressId(defaultAddress?.id ?? null);
+                }}
+                className="flex items-center gap-2 text-sm font-medium text-primary hover:underline"
+              >
+                {useNewAddress ? (
+                  <>
+                    <Check className="size-4" />
+                    Usar dirección guardada
+                  </>
+                ) : (
+                  <>
+                    <Plus className="size-4" />
+                    Usar otra dirección
+                  </>
+                )}
+              </button>
+
+              {/* Email always shown for payment confirmation */}
+              <div className="pt-1">
+                <label htmlFor="checkout-email" className={labelClass}>
+                  Email de confirmación
+                </label>
+                <input
+                  id="checkout-email"
+                  type="email"
+                  required
+                  className={inputClass}
+                  placeholder="tu@email.com"
+                />
+              </div>
             </div>
-            <div>
-              <label htmlFor="checkout-city" className={labelClass}>
-                Ciudad
-              </label>
-              <input
-                id="checkout-city"
-                type="text"
-                className={inputClass}
-                placeholder="Madrid"
-              />
+          )}
+
+          {/* Manual form */}
+          {(savedAddresses.length === 0 || useNewAddress) && (
+            <div className="space-y-5">
+              <div>
+                <label htmlFor="checkout-name" className={labelClass}>
+                  Nombre completo
+                </label>
+                <input
+                  id="checkout-name"
+                  type="text"
+                  required
+                  className={inputClass}
+                  placeholder="Tu nombre"
+                />
+              </div>
+              {savedAddresses.length === 0 && (
+                <div>
+                  <label htmlFor="checkout-email" className={labelClass}>
+                    Email
+                  </label>
+                  <input
+                    id="checkout-email"
+                    type="email"
+                    required
+                    className={inputClass}
+                    placeholder="tu@email.com"
+                  />
+                </div>
+              )}
+              <div>
+                <label htmlFor="checkout-address" className={labelClass}>
+                  Dirección
+                </label>
+                <textarea
+                  id="checkout-address"
+                  required
+                  rows={3}
+                  className="w-full rounded-[10px] border border-border bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors resize-none"
+                  placeholder="Calle, número, piso..."
+                />
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label htmlFor="checkout-postal" className={labelClass}>
+                    Código postal
+                  </label>
+                  <input
+                    id="checkout-postal"
+                    type="text"
+                    className={inputClass}
+                    placeholder="10100"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="checkout-city" className={labelClass}>
+                    Ciudad
+                  </label>
+                  <input
+                    id="checkout-city"
+                    type="text"
+                    className={inputClass}
+                    placeholder="Santo Domingo"
+                  />
+                </div>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label htmlFor="checkout-country" className={labelClass}>
+                    País
+                  </label>
+                  <input
+                    id="checkout-country"
+                    type="text"
+                    className={inputClass}
+                    placeholder="República Dominicana"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="checkout-phone" className={labelClass}>
+                    Teléfono
+                  </label>
+                  <input
+                    id="checkout-phone"
+                    type="tel"
+                    className={inputClass}
+                    placeholder="+1 (809) 000-0000"
+                  />
+                </div>
+              </div>
             </div>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <label htmlFor="checkout-country" className={labelClass}>
-                País
-              </label>
-              <input
-                id="checkout-country"
-                type="text"
-                className={inputClass}
-                placeholder="España"
-              />
-            </div>
-            <div>
-              <label htmlFor="checkout-phone" className={labelClass}>
-                Teléfono
-              </label>
-              <input
-                id="checkout-phone"
-                type="tel"
-                className={inputClass}
-                placeholder="+34 600 000 000"
-              />
-            </div>
-          </div>
+          )}
         </div>
       </div>
 
-      {/* Resumen del pedido — sticky en desktop */}
+      {/* Resumen del pedido */}
       <aside className="mt-8 lg:mt-0 lg:sticky lg:top-28 lg:self-start">
         <p className="mb-4 text-xs font-medium uppercase tracking-wider text-muted-foreground">
           Resumen del pedido
         </p>
-        <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-sm">
+        <div className="rounded-[14px] border border-border bg-card overflow-hidden">
           <ul className="divide-y divide-border">
             {items.map((item) => {
               const product = productMap.get(item.productId);
@@ -236,7 +420,7 @@ export function CheckoutContent({ products }: { products: CatalogProduct[] }) {
                   key={`${item.productId}:${item.designId ?? ""}`}
                   className="flex gap-4 p-4 sm:p-5"
                 >
-                  <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-muted ring-1 ring-border/50">
+                  <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-[10px] bg-muted ring-1 ring-border/50">
                     <Image
                       src={product.coverImage}
                       alt={product.name}
@@ -247,14 +431,14 @@ export function CheckoutContent({ products }: { products: CatalogProduct[] }) {
                     />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="font-semibold text-foreground">
+                    <p className="text-sm font-semibold text-foreground">
                       {product.name}
                     </p>
-                    <p className="text-sm text-muted-foreground tabular-nums">
+                    <p className="font-mono text-xs text-muted-foreground tabular-nums">
                       {product.price} × {item.quantity}
                     </p>
                   </div>
-                  <p className="font-semibold tabular-nums text-foreground shrink-0">
+                  <p className="font-mono text-sm font-semibold tabular-nums text-foreground shrink-0">
                     {formatDOPFromCents(lineTotal)}
                   </p>
                 </li>
@@ -264,19 +448,19 @@ export function CheckoutContent({ products }: { products: CatalogProduct[] }) {
           <div className="border-t border-border p-5 sm:p-6">
             <div className="flex items-baseline justify-between gap-4 mb-4">
               <span className="text-sm text-muted-foreground">Total</span>
-              <span className="text-2xl font-bold tabular-nums text-primary">
+              <span className="font-mono text-xl font-bold tabular-nums text-primary">
                 {formatDOPFromCents(totalCents)}
               </span>
             </div>
             {error && (
-              <p className="mb-4 rounded-xl border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+              <p className="mb-4 rounded-[10px] border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive">
                 {error}
               </p>
             )}
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-xl bg-primary py-3.5 text-base font-semibold text-primary-foreground shadow-sm transition-all hover:opacity-90 hover:shadow disabled:opacity-60 disabled:pointer-events-none"
+              className="w-full rounded-[10px] bg-primary py-3 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-60 disabled:pointer-events-none"
             >
               {loading ? "Procesando…" : "Pagar con AZUL"}
             </button>

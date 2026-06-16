@@ -156,11 +156,11 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
 
         {/* Price */}
         <div className="flex items-baseline gap-1.5">
-          <span className="text-sm font-black text-primary tabular-nums">
+          <span className="font-mono text-sm font-black text-primary tabular-nums">
             {product.price}
           </span>
           {hasDiscount && (
-            <span className="text-[11px] text-muted-foreground line-through tabular-nums">
+            <span className="font-mono text-[11px] text-muted-foreground line-through tabular-nums">
               {product.originalPrice}
             </span>
           )}

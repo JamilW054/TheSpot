@@ -9,6 +9,7 @@ import {
   Image as ImageIcon,
   Layers,
   LayoutDashboard,
+  LogOut,
   Package,
   PanelLeftClose,
   PlusCircle,
@@ -103,7 +104,7 @@ export function AppSidebar({
   onCollapsedChange,
 }: AppSidebarProps) {
   const pathname = usePathname();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const rawItems = NAV_BY_VARIANT[variant];
   const items =
     variant === "app"
@@ -217,14 +218,14 @@ export function AppSidebar({
 
         {variant === "admin" && (
           <div className="border-t border-border p-3">
-            <Link
-              href="/soporte"
-              onClick={onClose}
-              className="flex items-center gap-2.5 rounded-[10px] px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            <button
+              type="button"
+              onClick={() => { logout(); onClose?.(); }}
+              className="flex w-full items-center gap-2.5 rounded-[10px] px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
             >
-              <HelpCircle className="size-4 shrink-0" />
-              Soporte
-            </Link>
+              <LogOut className="size-4 shrink-0" aria-hidden />
+              Cerrar sesión
+            </button>
           </div>
         )}
       </aside>

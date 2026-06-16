@@ -13,7 +13,7 @@ export function EditorHeader({
   return (
     <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-background/95 px-5 backdrop-blur-sm">
       <Link
-        href="/mis-disenos"
+        href="/cuenta"
         className="text-lg font-semibold tracking-tight text-foreground transition-opacity hover:opacity-80"
       >
         Buxxep

@@ -1,16 +1,18 @@
 "use client";
 
 import { CartNavLink } from "@/components/layout/CartNavLink";
+import { UserNavLink } from "@/components/layout/UserNavLink";
 import { WishlistNavLink } from "@/components/layout/WishlistNavLink";
 import { NavbarSearch } from "@/components/layout/NavbarSearch";
 import StaggeredMenu from "@/components/StaggeredMenu";
 import { ORDER_STATUS_PAGE } from "@/config/navigation";
+import { useAuth } from "@/lib/auth-context";
 import type { CategoryRow } from "@/lib/db/categories";
 
 const LOGO_SRC = "/resources/buxxep-transparent.png";
 const PRIMARY = "#3CC8F7";
 
-const MENU_ITEMS = [
+const BASE_ITEMS = [
   { label: "Inicio", ariaLabel: "Ir a inicio", link: "/" },
   { label: "Catálogo", ariaLabel: "Ver catálogo", link: "/catalogo" },
   {
@@ -18,8 +20,16 @@ const MENU_ITEMS = [
     ariaLabel: ORDER_STATUS_PAGE.ariaLabel,
     link: ORDER_STATUS_PAGE.href,
   },
+];
+
+const GUEST_ITEMS = [
   { label: "Entrar", ariaLabel: "Iniciar sesión", link: "/login" },
   { label: "Registrarse", ariaLabel: "Crear cuenta", link: "/registro" },
+];
+
+const USER_ITEMS = [
+  { label: "Mi Cuenta", ariaLabel: "Ver mi cuenta", link: "/cuenta" },
+  { label: "Mis Pedidos", ariaLabel: "Ver mis pedidos", link: "/cuenta/pedidos" },
 ];
 
 const SOCIAL_ITEMS = [
@@ -31,10 +41,14 @@ interface Props {
 }
 
 export function PublicNavbar({ categories }: Props) {
+  const { user } = useAuth();
+
+  const menuItems = [...BASE_ITEMS, ...(user ? USER_ITEMS : GUEST_ITEMS)];
+
   return (
     <StaggeredMenu
       position="right"
-      items={MENU_ITEMS}
+      items={menuItems}
       socialItems={SOCIAL_ITEMS}
       displaySocials
       displayItemNumbering
@@ -54,6 +68,7 @@ export function PublicNavbar({ categories }: Props) {
       headerCenter={<NavbarSearch categories={categories} />}
       headerTrailing={
         <div className="flex items-center gap-0.5">
+          <UserNavLink className="mr-1" />
           <WishlistNavLink className="text-white/90 hover:bg-white/15 hover:text-white focus-visible:ring-white/40 focus-visible:ring-offset-0" />
           <CartNavLink className="text-white/90 hover:bg-white/15 hover:text-white focus-visible:ring-white/40 focus-visible:ring-offset-0" />
         </div>

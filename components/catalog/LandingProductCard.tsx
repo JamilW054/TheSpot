@@ -133,11 +133,11 @@ export function LandingProductCard({ product, variant = "default" }: CardProps) 
           <div className="flex items-end justify-between gap-2 pt-0.5">
             {/* Prices stacked so they never overflow on narrow columns */}
             <div className="min-w-0">
-              <p className="text-sm font-black text-primary tabular-nums leading-none">
+              <p className="font-mono text-sm font-black text-primary tabular-nums leading-none">
                 {product.price}
               </p>
               {hasDiscount && (
-                <p className="mt-0.5 text-[10px] text-muted-foreground line-through tabular-nums">
+                <p className="font-mono mt-0.5 text-[10px] text-muted-foreground line-through tabular-nums">
                   {product.originalPrice}
                 </p>
               )}
@@ -205,7 +205,7 @@ export function LandingProductCard({ product, variant = "default" }: CardProps) 
             {product.name}
           </h2>
           <div className="flex items-center justify-between gap-2">
-            <span className="text-sm font-black text-primary tabular-nums leading-none">
+            <span className="font-mono text-sm font-black text-primary tabular-nums leading-none">
               {product.price}
             </span>
             <button
@@ -289,9 +289,9 @@ export function LandingProductCard({ product, variant = "default" }: CardProps) 
             <div>
               <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Precio</p>
               <div className="flex items-baseline gap-1.5">
-                <span className="text-lg font-black text-primary tabular-nums">{product.price}</span>
+                <span className="font-mono text-lg font-black text-primary tabular-nums">{product.price}</span>
                 {hasDiscount && (
-                  <span className="text-xs text-muted-foreground line-through tabular-nums">{product.originalPrice}</span>
+                  <span className="font-mono text-xs text-muted-foreground line-through tabular-nums">{product.originalPrice}</span>
                 )}
               </div>
             </div>
@@ -371,9 +371,9 @@ export function LandingProductCard({ product, variant = "default" }: CardProps) 
 
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-black text-primary tabular-nums">{product.price}</span>
+            <span className="font-mono text-2xl font-black text-primary tabular-nums">{product.price}</span>
             {hasDiscount && (
-              <span className="text-sm text-white/35 line-through tabular-nums">{product.originalPrice}</span>
+              <span className="font-mono text-sm text-white/35 line-through tabular-nums">{product.originalPrice}</span>
             )}
           </div>
           <button

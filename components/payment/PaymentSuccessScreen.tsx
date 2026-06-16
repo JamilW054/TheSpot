@@ -110,7 +110,7 @@ export function PaymentSuccessScreen({
             Seguir comprando
           </Link>
           <Link
-            href="/mis-pedidos"
+            href="/cuenta/pedidos"
             className="inline-flex justify-center rounded-xl border border-border px-5 py-3 text-sm font-semibold text-foreground"
           >
             Mis pedidos

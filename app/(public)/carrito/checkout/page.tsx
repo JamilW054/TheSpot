@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getProducts } from "@/lib/db";
+import { getAddresses } from "@/lib/db/addresses";
 import { createClient } from "@/lib/supabase/server";
 import { CheckoutContent } from "./CheckoutContent";
 
@@ -9,7 +10,6 @@ export const metadata = {
   description: "Finaliza tu pedido. Introduce tus datos de envío y confirma.",
 };
 
-/** Evita caché: siempre comprobar sesión en el servidor. */
 export const dynamic = "force-dynamic";
 
 const CHECKOUT_PATH = "/carrito/checkout";
@@ -22,7 +22,10 @@ export default async function CheckoutPage() {
   if (!user) {
     redirect(`/login?redirect=${encodeURIComponent(CHECKOUT_PATH)}`);
   }
-  const products = await getProducts();
+  const [products, savedAddresses] = await Promise.all([
+    getProducts(),
+    getAddresses(),
+  ]);
   return (
     <article className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-2 sm:pt-4 pb-16 sm:pb-20">
       <nav className="mb-4 sm:mb-5" aria-label="Navegación">
@@ -58,7 +61,7 @@ export default async function CheckoutPage() {
         </p>
       </header>
 
-      <CheckoutContent products={products} />
+      <CheckoutContent products={products} savedAddresses={savedAddresses} />
     </article>
   );
 }

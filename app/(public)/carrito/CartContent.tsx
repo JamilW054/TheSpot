@@ -2,261 +2,500 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useState } from "react";
+import { Trash2, Tag, ChevronLeft, Truck } from "lucide-react";
 import { useCart } from "@/contexts/cart-context";
 import { formatDOPFromCents } from "@/lib/format-currency";
-import type { CatalogProduct } from "@/types";
+import type { CartItem, CatalogProduct } from "@/types";
+import type { ShippingMethod } from "@/lib/db";
 
 const MIN_ORDER_CENTS = Number(process.env.NEXT_PUBLIC_MIN_ORDER_CENTS ?? "0");
 
+function formatShippingDesc(method: ShippingMethod): string {
+  if (method.description) return method.description;
+  if (method.minDays != null && method.maxDays != null)
+    return `${method.minDays}-${method.maxDays} días hábiles`;
+  if (method.minDays != null) return `A partir de ${method.minDays} días`;
+  return "";
+}
+
 function isExternalImage(src: string): boolean {
+  return src.startsWith("http") || src.includes("placehold.co");
+}
+
+/* ── Empty state ─────────────────────────────────────────── */
+function EmptyCart() {
   return (
-    src.includes("placehold.co") ||
-    src.includes("imgur.com") ||
-    src.includes("unsplash.com") ||
-    src.startsWith("http")
+    <div className="animate-scale-in rounded-[14px] border border-border bg-card p-16 text-center">
+      <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-muted/60">
+        <svg
+          className="size-10 text-muted-foreground"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden
+        >
+          <circle cx="9" cy="21" r="1" />
+          <circle cx="20" cy="21" r="1" />
+          <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+        </svg>
+      </div>
+      <h2 className="text-xl font-semibold text-foreground">
+        Tu carrito está vacío
+      </h2>
+      <p className="mx-auto mt-3 max-w-xs text-sm leading-relaxed text-muted-foreground">
+        Añade productos desde el catálogo y vuelve aquí para finalizar tu
+        pedido.
+      </p>
+      <Link
+        href="/catalogo"
+        className="mt-8 inline-flex items-center justify-center rounded-[10px] bg-primary px-8 py-3 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
+      >
+        Ir al catálogo
+      </Link>
+    </div>
   );
 }
 
-export function CartContent({ products }: { products: CatalogProduct[] }) {
-  const { items, updateQuantity, removeItem } = useCart();
+/* ── Single item card ────────────────────────────────────── */
+interface CartItemCardProps {
+  item: CartItem;
+  product: CatalogProduct;
+  onUpdate: (
+    productId: string,
+    qty: number,
+    designId?: string | null,
+    size?: string | null,
+  ) => void;
+  onRemove: (
+    productId: string,
+    designId?: string | null,
+    size?: string | null,
+  ) => void;
+}
 
-  if (items.length === 0) {
-    return (
-      <div className="rounded-3xl border border-border bg-card p-16 sm:p-20 text-center">
-        <div className="mx-auto flex size-20 items-center justify-center rounded-full bg-muted/50 text-muted-foreground">
-          <svg
-            className="size-10"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden
-          >
-            <circle cx="9" cy="21" r="1" />
-            <circle cx="20" cy="21" r="1" />
-            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
-          </svg>
-        </div>
-        <h2 className="mt-8 text-xl font-semibold text-foreground">
-          Tu carrito está vacío
-        </h2>
-        <p className="mt-3 text-sm text-muted-foreground max-w-sm mx-auto leading-relaxed">
-          Añade productos desde el catálogo y vuelve aquí para finalizar tu
-          pedido.
-        </p>
-        <Link
-          href="/catalogo"
-          className="mt-10 inline-flex items-center justify-center rounded-xl bg-primary px-10 py-4 text-sm font-semibold text-primary-foreground shadow-sm transition-all hover:opacity-90 hover:shadow"
-        >
-          Ir al catálogo
-        </Link>
-      </div>
-    );
-  }
-
-  const productMap = new Map(products.map((p) => [p.id, p]));
-  let totalCents = 0;
-  const totalItems = items.reduce((acc, i) => acc + i.quantity, 0);
-
+function CartItemCard({ item, product, onUpdate, onRemove }: CartItemCardProps) {
   return (
-    <div className="lg:grid lg:grid-cols-[1fr_380px] lg:gap-10 xl:gap-12">
-      {/* Lista de productos */}
-      <div className="lg:min-w-0">
-        <p className="mb-4 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-          {totalItems} {totalItems === 1 ? "artículo" : "artículos"}
-        </p>
-        <ul className="space-y-4">
-          {items.map((item) => {
-            const product = productMap.get(item.productId);
-            if (!product) return null;
-            const lineTotal = product.priceCents * item.quantity;
-            totalCents += lineTotal;
-            return (
-              <li
-                key={`${item.productId}:${item.designId ?? ""}:${item.size ?? ""}`}
-                className="group flex flex-col gap-4 rounded-2xl border border-border bg-card p-4 shadow-sm transition-shadow hover:shadow-md sm:flex-row sm:items-center sm:gap-6 sm:p-5"
-              >
-                <Link
-                  href={`/catalogo/${product.slug}`}
-                  className="relative block aspect-square w-full shrink-0 overflow-hidden rounded-xl bg-muted ring-1 ring-border/50 sm:h-24 sm:w-24"
-                >
-                  <Image
-                    src={product.coverImage}
-                    alt={product.name}
-                    fill
-                    className="object-cover transition-transform duration-200 group-hover:scale-105"
-                    sizes="(max-width: 640px) 100vw, 96px"
-                    unoptimized={isExternalImage(product.coverImage)}
-                  />
-                </Link>
+    <li className="group flex gap-3 rounded-[14px] border border-border bg-card p-4 transition-[border-color] duration-200 hover:border-primary/20">
+      {/* Imagen */}
+      <Link
+        href={`/catalogo/${product.slug}`}
+        className="relative h-[72px] w-[72px] shrink-0 overflow-hidden rounded-[10px] bg-muted"
+        tabIndex={-1}
+        aria-hidden
+      >
+        <Image
+          src={product.coverImage}
+          alt={product.name}
+          fill
+          className="object-cover transition-transform duration-300 group-hover:scale-105"
+          sizes="72px"
+          unoptimized={isExternalImage(product.coverImage)}
+        />
+      </Link>
 
-                <div className="min-w-0 flex-1 space-y-0.5">
-                  <Link
-                    href={`/catalogo/${product.slug}`}
-                    className="font-semibold text-foreground hover:text-primary transition-colors line-clamp-2"
-                  >
-                    {product.name}
-                  </Link>
-                  <div className="flex flex-wrap items-center gap-2">
-                    {item.size ? (
-                      <span className="inline-flex items-center rounded-md border border-border bg-muted/40 px-2 py-0.5 text-xs font-semibold uppercase tracking-wide text-foreground">
-                        {item.size}
-                      </span>
-                    ) : null}
-                    {item.designId ? (
-                      <span className="inline-block text-xs font-medium text-muted-foreground">
-                        Diseño personalizado
-                      </span>
-                    ) : null}
-                  </div>
-                  <p className="text-sm text-muted-foreground tabular-nums">
-                    {product.price}{" "}
-                    <span className="text-foreground/80">
-                      × {item.quantity}
-                    </span>
-                  </p>
-                </div>
-
-                <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4 sm:justify-end sm:border-0 sm:pt-0 sm:flex-nowrap">
-                  <div className="flex items-center rounded-lg border border-border bg-muted/20">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        updateQuantity(
-                          item.productId,
-                          item.quantity - 1,
-                          item.designId,
-                          item.size,
-                        )
-                      }
-                      className="flex h-9 w-9 items-center justify-center text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                      aria-label="Reducir cantidad"
-                    >
-                      −
-                    </button>
-                    <span className="min-w-9 text-center text-sm font-medium tabular-nums">
-                      {item.quantity}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        updateQuantity(
-                          item.productId,
-                          item.quantity + 1,
-                          item.designId,
-                          item.size,
-                        )
-                      }
-                      className="flex h-9 w-9 items-center justify-center text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                      aria-label="Aumentar cantidad"
-                    >
-                      +
-                    </button>
-                  </div>
-                  <p className="text-lg font-semibold tabular-nums text-foreground">
-                    {formatDOPFromCents(lineTotal)}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      removeItem(item.productId, item.designId, item.size)
-                    }
-                    className="flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-destructive"
-                    aria-label="Quitar del carrito"
-                  >
-                    <svg
-                      className="size-4"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      aria-hidden
-                    >
-                      <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                      <line x1="10" y1="11" x2="10" y2="17" />
-                      <line x1="14" y1="11" x2="14" y2="17" />
-                    </svg>
-                    Quitar
-                  </button>
-                </div>
-              </li>
-            );
-          })}
-        </ul>
-
-        <p className="mt-6">
-          <Link
-            href="/catalogo"
-            className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <svg
-              className="size-4"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              aria-hidden
-            >
-              <path d="M19 12H5M12 19l-7-7 7-7" />
-            </svg>
-            Seguir comprando
-          </Link>
-        </p>
+      {/* Info */}
+      <div className="flex min-w-0 flex-1 flex-col gap-1">
+        {product.brandName ? (
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            {product.brandName}
+          </span>
+        ) : null}
+        <Link
+          href={`/catalogo/${product.slug}`}
+          className="line-clamp-2 text-sm font-semibold text-foreground transition-colors hover:text-primary"
+        >
+          {product.name}
+        </Link>
+        {item.size ? (
+          <span className="self-start rounded-full border border-border bg-muted/40 px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+            Talla: {item.size}
+          </span>
+        ) : null}
+        {item.designId ? (
+          <span className="text-[11px] font-medium text-muted-foreground">
+            Diseño personalizado
+          </span>
+        ) : null}
+        <span className="font-mono text-sm font-bold text-primary">
+          {product.price}
+        </span>
       </div>
 
-      {/* Resumen del pedido — sticky en desktop */}
-      <aside className="mt-8 lg:mt-0 lg:sticky lg:top-28 lg:self-start">
-        <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-            Resumen del pedido
-          </h2>
-          <div className="mt-4 border-t border-border pt-4 space-y-2">
-            <div className="flex items-baseline justify-between gap-4">
-              <span className="text-sm text-muted-foreground">Total</span>
-              <span className="text-2xl font-bold tabular-nums text-primary">
-                {formatDOPFromCents(totalCents)}
+      {/* Controles */}
+      <div className="flex shrink-0 flex-col items-end justify-between gap-2">
+        {/* Eliminar */}
+        <button
+          type="button"
+          onClick={() => onRemove(item.productId, item.designId, item.size)}
+          className="rounded-md p-1 text-muted-foreground/50 transition-colors hover:text-destructive"
+          aria-label="Quitar del carrito"
+        >
+          <Trash2 className="size-4" aria-hidden />
+        </button>
+
+        {/* Cantidad */}
+        <div className="flex items-center rounded-[10px] border border-border bg-background">
+          <button
+            type="button"
+            onClick={() =>
+              onUpdate(item.productId, item.quantity - 1, item.designId, item.size)
+            }
+            className="flex h-8 w-8 items-center justify-center text-lg leading-none text-muted-foreground transition-colors hover:text-foreground"
+            aria-label="Reducir cantidad"
+          >
+            −
+          </button>
+          <span className="min-w-7 text-center text-sm font-semibold tabular-nums text-foreground">
+            {item.quantity}
+          </span>
+          <button
+            type="button"
+            onClick={() =>
+              onUpdate(item.productId, item.quantity + 1, item.designId, item.size)
+            }
+            className="flex h-8 w-8 items-center justify-center text-lg leading-none text-muted-foreground transition-colors hover:text-foreground"
+            aria-label="Aumentar cantidad"
+          >
+            +
+          </button>
+        </div>
+      </div>
+    </li>
+  );
+}
+
+/* ── Shipping selector ───────────────────────────────────── */
+interface ShippingSelectorProps {
+  methods: ShippingMethod[];
+  selected: string;
+  onSelect: (id: string) => void;
+}
+
+function ShippingSelector({ methods, selected, onSelect }: ShippingSelectorProps) {
+  return (
+    <div className="rounded-[14px] border border-border bg-card p-4">
+      <div className="mb-3 flex items-center gap-2">
+        <Truck className="size-4 text-muted-foreground" aria-hidden />
+        <h3 className="text-sm font-semibold text-foreground">Tipo de envío</h3>
+      </div>
+      <div className="space-y-2">
+        {methods.map((method) => {
+          const active = selected === method.id;
+          const desc = formatShippingDesc(method);
+          return (
+            <label
+              key={method.id}
+              className={`flex cursor-pointer items-center gap-3 rounded-[10px] border p-3 transition-all duration-150 ${
+                active
+                  ? "border-primary bg-primary/5"
+                  : "border-border bg-muted/20 hover:border-border/60"
+              }`}
+            >
+              <input
+                type="radio"
+                name="shipping"
+                value={method.id}
+                checked={active}
+                onChange={() => onSelect(method.id)}
+                className="sr-only"
+              />
+              <span
+                className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border transition-colors ${
+                  active ? "border-primary" : "border-border"
+                }`}
+                aria-hidden
+              >
+                {active && <span className="h-2 w-2 rounded-full bg-primary" />}
               </span>
-            </div>
-            {MIN_ORDER_CENTS > 0 && totalCents < MIN_ORDER_CENTS && (
-              <div className="rounded-lg bg-amber-500/10 border border-amber-500/30 px-3 py-2.5">
-                <p className="text-xs text-amber-600 dark:text-amber-400 font-medium leading-snug">
-                  Monto mínimo de compra:{" "}
-                  <span className="font-bold">
-                    {formatDOPFromCents(MIN_ORDER_CENTS)}
+
+              <span className="flex-1 min-w-0">
+                <span className="block text-sm font-semibold text-foreground">
+                  {method.name}
+                </span>
+                {desc && (
+                  <span className="block text-xs text-muted-foreground">
+                    {desc}
                   </span>
-                </p>
-                <p className="text-xs text-amber-600/80 dark:text-amber-400/80 mt-0.5">
-                  Te faltan {formatDOPFromCents(MIN_ORDER_CENTS - totalCents)}{" "}
-                  para continuar.
-                </p>
-              </div>
-            )}
-          </div>
-          {MIN_ORDER_CENTS > 0 && totalCents < MIN_ORDER_CENTS ? (
+                )}
+              </span>
+
+              <span className="shrink-0 font-mono text-sm font-bold text-foreground tabular-nums">
+                {formatDOPFromCents(method.priceCents)}
+              </span>
+            </label>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* ── Promo code ──────────────────────────────────────────── */
+interface PromoInputProps {
+  code: string;
+  onChange: (v: string) => void;
+  onApply: () => void;
+  error: string | null;
+  applied: boolean;
+}
+
+function PromoInput({ code, onChange, onApply, error, applied }: PromoInputProps) {
+  return (
+    <div className="rounded-[14px] border border-border bg-card p-4">
+      <div className="mb-3 flex items-center gap-2">
+        <Tag className="size-4 text-muted-foreground" aria-hidden />
+        <h3 className="text-sm font-semibold text-foreground">
+          ¿Tienes un código?
+        </h3>
+      </div>
+      <div className="flex gap-2">
+        <input
+          type="text"
+          value={code}
+          onChange={(e) => onChange(e.target.value.toUpperCase())}
+          placeholder="BUXXEP10"
+          className="flex-1 rounded-[10px] border border-border bg-background px-3 py-2 font-mono text-sm text-foreground placeholder:text-muted-foreground/50 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15"
+        />
+        <button
+          type="button"
+          onClick={onApply}
+          className="rounded-[10px] bg-muted px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:bg-muted/80"
+        >
+          Aplicar
+        </button>
+      </div>
+      {error && (
+        <p className="mt-2 text-xs text-destructive">{error}</p>
+      )}
+      {applied && (
+        <p className="mt-2 text-xs text-primary font-medium">
+          ¡Código aplicado correctamente!
+        </p>
+      )}
+    </div>
+  );
+}
+
+/* ── Order summary ───────────────────────────────────────── */
+interface OrderSummaryProps {
+  subtotalCents: number;
+  shippingCents: number;
+  grandTotalCents: number;
+  belowMin: boolean;
+  minOrderCents: number;
+  shippingId: string;
+  className?: string;
+  showCheckoutBtn?: boolean;
+}
+
+function OrderSummary({
+  subtotalCents,
+  shippingCents,
+  grandTotalCents,
+  belowMin,
+  minOrderCents,
+  shippingId,
+  className = "",
+  showCheckoutBtn = true,
+}: OrderSummaryProps) {
+  return (
+    <div className={`rounded-[14px] border border-border bg-card p-4 ${className}`}>
+      <h3 className="mb-3 text-sm font-semibold text-foreground">Resumen</h3>
+      <div className="space-y-2">
+        <div className="flex items-center justify-between gap-4">
+          <span className="text-sm text-muted-foreground">Subtotal</span>
+          <span className="font-mono text-sm font-medium tabular-nums text-foreground">
+            {formatDOPFromCents(subtotalCents)}
+          </span>
+        </div>
+        <div className="flex items-center justify-between gap-4">
+          <span className="text-sm text-muted-foreground">Envío</span>
+          <span className="font-mono text-sm font-medium tabular-nums text-foreground">
+            {formatDOPFromCents(shippingCents)}
+          </span>
+        </div>
+        <div className="flex items-baseline justify-between gap-4 border-t border-border pt-2">
+          <span className="text-sm font-semibold text-foreground">Total</span>
+          <span className="font-mono text-xl font-bold tabular-nums text-primary">
+            {formatDOPFromCents(grandTotalCents)}
+          </span>
+        </div>
+      </div>
+
+      {belowMin && (
+        <div className="mt-3 rounded-[10px] border border-amber-500/30 bg-amber-500/10 px-3 py-2.5">
+          <p className="text-xs font-medium text-amber-500 leading-snug">
+            Monto mínimo:{" "}
+            <span className="font-bold">{formatDOPFromCents(minOrderCents)}</span>
+          </p>
+          <p className="mt-0.5 text-xs text-amber-500/80">
+            Te faltan {formatDOPFromCents(minOrderCents - subtotalCents)} para
+            continuar.
+          </p>
+        </div>
+      )}
+
+      {showCheckoutBtn && (
+        <>
+          {belowMin ? (
             <button
               type="button"
               disabled
-              className="mt-6 flex w-full items-center justify-center rounded-xl bg-muted px-6 py-3.5 text-base font-semibold text-muted-foreground cursor-not-allowed opacity-60"
+              className="mt-4 flex w-full cursor-not-allowed items-center justify-center rounded-[10px] bg-muted py-3 text-sm font-semibold text-muted-foreground opacity-50"
             >
               Finalizar compra
             </button>
           ) : (
             <Link
-              href="/carrito/checkout"
-              className="mt-6 flex w-full items-center justify-center rounded-xl bg-primary px-6 py-3.5 text-base font-semibold text-primary-foreground shadow-sm transition-all hover:opacity-90 hover:shadow"
+              href={`/carrito/checkout?shipping=${shippingId}`}
+              className="mt-4 flex w-full items-center justify-center rounded-[10px] bg-primary py-3 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
             >
-              Finalizar compra
+              Confirmar y pagar
             </Link>
           )}
-          <p className="mt-3 text-center text-xs text-muted-foreground">
+          <p className="mt-2 text-center text-xs text-muted-foreground">
             Pago seguro en el siguiente paso
           </p>
-        </div>
-      </aside>
+        </>
+      )}
     </div>
+  );
+}
+
+/* ── Main export ─────────────────────────────────────────── */
+export function CartContent({
+  products,
+  shippingMethods,
+}: {
+  products: CatalogProduct[];
+  shippingMethods: ShippingMethod[];
+}) {
+  const { items, updateQuantity, removeItem } = useCart();
+  const [shippingId, setShippingId] = useState<string>(
+    () => shippingMethods[0]?.id ?? "",
+  );
+  const [promoCode, setPromoCode] = useState("");
+  const [promoError, setPromoError] = useState<string | null>(null);
+  const [promoApplied, setPromoApplied] = useState(false);
+
+  if (items.length === 0) return <EmptyCart />;
+
+  const productMap = new Map(products.map((p) => [p.id, p]));
+  let subtotalCents = 0;
+  let totalItems = 0;
+
+  for (const item of items) {
+    const p = productMap.get(item.productId);
+    if (p) subtotalCents += p.priceCents * item.quantity;
+    totalItems += item.quantity;
+  }
+
+  const selectedShipping =
+    shippingMethods.find((s) => s.id === shippingId) ?? shippingMethods[0];
+  const grandTotalCents = subtotalCents + (selectedShipping?.priceCents ?? 0);
+  const belowMin = MIN_ORDER_CENTS > 0 && subtotalCents < MIN_ORDER_CENTS;
+
+  const handleApplyPromo = () => {
+    setPromoError("Código inválido o expirado.");
+    setPromoApplied(false);
+  };
+
+  return (
+    <>
+      <div className="lg:grid lg:grid-cols-[1fr_340px] lg:items-start lg:gap-8">
+        {/* ── Items ── */}
+        <div>
+          <p className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            {totalItems} {totalItems === 1 ? "artículo" : "artículos"}
+          </p>
+
+          <ul className="animate-stagger space-y-3">
+            {items.map((item) => {
+              const product = productMap.get(item.productId);
+              if (!product) return null;
+              return (
+                <CartItemCard
+                  key={`${item.productId}:${item.designId ?? ""}:${item.size ?? ""}`}
+                  item={item}
+                  product={product}
+                  onUpdate={updateQuantity}
+                  onRemove={removeItem}
+                />
+              );
+            })}
+          </ul>
+
+          <Link
+            href="/catalogo"
+            className="mt-5 inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <ChevronLeft className="size-4" aria-hidden />
+            Seguir comprando
+          </Link>
+        </div>
+
+        {/* ── Sidebar ── */}
+        <aside className="mt-6 space-y-3 lg:mt-0 lg:sticky lg:top-28">
+          <ShippingSelector
+            methods={shippingMethods}
+            selected={shippingId}
+            onSelect={setShippingId}
+          />
+
+          <PromoInput
+            code={promoCode}
+            onChange={setPromoCode}
+            onApply={handleApplyPromo}
+            error={promoError}
+            applied={promoApplied}
+          />
+
+          <OrderSummary
+            subtotalCents={subtotalCents}
+            shippingCents={selectedShipping.priceCents}
+            grandTotalCents={grandTotalCents}
+            belowMin={belowMin}
+            minOrderCents={MIN_ORDER_CENTS}
+            shippingId={shippingId}
+            showCheckoutBtn
+            className="hidden lg:block"
+          />
+        </aside>
+      </div>
+
+      {/* ── Mobile sticky bottom bar ── */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background/95 px-4 py-3 backdrop-blur-lg lg:hidden">
+        <div className="mx-auto flex max-w-lg items-center gap-3">
+          <div className="min-w-0 flex-1">
+            <p className="text-xs text-muted-foreground">
+              {totalItems} artículo(s)
+            </p>
+            <p className="font-mono text-lg font-bold tabular-nums text-primary leading-tight">
+              {formatDOPFromCents(grandTotalCents)}
+            </p>
+          </div>
+          {belowMin ? (
+            <button
+              type="button"
+              disabled
+              className="flex-1 cursor-not-allowed rounded-[10px] bg-muted py-3 text-sm font-semibold text-muted-foreground opacity-50"
+            >
+              Finalizar compra
+            </button>
+          ) : (
+            <Link
+              href={`/carrito/checkout?shipping=${shippingId}`}
+              className="flex-1 rounded-[10px] bg-primary py-3 text-center text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
+            >
+              Confirmar y pagar
+            </Link>
+          )}
+        </div>
+      </div>
+    </>
   );
 }
