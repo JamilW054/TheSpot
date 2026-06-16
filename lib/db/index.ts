@@ -795,9 +795,9 @@ export async function createOrder(
   }
 
   const shippingAddress: ShippingAddress = {
-    full_name: shipping.name.trim(),
-    email: shipping.email.trim(),
-    address_line1: shipping.address.trim(),
+    full_name: (shipping.name ?? "").trim(),
+    email: (shipping.email ?? "").trim(),
+    address_line1: (shipping.address ?? "").trim(),
     phone: shipping.phone?.trim() ?? null,
     city: shipping.city?.trim() ?? null,
     postal_code: shipping.postalCode?.trim() ?? null,
@@ -813,7 +813,7 @@ export async function createOrder(
       subtotal_cents: 0,
       total_cents: 0,
       shipping_address: shippingAddress,
-      contact_email: shipping.email.trim(),
+      contact_email: (shipping.email ?? "").trim(),
     })
     .select("id")
     .single();

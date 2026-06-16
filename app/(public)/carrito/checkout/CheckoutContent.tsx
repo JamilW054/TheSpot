@@ -36,7 +36,7 @@ interface ShippingData {
 
 function shippingFromAddress(a: Address, email: string): ShippingData {
   return {
-    name: a.fullName,
+    name: a.fullName ?? "",
     email,
     address: [a.addressLine1, a.addressLine2].filter(Boolean).join(", "),
     phone: a.phone ?? undefined,
@@ -153,15 +153,9 @@ export function CheckoutContent({
     } else {
       const checkoutForm = e.currentTarget;
       shipping = {
-        name: (
-          checkoutForm.querySelector("#checkout-name") as HTMLInputElement
-        ).value.trim(),
-        email: (
-          checkoutForm.querySelector("#checkout-email") as HTMLInputElement
-        ).value.trim(),
-        address: (
-          checkoutForm.querySelector("#checkout-address") as HTMLTextAreaElement
-        ).value.trim(),
+        name: ((checkoutForm.querySelector("#checkout-name") as HTMLInputElement | null)?.value ?? "").trim(),
+        email: ((checkoutForm.querySelector("#checkout-email") as HTMLInputElement | null)?.value ?? "").trim(),
+        address: ((checkoutForm.querySelector("#checkout-address") as HTMLTextAreaElement | null)?.value ?? "").trim(),
         phone:
           (checkoutForm.querySelector("#checkout-phone") as HTMLInputElement)?.value?.trim() ||
           undefined,
