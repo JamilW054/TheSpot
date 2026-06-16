@@ -1,4 +1,4 @@
-# Buxxep Web 16/6 v2
+# Buxxep Web 16/6 v3
 
 Plataforma de diseño y tienda de ropa: landing pública, zona de usuario con editor de diseños (canvas con arrastrar y soltar) y panel de admin.
 
