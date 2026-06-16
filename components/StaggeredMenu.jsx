@@ -306,9 +306,7 @@ export const StaggeredMenu = ({
   React.useEffect(() => {
     if (toggleBtnRef.current) {
       if (changeMenuColorOnOpen) {
-        const targetColor = openRef.current
-          ? openMenuButtonColor
-          : menuButtonColor;
+        const targetColor = openRef.current ? openMenuButtonColor : menuButtonColor;
         gsap.set(toggleBtnRef.current, { color: targetColor });
       } else {
         gsap.set(toggleBtnRef.current, { color: menuButtonColor });

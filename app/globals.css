@@ -272,6 +272,13 @@ body.scrollbar-hide-root::-webkit-scrollbar {
   animation: scale-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
+/* View Transitions — theme toggle animation */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
 /* Stagger automático — los hijos entran en cascada */
 .animate-stagger > * {
   opacity: 0;

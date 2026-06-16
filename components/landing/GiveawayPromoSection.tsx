@@ -41,7 +41,7 @@ function StripedProgressFill({
           <rect x="7" width="7" height="14" fill={STRIPE_A} />
         </pattern>
       </defs>
-      <rect width="400" height="36" fill="#0f172a" rx="4" />
+      <rect width="400" height="36" style={{ fill: "var(--muted)" }} rx="4" />
       <rect width={w} height="36" fill={`url(#${patternId})`} rx="4" />
     </svg>
   );
@@ -64,7 +64,7 @@ export function GiveawayPromoSection({
 
   return (
     <section
-      className="w-full bg-zinc-950 text-white"
+      className="w-full bg-card text-foreground"
       aria-labelledby="giveaway-heading"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-14 sm:py-20 lg:py-24">
@@ -74,7 +74,7 @@ export function GiveawayPromoSection({
           {/* ── Left: headline + prizes ── */}
           <div className="flex flex-col gap-6">
             <div className="flex flex-wrap gap-2">
-              <div className="inline-flex items-center gap-2 rounded-full border border-primary/35 bg-primary/10 px-3.5 py-2 text-[11px] font-semibold leading-snug text-zinc-100">
+              <div className="inline-flex items-center gap-2 rounded-full border border-primary/35 bg-primary/10 px-3.5 py-2 text-[11px] font-semibold leading-snug text-foreground">
                 <Lock className="size-3.5 shrink-0 text-primary" aria-hidden />
                 Pagos 100% seguros con Azul
               </div>
@@ -82,13 +82,13 @@ export function GiveawayPromoSection({
 
             <div className="space-y-2">
               <h2 id="giveaway-heading" className="leading-[1.02]">
-                <span className="block text-[clamp(2.4rem,6vw,4.5rem)] font-black uppercase tracking-tight text-white">
+                <span className="block text-[clamp(2.4rem,6vw,4.5rem)] font-black uppercase tracking-tight text-foreground">
                   Gana
                 </span>
                 <span className="mt-1 block text-[clamp(2rem,5.5vw,3.8rem)] font-bold italic tracking-tight text-primary">
                   en grande
                 </span>
-                <span className="mt-4 inline-block rounded-lg border border-primary/50 bg-primary/5 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-zinc-100 sm:text-sm">
+                <span className="mt-4 inline-block rounded-lg border border-primary/50 bg-primary/5 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-foreground sm:text-sm">
                   Con Buxxep
                 </span>
               </h2>
@@ -102,10 +102,10 @@ export function GiveawayPromoSection({
                 11
               </span>
               <div className="pb-0.5">
-                <p className="text-base font-bold uppercase tracking-wide text-white sm:text-lg">
+                <p className="text-base font-bold uppercase tracking-wide text-foreground sm:text-lg">
                   Ganadores
                 </p>
-                <ul className="mt-3 space-y-2.5 text-xs font-medium leading-snug text-zinc-300 sm:text-sm">
+                <ul className="mt-3 space-y-2.5 text-xs font-medium leading-snug text-muted-foreground sm:text-sm">
                   <li className="flex gap-2.5">
                     <Bike className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden />
                     <span>1 ganador moto Vengala 250</span>
@@ -136,16 +136,16 @@ export function GiveawayPromoSection({
 
           {/* ── Right: participation + progress + CTA ── */}
           <div className="flex flex-col gap-6">
-            <div className="rounded-xl border border-zinc-700/80 bg-zinc-900/80 p-5 sm:p-6">
+            <div className="rounded-xl border border-border bg-muted/50 p-5 sm:p-6">
               <div className="flex gap-3 sm:gap-4">
-                <div className="flex size-12 shrink-0 items-center justify-center rounded-lg border border-zinc-600 bg-zinc-950">
+                <div className="flex size-12 shrink-0 items-center justify-center rounded-lg border border-border bg-background">
                   <Smartphone className="size-5 text-primary" aria-hidden />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold uppercase leading-snug text-white">
+                  <p className="text-sm font-semibold uppercase leading-snug text-foreground">
                     Compra en Buxxep y participa automáticamente
                   </p>
-                  <p className="mt-2 text-xs leading-relaxed text-zinc-400">
+                  <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
                     Mientras más compras, más oportunidades tienes.
                   </p>
                 </div>
@@ -155,14 +155,14 @@ export function GiveawayPromoSection({
             {/* Progress */}
             <div className="space-y-3">
               <div className="text-center space-y-1">
-                <p className="text-sm font-semibold text-zinc-100 sm:text-base">
+                <p className="text-sm font-semibold text-foreground sm:text-base">
                   Llevamos{" "}
                   <span className="tabular-nums text-primary">{formattedCount}</span>{" "}
                   de{" "}
-                  <span className="tabular-nums text-white">{formattedGoal}</span>{" "}
+                  <span className="tabular-nums text-foreground">{formattedGoal}</span>{" "}
                   compras pagadas
                 </p>
-                <p className="text-xs leading-relaxed text-zinc-500">
+                <p className="text-xs leading-relaxed text-muted-foreground">
                   Al completar la meta se eligen los ganadores.
                 </p>
               </div>
@@ -173,7 +173,7 @@ export function GiveawayPromoSection({
                 aria-valuemax={goal}
                 aria-valuetext={`${formattedCount} de ${formattedGoal} compras pagadas, ${pct} por ciento`}
                 aria-label="Avance de compras pagadas hacia la meta del sorteo"
-                className="flex items-center gap-3 text-[11px] font-semibold tabular-nums text-zinc-400 sm:text-xs"
+                className="flex items-center gap-3 text-[11px] font-semibold tabular-nums text-muted-foreground sm:text-xs"
               >
                 <span>0</span>
                 <div className="min-w-0 flex-1">
@@ -204,7 +204,7 @@ export function GiveawayPromoSection({
               href="https://www.instagram.com/buxxep.app/"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 self-center text-sm font-medium text-zinc-400 transition-colors hover:text-primary"
+              className="inline-flex items-center gap-2 self-center text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
             >
               <Instagram className="size-5 text-primary" aria-hidden />
               Síguenos @buxxep.app
@@ -213,13 +213,13 @@ export function GiveawayPromoSection({
         </div>
 
         {/* Prize mini-cards */}
-        <div className="mt-14 flex flex-wrap justify-center gap-2 border-t border-zinc-800 pt-10 sm:gap-2.5">
+        <div className="mt-14 flex flex-wrap justify-center gap-2 border-t border-border pt-10 sm:gap-2.5">
           {Array.from({ length: 10 }, (_, i) => (
             <div
               key={`prize-${i + 1}`}
-              className="flex h-21.5 w-18 shrink-0 flex-col justify-between rounded-lg border border-primary/40 bg-zinc-900/90 p-2 text-center sm:h-22.5 sm:w-19"
+              className="flex h-21.5 w-18 shrink-0 flex-col justify-between rounded-lg border border-primary/40 bg-card p-2 text-center sm:h-22.5 sm:w-19"
             >
-              <p className="text-[9px] font-semibold uppercase leading-tight text-zinc-100">
+              <p className="text-[9px] font-semibold uppercase leading-tight text-foreground">
                 RD$ 1.500 en compras
               </p>
               <span className="mx-auto flex size-7 items-center justify-center rounded-full border border-primary/60 text-[11px] font-bold text-primary">
@@ -227,10 +227,10 @@ export function GiveawayPromoSection({
               </span>
             </div>
           ))}
-          <div className="flex h-21.5 w-23 shrink-0 flex-col justify-between rounded-lg border-2 border-primary bg-zinc-900 p-2 text-center sm:h-22.5 sm:w-25">
+          <div className="flex h-21.5 w-23 shrink-0 flex-col justify-between rounded-lg border-2 border-primary bg-card p-2 text-center sm:h-22.5 sm:w-25">
             <div className="flex flex-1 flex-col items-center justify-center gap-1">
               <Bike className="size-5 text-primary" aria-hidden />
-              <p className="text-[9px] font-semibold uppercase leading-tight text-white">
+              <p className="text-[9px] font-semibold uppercase leading-tight text-foreground">
                 Moto Vengala 250
               </p>
             </div>
@@ -241,15 +241,15 @@ export function GiveawayPromoSection({
         </div>
 
         {/* App stores */}
-        <div className="mt-8 flex flex-col items-center gap-4 border-t border-zinc-800 pt-8 text-center sm:flex-row sm:justify-center sm:gap-10">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-zinc-500">
+        <div className="mt-8 flex flex-col items-center gap-4 border-t border-border pt-8 text-center sm:flex-row sm:justify-center sm:gap-10">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
             Disponible en
           </p>
           <div className="flex flex-wrap justify-center gap-2">
-            <span className="rounded-lg border border-zinc-700 px-4 py-2 text-xs font-medium text-zinc-300">
+            <span className="rounded-lg border border-border px-4 py-2 text-xs font-medium text-muted-foreground">
               Google Play
             </span>
-            <span className="rounded-lg border border-zinc-700 px-4 py-2 text-xs font-medium text-zinc-300">
+            <span className="rounded-lg border border-border px-4 py-2 text-xs font-medium text-muted-foreground">
               App Store
             </span>
           </div>

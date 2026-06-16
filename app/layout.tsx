@@ -107,7 +107,7 @@ export const viewport: Viewport = {
   themeColor: "#0a0a0e",
 };
 
-const themeScript = `document.documentElement.classList.add('dark');`;
+const themeScript = `try{var t=localStorage.getItem('theme');if(t==='light'){document.documentElement.classList.remove('dark')}else{document.documentElement.classList.add('dark')}}catch(e){document.documentElement.classList.add('dark')}`;
 
 export default function RootLayout({
   children,
@@ -115,7 +115,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" className="dark" suppressHydrationWarning>
+    <html lang="es" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         suppressHydrationWarning

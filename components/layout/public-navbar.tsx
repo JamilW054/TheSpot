@@ -4,9 +4,11 @@ import { CartNavLink } from "@/components/layout/CartNavLink";
 import { UserNavLink } from "@/components/layout/UserNavLink";
 import { WishlistNavLink } from "@/components/layout/WishlistNavLink";
 import { NavbarSearch } from "@/components/layout/NavbarSearch";
+import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import StaggeredMenu from "@/components/StaggeredMenu";
 import { ORDER_STATUS_PAGE } from "@/config/navigation";
 import { useAuth } from "@/lib/auth-context";
+import { useTheme } from "@/components/theme-provider";
 import type { CategoryRow } from "@/lib/db/categories";
 
 const LOGO_SRC = "/resources/buxxep-transparent.png";
@@ -36,12 +38,17 @@ const SOCIAL_ITEMS = [
   { label: "Instagram", link: "https://www.instagram.com/buxxep/" },
 ];
 
+const DARK_COLORS = ["#0c0c0e", "#1a1a1f", "#2aa8d4", PRIMARY];
+const LIGHT_COLORS = ["#ffffff", "#f4f4f5", "#2aa8d4", PRIMARY];
+
 interface Props {
   categories?: CategoryRow[];
 }
 
 export function PublicNavbar({ categories }: Props) {
   const { user } = useAuth();
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
 
   const menuItems = [...BASE_ITEMS, ...(user ? USER_ITEMS : GUEST_ITEMS)];
 
@@ -52,10 +59,10 @@ export function PublicNavbar({ categories }: Props) {
       socialItems={SOCIAL_ITEMS}
       displaySocials
       displayItemNumbering
-      menuButtonColor="#ffffff"
-      openMenuButtonColor="#ffffff"
+      menuButtonColor={isDark ? "#ffffff" : "#0c0c0e"}
+      openMenuButtonColor={isDark ? "#ffffff" : PRIMARY}
       changeMenuColorOnOpen
-      colors={["#0c0c0e", "#1a1a1f", "#2aa8d4", PRIMARY]}
+      colors={isDark ? DARK_COLORS : LIGHT_COLORS}
       logoUrl={LOGO_SRC}
       logoAlt="Buxxep - Ir a inicio"
       accentColor={PRIMARY}
@@ -68,9 +75,16 @@ export function PublicNavbar({ categories }: Props) {
       headerCenter={<NavbarSearch categories={categories} />}
       headerTrailing={
         <div className="flex items-center gap-0.5">
+          <ThemeToggle
+            className={
+              isDark
+                ? "text-white/90 hover:bg-white/15 hover:text-white"
+                : "text-foreground/70 hover:bg-black/8 hover:text-foreground"
+            }
+          />
           <UserNavLink className="mr-1" />
-          <WishlistNavLink className="text-white/90 hover:bg-white/15 hover:text-white focus-visible:ring-white/40 focus-visible:ring-offset-0" />
-          <CartNavLink className="text-white/90 hover:bg-white/15 hover:text-white focus-visible:ring-white/40 focus-visible:ring-offset-0" />
+          <WishlistNavLink className={isDark ? "text-white/90 hover:bg-white/15 hover:text-white focus-visible:ring-white/40 focus-visible:ring-offset-0" : "text-foreground/70 hover:bg-black/8 hover:text-foreground"} />
+          <CartNavLink className={isDark ? "text-white/90 hover:bg-white/15 hover:text-white focus-visible:ring-white/40 focus-visible:ring-offset-0" : "text-foreground/70 hover:bg-black/8 hover:text-foreground"} />
         </div>
       }
     />

@@ -127,9 +127,10 @@
   font-size: clamp(0.875rem, 2vw, 1rem);
   line-height: 1;
   overflow: visible;
+  transition: color 0.3s ease;
 }
 
-/* Con menú abierto: botón Cerrar siempre fondo transparente y texto blanco */
+/* Con menú abierto: botón Cerrar blanco en modo oscuro */
 .staggered-menu-wrapper[data-open="true"] .sm-toggle,
 .staggered-menu-wrapper[data-open="true"] .sm-toggle .sm-toggle-line,
 .staggered-menu-wrapper[data-open="true"] .sm-icon-line {
@@ -437,4 +438,39 @@
   .staggered-menu-wrapper[data-scrolled="true"] .staggered-menu-header {
     padding: 0.625rem 0.875rem;
   }
+}
+
+/* ── Light mode overrides ───────────────────────────────── */
+html:not(.dark) .staggered-menu-header {
+  border-color: rgba(0, 0, 0, 0.07);
+}
+
+html:not(.dark) .staggered-menu-wrapper[data-scrolled="true"] .staggered-menu-header {
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-color: rgba(0, 0, 0, 0.08);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+}
+
+/* Toggle button: dark text in light mode when menu is closed */
+html:not(.dark) .sm-toggle {
+  color: #0c0c0e !important;
+}
+
+/* When menu opens in light mode: primary (blue) color */
+html:not(.dark) .staggered-menu-wrapper[data-open="true"] .sm-toggle,
+html:not(.dark) .staggered-menu-wrapper[data-open="true"] .sm-toggle .sm-toggle-line,
+html:not(.dark) .staggered-menu-wrapper[data-open="true"] .sm-icon-line {
+  color: #3cc8f7 !important;
+}
+
+/* Logo: don't invert in light mode on mobile when menu is closed */
+html:not(.dark) .staggered-menu-wrapper:not([data-open]) .sm-logo-img {
+  filter: none;
+}
+
+/* Logo stays white when menu is open (dark overlay behind it) */
+html:not(.dark) .staggered-menu-wrapper[data-open] .sm-logo-img {
+  filter: invert(0%);
 }
