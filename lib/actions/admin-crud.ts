@@ -279,6 +279,7 @@ export async function adminCreateBanner(
       subtitle: str(fd, "subtitle"),
       eyebrow: str(fd, "eyebrow"),
       image_url: str(fd, "image_url"),
+      image_url_mobile: str(fd, "image_url_mobile"),
       accent_color: str(fd, "accent_color"),
       link_path: str(fd, "link_path"),
       sort_order: intOr(fd, "sort_order", 0),
@@ -305,6 +306,7 @@ export async function adminUpdateBanner(
       subtitle: str(fd, "subtitle"),
       eyebrow: str(fd, "eyebrow"),
       image_url: str(fd, "image_url"),
+      image_url_mobile: str(fd, "image_url_mobile"),
       accent_color: str(fd, "accent_color"),
       link_path: str(fd, "link_path"),
       sort_order: intOr(fd, "sort_order", 0),
@@ -444,17 +446,21 @@ export async function adminCreateNotification(
   try {
     const admin = await requireAdmin();
     const targetMode = fd.get("target_mode")?.toString();
+    // `target` es un enum ('broadcast' | 'user'); el destinatario va en `user_id`.
     let target = "broadcast";
+    let targetUserId: string | null = null;
     if (targetMode === "user") {
       const userId = str(fd, "target_user_id");
       if (!userId) throw new Error("Selecciona un usuario destinatario.");
-      target = userId;
+      target = "user";
+      targetUserId = userId;
     }
     await notificationsRepo.insert({
       title: requiredStr(fd, "title", "El título"),
       body: requiredStr(fd, "body", "El cuerpo"),
       type: str(fd, "type") ?? "system",
       target,
+      user_id: targetUserId,
       link_path: str(fd, "link_path"),
       created_by: admin.userId,
     });
@@ -569,7 +575,10 @@ export async function adminCreateLinea(
     const name = requiredStr(fd, "name", "El nombre");
     await lineasAdminRepo.insert({
       name,
-      slug: await uniqueSlug(lineasAdminRepo as Repository<{ id: string }>, str(fd, "slug") ?? name),
+      slug: await uniqueSlug(
+        lineasAdminRepo as Repository<{ id: string }>,
+        str(fd, "slug") ?? name,
+      ),
       description: str(fd, "description"),
       cover_image_url: str(fd, "cover_image_url"),
       published: bool(fd, "published"),

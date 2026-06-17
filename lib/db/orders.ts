@@ -1,6 +1,6 @@
 import { formatDOPFromCents } from "@/lib/format-currency";
-import { formatDate } from "@/lib/format-date";
-import type { Pedido, PedidoEstado } from "@/types";
+import { formatDateTime } from "@/lib/format-date";
+import type { OrderPaymentStatus, Pedido, PedidoEstado, PedidoShipping } from "@/types";
 
 /** Dirección de envío almacenada como JSONB en orders.shipping_address. */
 export interface ShippingAddress {
@@ -21,6 +21,7 @@ export interface OrderRow {
   id: string;
   user_id: string | null;
   status: string;
+  payment_status: string | null;
   total_cents: number;
   created_at: string;
   shipping_address: ShippingAddress | null;
@@ -53,13 +54,41 @@ export const statusMap: Record<string, PedidoEstado> = {
   refunded: "pendiente",
 };
 
+export function dbToAppPaymentStatus(
+  value: string | null | undefined,
+): OrderPaymentStatus {
+  if (value === "paid") return "paid";
+  if (value === "failed" || value === "declined") return "declined";
+  return "pending";
+}
+
+function shippingFromRow(
+  sa: ShippingAddress | null,
+  contactEmail: string | null,
+): PedidoShipping | null {
+  if (!sa && !contactEmail) return null;
+  return {
+    fullName: sa?.full_name ?? null,
+    addressLine1: sa?.address_line1 ?? null,
+    addressLine2: sa?.address_line2 ?? null,
+    city: sa?.city ?? null,
+    postalCode: sa?.postal_code ?? null,
+    countryCode: sa?.country_code ?? null,
+    phone: sa?.phone ?? null,
+    email: contactEmail ?? sa?.email ?? null,
+  };
+}
+
 export function rowToPedido(row: OrderRow, itemsCount: number): Pedido {
   return {
     id: row.id,
     cliente: customerNameFromOrder(row.shipping_address, row.contact_email),
     items: itemsCount,
     total: formatDOPFromCents(row.total_cents),
+    totalCents: row.total_cents,
     estado: statusMap[row.status] ?? "pendiente",
-    createdAt: formatDate(row.created_at, { day: "2-digit", month: "2-digit", year: "2-digit" }),
+    paymentStatus: dbToAppPaymentStatus(row.payment_status),
+    createdAt: formatDateTime(row.created_at, { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }),
+    shipping: shippingFromRow(row.shipping_address, row.contact_email),
   };
 }

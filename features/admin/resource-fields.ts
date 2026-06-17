@@ -239,10 +239,19 @@ export function bannerFields(initial?: BannerRow): ResourceField[] {
     },
     {
       name: "image_url",
-      label: "Imagen (URL)",
-      type: "url",
+      label: "Imagen desktop",
+      type: "image",
+      colSpan: 1,
       defaultValue: initial?.image_url ?? "",
-      placeholder: "https://…",
+      help: "Recomendado: 1440 × 480 px · ratio 3:1 · PNG/JPEG/WebP · máx 5 MB",
+    },
+    {
+      name: "image_url_mobile",
+      label: "Imagen mobile",
+      type: "image",
+      colSpan: 1,
+      defaultValue: initial?.image_url_mobile ?? "",
+      help: "Recomendado: 750 × 400 px · ratio ~2:1 · Si no se sube, usa la imagen desktop",
     },
     {
       name: "link_path",

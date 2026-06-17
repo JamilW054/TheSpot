@@ -14,8 +14,10 @@ import {
   Star,
   Store,
   ArrowLeft,
+  ShoppingCart,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
+import { useCart } from "@/contexts/cart-context";
 import { useWishlist } from "@/contexts/wishlist-context";
 
 interface SidebarUser {
@@ -40,6 +42,7 @@ export function CuentaSidebar({ sidebarUser }: { sidebarUser: SidebarUser }) {
   const router = useRouter();
   const { logout } = useAuth();
   const { wishlistCount } = useWishlist();
+  const { itemCount } = useCart();
 
   const initials =
     sidebarUser.name
@@ -53,6 +56,12 @@ export function CuentaSidebar({ sidebarUser }: { sidebarUser: SidebarUser }) {
     {
       title: "Tu Cuenta",
       items: [
+        {
+          href: "/carrito",
+          icon: ShoppingCart,
+          label: "Carrito",
+          badge: itemCount || undefined,
+        },
         { href: "/cuenta/pedidos", icon: Package, label: "Mis pedidos" },
         {
           href: "/cuenta/wishlist",

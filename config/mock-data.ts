@@ -435,7 +435,10 @@ export const MOCK_PEDIDOS: Pedido[] = clientes.map((cliente, i) => {
     cliente,
     items,
     total: formatDOPFromCents(Math.round(totalNum * 100)),
+    totalCents: Math.round(totalNum * 100),
     estado,
+    paymentStatus: "pending" as const,
+    shipping: null,
     createdAt: mockFecha(i * 2),
   };
 });

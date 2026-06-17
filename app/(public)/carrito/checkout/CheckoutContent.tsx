@@ -1,14 +1,16 @@
 "use client";
 
+import { Check, Plus, Star } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
-import { Star, Plus, Check } from "lucide-react";
-import { createOrderAction } from "@/app/(public)/carrito/checkout/actions";
 import { useCart } from "@/contexts/cart-context";
+import { checkoutAction } from "@/lib/actions/checkout";
+import { validateCouponAction } from "@/lib/actions/coupons";
+import type { ShippingMethod } from "@/lib/db";
+import type { Address } from "@/lib/db/addresses";
 import { formatDOPFromCents } from "@/lib/format-currency";
 import type { CatalogProduct } from "@/types";
-import type { Address } from "@/lib/db/addresses";
 
 function isExternalImage(src: string): boolean {
   return (
@@ -111,9 +113,11 @@ function AddressRadioCard({
 export function CheckoutContent({
   products,
   savedAddresses,
+  shippingMethods,
 }: {
   products: CatalogProduct[];
   savedAddresses: Address[];
+  shippingMethods: ShippingMethod[];
 }) {
   const { items } = useCart();
   const [loading, setLoading] = useState(false);
@@ -124,14 +128,49 @@ export function CheckoutContent({
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(
     defaultAddress?.id ?? null,
   );
-  const [useNewAddress, setUseNewAddress] = useState(savedAddresses.length === 0);
+  const [useNewAddress, setUseNewAddress] = useState(
+    savedAddresses.length === 0,
+  );
+
+  const [selectedShippingId, setSelectedShippingId] = useState<string | null>(
+    shippingMethods[0]?.id ?? null,
+  );
+
+  const [couponCode, setCouponCode] = useState("");
+  const [couponDiscount, setCouponDiscount] = useState(0);
+  const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
+  const [couponError, setCouponError] = useState<string | null>(null);
+  const [couponLoading, setCouponLoading] = useState(false);
 
   const productMap = new Map(products.map((p) => [p.id, p]));
-  let totalCents = 0;
+  let subtotalCents = 0;
   items.forEach((item) => {
     const p = productMap.get(item.productId);
-    if (p) totalCents += p.priceCents * item.quantity;
+    if (p) subtotalCents += p.priceCents * item.quantity;
   });
+
+  const selectedShipping =
+    shippingMethods.find((m) => m.id === selectedShippingId) ?? null;
+  const shippingCents = selectedShipping?.priceCents ?? 0;
+  const discountCents = appliedCoupon ? couponDiscount : 0;
+  const totalCents = Math.max(0, subtotalCents - discountCents + shippingCents);
+
+  const handleApplyCoupon = async () => {
+    setCouponError(null);
+    const code = couponCode.trim();
+    if (!code) return;
+    setCouponLoading(true);
+    const res = await validateCouponAction(code, subtotalCents);
+    setCouponLoading(false);
+    if (res.valid) {
+      setAppliedCoupon(res.code ?? code);
+      setCouponDiscount(res.discountCents ?? 0);
+    } else {
+      setAppliedCoupon(null);
+      setCouponDiscount(0);
+      setCouponError(res.reason ?? "Cupón no válido.");
+    }
+  };
 
   const selectedAddress =
     !useNewAddress && selectedAddressId
@@ -146,38 +185,69 @@ export function CheckoutContent({
     let shipping: ShippingData;
 
     if (selectedAddress) {
-      const emailInput = (
-        e.currentTarget.querySelector("#checkout-email") as HTMLInputElement | null
-      )?.value.trim() ?? "";
+      const emailInput =
+        (
+          e.currentTarget.querySelector(
+            "#checkout-email",
+          ) as HTMLInputElement | null
+        )?.value.trim() ?? "";
       shipping = shippingFromAddress(selectedAddress, emailInput);
     } else {
       const checkoutForm = e.currentTarget;
       shipping = {
-        name: ((checkoutForm.querySelector("#checkout-name") as HTMLInputElement | null)?.value ?? "").trim(),
-        email: ((checkoutForm.querySelector("#checkout-email") as HTMLInputElement | null)?.value ?? "").trim(),
-        address: ((checkoutForm.querySelector("#checkout-address") as HTMLTextAreaElement | null)?.value ?? "").trim(),
+        name: (
+          (
+            checkoutForm.querySelector(
+              "#checkout-name",
+            ) as HTMLInputElement | null
+          )?.value ?? ""
+        ).trim(),
+        email: (
+          (
+            checkoutForm.querySelector(
+              "#checkout-email",
+            ) as HTMLInputElement | null
+          )?.value ?? ""
+        ).trim(),
+        address: (
+          (
+            checkoutForm.querySelector(
+              "#checkout-address",
+            ) as HTMLTextAreaElement | null
+          )?.value ?? ""
+        ).trim(),
         phone:
-          (checkoutForm.querySelector("#checkout-phone") as HTMLInputElement)?.value?.trim() ||
-          undefined,
+          (
+            checkoutForm.querySelector("#checkout-phone") as HTMLInputElement
+          )?.value?.trim() || undefined,
         city:
-          (checkoutForm.querySelector("#checkout-city") as HTMLInputElement)?.value?.trim() ||
-          undefined,
+          (
+            checkoutForm.querySelector("#checkout-city") as HTMLInputElement
+          )?.value?.trim() || undefined,
         postalCode:
-          (checkoutForm.querySelector("#checkout-postal") as HTMLInputElement)?.value?.trim() ||
-          undefined,
+          (
+            checkoutForm.querySelector("#checkout-postal") as HTMLInputElement
+          )?.value?.trim() || undefined,
         country:
-          (checkoutForm.querySelector("#checkout-country") as HTMLInputElement)?.value?.trim() ||
-          undefined,
+          (
+            checkoutForm.querySelector("#checkout-country") as HTMLInputElement
+          )?.value?.trim() || undefined,
       };
     }
 
-    const orderItems = items.map((it) => ({
-      productId: it.productId,
-      quantity: it.quantity,
-      designId: it.designId ?? null,
-      size: it.size ?? null,
-    }));
-    const result = await createOrderAction(shipping, orderItems);
+    const result = await checkoutAction({
+      shipping: {
+        name: shipping.name,
+        email: shipping.email,
+        address: shipping.address,
+        phone: shipping.phone ?? null,
+        city: shipping.city ?? null,
+        postalCode: shipping.postalCode ?? null,
+        country: shipping.country ?? null,
+      },
+      shippingMethodId: selectedShippingId,
+      couponCode: appliedCoupon,
+    });
     setLoading(false);
     if (result.ok) {
       const redirectForm = document.createElement("form");
@@ -186,7 +256,7 @@ export function CheckoutContent({
       const input = document.createElement("input");
       input.type = "hidden";
       input.name = "orderId";
-      input.value = result.orderId;
+      input.value = result.result.orderId;
       redirectForm.appendChild(input);
       document.body.appendChild(redirectForm);
       redirectForm.submit();
@@ -439,8 +509,105 @@ export function CheckoutContent({
               );
             })}
           </ul>
+          {/* Método de envío */}
+          {shippingMethods.length > 0 && (
+            <div className="border-t border-border p-5 sm:p-6 space-y-2">
+              <p className="text-sm font-semibold text-foreground">Envío</p>
+              {shippingMethods.map((m) => (
+                <label
+                  key={m.id}
+                  className={`flex cursor-pointer items-center justify-between gap-3 rounded-[10px] border p-3 text-sm transition-colors ${
+                    selectedShippingId === m.id
+                      ? "border-primary/60 bg-primary/5"
+                      : "border-border hover:border-border/70"
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="shipping_method"
+                      checked={selectedShippingId === m.id}
+                      onChange={() => setSelectedShippingId(m.id)}
+                      className="accent-primary"
+                    />
+                    <span>
+                      <span className="font-medium text-foreground">
+                        {m.name}
+                      </span>
+                      {(m.minDays != null || m.maxDays != null) && (
+                        <span className="ml-1 text-xs text-muted-foreground">
+                          ({m.minDays ?? "?"}-{m.maxDays ?? "?"} días)
+                        </span>
+                      )}
+                    </span>
+                  </span>
+                  <span className="font-mono tabular-nums text-foreground">
+                    {m.priceCents === 0
+                      ? "Gratis"
+                      : formatDOPFromCents(m.priceCents)}
+                  </span>
+                </label>
+              ))}
+            </div>
+          )}
+
+          {/* Cupón de descuento */}
+          <div className="border-t border-border p-5 sm:p-6 space-y-2">
+            <p className="text-sm font-semibold text-foreground">Cupón</p>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={couponCode}
+                onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                placeholder="CÓDIGO"
+                className="h-10 flex-1 rounded-[10px] border border-border bg-background px-3 text-sm uppercase text-foreground placeholder:text-muted-foreground/50 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+              <button
+                type="button"
+                onClick={handleApplyCoupon}
+                disabled={couponLoading || !couponCode.trim()}
+                className="rounded-[10px] border border-border bg-muted/40 px-4 text-sm font-medium text-foreground transition-colors hover:bg-muted disabled:opacity-60"
+              >
+                {couponLoading ? "…" : "Aplicar"}
+              </button>
+            </div>
+            {couponError && (
+              <p className="text-xs text-destructive">{couponError}</p>
+            )}
+            {appliedCoupon && (
+              <p className="text-xs font-medium text-primary">
+                Cupón {appliedCoupon} aplicado: −
+                {formatDOPFromCents(discountCents)}
+              </p>
+            )}
+          </div>
+
           <div className="border-t border-border p-5 sm:p-6">
-            <div className="flex items-baseline justify-between gap-4 mb-4">
+            <dl className="mb-4 space-y-1.5 text-sm">
+              <div className="flex justify-between gap-4">
+                <dt className="text-muted-foreground">Subtotal</dt>
+                <dd className="font-mono tabular-nums text-foreground">
+                  {formatDOPFromCents(subtotalCents)}
+                </dd>
+              </div>
+              {discountCents > 0 && (
+                <div className="flex justify-between gap-4">
+                  <dt className="text-muted-foreground">Descuento</dt>
+                  <dd className="font-mono tabular-nums text-primary">
+                    −{formatDOPFromCents(discountCents)}
+                  </dd>
+                </div>
+              )}
+              <div className="flex justify-between gap-4">
+                <dt className="text-muted-foreground">Envío</dt>
+                <dd className="font-mono tabular-nums text-foreground">
+                  {shippingCents === 0
+                    ? "Gratis"
+                    : formatDOPFromCents(shippingCents)}
+                </dd>
+              </div>
+            </dl>
+            <div className="flex items-baseline justify-between gap-4 mb-4 border-t border-border pt-3">
               <span className="text-sm text-muted-foreground">Total</span>
               <span className="font-mono text-xl font-bold tabular-nums text-primary">
                 {formatDOPFromCents(totalCents)}

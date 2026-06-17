@@ -19,6 +19,8 @@ export interface PedidosTableProps {
   onMarkEnProceso?: (ids: string[]) => void;
   /** Llamado al ejecutar "Marcar completado" en lote; recibe los ids seleccionados. */
   onMarkCompletado?: (ids: string[]) => void;
+  /** Elimina un pedido no pagado por su id. */
+  onDelete?: (id: string) => Promise<void>;
 }
 
 /** Props for the internal PedidosTableBody component. */

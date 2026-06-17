@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { PageLayout } from "@/components/layout";
 import { PedidosTable } from "@/features/admin";
-import { adminSetOrdersStatus } from "@/lib/actions/orders-admin";
+import { adminDeleteOrder, adminSetOrdersStatus } from "@/lib/actions/orders-admin";
 import type { Pedido } from "@/types";
 
 export function PedidosAdminClient({ pedidos }: { pedidos: Pedido[] }) {
@@ -14,11 +14,11 @@ export function PedidosAdminClient({ pedidos }: { pedidos: Pedido[] }) {
   return (
     <PageLayout
       title="Todos los pedidos"
-      description="Por defecto se muestran pedidos abiertos (pendiente y en proceso). Usa el filtro para ver completados o todo el histórico."
+      description="Vista de pedidos con dirección y datos del cliente. Usa el filtro para ver por estado o el toggle para cambiar entre tarjetas y tabla."
     >
-      {pending ? (
+      {pending && (
         <p className="mb-3 text-xs text-muted-foreground">Actualizando…</p>
-      ) : null}
+      )}
       <PedidosTable
         pedidos={pedidos}
         withFilters
@@ -34,6 +34,10 @@ export function PedidosAdminClient({ pedidos }: { pedidos: Pedido[] }) {
             await adminSetOrdersStatus(ids, "shipped");
             router.refresh();
           });
+        }}
+        onDelete={async (id) => {
+          await adminDeleteOrder(id);
+          router.refresh();
         }}
       />
     </PageLayout>

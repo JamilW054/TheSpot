@@ -5,14 +5,27 @@
 
 export type PedidoEstado = "pendiente" | "en_proceso" | "completado";
 
+export interface PedidoShipping {
+  fullName?: string | null;
+  addressLine1?: string | null;
+  addressLine2?: string | null;
+  city?: string | null;
+  postalCode?: string | null;
+  countryCode?: string | null;
+  phone?: string | null;
+  email?: string | null;
+}
+
 export interface Pedido {
   id: string;
   cliente: string;
   items: number;
   total: string;
+  totalCents: number;
   estado: PedidoEstado;
-  /** Fecha de creación para listados (ej. "22/02/24") */
+  paymentStatus: OrderPaymentStatus;
   createdAt?: string;
+  shipping: PedidoShipping | null;
 }
 
 /** Línea del detalle de pedido (consulta estado). */

@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Trash2, Tag, ChevronLeft, Truck } from "lucide-react";
 import { useCart } from "@/contexts/cart-context";
 import { formatDOPFromCents } from "@/lib/format-currency";
@@ -382,9 +382,20 @@ export function CartContent({
   const [promoError, setPromoError] = useState<string | null>(null);
   const [promoApplied, setPromoApplied] = useState(false);
 
+  const productMap = new Map(products.map((p) => [p.id, p]));
+
+  // Auto-remove stale cart items (products deleted or not returned by the catalog).
+  useEffect(() => {
+    for (const item of items) {
+      if (!productMap.has(item.productId)) {
+        removeItem(item.productId, item.designId, item.size);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   if (items.length === 0) return <EmptyCart />;
 
-  const productMap = new Map(products.map((p) => [p.id, p]));
   let subtotalCents = 0;
   let totalItems = 0;
 

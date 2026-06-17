@@ -5,8 +5,15 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
 } from "react";
+import {
+  getWishlistEntriesAction,
+  mergeGuestWishlistAction,
+  toggleWishlistAction,
+} from "@/lib/actions/wishlist";
+import { useAuth } from "@/lib/auth-context";
 
 interface WishlistContextValue {
   wishlistIds: Set<string>;
@@ -44,34 +51,85 @@ function parseStorage(): Record<string, string> {
   return {};
 }
 
+function saveStorage(dates: Record<string, string>) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(dates));
+  } catch {
+    /* ignore */
+  }
+}
+
 export function WishlistProvider({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
+  const isLoggedIn = !!user;
+
   const [dates, setDates] = useState<Record<string, string>>({});
+  const [mounted, setMounted] = useState(false);
+  const prevUserId = useRef<string | null>(null);
 
   useEffect(() => {
     setDates(parseStorage());
+    setMounted(true);
   }, []);
 
-  const toggleWishlist = useCallback((productId: string) => {
-    setDates((prev) => {
-      const next = { ...prev };
-      if (next[productId]) {
-        delete next[productId];
-      } else {
-        next[productId] = new Date().toISOString();
+  // Persistir en localStorage solo como invitado.
+  useEffect(() => {
+    if (mounted && !isLoggedIn) saveStorage(dates);
+  }, [dates, mounted, isLoggedIn]);
+
+  const refreshFromDb = useCallback(async () => {
+    const entries = await getWishlistEntriesAction();
+    setDates(Object.fromEntries(entries.map((e) => [e.productId, e.addedAt])));
+  }, []);
+
+  // Transición de sesión: fusionar lista de invitado y cargar la de la BD.
+  useEffect(() => {
+    if (!mounted) return;
+    const uid = user?.id ?? null;
+    if (uid === prevUserId.current) return;
+    prevUserId.current = uid;
+
+    if (!uid) {
+      setDates(parseStorage());
+      return;
+    }
+
+    void (async () => {
+      const guest = parseStorage();
+      const guestIds = Object.keys(guest);
+      if (guestIds.length > 0) {
+        await mergeGuestWishlistAction(guestIds);
+        try {
+          localStorage.removeItem(STORAGE_KEY);
+        } catch {
+          /* ignore */
+        }
       }
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-      } catch {}
-      return next;
-    });
-  }, []);
+      await refreshFromDb();
+    })();
+  }, [user, mounted, refreshFromDb]);
 
-  const ids = new Set(Object.keys(dates));
+  const toggleWishlist = useCallback(
+    (productId: string) => {
+      setDates((prev) => {
+        const next = { ...prev };
+        if (next[productId]) delete next[productId];
+        else next[productId] = new Date().toISOString();
+        return next;
+      });
+      if (isLoggedIn) {
+        void toggleWishlistAction(productId);
+      }
+    },
+    [isLoggedIn],
+  );
 
   const isInWishlist = useCallback(
     (productId: string) => productId in dates,
     [dates],
   );
+
+  const ids = new Set(Object.keys(dates));
 
   return (
     <WishlistContext.Provider

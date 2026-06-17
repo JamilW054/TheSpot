@@ -51,6 +51,7 @@ export interface BannerRow {
   subtitle: string | null;
   eyebrow: string | null;
   image_url: string | null;
+  image_url_mobile: string | null;
   accent_color: string | null;
   link_path: string | null;
   is_active: boolean;

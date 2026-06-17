@@ -1,11 +1,16 @@
-import { Bell } from "lucide-react";
+import { getUserNotifications } from "@/lib/db/notifications";
+import { NotificacionesContent } from "./NotificacionesContent";
 
 export const metadata = {
   title: "Notificaciones | Buxxep",
   description: "Tus notificaciones de Buxxep.",
 };
 
-export default function NotificacionesPage() {
+export const dynamic = "force-dynamic";
+
+export default async function NotificacionesPage() {
+  const notifications = await getUserNotifications();
+
   return (
     <article className="w-full max-w-lg px-4 sm:px-6 pb-20 pt-6">
       <header className="mb-6">
@@ -17,18 +22,7 @@ export default function NotificacionesPage() {
         </p>
       </header>
 
-      <div className="animate-scale-in rounded-[14px] border border-border bg-card p-12 text-center">
-        <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-muted/60">
-          <Bell className="size-8 text-muted-foreground" aria-hidden />
-        </div>
-        <h2 className="text-base font-semibold text-foreground">
-          Sin notificaciones
-        </h2>
-        <p className="mx-auto mt-2 max-w-xs text-sm text-muted-foreground leading-relaxed">
-          Cuando tengas novedades sobre tus pedidos o promociones exclusivas
-          aparecerán aquí.
-        </p>
-      </div>
+      <NotificacionesContent initial={notifications} />
     </article>
   );
 }

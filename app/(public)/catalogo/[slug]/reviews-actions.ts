@@ -1,10 +1,14 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { deleteReview, upsertReview } from "@/lib/db/reviews";
 
 export type ReviewActionResult = { ok: true } | { ok: false; error: string };
 
+/**
+ * Crea/actualiza la reseña del usuario. Delega en la capa de datos, que además
+ * marca la compra verificada y recalcula `rating_avg`/`review_count` del producto.
+ */
 export async function submitReviewAction(
   productId: string,
   productSlug: string,
@@ -15,75 +19,30 @@ export async function submitReviewAction(
   if (rating < 1 || rating > 5) {
     return { ok: false, error: "Calificación inválida." };
   }
-
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return { ok: false, error: "Debes iniciar sesión para dejar una reseña." };
-  }
-
-  const trimmedTitle = title.trim() || null;
-  const trimmedBody = body.trim() || null;
-
-  // El esquema nuevo no tiene índice único (product_id,user_id): upsert manual.
-  const { data: existing } = await supabase
-    .from("reviews")
-    .select("id")
-    .eq("product_id", productId)
-    .eq("user_id", user.id)
-    .is("deleted_at", null)
-    .maybeSingle();
-
-  const { error } = existing
-    ? await supabase
-        .from("reviews")
-        .update({ rating, title: trimmedTitle, body: trimmedBody })
-        .eq("id", (existing as { id: string }).id)
-    : await supabase.from("reviews").insert({
-        product_id: productId,
-        user_id: user.id,
-        rating,
-        title: trimmedTitle,
-        body: trimmedBody,
-      });
-
-  if (error) {
+  try {
+    await upsertReview({ productId, rating, title, body });
+    revalidatePath(`/catalogo/${productSlug}`);
+    return { ok: true };
+  } catch (e) {
     return {
       ok: false,
-      error: "No se pudo guardar la reseña. Intenta de nuevo.",
+      error: e instanceof Error ? e.message : "No se pudo guardar la reseña.",
     };
   }
-
-  revalidatePath(`/catalogo/${productSlug}`);
-  return { ok: true };
 }
 
 export async function deleteReviewAction(
   productId: string,
   productSlug: string,
 ): Promise<ReviewActionResult> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return { ok: false, error: "No autenticado." };
+  try {
+    await deleteReview(productId);
+    revalidatePath(`/catalogo/${productSlug}`);
+    return { ok: true };
+  } catch (e) {
+    return {
+      ok: false,
+      error: e instanceof Error ? e.message : "No se pudo eliminar la reseña.",
+    };
   }
-
-  const { error } = await supabase
-    .from("reviews")
-    .delete()
-    .eq("product_id", productId)
-    .eq("user_id", user.id);
-
-  if (error) {
-    return { ok: false, error: "No se pudo eliminar la reseña." };
-  }
-
-  revalidatePath(`/catalogo/${productSlug}`);
-  return { ok: true };
 }

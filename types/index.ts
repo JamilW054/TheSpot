@@ -32,6 +32,7 @@ export type {
   OrderPaymentStatus,
   Pedido,
   PedidoEstado,
+  PedidoShipping,
   OrderStatusDetail,
   OrderStatusDetailItem,
 } from "./pedido";

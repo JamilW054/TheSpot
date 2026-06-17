@@ -3,8 +3,8 @@
  * Use from Server Components or server actions; for client use React Query or pass data from page.
  */
 
-import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { formatDate, formatDateTime } from "@/lib/format-date";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 
 /** Convert Supabase/PostgREST error to a plain Error so Next.js and UI show a readable message. */
 function toError(err: {
@@ -62,6 +62,7 @@ import type {
   OrderStatusDetail,
   Pedido,
 } from "@/types";
+import { getActiveBanners, type PublicBanner } from "./banners";
 import { type BaseModelRow, rowToMockup } from "./base-models";
 import {
   type CategoryRow,
@@ -74,6 +75,7 @@ import { DESIGN_SELECT, type DesignRow, rowToDesign } from "./designs";
 import { type LineaRow, rowToLinea } from "./lineas";
 import {
   customerNameFromOrder,
+  dbToAppPaymentStatus,
   type OrderRow,
   rowToPedido,
   type ShippingAddress,
@@ -94,7 +96,9 @@ export {
   getGiveawayPaidPurchaseCount,
 } from "./giveaway-stats";
 export type { CategoryRow };
+export type { PublicBanner };
 export {
+  getActiveBanners,
   getCategoriesForAdmin,
   getCategoriesPublic,
   getCategoryAdminById,
@@ -307,13 +311,20 @@ export async function getFacturasPedidosPagadosAdmin(): Promise<
     const { data, error } = await supabase
       .from("orders")
       .select(
-        "id, shipping_address, contact_email, total_cents, created_at, payment_status, payment_transactions(paid_at)",
+        "id, shipping_address, contact_email, total_cents, created_at, payment_transactions(paid_at)",
       )
+      .eq("payment_status", "paid")
       .order("created_at", { ascending: false });
     if (error) throw toError(error);
     const rows = data ?? [];
     const fmt = (iso: string) =>
-      formatDateTime(iso, { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+      formatDateTime(iso, {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
     type PaidRow = {
       id: string;
       shipping_address: ShippingAddress | null;
@@ -486,7 +497,7 @@ export async function getOrders(): Promise<Pedido[]> {
     const { data, error } = await supabase
       .from("orders")
       .select(
-        "id, user_id, status, shipping_address, contact_email, total_cents, created_at",
+        "id, user_id, status, payment_status, shipping_address, contact_email, total_cents, created_at",
       )
       .order("created_at", { ascending: false });
     if (error) throw toError(error);
@@ -501,7 +512,7 @@ export async function getOrdersAdmin(): Promise<Pedido[]> {
     const { data, error } = await supabase
       .from("orders")
       .select(
-        "id, user_id, status, shipping_address, contact_email, total_cents, created_at",
+        "id, user_id, status, payment_status, shipping_address, contact_email, total_cents, created_at",
       )
       .order("created_at", { ascending: false });
     if (error) throw toError(error);
@@ -536,15 +547,6 @@ export interface OrderPaymentSnapshot {
   total_cents: number;
   payment_provider: string | null;
   payment_status: string;
-}
-
-/** payment_status (DB enum) → estado de pago de la app. */
-function dbToAppPaymentStatus(
-  value: string | null | undefined,
-): OrderPaymentStatus {
-  if (value === "paid") return "paid";
-  if (value === "failed") return "declined";
-  return "pending";
 }
 
 export async function getOrderPaymentSnapshotByOrderNumber(
@@ -741,7 +743,13 @@ export async function getOrderStatusById(
       id: o.id,
       status: statusMap[o.status] ?? "pendiente",
       totalCents: o.total_cents,
-      createdAt: formatDateTime(o.created_at, { day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" }),
+      createdAt: formatDateTime(o.created_at, {
+        day: "2-digit",
+        month: "long",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
       shippingName: customerNameFromOrder(o.shipping_address, o.contact_email),
       items,
       paymentStatus: coercePaymentStatus(o.payment_status ?? undefined),
@@ -773,6 +781,24 @@ export interface CreateOrderShipping {
   city?: string;
   postalCode?: string;
   country?: string;
+}
+
+/** Looks up a product by id without is_active filter (for order creation). */
+async function getProductByIdForOrder(
+  id: string,
+): Promise<CatalogProduct | null> {
+  try {
+    const supabase = createServiceClient();
+    const { data, error } = await supabase
+      .from("products")
+      .select(productCatalogSelect)
+      .eq("id", id)
+      .single();
+    if (error) return null;
+    return data ? rowToCatalogProduct(data as unknown as ProductRow) : null;
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -825,7 +851,9 @@ export async function createOrder(
 
   let totalCents = 0;
   for (const item of items) {
-    const product = await getProductById(item.productId);
+    // Use service-role lookup without is_active filter so products deactivated
+    // after being added to cart can still be ordered.
+    const product = await getProductByIdForOrder(item.productId);
     if (!product) throw new Error(`Producto no encontrado: ${item.productId}`);
 
     const resolved = await resolveVariantForOrder(
@@ -851,7 +879,7 @@ export async function createOrder(
       quantity: item.quantity,
       unit_price_cents: unitPrice,
       total_price_cents: lineTotal,
-      size: item.size ?? null,
+      // La talla viaja dentro de `product_snapshot`; order_items no tiene columna `size`.
       product_snapshot: snapshot,
     });
     if (itemError) throw toError(itemError);

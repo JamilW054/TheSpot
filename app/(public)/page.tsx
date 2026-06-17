@@ -1,13 +1,16 @@
-import { readdir } from "fs/promises";
 import path from "node:path";
+import { readdir } from "fs/promises";
 import Image from "next/image";
 import Link from "next/link";
 import { LandingProductCard } from "@/components/catalog/LandingProductCard";
+import { ProductCard } from "@/components/catalog/ProductCard";
 import { GiveawayPromoSection } from "@/components/landing/GiveawayPromoSection";
 import { InstagramEmbeds } from "@/components/landing/InstagramEmbeds";
+import { PromoBanners } from "@/components/landing/PromoBanners";
 import { ScrollReveal } from "@/components/landing/ScrollReveal";
 import MagicBento from "@/components/MagicBento";
 import {
+  getActiveBanners,
   getCategoriesPublic,
   getCategoryCoverByCategoryId,
   getGiveawayGoalPurchases,
@@ -47,12 +50,20 @@ const C = "max-w-7xl mx-auto px-4 sm:px-6";
 const S = "py-16 sm:py-20";
 
 export default async function PublicPage() {
-  const [clothDesigns, giveawayPaidCount, products, categories, covers] = await Promise.all([
+  const [
+    clothDesigns,
+    giveawayPaidCount,
+    products,
+    categories,
+    covers,
+    banners,
+  ] = await Promise.all([
     getClothDesignImageUrls(),
     getGiveawayPaidPurchaseCount(),
     getProducts(),
     getCategoriesPublic(),
     getCategoryCoverByCategoryId(),
+    getActiveBanners(),
   ]);
   const giveawayGoal = getGiveawayGoalPurchases();
   const featured = products.slice(0, 6);
@@ -60,6 +71,101 @@ export default async function PublicPage() {
 
   return (
     <article className="flex flex-col bg-background text-foreground overflow-x-hidden">
+      {/* ─── 0. CATÁLOGO ─────────────────────────────────────────────── */}
+      <section className="w-full border-b border-border" aria-label="Catálogo">
+        {/* Banners promocionales (desde la base de datos) */}
+        <PromoBanners banners={banners} />
+
+        {/* Category tiles — square */}
+        {categories.length > 0 && (
+          <div className="w-full border-b border-border">
+            <div
+              className="max-w-7xl mx-auto w-full flex gap-3 sm:gap-4 overflow-x-auto px-3 sm:px-6 py-4"
+              style={{ scrollbarWidth: "none" }}
+            >
+              {categories.map((cat) => {
+                const thumb = cat.image_url ?? covers[cat.id];
+                return (
+                  <Link
+                    key={cat.id}
+                    href={`/catalogo?categoria=${cat.slug}`}
+                    className="group shrink-0 flex flex-col items-center gap-2"
+                  >
+                    <div className="relative size-19 sm:size-22 overflow-hidden rounded-[14px] border border-border bg-muted transition duration-200 group-hover:border-foreground/30 group-active:scale-95">
+                      {thumb ? (
+                        <Image
+                          src={thumb}
+                          alt={cat.name}
+                          width={88}
+                          height={88}
+                          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                          unoptimized={thumb.startsWith("http")}
+                        />
+                      ) : (
+                        <div className="grid h-full w-full place-items-center text-sm font-semibold uppercase text-muted-foreground">
+                          {cat.name.slice(0, 2)}
+                        </div>
+                      )}
+                    </div>
+                    <span className="w-19 sm:w-22 text-center text-[11px] font-medium leading-tight text-foreground line-clamp-2">
+                      {cat.name}
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Sort tabs */}
+        <div
+          className="max-w-7xl mx-auto px-3 sm:px-6 pt-4 pb-2 flex gap-2 overflow-x-auto"
+          style={{ scrollbarWidth: "none" }}
+        >
+          {(
+            [
+              { label: "Para Ti", href: "/catalogo" },
+              { label: "Novedades", href: "/catalogo?orden=recientes" },
+              { label: "Precio ↑", href: "/catalogo?orden=precio-menor" },
+              { label: "Precio ↓", href: "/catalogo?orden=precio-mayor" },
+              { label: "Ofertas", href: "/catalogo?precio=economico" },
+              { label: "A-Z", href: "/catalogo?orden=az" },
+            ] as const
+          ).map((tab, i) => (
+            <Link
+              key={tab.label}
+              href={tab.href}
+              className={`shrink-0 px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap border transition-colors ${
+                i === 0
+                  ? "bg-foreground text-background border-foreground"
+                  : "border-border bg-transparent text-muted-foreground hover:border-foreground/40 hover:text-foreground"
+              }`}
+            >
+              {tab.label}
+            </Link>
+          ))}
+        </div>
+
+        {/* Header row */}
+        <div className="max-w-7xl mx-auto w-full px-3 sm:px-6 pb-3 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2.5">
+            <span aria-hidden className="h-5 w-1 rounded-full bg-primary" />
+            <h2 className="text-base font-black uppercase tracking-tight text-foreground sm:text-lg">
+              Todo el catálogo
+            </h2>
+          </div>
+          <span className="rounded-full border border-border bg-muted/40 px-2.5 py-0.5 tabular-nums text-xs font-semibold text-muted-foreground">
+            {products.length} {products.length === 1 ? "pieza" : "piezas"}
+          </span>
+        </div>
+
+        {/* Product grid */}
+        <div className="max-w-7xl mx-auto w-full grid grid-cols-2 gap-2.5 min-[480px]:grid-cols-3 sm:gap-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 px-3 sm:px-4 pb-10">
+          {products.map((product) => (
+            <ProductCard key={product.id} product={product} />
+          ))}
+        </div>
+      </section>
 
       {/* ─── 1. SORTEO ───────────────────────────────────────────────── */}
       <GiveawayPromoSection
@@ -90,7 +196,10 @@ export default async function PublicPage() {
 
       {/* ─── 3. CATEGORÍAS ───────────────────────────────────────────── */}
       {categories.length > 0 && (
-        <section className={`${S} border-t border-border`} aria-labelledby="sec-cats">
+        <section
+          className={`${S} border-t border-border`}
+          aria-labelledby="sec-cats"
+        >
           <div className={C}>
             <ScrollReveal>
               <div className="flex items-end justify-between gap-4 mb-6">
@@ -102,7 +211,8 @@ export default async function PublicPage() {
                     id="sec-cats"
                     className="mt-1 text-xl sm:text-2xl font-black uppercase tracking-tight text-foreground"
                   >
-                    Explorar por <span className="landing-wavy-underline">categoría</span>
+                    Explorar por{" "}
+                    <span className="landing-wavy-underline">categoría</span>
                   </h2>
                 </div>
                 <Link
@@ -128,7 +238,9 @@ export default async function PublicPage() {
                     <span className="block text-white text-[11px] font-bold uppercase tracking-widest leading-tight">
                       Todo
                     </span>
-                    <span className="block text-white/50 text-[10px] mt-0.5">Ver catálogo</span>
+                    <span className="block text-white/50 text-[10px] mt-0.5">
+                      Ver catálogo
+                    </span>
                   </div>
                 </Link>
               </ScrollReveal>
@@ -156,7 +268,9 @@ export default async function PublicPage() {
                         <span className="block text-white text-[11px] font-bold leading-tight line-clamp-2">
                           {cat.name}
                         </span>
-                        <span className="block text-white/50 text-[10px] mt-0.5">Ver →</span>
+                        <span className="block text-white/50 text-[10px] mt-0.5">
+                          Ver →
+                        </span>
                       </div>
                     </Link>
                   </ScrollReveal>
@@ -169,9 +283,11 @@ export default async function PublicPage() {
 
       {/* ─── 4. PRODUCTOS DESTACADOS ─────────────────────────────────── */}
       {featured.length > 0 && (
-        <section className="py-14 sm:py-20 border-t border-border" aria-labelledby="sec-featured">
+        <section
+          className="py-14 sm:py-20 border-t border-border"
+          aria-labelledby="sec-featured"
+        >
           <div className={C}>
-
             {/* ── Section header ── */}
             <ScrollReveal>
               <div className="mb-7 sm:mb-10">
@@ -186,7 +302,8 @@ export default async function PublicPage() {
                       id="sec-featured"
                       className="mt-2.5 text-[2rem] sm:text-[clamp(2rem,4.5vw,3rem)] font-black uppercase tracking-[-0.03em] text-foreground leading-[0.9]"
                     >
-                      Productos<br />
+                      Productos
+                      <br />
                       <span className="text-primary">Destacados</span>
                     </h2>
                   </div>
@@ -195,8 +312,19 @@ export default async function PublicPage() {
                     className="hidden sm:inline-flex shrink-0 group items-center gap-2 rounded-[10px] border border-border/80 bg-card px-5 py-2.5 text-sm font-semibold text-foreground transition-all hover:border-primary/40 hover:text-primary mt-1"
                   >
                     Ver todo
-                    <svg className="size-3.5 transition-transform group-hover:translate-x-0.5" viewBox="0 0 16 16" fill="none" aria-hidden>
-                      <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    <svg
+                      className="size-3.5 transition-transform group-hover:translate-x-0.5"
+                      viewBox="0 0 16 16"
+                      fill="none"
+                      aria-hidden
+                    >
+                      <path
+                        d="M3 8h10M9 4l4 4-4 4"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
                     </svg>
                   </Link>
                 </div>
@@ -234,7 +362,11 @@ export default async function PublicPage() {
                 {/* 2×2 grid — grid-rows-2 distributes height evenly */}
                 <div className="flex-1 grid grid-cols-2 grid-rows-2 gap-3">
                   {featured.slice(1, 5).map((product, i) => (
-                    <ScrollReveal key={product.id} delay={(i + 1) * 60} className="h-full">
+                    <ScrollReveal
+                      key={product.id}
+                      delay={(i + 1) * 60}
+                      className="h-full"
+                    >
                       <LandingProductCard product={product} variant="fill" />
                     </ScrollReveal>
                   ))}
@@ -248,7 +380,6 @@ export default async function PublicPage() {
                 </ScrollReveal>
               )}
             </div>
-
           </div>
         </section>
       )}
@@ -269,7 +400,8 @@ export default async function PublicPage() {
               Ahora disponible
             </p>
             <h2 className="text-[clamp(2rem,5vw,3.5rem)] font-black uppercase tracking-tight text-white leading-tight max-w-xl">
-              Colección<br />
+              Colección
+              <br />
               <span className="text-primary">Temporada 2025</span>
             </h2>
             <p className="mt-4 text-white/75 max-w-sm text-sm leading-relaxed">
@@ -289,7 +421,10 @@ export default async function PublicPage() {
 
       {/* ─── 5. MODELOS EN TELA ──────────────────────────────────────── */}
       {clothSlice.length > 0 && (
-        <section className="w-full border-t border-border bg-muted/15" aria-labelledby="sec-cloths">
+        <section
+          className="w-full border-t border-border bg-muted/15"
+          aria-labelledby="sec-cloths"
+        >
           <div className={`${C} pt-16 sm:pt-20 pb-8`}>
             <ScrollReveal>
               <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
@@ -301,10 +436,12 @@ export default async function PublicPage() {
                     id="sec-cloths"
                     className="mt-1 text-2xl sm:text-4xl font-black uppercase tracking-tight text-foreground"
                   >
-                    Prendas <span className="landing-wavy-underline">reales</span>
+                    Prendas{" "}
+                    <span className="landing-wavy-underline">reales</span>
                   </h2>
                   <p className="mt-2 max-w-xl text-sm leading-snug text-muted-foreground">
-                    Modelos con nuestras prendas tal como son. Elige la que más te guste y cómprala directo en el catálogo.
+                    Modelos con nuestras prendas tal como son. Elige la que más
+                    te guste y cómprala directo en el catálogo.
                   </p>
                 </div>
                 <Link
@@ -321,7 +458,10 @@ export default async function PublicPage() {
               {clothSlice.map((src, i) => (
                 <ScrollReveal key={src} delay={i * 80} className="h-full">
                   <div className="block h-full overflow-hidden relative rounded-2xl">
-                    <div className="relative w-full" style={{ minHeight: "70vh" }}>
+                    <div
+                      className="relative w-full"
+                      style={{ minHeight: "70vh" }}
+                    >
                       <Image
                         src={src}
                         alt={`Prenda Buxxep modelo ${i + 1}`}
@@ -339,7 +479,10 @@ export default async function PublicPage() {
       )}
 
       {/* ─── 6. BENTO / CARACTERÍSTICAS ──────────────────────────────── */}
-      <section className={`hidden sm:block ${S} border-t border-border ${C}`} aria-labelledby="sec-bento">
+      <section
+        className={`hidden sm:block ${S} border-t border-border ${C}`}
+        aria-labelledby="sec-bento"
+      >
         <ScrollReveal>
           <div className="mb-8">
             <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-primary">
@@ -349,7 +492,8 @@ export default async function PublicPage() {
               id="sec-bento"
               className="mt-1 text-xl sm:text-2xl font-black uppercase tracking-tight text-foreground"
             >
-              Hecho para el día a día <span className="landing-wavy-underline">fuerte</span>
+              Hecho para el día a día{" "}
+              <span className="landing-wavy-underline">fuerte</span>
             </h2>
             <p className="mt-2 text-muted-foreground text-sm max-w-md">
               Prendas que aguantan el ritmo. Calidad real para el día a día.
@@ -372,7 +516,10 @@ export default async function PublicPage() {
       </section>
 
       {/* ─── 7. CÓMO FUNCIONA ────────────────────────────────────────── */}
-      <section className="hidden sm:block w-full border-t border-border bg-muted/30" aria-labelledby="sec-how">
+      <section
+        className="hidden sm:block w-full border-t border-border bg-muted/30"
+        aria-labelledby="sec-how"
+      >
         <div className={`${C} py-20 sm:py-28`}>
           <ScrollReveal>
             <div className="text-center mb-16">
@@ -417,8 +564,12 @@ export default async function PublicPage() {
                     {item.step}
                   </span>
                   <div className="space-y-2">
-                    <h3 className="text-lg sm:text-xl font-bold text-foreground">{item.title}</h3>
-                    <p className="text-muted-foreground text-sm leading-relaxed">{item.text}</p>
+                    <h3 className="text-lg sm:text-xl font-bold text-foreground">
+                      {item.title}
+                    </h3>
+                    <p className="text-muted-foreground text-sm leading-relaxed">
+                      {item.text}
+                    </p>
                   </div>
                   <Link
                     href={item.href}
