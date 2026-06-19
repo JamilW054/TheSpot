@@ -25,9 +25,12 @@ export interface CartLine {
   productName: string;
   productSlug: string;
   coverImage: string | null;
-  /** Talla u otros atributos de la variante (ej. { size: "M" }). */
+  /** Talla u otros atributos de la variante (ej. { size: "M", color: "Rojo" }). */
   attributes: Record<string, unknown>;
   size: string | null;
+  color: string | null;
+  /** Hex del color elegido (para el swatch), si la variante lo tiene. */
+  colorHex: string | null;
   designName: string | null;
   designThumbnail: string | null;
   createdAt: string;
@@ -77,6 +80,10 @@ function rowToCartLine(row: CartItemRow): CartLine {
   const attributes = (variant?.attributes ?? {}) as Record<string, unknown>;
   const size =
     typeof attributes.size === "string" ? (attributes.size as string) : null;
+  const color =
+    typeof attributes.color === "string" ? (attributes.color as string) : null;
+  const colorHex =
+    typeof attributes.hex === "string" ? (attributes.hex as string) : null;
   return {
     id: row.id,
     variantId: row.variant_id,
@@ -91,6 +98,8 @@ function rowToCartLine(row: CartItemRow): CartLine {
     coverImage: coverFromMedia(product?.product_media),
     attributes,
     size,
+    color,
+    colorHex,
     designName: row.designs?.name ?? null,
     designThumbnail:
       row.designs?.thumbnail_url ?? row.designs?.preview_url ?? null,
@@ -108,13 +117,15 @@ async function requireUser() {
 }
 
 /**
- * Resuelve la variante para un producto + talla. Si no hay talla o no coincide,
- * devuelve la primera variante activa. Lanza si el producto no tiene variantes.
+ * Resuelve la variante para un producto + talla + color. Casa por ambos ejes
+ * (los presentes); si no coincide ninguna, devuelve la primera variante activa.
+ * Lanza si el producto no tiene variantes.
  */
 export async function resolveVariant(
   supabase: Awaited<ReturnType<typeof createClient>>,
   productId: string,
   size: string | null,
+  color: string | null,
 ): Promise<{ variantId: string; priceCents: number }> {
   const { data: variantData } = await supabase
     .from("product_variants")
@@ -146,14 +157,21 @@ export async function resolveVariant(
     throw new Error("El producto no tiene variantes disponibles.");
   }
 
-  const wanted = size?.trim().toLowerCase();
-  const match = wanted
-    ? variants.find(
-        (v) =>
-          typeof v.attributes?.size === "string" &&
-          (v.attributes.size as string).toLowerCase() === wanted,
-      )
-    : undefined;
+  const wantSize = size?.trim().toLowerCase() ?? "";
+  const wantColor = color?.trim().toLowerCase() ?? "";
+  const attrStr = (attrs: Record<string, unknown> | null, key: string) =>
+    typeof attrs?.[key] === "string"
+      ? (attrs[key] as string).toLowerCase()
+      : "";
+  // Casa por los ejes solicitados (talla y/o color); ignora los no especificados.
+  const match =
+    wantSize || wantColor
+      ? variants.find(
+          (v) =>
+            (!wantSize || attrStr(v.attributes, "size") === wantSize) &&
+            (!wantColor || attrStr(v.attributes, "color") === wantColor),
+        )
+      : undefined;
   const chosen = match ?? variants[0];
   return { variantId: chosen.id, priceCents: chosen.price_cents ?? basePrice };
 }
@@ -212,6 +230,7 @@ export interface AddToCartInput {
   productId?: string;
   variantId?: string;
   size?: string | null;
+  color?: string | null;
   designId?: string | null;
   quantity?: number;
 }
@@ -233,6 +252,7 @@ export async function addToCart(input: AddToCartInput): Promise<CartLine> {
       supabase,
       input.productId,
       input.size ?? null,
+      input.color ?? null,
     );
     variantId = resolved.variantId;
     unitPriceCents = resolved.priceCents;
@@ -361,6 +381,7 @@ export interface GuestCartItem {
   productId?: string;
   variantId?: string;
   size?: string | null;
+  color?: string | null;
   designId?: string | null;
   quantity?: number;
 }

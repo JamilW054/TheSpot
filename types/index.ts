@@ -110,6 +110,12 @@ export interface Mockup {
   modelPath?: string;
 }
 
+/** Un color disponible: etiqueta visible + hex para el swatch (null si sin color). */
+export interface ProductColor {
+  label: string;
+  hex: string | null;
+}
+
 /** Producto del catálogo público: ropa a la venta que se puede personalizar en el editor. */
 export interface CatalogProduct {
   id: string;
@@ -137,6 +143,8 @@ export interface CatalogProduct {
   categorySlug: string | null;
   /** Tallas disponibles para este producto (ej. ["XS","S","M","L","XL","XXL"]). */
   sizes: string[];
+  /** Colores disponibles (eje independiente de las tallas). Vacío si no aplica. */
+  colors: ProductColor[];
   /** Etiquetas del producto. */
   tags: string[];
   /** Promedio de calificación (1-5). Null si sin reseñas. */
@@ -163,6 +171,8 @@ export interface CartItem {
   quantity: number;
   /** Talla seleccionada por el usuario (null si el producto no tiene tallas). */
   size?: string | null;
+  /** Color seleccionado por el usuario (null si el producto no tiene colores). */
+  color?: string | null;
   /** Si viene del editor, id del diseño personalizado (opcional). */
   designId?: string | null;
 }

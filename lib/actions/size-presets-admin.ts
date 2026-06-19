@@ -6,11 +6,51 @@ import { createServiceClient } from "@/lib/supabase/server";
 
 export type SizePresetActionState = { ok?: true; error?: string };
 
-function parseSizes(raw: string): string[] {
-  return raw
+interface PresetItem {
+  label: string;
+  hex: string | null;
+}
+
+/**
+ * Lee los items del preset desde el formulario. Para color se envía `items_json`
+ * (`[{label, hex}]`, hex del color picker); para talla se mantiene `sizes` como
+ * texto separado por comas. Devuelve el tipo (kind) y los items normalizados.
+ */
+function parsePresetInput(formData: FormData): {
+  kind: "size" | "color";
+  items: PresetItem[];
+} {
+  const kind = formData.get("kind") === "color" ? "color" : "size";
+  const itemsRaw = formData.get("items_json")?.toString();
+  if (itemsRaw) {
+    try {
+      const parsed = JSON.parse(itemsRaw);
+      if (Array.isArray(parsed)) {
+        const seen = new Set<string>();
+        const items: PresetItem[] = [];
+        for (const it of parsed) {
+          if (typeof it !== "object" || it == null) continue;
+          const rec = it as Record<string, unknown>;
+          const label =
+            typeof rec.label === "string" ? rec.label.trim() : "";
+          if (!label || seen.has(label.toLowerCase())) continue;
+          seen.add(label.toLowerCase());
+          const hex =
+            kind === "color" && typeof rec.hex === "string" ? rec.hex : null;
+          items.push({ label, hex });
+        }
+        return { kind, items };
+      }
+    } catch {
+      // cae al parseo de texto
+    }
+  }
+  const items = (formData.get("sizes")?.toString() ?? "")
     .split(",")
     .map((s) => s.trim())
-    .filter(Boolean);
+    .filter(Boolean)
+    .map((label) => ({ label, hex: null }));
+  return { kind, items };
 }
 
 function revalidate() {
@@ -18,17 +58,18 @@ function revalidate() {
   revalidatePath("/admin/categorias");
 }
 
-/** Reemplaza las tallas (size_preset_items) de un preset. */
+/** Reemplaza los items (size_preset_items) de un preset. */
 async function replacePresetItems(
   supabase: ReturnType<typeof createServiceClient>,
   presetId: string,
-  sizes: string[],
+  items: PresetItem[],
 ): Promise<void> {
   await supabase.from("size_preset_items").delete().eq("preset_id", presetId);
-  if (sizes.length === 0) return;
-  const rows = sizes.map((label, i) => ({
+  if (items.length === 0) return;
+  const rows = items.map((item, i) => ({
     preset_id: presetId,
-    label,
+    label: item.label,
+    swatch_hex: item.hex,
     sort_order: i,
   }));
   const { error } = await supabase.from("size_preset_items").insert(rows);
@@ -43,17 +84,20 @@ export async function adminCreateSizePreset(
     await requireAdmin();
     const name = formData.get("name")?.toString().trim() ?? "";
     if (!name) throw new Error("El nombre es obligatorio.");
-    const sizes = parseSizes(formData.get("sizes")?.toString() ?? "");
-    if (sizes.length === 0) throw new Error("Agrega al menos una talla.");
+    const { kind, items } = parsePresetInput(formData);
+    if (items.length === 0)
+      throw new Error(
+        kind === "color" ? "Agrega al menos un color." : "Agrega al menos una talla.",
+      );
 
     const supabase = createServiceClient();
     const { data, error } = await supabase
       .from("size_presets")
-      .insert({ name })
+      .insert({ name, kind })
       .select("id")
       .single();
     if (error) throw new Error(error.message);
-    await replacePresetItems(supabase, (data as { id: string }).id, sizes);
+    await replacePresetItems(supabase, (data as { id: string }).id, items);
 
     revalidate();
     return { ok: true };
@@ -72,16 +116,19 @@ export async function adminUpdateSizePreset(
     if (!id) throw new Error("Falta el identificador.");
     const name = formData.get("name")?.toString().trim() ?? "";
     if (!name) throw new Error("El nombre es obligatorio.");
-    const sizes = parseSizes(formData.get("sizes")?.toString() ?? "");
-    if (sizes.length === 0) throw new Error("Agrega al menos una talla.");
+    const { kind, items } = parsePresetInput(formData);
+    if (items.length === 0)
+      throw new Error(
+        kind === "color" ? "Agrega al menos un color." : "Agrega al menos una talla.",
+      );
 
     const supabase = createServiceClient();
     const { error } = await supabase
       .from("size_presets")
-      .update({ name })
+      .update({ name, kind })
       .eq("id", id);
     if (error) throw new Error(error.message);
-    await replacePresetItems(supabase, id, sizes);
+    await replacePresetItems(supabase, id, items);
 
     revalidate();
     return { ok: true };

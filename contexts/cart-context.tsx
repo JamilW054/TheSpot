@@ -24,15 +24,16 @@ import type { CartItem } from "@/types";
 const STORAGE_KEY = "buxxep-cart";
 
 function cartItemKey(item: CartItem): string {
-  return `${item.productId}:${item.designId ?? ""}:${item.size ?? ""}`;
+  return `${item.productId}:${item.designId ?? ""}:${item.size ?? ""}:${item.color ?? ""}`;
 }
 
 function keyOf(
   productId: string,
   designId?: string | null,
   size?: string | null,
+  color?: string | null,
 ): string {
-  return `${productId}:${designId ?? ""}:${size ?? ""}`;
+  return `${productId}:${designId ?? ""}:${size ?? ""}:${color ?? ""}`;
 }
 
 function loadCart(): CartItem[] {
@@ -64,23 +65,27 @@ interface CartContextValue {
     quantity?: number,
     designId?: string | null,
     size?: string | null,
+    color?: string | null,
   ) => void;
   removeItem: (
     productId: string,
     designId?: string | null,
     size?: string | null,
+    color?: string | null,
   ) => void;
   updateQuantity: (
     productId: string,
     quantity: number,
     designId?: string | null,
     size?: string | null,
+    color?: string | null,
   ) => void;
   clearCart: () => void;
   getQuantity: (
     productId: string,
     designId?: string | null,
     size?: string | null,
+    color?: string | null,
   ) => number;
 }
 
@@ -158,6 +163,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         quantity: l.quantity,
         designId: l.designId ?? undefined,
         size: l.size ?? undefined,
+        color: l.color ?? undefined,
       };
       const key = cartItemKey(item);
       seenKeys.add(key);
@@ -236,6 +242,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
             toMerge.map((it) => ({
               productId: it.productId,
               size: it.size ?? null,
+              color: it.color ?? null,
               designId: it.designId ?? null,
               quantity: it.quantity,
             })),
@@ -257,8 +264,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
       quantity = 1,
       designId?: string | null,
       size?: string | null,
+      color?: string | null,
     ) => {
-      const key = keyOf(productId, designId, size);
+      const key = keyOf(productId, designId, size, color);
       // Re-agregar cancela cualquier eliminación pendiente de la misma clave.
       pendingRemovals.current.delete(key);
       setItems((prev) => {
@@ -276,6 +284,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
             quantity,
             designId: designId ?? undefined,
             size: size ?? undefined,
+            color: color ?? undefined,
           },
         ];
       });
@@ -283,6 +292,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         void addToCartAction({
           productId,
           size: size ?? null,
+          color: color ?? null,
           designId: designId ?? null,
           quantity,
         }).then((result) => {
@@ -294,8 +304,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
   );
 
   const removeItem = useCallback(
-    (productId: string, designId?: string | null, size?: string | null) => {
-      const key = keyOf(productId, designId, size);
+    (
+      productId: string,
+      designId?: string | null,
+      size?: string | null,
+      color?: string | null,
+    ) => {
+      const key = keyOf(productId, designId, size, color);
       setItems((prev) => prev.filter((it) => cartItemKey(it) !== key));
       if (isLoggedIn) {
         // El cliente es la autoridad: la clave queda marcada como eliminada hasta
@@ -320,12 +335,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
       quantity: number,
       designId?: string | null,
       size?: string | null,
+      color?: string | null,
     ) => {
       if (quantity < 1) {
-        removeItem(productId, designId, size);
+        removeItem(productId, designId, size, color);
         return;
       }
-      const key = keyOf(productId, designId, size);
+      const key = keyOf(productId, designId, size, color);
       setItems((prev) =>
         prev.map((it) => (cartItemKey(it) === key ? { ...it, quantity } : it)),
       );
@@ -356,8 +372,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [isLoggedIn, refreshFromDb]);
 
   const getQuantity = useCallback(
-    (productId: string, designId?: string | null, size?: string | null) => {
-      const key = keyOf(productId, designId, size);
+    (
+      productId: string,
+      designId?: string | null,
+      size?: string | null,
+      color?: string | null,
+    ) => {
+      const key = keyOf(productId, designId, size, color);
       const it = items.find((i) => cartItemKey(i) === key);
       return it?.quantity ?? 0;
     },

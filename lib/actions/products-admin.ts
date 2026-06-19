@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { createServiceClient } from "@/lib/supabase/server";
+import { variantKey } from "@/lib/variants";
 
 export type AdminProductActionState = { ok?: true; error?: string };
 
@@ -11,8 +12,12 @@ type ServiceClient = ReturnType<typeof createServiceClient>;
 
 /** Variante enviada desde el formulario (JSON). */
 interface VariantInput {
-  /** Talla (atributo principal); vacío para producto sin tallas (variante única). */
+  /** Talla; vacío si el producto no varía por talla. */
   size: string;
+  /** Color; vacío si el producto no varía por color. */
+  color?: string;
+  /** Hex del color (para el swatch); solo si hay color. */
+  hex?: string;
   sku?: string;
   /** Precio en DOP; si vacío, hereda el precio base. */
   priceDop?: string;
@@ -83,11 +88,15 @@ function parseVariants(formData: FormData): VariantInput[] {
     if (typeof v !== "object" || v == null) continue;
     const rec = v as Record<string, unknown>;
     const size = typeof rec.size === "string" ? rec.size.trim() : "";
-    const key = size.toLowerCase();
+    const color = typeof rec.color === "string" ? rec.color.trim() : "";
+    const key = variantKey(size, color);
     if (seen.has(key)) continue;
     seen.add(key);
     out.push({
       size,
+      color: color || undefined,
+      hex:
+        color && typeof rec.hex === "string" ? rec.hex.trim() : undefined,
       sku: typeof rec.sku === "string" ? rec.sku.trim() : undefined,
       priceDop: typeof rec.priceDop === "string" ? rec.priceDop : undefined,
       qty: Number.isFinite(Number(rec.qty))
@@ -229,26 +238,38 @@ async function syncVariants(
     is_active: boolean;
   }[];
 
-  const sizeOf = (attrs: Record<string, unknown> | null) =>
-    typeof attrs?.size === "string" ? (attrs.size as string).toLowerCase() : "";
-  const bySize = new Map(existing.map((v) => [sizeOf(v.attributes), v]));
+  const keyOfAttrs = (attrs: Record<string, unknown> | null) => {
+    const size = typeof attrs?.size === "string" ? (attrs.size as string) : "";
+    const color =
+      typeof attrs?.color === "string" ? (attrs.color as string) : "";
+    return variantKey(size, color);
+  };
+  const byKey = new Map(existing.map((v) => [keyOfAttrs(v.attributes), v]));
 
   const warehouseId =
     explicitWarehouseId?.trim() || (await getDefaultWarehouseId(supabase));
-  const submittedSizes = new Set(variants.map((v) => v.size.toLowerCase()));
+  const submittedKeys = new Set(
+    variants.map((v) => variantKey(v.size, v.color)),
+  );
 
   let sort = 0;
   for (const v of variants) {
-    const sizeKey = v.size.toLowerCase();
+    const key = variantKey(v.size, v.color);
     const priceCents = parseOptionalPriceCents(v.priceDop) ?? basePriceCents;
-    const attributes = v.size ? { size: v.size } : {};
+    const attributes: Record<string, string> = {};
+    if (v.size) attributes.size = v.size;
+    if (v.color) {
+      attributes.color = v.color;
+      if (v.hex) attributes.hex = v.hex;
+    }
+    const skuSuffix = [v.size, v.color].filter(Boolean).join("-") || "u";
     const sku =
       v.sku && v.sku.length > 0
         ? v.sku
-        : `${productSlug}-${v.size || "u"}`
+        : `${productSlug}-${skuSuffix}`
             .toUpperCase()
             .replace(/[^A-Z0-9-]/g, "");
-    const match = bySize.get(sizeKey);
+    const match = byKey.get(key);
 
     let variantId: string;
     if (match) {
@@ -291,9 +312,9 @@ async function syncVariants(
     sort++;
   }
 
-  // Desactiva variantes cuya talla ya no se envía.
+  // Desactiva variantes cuya combinación (talla/color) ya no se envía.
   for (const v of existing) {
-    if (!submittedSizes.has(sizeOf(v.attributes)) && v.is_active) {
+    if (!submittedKeys.has(keyOfAttrs(v.attributes)) && v.is_active) {
       await supabase
         .from("product_variants")
         .update({ is_active: false })

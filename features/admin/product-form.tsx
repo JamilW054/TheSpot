@@ -5,7 +5,6 @@ import {
   ImagePlus,
   Loader2,
   Plus,
-  Ruler,
   Save,
   Trash2,
   X,
@@ -26,6 +25,7 @@ import { adminCreateBrand } from "@/lib/actions/admin-crud";
 import type { CategoryRow } from "@/lib/db/categories";
 import { type AdminProductRow, tagsFromRow } from "@/lib/db/products";
 import type { SizePresetRow } from "@/lib/db/size-presets";
+import { variantKey } from "@/lib/variants";
 import { CategoryForm } from "./category-form";
 import { brandFields } from "./resource-fields";
 import { ResourceForm } from "./resource-form";
@@ -34,15 +34,18 @@ import { SizePresetForm } from "./size-preset-form";
 const labelCls = "block text-[13px] font-medium text-foreground mb-1.5";
 const fieldCls =
   "h-9 w-full rounded-[10px] border border-border bg-[#0c0c0e] px-2 text-sm font-medium text-foreground placeholder:text-muted-foreground focus-visible:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20";
+const stockInputCls =
+  "h-10 w-full rounded-lg border border-border bg-background px-3 text-base font-semibold text-foreground focus-visible:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20";
 
-interface VariantState {
-  size: string;
-  enabled: boolean;
-  qty: number;
+interface ColorValue {
+  label: string;
+  hex: string;
 }
 
 interface VariantPayload {
   size: string;
+  color: string;
+  hex: string;
   qty: number;
   active: boolean;
 }
@@ -64,58 +67,90 @@ interface ProductFormProps {
   onCancel?: () => void;
 }
 
-const SINGLE = "__single__";
-
 function centsToDop(value: number | string | null | undefined): string {
   if (value == null) return "";
   const n = typeof value === "string" ? Number.parseFloat(value) : value;
   return Number.isFinite(n) ? (n / 100).toFixed(2) : "";
 }
 
-function initialVariantMap(
-  initial: AdminProductRow | undefined,
-  presetSizes: string[] | null,
-  mode: "create" | "edit",
-): Record<string, VariantState> {
-  const existing = new Map<string, VariantState>();
-  for (const v of initial?.product_variants ?? []) {
+interface InitialAxes {
+  sizeEnabled: boolean;
+  colorEnabled: boolean;
+  sizes: string[];
+  colors: ColorValue[];
+  stock: Record<string, number>;
+  singleQty: number;
+}
+
+/** Reconstruye los ejes (talla/color) y el stock por combinación desde las variantes. */
+function deriveInitialAxes(initial: AdminProductRow | undefined): InitialAxes {
+  const variants = initial?.product_variants ?? [];
+  const sizes: string[] = [];
+  const colors: ColorValue[] = [];
+  const seenSize = new Set<string>();
+  const seenColor = new Set<string>();
+  const stock: Record<string, number> = {};
+  let singleQty = 0;
+
+  for (const v of variants) {
+    if (v.is_active === false) continue;
     const size =
       typeof v.attributes?.size === "string" ? v.attributes.size : "";
-    const qty = (v.inventory ?? []).reduce((s, i) => s + (i.quantity ?? 0), 0);
-    existing.set(size || SINGLE, {
-      size,
-      enabled: v.is_active !== false,
-      qty,
-    });
+    const color =
+      typeof v.attributes?.color === "string" ? v.attributes.color : "";
+    const hex = typeof v.attributes?.hex === "string" ? v.attributes.hex : "";
+    const qty = (v.inventory ?? []).reduce(
+      (s, i) => s + (i.quantity ?? 0),
+      0,
+    );
+    if (size && !seenSize.has(size.toLowerCase())) {
+      seenSize.add(size.toLowerCase());
+      sizes.push(size);
+    }
+    if (color && !seenColor.has(color.toLowerCase())) {
+      seenColor.add(color.toLowerCase());
+      colors.push({ label: color, hex: hex || "#111111" });
+    }
+    if (!size && !color) singleQty = qty;
+    else stock[variantKey(size, color)] = qty;
   }
 
-  // Edit mode: only show sizes that already exist on the product
-  if (mode === "edit" && existing.size > 0) {
-    const map: Record<string, VariantState> = {};
-    for (const [key, v] of existing) {
-      map[key] = v;
-    }
-    return map;
-  }
+  return {
+    sizeEnabled: sizes.length > 0,
+    colorEnabled: colors.length > 0,
+    sizes,
+    colors,
+    stock,
+    singleQty,
+  };
+}
 
-  // Create mode (or edit with no existing variants): show all preset sizes
-  const map: Record<string, VariantState> = {};
-  if (presetSizes && presetSizes.length > 0) {
-    for (const s of presetSizes) {
-      map[s] = existing.get(s) ?? { size: s, enabled: true, qty: 0 };
+/** Une dos listas de strings sin duplicar (case-insensitive), preservando orden. */
+function unionSizes(a: string[], b: string[]): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const s of [...a, ...b]) {
+    const k = s.toLowerCase();
+    if (s && !seen.has(k)) {
+      seen.add(k);
+      out.push(s);
     }
-    for (const [key, v] of existing) {
-      if (key !== SINGLE && !map[key]) map[key] = v;
-    }
-  } else {
-    map[SINGLE] = existing.get(SINGLE) ??
-      [...existing.values()][0] ?? {
-        size: "",
-        enabled: true,
-        qty: 0,
-      };
   }
-  return map;
+  return out;
+}
+
+/** Une dos listas de colores por label (case-insensitive), preservando orden. */
+function unionColors(a: ColorValue[], b: ColorValue[]): ColorValue[] {
+  const seen = new Set<string>();
+  const out: ColorValue[] = [];
+  for (const c of [...a, ...b]) {
+    const k = c.label.toLowerCase();
+    if (c.label && !seen.has(k)) {
+      seen.add(k);
+      out.push(c);
+    }
+  }
+  return out;
 }
 
 export function ProductForm({
@@ -137,6 +172,17 @@ export function ProductForm({
     FormData
   >(actionFn, undefined);
 
+  const sizePresetList = useMemo(
+    () => sizePresets.filter((p) => p.kind === "size"),
+    [sizePresets],
+  );
+  const colorPresetList = useMemo(
+    () => sizePresets.filter((p) => p.kind === "color"),
+    [sizePresets],
+  );
+
+  const initialAxes = useMemo(() => deriveInitialAxes(initial), [initial]);
+
   // Gallery
   const [media, setMedia] = useState<string[]>(() =>
     [...(initial?.product_media ?? [])]
@@ -150,68 +196,124 @@ export function ProductForm({
   // Sub-drawers
   const [brandDrawerOpen, setBrandDrawerOpen] = useState(false);
   const [categoryDrawerOpen, setCategoryDrawerOpen] = useState(false);
-  const [sizePresetDrawerOpen, setSizePresetDrawerOpen] = useState(false);
+  const [presetDrawerOpen, setPresetDrawerOpen] = useState(false);
   const [brandDrawerKey, setBrandDrawerKey] = useState(0);
   const [categoryDrawerKey, setCategoryDrawerKey] = useState(0);
-  const [sizePresetDrawerKey, setSizePresetDrawerKey] = useState(0);
+  const [presetDrawerKey, setPresetDrawerKey] = useState(0);
 
-  // Category + size preset
+  // Category
   const [selectedCategoryId, setSelectedCategoryId] = useState(
     initial?.category_id ?? "",
   );
-  const selectedCategory = useMemo(
-    () => categories.find((c) => c.id === selectedCategoryId) ?? null,
-    [categories, selectedCategoryId],
+
+  // ── Eje talla ──
+  const [sizeEnabled, setSizeEnabled] = useState(initialAxes.sizeEnabled);
+  const [sizePresetId, setSizePresetId] = useState("");
+  const [activeSizes, setActiveSizes] = useState<string[]>(initialAxes.sizes);
+  const sizePreset = useMemo(
+    () => sizePresetList.find((p) => p.id === sizePresetId) ?? null,
+    [sizePresetList, sizePresetId],
   );
-  const [selectedSizePresetId, setSelectedSizePresetId] = useState(() => {
-    const initialCategory = categories.find(
-      (c) => c.id === initial?.category_id,
+  // Pills = tallas del preset ∪ tallas ya activas (para edición conserva existentes).
+  const sizePool = useMemo(
+    () => unionSizes(sizePreset?.sizes ?? [], activeSizes),
+    [sizePreset, activeSizes],
+  );
+
+  // ── Eje color ──
+  const [colorEnabled, setColorEnabled] = useState(initialAxes.colorEnabled);
+  const [colorPresetId, setColorPresetId] = useState("");
+  const [activeColors, setActiveColors] = useState<ColorValue[]>(
+    initialAxes.colors,
+  );
+  const colorPreset = useMemo(
+    () => colorPresetList.find((p) => p.id === colorPresetId) ?? null,
+    [colorPresetList, colorPresetId],
+  );
+  const colorPool = useMemo(() => {
+    const presetColors: ColorValue[] = (colorPreset?.items ?? []).map((i) => ({
+      label: i.label,
+      hex: i.hex ?? "#111111",
+    }));
+    return unionColors(presetColors, activeColors);
+  }, [colorPreset, activeColors]);
+
+  // ── Stock ──
+  const [stockMap, setStockMap] = useState<Record<string, number>>(
+    initialAxes.stock,
+  );
+  const [singleQty, setSingleQty] = useState<number>(initialAxes.singleQty);
+
+  const hasSizeAxis = sizeEnabled && activeSizes.length > 0;
+  const hasColorAxis = colorEnabled && activeColors.length > 0;
+  const isSingle = !hasSizeAxis && !hasColorAxis;
+
+  const cellQty = (size: string, color: string | null): number => {
+    if (isSingle) return singleQty;
+    return stockMap[variantKey(size, color)] ?? 0;
+  };
+  const setCellQty = (size: string, color: string | null, qty: number) => {
+    const v = Math.max(0, qty || 0);
+    if (isSingle) {
+      setSingleQty(v);
+      return;
+    }
+    setStockMap((prev) => ({ ...prev, [variantKey(size, color)]: v }));
+  };
+
+  const toggleSize = (s: string) =>
+    setActiveSizes((prev) =>
+      prev.some((x) => x.toLowerCase() === s.toLowerCase())
+        ? prev.filter((x) => x.toLowerCase() !== s.toLowerCase())
+        : [...prev, s],
     );
-    return initialCategory?.size_preset_id ?? "";
-  });
-  useEffect(() => {
-    const nextPresetId = selectedCategoryId
-      ? (selectedCategory?.size_preset_id ?? sizePresets[0]?.id ?? "")
-      : "";
-    setSelectedSizePresetId(nextPresetId);
-  }, [selectedCategoryId, selectedCategory?.size_preset_id, sizePresets]);
+  const toggleColor = (c: ColorValue) =>
+    setActiveColors((prev) =>
+      prev.some((x) => x.label.toLowerCase() === c.label.toLowerCase())
+        ? prev.filter((x) => x.label.toLowerCase() !== c.label.toLowerCase())
+        : [...prev, c],
+    );
+  const sizeOn = (s: string) =>
+    activeSizes.some((x) => x.toLowerCase() === s.toLowerCase());
+  const colorOn = (label: string) =>
+    activeColors.some((x) => x.label.toLowerCase() === label.toLowerCase());
 
-  const selectedSizePreset = useMemo(
-    () => sizePresets.find((p) => p.id === selectedSizePresetId) ?? null,
-    [selectedSizePresetId, sizePresets],
-  );
-  const presetSizes = useMemo(
-    () => selectedSizePreset?.sizes ?? null,
-    [selectedSizePreset],
-  );
+  // Al elegir preset de talla: precarga sus tallas como activas.
+  const onPickSizePreset = (id: string) => {
+    setSizePresetId(id);
+    const preset = sizePresetList.find((p) => p.id === id);
+    if (preset) setActiveSizes(preset.sizes);
+  };
+  const onPickColorPreset = (id: string) => {
+    setColorPresetId(id);
+    const preset = colorPresetList.find((p) => p.id === id);
+    if (preset)
+      setActiveColors(
+        preset.items.map((i) => ({ label: i.label, hex: i.hex ?? "#111111" })),
+      );
+  };
 
-  // Variants
-  const [variants, setVariants] = useState<Record<string, VariantState>>(() =>
-    initialVariantMap(initial, presetSizes, mode),
-  );
-  useEffect(() => {
-    setVariants(initialVariantMap(initial, presetSizes, mode));
-  }, [presetSizes, initial, mode]);
-
+  // Payload de variantes: producto cartesiano de los ejes activos.
   const variantPayload = useMemo<VariantPayload[]>(() => {
+    const sizesAxis = hasSizeAxis ? activeSizes : [""];
+    const colorsAxis: (ColorValue | null)[] = hasColorAxis
+      ? activeColors
+      : [null];
     const out: VariantPayload[] = [];
-    for (const v of Object.values(variants)) {
-      const single = v.size === "";
-      if (!single && !v.enabled) continue;
-      out.push({ size: v.size, qty: v.qty, active: single ? true : v.enabled });
+    for (const s of sizesAxis) {
+      for (const c of colorsAxis) {
+        out.push({
+          size: s,
+          color: c?.label ?? "",
+          hex: c?.hex ?? "",
+          qty: cellQty(s, c?.label ?? null),
+          active: true,
+        });
+      }
     }
     return out;
-  }, [variants]);
-
-  const updateVariant = (key: string, patch: Partial<VariantState>) =>
-    setVariants((prev) => ({ ...prev, [key]: { ...prev[key], ...patch } }));
-
-  // In edit mode: sizes not yet in the product (from preset) that can be added
-  const unusedPresetSizes = useMemo(() => {
-    if (mode !== "edit" || !presetSizes) return [];
-    const existingKeys = new Set(Object.keys(variants));
-    return presetSizes.filter((s) => !existingKeys.has(s));
-  }, [mode, presetSizes, variants]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasSizeAxis, hasColorAxis, activeSizes, activeColors, stockMap, singleQty]);
 
   // Warehouse
   const [selectedWarehouseId, setSelectedWarehouseId] = useState(
@@ -273,12 +375,16 @@ export function ProductForm({
     setMedia((prev) => [url, ...prev.filter((u) => u !== url)]);
   }
 
-  const variantEntries = Object.entries(variants);
-  const hasSizes = presetSizes != null && presetSizes.length > 0;
-
   const priceDopDefault = centsToDop(initial?.base_price_cents);
   const originalPriceDopDefault = centsToDop(initial?.original_price_cents);
   const tagsDefault = initial ? tagsFromRow(initial.product_tags).join(", ") : "";
+
+  const axisToggleCls = (on: boolean) =>
+    `inline-flex h-9 items-center gap-2 rounded-full border px-4 text-sm font-semibold transition-colors ${
+      on
+        ? "border-primary bg-primary text-primary-foreground"
+        : "border-border bg-background text-foreground hover:border-primary/60"
+    }`;
 
   return (
     <>
@@ -286,21 +392,13 @@ export function ProductForm({
         {mode === "edit" && initial ? (
           <input type="hidden" name="product_id" value={initial.id} />
         ) : null}
-        <input
-          type="hidden"
-          name="media_json"
-          value={JSON.stringify(media)}
-        />
+        <input type="hidden" name="media_json" value={JSON.stringify(media)} />
         <input
           type="hidden"
           name="variants_json"
           value={JSON.stringify(variantPayload)}
         />
-        <input
-          type="hidden"
-          name="warehouse_id"
-          value={selectedWarehouseId}
-        />
+        <input type="hidden" name="warehouse_id" value={selectedWarehouseId} />
 
         {/* ── Imágenes ── */}
         <section className="rounded-[14px] border border-border bg-card p-4">
@@ -389,7 +487,7 @@ export function ProductForm({
             name="name"
             required
             defaultValue={initial?.name ?? ""}
-            placeholder="Ej. Camiseta básica"
+            placeholder="Ej. Silla de comedor"
           />
 
           {mode === "edit" && initial?.slug ? (
@@ -416,7 +514,7 @@ export function ProductForm({
             rows={2}
             label="Etiquetas (separadas por coma)"
             defaultValue={tagsDefault}
-            placeholder="verano, básicos, unisex"
+            placeholder="hogar, muebles, salón"
           />
         </section>
 
@@ -451,34 +549,6 @@ export function ProductForm({
                   ...categories.map((c) => ({ value: c.id, label: c.name })),
                 ]}
                 disabled={categories.length === 0}
-              />
-            </div>
-
-            {/* Tipo de talla */}
-            <div className="relative">
-              <div className="mb-1.5 flex items-center justify-between gap-2">
-                <span className="text-[13px] font-medium text-foreground">Tipo de talla</span>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSizePresetDrawerKey((k) => k + 1);
-                    setSizePresetDrawerOpen(true);
-                  }}
-                  className="inline-flex items-center gap-1 rounded-full border border-border bg-background px-2 py-0.5 text-[11px] font-semibold text-foreground transition-colors hover:bg-muted"
-                >
-                  <Plus className="size-3" aria-hidden />
-                  Nuevo
-                </button>
-              </div>
-              <SelectMenu
-                placeholder={selectedCategoryId ? "Sin tallas" : "Elige categoría primero"}
-                value={selectedSizePresetId}
-                onChange={setSelectedSizePresetId}
-                disabled={!selectedCategoryId || sizePresets.length === 0}
-                options={sizePresets.map((p) => ({
-                  value: p.id,
-                  label: `${p.name} (${p.sizes.join(", ")})`,
-                }))}
               />
             </div>
 
@@ -553,7 +623,6 @@ export function ProductForm({
         <section className="rounded-[14px] border border-border bg-card p-4 space-y-4">
           <div className="flex items-center justify-between gap-3">
             <p className={`${labelCls} text-base`}>Variantes e inventario</p>
-            {/* Warehouse selector */}
             {warehouses.length > 0 && (
               <div className="relative flex items-center gap-2 shrink-0">
                 <span className="text-[11px] font-medium text-muted-foreground whitespace-nowrap">
@@ -574,160 +643,142 @@ export function ProductForm({
             )}
           </div>
 
-          {hasSizes ? (
-            <div className="space-y-4">
-              {/* Toggle tallas */}
-              <div className="rounded-[14px] border border-border bg-muted/10 p-4">
-                <div className="mb-3 flex items-center justify-between gap-3">
-                  <div>
-                    <p className="text-sm font-semibold text-foreground">
-                      Tallas disponibles
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {mode === "edit"
-                        ? "Tallas asignadas. Pulsa para activar/desactivar."
-                        : "Pulsa para activar o desactivar."}
-                    </p>
-                  </div>
-                  <span className="rounded-full border border-border bg-background px-3 py-1 text-xs font-medium text-muted-foreground">
-                    {Object.values(variants).filter((v) => v.enabled).length}{" "}
-                    activas
-                  </span>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {variantEntries.map(([key, v]) => (
-                    <button
-                      key={key}
-                      type="button"
-                      onClick={() =>
-                        updateVariant(key, { enabled: !v.enabled })
-                      }
-                      className={`inline-flex h-10 min-w-10 items-center justify-center rounded-full border px-4 text-sm font-semibold transition-all ${
-                        v.enabled
-                          ? "border-primary bg-primary text-primary-foreground shadow-sm"
-                          : "border-border bg-background text-foreground hover:border-primary/60 hover:bg-primary/5"
-                      }`}
-                      aria-pressed={v.enabled}
-                      aria-label={`${v.enabled ? "Desactivar" : "Activar"} talla ${v.size}`}
-                    >
-                      {v.size}
-                    </button>
-                  ))}
+          {/* Toggles de eje */}
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setSizeEnabled((v) => !v)}
+              className={axisToggleCls(sizeEnabled)}
+              aria-pressed={sizeEnabled}
+            >
+              Varía por talla
+            </button>
+            <button
+              type="button"
+              onClick={() => setColorEnabled((v) => !v)}
+              className={axisToggleCls(colorEnabled)}
+              aria-pressed={colorEnabled}
+            >
+              Varía por color
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setPresetDrawerKey((k) => k + 1);
+                setPresetDrawerOpen(true);
+              }}
+              className="inline-flex h-9 items-center gap-1 rounded-full border border-dashed border-border bg-background px-3 text-xs font-semibold text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+            >
+              <Plus className="size-3" aria-hidden />
+              Nuevo tipo
+            </button>
+          </div>
 
-                  {/* In edit mode: add unused sizes from preset */}
-                  {unusedPresetSizes.map((s) => (
+          {/* Selección de valores por eje */}
+          {sizeEnabled && (
+            <div className="rounded-[14px] border border-border bg-muted/10 p-4 space-y-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-sm font-semibold text-foreground">Tallas</p>
+                <div className="w-56">
+                  <SelectMenu
+                    placeholder="Cargar desde tipo…"
+                    value={sizePresetId}
+                    onChange={onPickSizePreset}
+                    disabled={sizePresetList.length === 0}
+                    options={sizePresetList.map((p) => ({
+                      value: p.id,
+                      label: `${p.name} (${p.sizes.join(", ")})`,
+                    }))}
+                  />
+                </div>
+              </div>
+              {sizePool.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {sizePool.map((s) => (
                     <button
                       key={s}
                       type="button"
-                      onClick={() => {
-                        setVariants((prev) => ({
-                          ...prev,
-                          [s]: { size: s, enabled: true, qty: 0 },
-                        }));
-                      }}
-                      className="inline-flex h-10 min-w-10 items-center justify-center gap-1 rounded-full border border-dashed border-border px-3 text-xs font-medium text-muted-foreground transition-colors hover:border-primary hover:text-primary"
-                      title={`Agregar talla ${s}`}
+                      onClick={() => toggleSize(s)}
+                      aria-pressed={sizeOn(s)}
+                      className={`inline-flex h-10 min-w-10 items-center justify-center rounded-full border px-4 text-sm font-semibold transition-all ${
+                        sizeOn(s)
+                          ? "border-primary bg-primary text-primary-foreground shadow-sm"
+                          : "border-border bg-background text-foreground hover:border-primary/60"
+                      }`}
                     >
-                      <Plus className="size-3" aria-hidden />
                       {s}
                     </button>
                   ))}
                 </div>
-              </div>
-
-              {/* Stock por talla */}
-              <div className="rounded-[14px] border border-border bg-card p-4">
-                <p className="mb-3 text-sm font-semibold text-foreground">
-                  Stock por talla
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  Elige un tipo de talla o crea uno con “Nuevo tipo”.
                 </p>
-                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                  {variantEntries
-                    .filter(([, v]) => v.enabled)
-                    .map(([key, v]) => (
-                      <div
-                        key={key}
-                        className="rounded-lg border border-primary/20 bg-primary/5 p-3 shadow-sm"
-                      >
-                        <p className="mb-2 text-sm font-semibold text-foreground">
-                          {v.size}
-                        </p>
-                        <label className="block text-xs font-medium text-muted-foreground">
-                          Stock
-                          <input
-                            type="number"
-                            min={0}
-                            value={v.qty}
-                            onChange={(e) =>
-                              updateVariant(key, {
-                                qty: Math.max(
-                                  0,
-                                  Number(e.target.value) || 0,
-                                ),
-                              })
-                            }
-                            className="mt-1.5 h-10 w-full rounded-lg border border-border bg-background px-3 text-base font-semibold text-foreground focus-visible:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
-                          />
-                        </label>
-                      </div>
-                    ))}
-                </div>
-                {variantEntries.filter(([, v]) => v.enabled).length === 0 ? (
-                  <p className="mt-2 text-sm text-muted-foreground">
-                    Activa al menos una talla para ver su stock.
-                  </p>
-                ) : null}
-              </div>
-            </div>
-          ) : selectedCategoryId ? (
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 rounded-[10px] border border-border bg-muted/20 px-3 py-2.5 text-sm text-muted-foreground">
-                <Ruler className="size-4 shrink-0" aria-hidden />
-                <span>
-                  Sin tallas.{" "}
-                  <a
-                    href="/admin/tallas"
-                    className="text-primary underline-offset-2 hover:underline"
-                  >
-                    Configurar tallas
-                  </a>
-                </span>
-              </div>
-              <label className={labelCls}>
-                Stock
-                <input
-                  type="number"
-                  min={0}
-                  value={variants[SINGLE]?.qty ?? 0}
-                  onChange={(e) =>
-                    updateVariant(SINGLE, {
-                      qty: Math.max(0, Number(e.target.value) || 0),
-                    })
-                  }
-                  className={`${fieldCls} mt-1.5 w-24`}
-                />
-              </label>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              <p className="text-sm text-muted-foreground">
-                Selecciona una categoría con tallas, o deja variante única.
-              </p>
-              <label className={labelCls}>
-                Stock (variante única)
-                <input
-                  type="number"
-                  min={0}
-                  value={variants[SINGLE]?.qty ?? 0}
-                  onChange={(e) =>
-                    updateVariant(SINGLE, {
-                      qty: Math.max(0, Number(e.target.value) || 0),
-                    })
-                  }
-                  className={`${fieldCls} mt-1.5 w-24`}
-                />
-              </label>
+              )}
             </div>
           )}
+
+          {colorEnabled && (
+            <div className="rounded-[14px] border border-border bg-muted/10 p-4 space-y-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-sm font-semibold text-foreground">Colores</p>
+                <div className="w-56">
+                  <SelectMenu
+                    placeholder="Cargar desde tipo…"
+                    value={colorPresetId}
+                    onChange={onPickColorPreset}
+                    disabled={colorPresetList.length === 0}
+                    options={colorPresetList.map((p) => ({
+                      value: p.id,
+                      label: `${p.name} (${p.sizes.join(", ")})`,
+                    }))}
+                  />
+                </div>
+              </div>
+              {colorPool.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {colorPool.map((c) => {
+                    const on = colorOn(c.label);
+                    return (
+                      <button
+                        key={c.label}
+                        type="button"
+                        onClick={() => toggleColor(c)}
+                        aria-pressed={on}
+                        className={`inline-flex h-10 items-center gap-2 rounded-full border px-3 text-sm font-semibold transition-all ${
+                          on
+                            ? "border-primary bg-primary/10 text-primary shadow-sm"
+                            : "border-border bg-background text-foreground hover:border-primary/60"
+                        }`}
+                      >
+                        <span
+                          className="size-5 rounded-full border border-border"
+                          style={{ backgroundColor: c.hex }}
+                          aria-hidden
+                        />
+                        {c.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  Elige un tipo de color o crea uno con “Nuevo tipo”.
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Stock */}
+          <StockEditor
+            isSingle={isSingle}
+            hasSizeAxis={hasSizeAxis}
+            hasColorAxis={hasColorAxis}
+            activeSizes={activeSizes}
+            activeColors={activeColors}
+            cellQty={cellQty}
+            setCellQty={setCellQty}
+          />
         </section>
 
         {/* ── Configuración ── */}
@@ -821,21 +872,170 @@ export function ProductForm({
       </Drawer>
 
       <Drawer
-        open={sizePresetDrawerOpen}
-        onClose={() => setSizePresetDrawerOpen(false)}
-        title="Nuevo tipo de talla"
+        open={presetDrawerOpen}
+        onClose={() => setPresetDrawerOpen(false)}
+        title="Nuevo tipo de variante"
         width="md"
       >
         <SizePresetForm
-          key={sizePresetDrawerKey}
+          key={presetDrawerKey}
           mode="create"
           onSuccess={() => {
-            setSizePresetDrawerOpen(false);
+            setPresetDrawerOpen(false);
             router.refresh();
           }}
-          onCancel={() => setSizePresetDrawerOpen(false)}
+          onCancel={() => setPresetDrawerOpen(false)}
         />
       </Drawer>
     </>
+  );
+}
+
+interface StockEditorProps {
+  isSingle: boolean;
+  hasSizeAxis: boolean;
+  hasColorAxis: boolean;
+  activeSizes: string[];
+  activeColors: ColorValue[];
+  cellQty: (size: string, color: string | null) => number;
+  setCellQty: (size: string, color: string | null, qty: number) => void;
+}
+
+/** Editor de stock: único, lista (un eje) o matriz (talla × color). */
+function StockEditor({
+  isSingle,
+  hasSizeAxis,
+  hasColorAxis,
+  activeSizes,
+  activeColors,
+  cellQty,
+  setCellQty,
+}: StockEditorProps) {
+  if (isSingle) {
+    return (
+      <div className="rounded-[14px] border border-border bg-card p-4">
+        <label className={labelCls}>
+          Stock (variante única)
+          <input
+            type="number"
+            min={0}
+            value={cellQty("", null)}
+            onChange={(e) => setCellQty("", null, Number(e.target.value))}
+            className={`${fieldCls} mt-1.5 w-24`}
+          />
+        </label>
+      </div>
+    );
+  }
+
+  // Matriz talla × color
+  if (hasSizeAxis && hasColorAxis) {
+    return (
+      <div className="overflow-x-auto rounded-[14px] border border-border bg-card p-4">
+        <p className="mb-3 text-sm font-semibold text-foreground">
+          Stock por talla y color
+        </p>
+        <table className="w-full border-collapse text-sm">
+          <thead>
+            <tr>
+              <th className="px-2 py-2 text-left text-xs font-medium text-muted-foreground">
+                Talla \ Color
+              </th>
+              {activeColors.map((c) => (
+                <th key={c.label} className="px-2 py-2">
+                  <span className="inline-flex items-center gap-1.5 text-xs font-medium text-foreground">
+                    <span
+                      className="size-3.5 rounded-full border border-border"
+                      style={{ backgroundColor: c.hex }}
+                      aria-hidden
+                    />
+                    {c.label}
+                  </span>
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {activeSizes.map((s) => (
+              <tr key={s} className="border-t border-border">
+                <td className="px-2 py-2 text-sm font-semibold text-foreground">
+                  {s}
+                </td>
+                {activeColors.map((c) => (
+                  <td key={c.label} className="px-2 py-2">
+                    <input
+                      type="number"
+                      min={0}
+                      aria-label={`Stock ${s} ${c.label}`}
+                      value={cellQty(s, c.label)}
+                      onChange={(e) =>
+                        setCellQty(s, c.label, Number(e.target.value))
+                      }
+                      className={`${stockInputCls} w-20`}
+                    />
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  }
+
+  // Un solo eje: lista
+  const cells: { key: string; label: string; hex?: string; size: string; color: string | null }[] =
+    hasSizeAxis
+      ? activeSizes.map((s) => ({
+          key: s,
+          label: s,
+          size: s,
+          color: null,
+        }))
+      : activeColors.map((c) => ({
+          key: c.label,
+          label: c.label,
+          hex: c.hex,
+          size: "",
+          color: c.label,
+        }));
+
+  return (
+    <div className="rounded-[14px] border border-border bg-card p-4">
+      <p className="mb-3 text-sm font-semibold text-foreground">
+        Stock por {hasSizeAxis ? "talla" : "color"}
+      </p>
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        {cells.map((cell) => (
+          <div
+            key={cell.key}
+            className="rounded-lg border border-primary/20 bg-primary/5 p-3 shadow-sm"
+          >
+            <p className="mb-2 inline-flex items-center gap-1.5 text-sm font-semibold text-foreground">
+              {cell.hex ? (
+                <span
+                  className="size-3.5 rounded-full border border-border"
+                  style={{ backgroundColor: cell.hex }}
+                  aria-hidden
+                />
+              ) : null}
+              {cell.label}
+            </p>
+            <label className="block text-xs font-medium text-muted-foreground">
+              Stock
+              <input
+                type="number"
+                min={0}
+                value={cellQty(cell.size, cell.color)}
+                onChange={(e) =>
+                  setCellQty(cell.size, cell.color, Number(e.target.value))
+                }
+                className={`${stockInputCls} mt-1.5`}
+              />
+            </label>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }

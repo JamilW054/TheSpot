@@ -1,13 +1,24 @@
 import { createClient } from "@/lib/supabase/server";
+import { variantKey } from "@/lib/variants";
+
+export interface ProductStock {
+  /** Stock disponible por combinación; clave = variantKey(size, color). */
+  stockByKey: Record<string, number>;
+  /** Suma de todo el stock disponible. */
+  totalStock: number;
+  /** false cuando el producto no tiene filas de inventario (stock no rastreado). */
+  tracked: boolean;
+}
 
 /**
- * Returns available stock per size attribute for a product.
- * Available = sum(quantity - reserved) across all warehouses, per active variant.
- * Returns {} if the product has no inventory rows (untrackedStock).
+ * Stock disponible por combinación de variante (talla y/o color) de un producto.
+ * Disponible = sum(quantity - reserved) en todos los almacenes, por variante activa.
+ * La clave usa `variantKey(size, color)` para coincidir con admin, ficha y carrito.
+ * `tracked = false` cuando no hay inventario (no se aplica límite de stock).
  */
-export async function getStockBySizeForProduct(
+export async function getStockMatrixForProduct(
   productId: string,
-): Promise<Record<string, number>> {
+): Promise<ProductStock> {
   const supabase = await createClient();
   const { data } = await supabase
     .from("product_variants")
@@ -15,22 +26,31 @@ export async function getStockBySizeForProduct(
     .eq("product_id", productId)
     .eq("is_active", true);
 
-  if (!data) return {};
+  const empty: ProductStock = { stockByKey: {}, totalStock: 0, tracked: false };
+  if (!data) return empty;
 
-  const result: Record<string, number> = {};
+  const stockByKey: Record<string, number> = {};
+  let totalStock = 0;
+  let tracked = false;
+
   for (const v of data as unknown as {
     attributes: Record<string, unknown> | null;
     inventory?: { quantity: number; reserved: number }[] | null;
   }[]) {
-    const size = v.attributes?.size;
-    if (typeof size !== "string" || !size.trim()) continue;
-    const key = size.trim();
-    const avail = (v.inventory ?? []).reduce(
-      (sum: number, inv: { quantity: number; reserved: number }) =>
-        sum + Math.max(0, inv.quantity - inv.reserved),
+    const inv = v.inventory ?? [];
+    if (inv.length > 0) tracked = true;
+    const size =
+      typeof v.attributes?.size === "string" ? v.attributes.size : null;
+    const color =
+      typeof v.attributes?.color === "string" ? v.attributes.color : null;
+    const key = variantKey(size, color);
+    const avail = inv.reduce(
+      (sum, i) => sum + Math.max(0, i.quantity - i.reserved),
       0,
     );
-    result[key] = (result[key] ?? 0) + avail;
+    stockByKey[key] = (stockByKey[key] ?? 0) + avail;
+    totalStock += avail;
   }
-  return result;
+
+  return { stockByKey, totalStock, tracked };
 }

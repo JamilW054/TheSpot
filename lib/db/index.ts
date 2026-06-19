@@ -702,6 +702,8 @@ export async function getOrderStatusById(
       name?: string;
       slug?: string;
       cover_image_url?: string;
+      size?: string | null;
+      color?: string | null;
     };
     type ItemRow = {
       quantity: number;
@@ -736,6 +738,8 @@ export async function getOrderStatusById(
           : null,
         quantity: row.quantity,
         unitPriceCents: row.unit_price_cents,
+        size: snap.size ?? null,
+        color: snap.color ?? null,
       };
     });
 
@@ -770,6 +774,7 @@ export interface CreateOrderItem {
   quantity: number;
   designId?: string | null;
   size?: string | null;
+  color?: string | null;
 }
 
 /** Shipping data for order creation. */
@@ -860,6 +865,7 @@ export async function createOrder(
       supabase,
       item.productId,
       item.size ?? null,
+      item.color ?? null,
     );
     const unitPrice = resolved?.priceCents ?? product.priceCents;
     const lineTotal = unitPrice * item.quantity;
@@ -870,6 +876,7 @@ export async function createOrder(
       slug: product.slug,
       cover_image_url: product.coverImage,
       size: item.size ?? null,
+      color: item.color ?? null,
     };
 
     const { error: itemError } = await supabase.from("order_items").insert({
@@ -879,7 +886,8 @@ export async function createOrder(
       quantity: item.quantity,
       unit_price_cents: unitPrice,
       total_price_cents: lineTotal,
-      // La talla viaja dentro de `product_snapshot`; order_items no tiene columna `size`.
+      size: item.size ?? null,
+      color: item.color ?? null,
       product_snapshot: snapshot,
     });
     if (itemError) throw toError(itemError);
@@ -938,6 +946,7 @@ async function resolveVariantForOrder(
   supabase: Awaited<ReturnType<typeof createClient>>,
   productId: string,
   size: string | null,
+  color: string | null,
 ): Promise<{ variantId: string; priceCents: number | null } | null> {
   const { data } = await supabase
     .from("product_variants")
@@ -952,14 +961,20 @@ async function resolveVariantForOrder(
     sort_order: number;
   }[];
   if (variants.length === 0) return null;
-  const wanted = size?.trim().toLowerCase();
-  const match = wanted
-    ? variants.find(
-        (v) =>
-          typeof v.attributes?.size === "string" &&
-          (v.attributes.size as string).toLowerCase() === wanted,
-      )
-    : undefined;
+  const wantSize = size?.trim().toLowerCase() ?? "";
+  const wantColor = color?.trim().toLowerCase() ?? "";
+  const attrStr = (attrs: Record<string, unknown> | null, key: string) =>
+    typeof attrs?.[key] === "string"
+      ? (attrs[key] as string).toLowerCase()
+      : "";
+  const match =
+    wantSize || wantColor
+      ? variants.find(
+          (v) =>
+            (!wantSize || attrStr(v.attributes, "size") === wantSize) &&
+            (!wantColor || attrStr(v.attributes, "color") === wantColor),
+        )
+      : undefined;
   const chosen = match ?? variants[0];
   return { variantId: chosen.id, priceCents: chosen.price_cents };
 }

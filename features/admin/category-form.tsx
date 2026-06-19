@@ -179,10 +179,12 @@ export function CategoryForm({
                 placeholder="Sin tallas definidas"
                 options={[
                   { value: "", label: "Sin tallas definidas" },
-                  ...sizePresets.map((p) => ({
-                    value: p.id,
-                    label: `${p.name} (${p.sizes.join(", ")})`,
-                  })),
+                  ...sizePresets
+                    .filter((p) => p.kind === "size")
+                    .map((p) => ({
+                      value: p.id,
+                      label: `${p.name} (${p.sizes.join(", ")})`,
+                    })),
                 ]}
               />
               <p className="mt-1.5 text-xs text-muted-foreground">

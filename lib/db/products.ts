@@ -165,6 +165,29 @@ export function sizesFromVariants(
   return out;
 }
 
+/** Colores disponibles: atributos `color`/`hex` de las variantes activas, en orden. */
+export function colorsFromVariants(
+  variants: ProductVariantJoinRow[] | null | undefined,
+): { label: string; hex: string | null }[] {
+  if (!variants) return [];
+  const seen = new Set<string>();
+  const out: { label: string; hex: string | null }[] = [];
+  const sorted = [...variants].sort(
+    (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0),
+  );
+  for (const v of sorted) {
+    if (v.is_active === false) continue;
+    const color = v.attributes?.color;
+    if (typeof color !== "string" || !color.trim()) continue;
+    const key = color.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const hex = v.attributes?.hex;
+    out.push({ label: color, hex: typeof hex === "string" ? hex : null });
+  }
+  return out;
+}
+
 /** Etiquetas (slugs) de un producto a partir del join product_tags. */
 export function tagsFromRow(
   productTags: ProductTagJoinRow[] | null | undefined,
@@ -200,6 +223,7 @@ export function rowToCatalogProduct(row: ProductRow): CatalogProduct {
     baseTextureUrl: null,
     categorySlug: categorySlugFromRow(row.categories),
     sizes: sizesFromVariants(row.product_variants),
+    colors: colorsFromVariants(row.product_variants),
     tags: tagsFromRow(row.product_tags),
     ratingAvg: row.rating_avg != null ? Number(row.rating_avg) : null,
     reviewCount: row.review_count ?? 0,

@@ -173,6 +173,20 @@ export function OrderDetailView({
                     <span className="text-foreground">{item.designName}</span>
                   </p>
                 )}
+                {(item.size || item.color) && (
+                  <p className="mt-1 flex flex-wrap gap-1.5">
+                    {item.size && (
+                      <span className="rounded-full border border-border bg-muted/40 px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+                        Talla: {item.size}
+                      </span>
+                    )}
+                    {item.color && (
+                      <span className="rounded-full border border-border bg-muted/40 px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+                        Color: {item.color}
+                      </span>
+                    )}
+                  </p>
+                )}
                 <p className="mt-1.5 font-mono text-sm text-muted-foreground tabular-nums">
                   {formatDOPFromCents(item.unitPriceCents)} × {item.quantity}
                 </p>

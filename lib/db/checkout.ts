@@ -177,11 +177,14 @@ export async function checkoutFromCart(
     unit_price_cents: l.unitPriceCents,
     total_price_cents: l.lineTotalCents,
     texture_url: l.designThumbnail,
+    size: l.size,
+    color: l.color,
     product_snapshot: {
       name: l.productName,
       slug: l.productSlug,
       cover_image_url: l.coverImage,
       size: l.size,
+      color: l.color,
     },
   }));
   const { error: itemsError } = await supabase

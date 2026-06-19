@@ -39,6 +39,10 @@ export interface OrderStatusDetailItem {
   designCoverImageUrl: string | null;
   quantity: number;
   unitPriceCents: number;
+  /** Talla elegida (snapshot del pedido), si aplica. */
+  size: string | null;
+  /** Color elegido (snapshot del pedido), si aplica. */
+  color: string | null;
 }
 
 export type OrderPaymentStatus = "pending" | "paid" | "declined";

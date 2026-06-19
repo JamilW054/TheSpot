@@ -2,7 +2,8 @@
 
 import Image from "next/image";
 import { useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Expand } from "lucide-react";
+import { ProductImageViewer } from "./ProductImageViewer";
 
 interface ProductGalleryProps {
   images: string[];
@@ -15,6 +16,7 @@ function imageNeedsUnoptimized(src: string): boolean {
 
 export function ProductGallery({ images, name }: ProductGalleryProps) {
   const [activeIdx, setActiveIdx] = useState(0);
+  const [viewerOpen, setViewerOpen] = useState(false);
 
   const hasSrc = images.length > 0;
   const src = hasSrc ? images[activeIdx] : "/placeholder-product.png";

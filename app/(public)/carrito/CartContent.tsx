@@ -69,11 +69,13 @@ interface CartItemCardProps {
     qty: number,
     designId?: string | null,
     size?: string | null,
+    color?: string | null,
   ) => void;
   onRemove: (
     productId: string,
     designId?: string | null,
     size?: string | null,
+    color?: string | null,
   ) => void;
 }
 
@@ -110,9 +112,18 @@ function CartItemCard({ item, product, onUpdate, onRemove }: CartItemCardProps) 
         >
           {product.name}
         </Link>
-        {item.size ? (
-          <span className="self-start rounded-full border border-border bg-muted/40 px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
-            Talla: {item.size}
+        {item.size || item.color ? (
+          <span className="flex flex-wrap gap-1.5">
+            {item.size ? (
+              <span className="self-start rounded-full border border-border bg-muted/40 px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+                Talla: {item.size}
+              </span>
+            ) : null}
+            {item.color ? (
+              <span className="self-start rounded-full border border-border bg-muted/40 px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+                Color: {item.color}
+              </span>
+            ) : null}
           </span>
         ) : null}
         {item.designId ? (
@@ -130,7 +141,9 @@ function CartItemCard({ item, product, onUpdate, onRemove }: CartItemCardProps) 
         {/* Eliminar */}
         <button
           type="button"
-          onClick={() => onRemove(item.productId, item.designId, item.size)}
+          onClick={() =>
+            onRemove(item.productId, item.designId, item.size, item.color)
+          }
           className="rounded-md p-1 text-muted-foreground/50 transition-colors hover:text-destructive"
           aria-label="Quitar del carrito"
         >
@@ -142,7 +155,13 @@ function CartItemCard({ item, product, onUpdate, onRemove }: CartItemCardProps) 
           <button
             type="button"
             onClick={() =>
-              onUpdate(item.productId, item.quantity - 1, item.designId, item.size)
+              onUpdate(
+                item.productId,
+                item.quantity - 1,
+                item.designId,
+                item.size,
+                item.color,
+              )
             }
             className="flex h-8 w-8 items-center justify-center text-lg leading-none text-muted-foreground transition-colors hover:text-foreground"
             aria-label="Reducir cantidad"
@@ -155,7 +174,13 @@ function CartItemCard({ item, product, onUpdate, onRemove }: CartItemCardProps) 
           <button
             type="button"
             onClick={() =>
-              onUpdate(item.productId, item.quantity + 1, item.designId, item.size)
+              onUpdate(
+                item.productId,
+                item.quantity + 1,
+                item.designId,
+                item.size,
+                item.color,
+              )
             }
             className="flex h-8 w-8 items-center justify-center text-lg leading-none text-muted-foreground transition-colors hover:text-foreground"
             aria-label="Aumentar cantidad"
@@ -388,7 +413,7 @@ export function CartContent({
   useEffect(() => {
     for (const item of items) {
       if (!productMap.has(item.productId)) {
-        removeItem(item.productId, item.designId, item.size);
+        removeItem(item.productId, item.designId, item.size, item.color);
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -430,7 +455,7 @@ export function CartContent({
               if (!product) return null;
               return (
                 <CartItemCard
-                  key={`${item.productId}:${item.designId ?? ""}:${item.size ?? ""}`}
+                  key={`${item.productId}:${item.designId ?? ""}:${item.size ?? ""}:${item.color ?? ""}`}
                   item={item}
                   product={product}
                   onUpdate={updateQuantity}

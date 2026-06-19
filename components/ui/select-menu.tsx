@@ -79,7 +79,7 @@ export function SelectMenu({
   const displayLabel = selectedOption?.label;
 
   return (
-    <div ref={containerRef} className={`space-y-1.5 ${className}`}>
+    <div ref={containerRef} className={`relative space-y-1.5 ${className}`}>
       {label ? (
         <label
           htmlFor={id}

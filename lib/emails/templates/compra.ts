@@ -2,6 +2,7 @@ export interface OrderItem {
   name: string;
   quantity: number;
   size?: string;
+  color?: string;
   unitPrice: number;
 }
 
@@ -44,6 +45,7 @@ export function compraEmailHtml(data: CompraEmailData): string {
           <td style="padding:14px 0;border-bottom:1px solid #1a1a1d;vertical-align:top;">
             <div style="font-size:13px;font-weight:700;color:#f4f4f5;text-transform:uppercase;letter-spacing:0.5px;">${item.name}</div>
             ${item.size ? `<div style="margin-top:3px;font-size:11px;font-weight:600;color:#3cc8f7;letter-spacing:2px;text-transform:uppercase;">TALLA ${item.size}</div>` : ""}
+            ${item.color ? `<div style="margin-top:3px;font-size:11px;font-weight:600;color:#3cc8f7;letter-spacing:2px;text-transform:uppercase;">COLOR ${item.color}</div>` : ""}
           </td>
           <td style="padding:14px 8px;border-bottom:1px solid #1a1a1d;text-align:center;vertical-align:top;">
             <span style="display:inline-block;background:#1a1a1d;border-radius:6px;padding:3px 10px;font-size:12px;font-weight:700;color:#a1a1aa;">×${item.quantity}</span>
@@ -227,7 +229,7 @@ export function compraEmailText(data: CompraEmailData): string {
   const lines = items
     .map(
       (i) =>
-        `  - ${i.name}${i.size ? ` (${i.size})` : ""} x${i.quantity}: ${fmt(i.unitPrice * i.quantity)}`,
+        `  - ${i.name}${[i.size, i.color].filter(Boolean).length ? ` (${[i.size, i.color].filter(Boolean).join(", ")})` : ""} x${i.quantity}: ${fmt(i.unitPrice * i.quantity)}`,
     )
     .join("\n");
   return `BUXXEP — Pedido confirmado #${orderNumber}\n\nHola ${name},\n\n${lines}\n\nSubtotal: ${fmt(subtotal)}\nEnvío: ${shipping === 0 ? "GRATIS" : fmt(shipping)}\nTOTAL: ${fmt(total)}\n\nhttps://buxxep.vercel.app/cuenta/pedidos\n\n— BUXXEP`;

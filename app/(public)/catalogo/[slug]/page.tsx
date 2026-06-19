@@ -9,7 +9,7 @@ import { ProductReviews } from "@/components/catalog/ProductReviews";
 import { StickyBuyBar } from "@/components/catalog/StickyBuyBar";
 import { getProductBySlug } from "@/lib/db";
 import { getProductReviews, getUserReviewForProduct } from "@/lib/db/reviews";
-import { getStockBySizeForProduct } from "@/lib/db/inventory";
+import { getStockMatrixForProduct } from "@/lib/db/inventory";
 import { formatDOPFromCents } from "@/lib/format-currency";
 import { createClient } from "@/lib/supabase/server";
 
@@ -41,10 +41,10 @@ export default async function CatalogProductPage({ params }: PageProps) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const [reviews, userExistingReview, stockBySize] = await Promise.all([
+  const [reviews, userExistingReview, stock] = await Promise.all([
     getProductReviews(product.id),
     getUserReviewForProduct(product.id),
-    getStockBySizeForProduct(product.id),
+    getStockMatrixForProduct(product.id),
   ]);
 
   const hasDiscount =
@@ -63,9 +63,7 @@ export default async function CatalogProductPage({ params }: PageProps) {
     ? formatDOPFromCents(product.originalPriceCents! - product.priceCents)
     : "";
 
-  const totalStock = Object.values(stockBySize).reduce((s, n) => s + n, 0);
-  const isAvailable =
-    Object.keys(stockBySize).length === 0 || totalStock > 0;
+  const isAvailable = !stock.tracked || stock.totalStock > 0;
 
   const hasRating = product.ratingAvg != null && product.reviewCount > 0;
   const ratingFull = hasRating ? Math.round(product.ratingAvg!) : 0;
@@ -201,7 +199,9 @@ export default async function CatalogProductPage({ params }: PageProps) {
               <AddToCartButton
                 productId={product.id}
                 sizes={product.sizes}
-                stockBySize={stockBySize}
+                colors={product.colors}
+                stockByKey={stock.stockByKey}
+                stockTracked={stock.tracked}
                 variant="primary"
                 className="w-full justify-center rounded-xl py-3.5 text-[15px] font-semibold"
               />

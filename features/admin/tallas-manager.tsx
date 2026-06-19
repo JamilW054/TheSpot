@@ -53,20 +53,20 @@ export function TallasManager({ initialRows }: Props) {
           className="inline-flex items-center gap-2 rounded-[10px] bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
         >
           <Plus className="size-4" aria-hidden />
-          Nuevo tipo de talla
+          Nuevo tipo de variante
         </button>
       </div>
 
       {initialRows.length === 0 ? (
         <div className="rounded-[14px] border border-border bg-card px-6 py-12 text-center text-sm text-muted-foreground">
-          No hay tipos de talla. Crea el primero con el botón.
+          No hay tipos de variante. Crea el primero con el botón.
         </div>
       ) : (
         <div className="overflow-x-auto rounded-[14px] border border-border">
           <table className="w-full min-w-[560px] border-collapse text-left text-sm">
             <thead>
               <tr className="border-b border-border bg-muted/30">
-                {["Nombre", "Tallas", "Orden", "Acciones"].map((h) => (
+                {["Nombre", "Tipo", "Valores", "Orden", "Acciones"].map((h) => (
                   <th
                     key={h}
                     scope="col"
@@ -85,13 +85,25 @@ export function TallasManager({ initialRows }: Props) {
                 >
                   <td className="px-4 py-3 font-medium">{p.name}</td>
                   <td className="px-4 py-3">
+                    <span className="rounded-full border border-border bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                      {p.kind === "color" ? "Color" : "Talla"}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
                     <div className="flex flex-wrap gap-1.5">
-                      {p.sizes.map((s) => (
+                      {p.items.map((it) => (
                         <span
-                          key={s}
-                          className="rounded-md border border-border bg-muted px-2 py-0.5 text-xs font-medium"
+                          key={it.label}
+                          className="inline-flex items-center gap-1.5 rounded-md border border-border bg-muted px-2 py-0.5 text-xs font-medium"
                         >
-                          {s}
+                          {it.hex ? (
+                            <span
+                              className="size-3 rounded-full border border-border"
+                              style={{ backgroundColor: it.hex }}
+                              aria-hidden
+                            />
+                          ) : null}
+                          {it.label}
                         </span>
                       ))}
                     </div>
@@ -158,7 +170,7 @@ export function TallasManager({ initialRows }: Props) {
       )}
 
       {/* Create drawer */}
-      <Drawer open={drawerMode === "create"} onClose={closeDrawer} title="Nuevo tipo de talla">
+      <Drawer open={drawerMode === "create"} onClose={closeDrawer} title="Nuevo tipo de variante">
         <SizePresetForm
           key={createKey}
           mode="create"
@@ -168,7 +180,7 @@ export function TallasManager({ initialRows }: Props) {
       </Drawer>
 
       {/* Edit drawer */}
-      <Drawer open={drawerMode === "edit"} onClose={closeDrawer} title="Editar tipo de talla">
+      <Drawer open={drawerMode === "edit"} onClose={closeDrawer} title="Editar tipo de variante">
         {drawerMode === "edit" && selected && (
           <SizePresetForm
             key={selected.id}
@@ -206,15 +218,24 @@ export function TallasManager({ initialRows }: Props) {
             <div className="p-5 space-y-4">
               <div>
                 <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Tallas disponibles
+                  {previewRow.kind === "color"
+                    ? "Colores disponibles"
+                    : "Tallas disponibles"}
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  {previewRow.sizes.map((s) => (
+                  {previewRow.items.map((it) => (
                     <span
-                      key={s}
-                      className="rounded-[10px] border border-primary/30 bg-primary/10 px-3 py-1 text-sm font-medium text-primary"
+                      key={it.label}
+                      className="inline-flex items-center gap-1.5 rounded-[10px] border border-primary/30 bg-primary/10 px-3 py-1 text-sm font-medium text-primary"
                     >
-                      {s}
+                      {it.hex ? (
+                        <span
+                          className="size-3.5 rounded-full border border-border"
+                          style={{ backgroundColor: it.hex }}
+                          aria-hidden
+                        />
+                      ) : null}
+                      {it.label}
                     </span>
                   ))}
                 </div>
