@@ -52,7 +52,14 @@ export async function middleware(request: NextRequest) {
   if (!user && isProtectedPath(request.nextUrl.pathname)) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("next", request.nextUrl.pathname);
-    return NextResponse.redirect(loginUrl);
+    const redirect = NextResponse.redirect(loginUrl);
+    // Conserva las cookies que Supabase pudo refrescar en este request: si se
+    // crea una respuesta nueva sin copiarlas, se pierde la sesión y el usuario
+    // entra en bucles de logout. (Requisito documentado de @supabase/ssr.)
+    for (const cookie of supabaseResponse.cookies.getAll()) {
+      redirect.cookies.set(cookie);
+    }
+    return redirect;
   }
 
   return supabaseResponse;

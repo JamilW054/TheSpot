@@ -150,6 +150,31 @@ export function AuthProvider({ children }: AuthProviderProps) {
     };
   }, [supabase]);
 
+  // Refresco proactivo: el timer interno de Supabase se estrangula en pestañas
+  // en segundo plano, así que al volver el foco/visibilidad/conexión revalidamos
+  // la sesión. Si el access token expiró pero el refresh token sigue válido,
+  // `getSession()` lo renueva (dispara TOKEN_REFRESHED) en vez de caer la sesión.
+  useEffect(() => {
+    let last = 0;
+    const revalidate = () => {
+      const now = Date.now();
+      if (now - last < 5000) return; // throttle: evita ráfagas de foco
+      last = now;
+      void supabase.auth.getSession();
+    };
+    const onVisible = () => {
+      if (document.visibilityState === "visible") revalidate();
+    };
+    window.addEventListener("focus", revalidate);
+    window.addEventListener("online", revalidate);
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      window.removeEventListener("focus", revalidate);
+      window.removeEventListener("online", revalidate);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [supabase]);
+
   const login = useCallback(
     async (email: string, password: string) => {
       setIsLoading(true);

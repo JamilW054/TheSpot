@@ -45,6 +45,20 @@ export function ProductGallery({ images, name }: ProductGalleryProps) {
           </div>
         )}
 
+        {/* Abrir visor a pantalla completa al hacer clic en la imagen */}
+        {hasSrc && (
+          <button
+            type="button"
+            onClick={() => setViewerOpen(true)}
+            aria-label="Ampliar imagen"
+            className="absolute inset-0 cursor-zoom-in"
+          >
+            <span className="absolute right-3 top-3 flex size-9 items-center justify-center rounded-full bg-background/70 text-foreground opacity-0 shadow-md backdrop-blur-sm transition-opacity group-hover:opacity-100">
+              <Expand className="size-4" aria-hidden />
+            </span>
+          </button>
+        )}
+
         {/* Nav arrows — only when multiple images */}
         {images.length > 1 && (
           <>
@@ -111,6 +125,17 @@ export function ProductGallery({ images, name }: ProductGalleryProps) {
             </button>
           ))}
         </div>
+      )}
+
+      {/* Visor a pantalla completa (zoom, pan, pinch, swipe) */}
+      {viewerOpen && hasSrc && (
+        <ProductImageViewer
+          images={images}
+          name={name}
+          initialIndex={activeIdx}
+          onIndexChange={setActiveIdx}
+          onClose={() => setViewerOpen(false)}
+        />
       )}
     </div>
   );

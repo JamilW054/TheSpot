@@ -230,12 +230,13 @@ async function syncVariants(
 ): Promise<void> {
   const { data: existingData } = await supabase
     .from("product_variants")
-    .select("id, attributes, is_active")
+    .select("id, attributes, is_active, sku")
     .eq("product_id", productId);
   const existing = (existingData ?? []) as {
     id: string;
     attributes: Record<string, unknown> | null;
     is_active: boolean;
+    sku: string | null;
   }[];
 
   const keyOfAttrs = (attrs: Record<string, unknown> | null) => {
@@ -244,13 +245,45 @@ async function syncVariants(
       typeof attrs?.color === "string" ? (attrs.color as string) : "";
     return variantKey(size, color);
   };
-  const byKey = new Map(existing.map((v) => [keyOfAttrs(v.attributes), v]));
+
+  // Una sola fila canónica por combinación; el resto son duplicados de guardados
+  // previos. Map.set conserva la primera ocurrencia como canónica.
+  const canonical = new Map<string, (typeof existing)[number]>();
+  const duplicates: typeof existing = [];
+  for (const v of existing) {
+    const k = keyOfAttrs(v.attributes);
+    if (canonical.has(k)) duplicates.push(v);
+    else canonical.set(k, v);
+  }
 
   const warehouseId =
     explicitWarehouseId?.trim() || (await getDefaultWarehouseId(supabase));
   const submittedKeys = new Set(
     variants.map((v) => variantKey(v.size, v.color)),
   );
+
+  // Retira (soft) los duplicados y las combinaciones que ya no se envían,
+  // LIBERANDO su SKU (renombrado único). Así la fila activa puede tomar el SKU
+  // canónico sin chocar con el índice único `product_variants_sku_unique`.
+  const toRetire = [
+    ...duplicates,
+    ...[...canonical.values()].filter(
+      (v) => !submittedKeys.has(keyOfAttrs(v.attributes)),
+    ),
+  ];
+  const retiredIds = new Set(toRetire.map((v) => v.id));
+  for (const v of toRetire) {
+    await supabase
+      .from("product_variants")
+      .update({ is_active: false, sku: `retired-${v.id}` })
+      .eq("id", v.id);
+  }
+
+  // SKU → fila que lo tiene (excluyendo las ya retiradas, que liberaron su SKU).
+  const bySku = new Map<string, (typeof existing)[number]>();
+  for (const v of existing) {
+    if (v.sku && !retiredIds.has(v.id)) bySku.set(v.sku, v);
+  }
 
   let sort = 0;
   for (const v of variants) {
@@ -269,7 +302,18 @@ async function syncVariants(
         : `${productSlug}-${skuSuffix}`
             .toUpperCase()
             .replace(/[^A-Z0-9-]/g, "");
-    const match = byKey.get(key);
+    const match = canonical.get(key);
+
+    // Si otra fila (distinta de la nuestra) ya tiene este SKU, libéralo antes de
+    // escribir para no chocar con el índice único.
+    const holder = bySku.get(sku);
+    if (holder && holder.id !== match?.id) {
+      await supabase
+        .from("product_variants")
+        .update({ is_active: false, sku: `retired-${holder.id}` })
+        .eq("id", holder.id);
+      bySku.delete(sku);
+    }
 
     let variantId: string;
     if (match) {
@@ -310,16 +354,6 @@ async function syncVariants(
       { onConflict: "variant_id,warehouse_id" },
     );
     sort++;
-  }
-
-  // Desactiva variantes cuya combinación (talla/color) ya no se envía.
-  for (const v of existing) {
-    if (!submittedKeys.has(keyOfAttrs(v.attributes)) && v.is_active) {
-      await supabase
-        .from("product_variants")
-        .update({ is_active: false })
-        .eq("id", v.id);
-    }
   }
 }
 

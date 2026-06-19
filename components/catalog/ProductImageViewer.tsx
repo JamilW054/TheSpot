@@ -220,16 +220,21 @@ export function ProductImageViewer({
     }
 
     // Single-pointer: pan when zoomed, otherwise swipe-track.
-    if (pointers.current.size === 1 && drag.current) {
-      const dx = e.clientX - drag.current.startX;
-      const dy = e.clientY - drag.current.startY;
-      if (Math.abs(dx) > 4 || Math.abs(dy) > 4) drag.current.moved = true;
+    const d = drag.current;
+    if (pointers.current.size === 1 && d) {
+      const dx = e.clientX - d.startX;
+      const dy = e.clientY - d.startY;
+      if (Math.abs(dx) > 4 || Math.abs(dy) > 4) d.moved = true;
 
       if (zoomed) {
         const { w, h } = stageSize();
+        // Capturar origen aquí; `drag.current` puede ser null cuando React
+        // ejecute el updater (p. ej. tras soltar el puntero).
+        const originX = d.originX;
+        const originY = d.originY;
         setTransform((t) =>
           clampTranslate(
-            { scale: t.scale, x: drag.current!.originX + dx, y: drag.current!.originY + dy },
+            { scale: t.scale, x: originX + dx, y: originY + dy },
             w,
             h,
           ),
@@ -344,6 +349,8 @@ export function ProductImageViewer({
             transition: pointers.current.size > 0 ? "none" : "transform 0.18s ease-out",
           }}
         >
+          {/* `unoptimized`: sirve el original a resolución completa para que el
+              zoom no pixele (alta resolución sin pérdida). */}
           <Image
             key={src}
             src={src}
@@ -351,10 +358,10 @@ export function ProductImageViewer({
             fill
             className="object-contain"
             sizes="100vw"
-            quality={95}
+            quality={100}
             priority
             draggable={false}
-            unoptimized={imageNeedsUnoptimized(src)}
+            unoptimized
           />
         </div>
 
