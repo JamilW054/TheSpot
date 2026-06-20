@@ -430,15 +430,32 @@ function mockFecha(daysAgo: number): string {
   });
 }
 
+const MOCK_SIZES = ["S", "M", "L", "XL"];
+const MOCK_COLORS = ["Negro", "Blanco", "Azul", "Verde"];
+
 export const MOCK_PEDIDOS: Pedido[] = clientes.map((cliente, i) => {
   const id = `PED-${String(i + 1).padStart(3, "0")}`;
-  const items = 1 + (i % 5);
+  const lineCount = 1 + (i % 3);
+  const lineItems = Array.from({ length: lineCount }, (_, j) => {
+    const design = designNames[(i + j) % designNames.length];
+    return {
+      productName: design?.name ?? "Producto",
+      coverImageUrl: placeholder(200, 200, `${id}-${j}`),
+      designName: null,
+      designCoverImageUrl: null,
+      quantity: 1 + ((i + j) % 3),
+      size: MOCK_SIZES[(i + j) % MOCK_SIZES.length] ?? null,
+      color: MOCK_COLORS[(i + j) % MOCK_COLORS.length] ?? null,
+    };
+  });
+  const items = lineItems.reduce((sum, li) => sum + li.quantity, 0);
   const totalNum = (items * (15 + (i % 10)) * 10) / 10;
   const estado = estados[Math.floor(i / estadoCount) % 3] ?? "pendiente";
   return {
     id,
     cliente,
     items,
+    lineItems,
     total: formatDOPFromCents(Math.round(totalNum * 100)),
     totalCents: Math.round(totalNum * 100),
     estado,

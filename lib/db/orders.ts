@@ -1,6 +1,12 @@
 import { formatDOPFromCents } from "@/lib/format-currency";
 import { formatDateTime } from "@/lib/format-date";
-import type { OrderPaymentStatus, Pedido, PedidoEstado, PedidoShipping } from "@/types";
+import type {
+  OrderPaymentStatus,
+  Pedido,
+  PedidoEstado,
+  PedidoLineItem,
+  PedidoShipping,
+} from "@/types";
 
 /** Dirección de envío almacenada como JSONB en orders.shipping_address. */
 export interface ShippingAddress {
@@ -79,11 +85,50 @@ function shippingFromRow(
   };
 }
 
-export function rowToPedido(row: OrderRow, itemsCount: number): Pedido {
+/** Snapshot del producto almacenado en order_items.product_snapshot (JSONB). */
+export interface OrderItemSnapshot {
+  name?: string;
+  slug?: string;
+  cover_image_url?: string;
+  size?: string | null;
+  color?: string | null;
+}
+
+/** Fila de order_items con el diseño asociado (para construir las líneas del pedido). */
+export interface OrderItemRow {
+  order_id?: string;
+  quantity: number;
+  design_id: string | null;
+  product_snapshot?: OrderItemSnapshot | null;
+  designs?:
+    | { name: string | null; thumbnail_url: string | null; preview_url: string | null }
+    | { name: string | null; thumbnail_url: string | null; preview_url: string | null }[]
+    | null;
+}
+
+/** order_items row → línea de producto para las cards del admin. */
+export function rowToLineItem(row: OrderItemRow): PedidoLineItem {
+  const snap = row.product_snapshot ?? {};
+  const design = Array.isArray(row.designs) ? row.designs[0] : row.designs;
+  return {
+    productName: snap.name ?? "Producto",
+    coverImageUrl: snap.cover_image_url ?? "",
+    designName: row.design_id ? (design?.name ?? "Diseño personalizado") : null,
+    designCoverImageUrl: row.design_id
+      ? (design?.thumbnail_url ?? design?.preview_url ?? null)
+      : null,
+    quantity: row.quantity,
+    size: snap.size ?? null,
+    color: snap.color ?? null,
+  };
+}
+
+export function rowToPedido(row: OrderRow, lineItems: PedidoLineItem[]): Pedido {
   return {
     id: row.id,
     cliente: customerNameFromOrder(row.shipping_address, row.contact_email),
-    items: itemsCount,
+    items: lineItems.reduce((sum, li) => sum + li.quantity, 0),
+    lineItems,
     total: formatDOPFromCents(row.total_cents),
     totalCents: row.total_cents,
     estado: statusMap[row.status] ?? "pendiente",

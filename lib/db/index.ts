@@ -61,6 +61,7 @@ import type {
   OrderPaymentStatus,
   OrderStatusDetail,
   Pedido,
+  PedidoLineItem,
 } from "@/types";
 import { getActiveBanners, type PublicBanner } from "./banners";
 import { type BaseModelRow, rowToMockup } from "./base-models";
@@ -76,7 +77,9 @@ import { type LineaRow, rowToLinea } from "./lineas";
 import {
   customerNameFromOrder,
   dbToAppPaymentStatus,
+  type OrderItemRow,
   type OrderRow,
+  rowToLineItem,
   rowToPedido,
   type ShippingAddress,
   statusMap,
@@ -476,18 +479,21 @@ async function fetchOrdersPedidos(
   supabase: Awaited<ReturnType<typeof createClient>>,
 ): Promise<Pedido[]> {
   const orderIds = ordersData.map((o) => o.id);
-  const counts: Record<string, number> = {};
+  const lineItemsByOrder: Record<string, PedidoLineItem[]> = {};
   if (orderIds.length > 0) {
     const { data: itemsData } = await supabase
       .from("order_items")
-      .select("order_id")
+      .select(
+        "order_id, quantity, design_id, product_snapshot, designs(name, thumbnail_url, preview_url)",
+      )
       .in("order_id", orderIds);
-    for (const row of itemsData ?? []) {
-      const oid = (row as { order_id: string }).order_id;
-      counts[oid] = (counts[oid] ?? 0) + 1;
+    for (const row of (itemsData ?? []) as unknown as OrderItemRow[]) {
+      const oid = row.order_id;
+      if (!oid) continue;
+      (lineItemsByOrder[oid] ??= []).push(rowToLineItem(row));
     }
   }
-  return ordersData.map((r) => rowToPedido(r, counts[r.id] ?? 0));
+  return ordersData.map((r) => rowToPedido(r, lineItemsByOrder[r.id] ?? []));
 }
 
 /** Orders for current user (RLS). */
@@ -518,18 +524,21 @@ export async function getOrdersAdmin(): Promise<Pedido[]> {
     if (error) throw toError(error);
     const rows = (data ?? []) as unknown as OrderRow[];
     const orderIds = rows.map((o) => o.id);
-    const counts: Record<string, number> = {};
+    const lineItemsByOrder: Record<string, PedidoLineItem[]> = {};
     if (orderIds.length > 0) {
       const { data: itemsData } = await supabase
         .from("order_items")
-        .select("order_id")
+        .select(
+          "order_id, quantity, design_id, product_snapshot, designs(name, thumbnail_url, preview_url)",
+        )
         .in("order_id", orderIds);
-      for (const row of itemsData ?? []) {
-        const oid = (row as { order_id: string }).order_id;
-        counts[oid] = (counts[oid] ?? 0) + 1;
+      for (const row of (itemsData ?? []) as unknown as OrderItemRow[]) {
+        const oid = row.order_id;
+        if (!oid) continue;
+        (lineItemsByOrder[oid] ??= []).push(rowToLineItem(row));
       }
     }
-    return rows.map((r) => rowToPedido(r, counts[r.id] ?? 0));
+    return rows.map((r) => rowToPedido(r, lineItemsByOrder[r.id] ?? []));
   }, []);
 }
 

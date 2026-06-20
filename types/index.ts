@@ -32,6 +32,7 @@ export type {
   OrderPaymentStatus,
   Pedido,
   PedidoEstado,
+  PedidoLineItem,
   PedidoShipping,
   OrderStatusDetail,
   OrderStatusDetailItem,

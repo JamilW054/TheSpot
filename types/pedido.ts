@@ -16,10 +16,26 @@ export interface PedidoShipping {
   email?: string | null;
 }
 
+/** Línea de producto resumida para las cards de pedidos del admin. */
+export interface PedidoLineItem {
+  productName: string;
+  /** Imagen de portada del producto (snapshot del pedido). */
+  coverImageUrl: string;
+  /** Nombre del diseño personalizado, si aplica. */
+  designName: string | null;
+  /** Imagen del diseño personalizado, si aplica. */
+  designCoverImageUrl: string | null;
+  quantity: number;
+  size: string | null;
+  color: string | null;
+}
+
 export interface Pedido {
   id: string;
   cliente: string;
   items: number;
+  /** Detalle de productos del pedido (nombre + foto) para el admin. */
+  lineItems: PedidoLineItem[];
   total: string;
   totalCents: number;
   estado: PedidoEstado;

@@ -3,6 +3,7 @@
 import {
   CheckCircle2,
   Eye,
+  ImageIcon,
   LayoutGrid,
   LayoutList,
   Mail,
@@ -13,12 +14,13 @@ import {
   X,
   AlertTriangle,
 } from "lucide-react";
+import Image from "next/image";
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { SelectMenu } from "@/components/ui/select-menu";
 import type { FilterEstado, Pedido, PedidoEstado, PedidosTableProps } from "@/types";
-import type { PedidoShipping } from "@/types/pedido";
+import type { PedidoLineItem, PedidoShipping } from "@/types/pedido";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -102,6 +104,114 @@ function countryLabel(code: string | null | undefined): string {
     ES: "España",
   };
   return map[code.toUpperCase()] ?? code.toUpperCase();
+}
+
+function isExternalImage(src: string): boolean {
+  if (!src) return false;
+  return (
+    src.includes("placehold.co") ||
+    src.includes("imgur.com") ||
+    src.includes("unsplash.com") ||
+    src.startsWith("http")
+  );
+}
+
+// ─── Product line items ─────────────────────────────────────────────────────────
+
+/** Miniatura cuadrada del producto, con fallback a icono si no hay imagen. */
+function ProductThumb({
+  src,
+  alt,
+  size,
+}: {
+  src: string;
+  alt: string;
+  size: number;
+}) {
+  return (
+    <div
+      className="relative shrink-0 overflow-hidden rounded-lg border border-border bg-muted"
+      style={{ width: size, height: size }}
+    >
+      {src ? (
+        <Image
+          src={src}
+          alt={alt}
+          fill
+          className="object-cover"
+          sizes={`${size}px`}
+          unoptimized={isExternalImage(src)}
+        />
+      ) : (
+        <div className="flex h-full w-full items-center justify-center text-muted-foreground">
+          <ImageIcon className="size-1/2" />
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** Fila de un producto del pedido: foto + nombre + talla/color + cantidad. */
+function LineItemRow({ item }: { item: PedidoLineItem }) {
+  const img = item.designCoverImageUrl || item.coverImageUrl;
+  return (
+    <div className="flex items-center gap-2.5">
+      <ProductThumb src={img} alt={item.productName} size={40} />
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-xs font-medium text-foreground">
+          {item.productName}
+        </p>
+        <div className="mt-0.5 flex flex-wrap items-center gap-1">
+          {item.designName && (
+            <span className="truncate text-[11px] text-muted-foreground">
+              {item.designName}
+            </span>
+          )}
+          {item.size && (
+            <span className="rounded border border-border bg-background px-1.5 py-px text-[10px] font-medium text-muted-foreground">
+              {item.size}
+            </span>
+          )}
+          {item.color && (
+            <span className="rounded border border-border bg-background px-1.5 py-px text-[10px] font-medium text-muted-foreground">
+              {item.color}
+            </span>
+          )}
+        </div>
+      </div>
+      <span className="shrink-0 font-mono text-xs font-semibold text-foreground tabular-nums">
+        ×{item.quantity}
+      </span>
+    </div>
+  );
+}
+
+/** Lista de productos del pedido para la card; colapsa el sobrante. */
+function ProductList({
+  items,
+  max = 3,
+}: {
+  items: PedidoLineItem[];
+  max?: number;
+}) {
+  if (items.length === 0) return null;
+  const shown = items.slice(0, max);
+  const extra = items.length - shown.length;
+  return (
+    <div className="mx-4 mb-3 space-y-2 rounded-xl border border-border bg-muted/30 px-3 py-2.5">
+      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+        Productos
+      </p>
+      {shown.map((item, i) => (
+        <LineItemRow key={i} item={item} />
+      ))}
+      {extra > 0 && (
+        <p className="pl-[50px] text-[11px] font-medium text-muted-foreground">
+          + {extra} producto{extra > 1 ? "s" : ""} más
+        </p>
+      )}
+    </div>
+  );
 }
 
 // ─── Confirm Modal ────────────────────────────────────────────────────────────
@@ -242,6 +352,53 @@ function DetailModal({ pedido, onClose }: { pedido: Pedido; onClose: () => void 
               </div>
             )}
           </div>
+
+          {/* Productos */}
+          {pedido.lineItems.length > 0 && (
+            <div className="space-y-3 px-5 py-4">
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Productos pedidos
+              </p>
+              <div className="space-y-3">
+                {pedido.lineItems.map((item, i) => (
+                  <div key={i} className="flex items-center gap-3">
+                    <ProductThumb
+                      src={item.designCoverImageUrl || item.coverImageUrl}
+                      alt={item.productName}
+                      size={48}
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-foreground">
+                        {item.productName}
+                      </p>
+                      {item.designName && (
+                        <p className="truncate text-xs text-muted-foreground">
+                          {item.designName}
+                        </p>
+                      )}
+                      {(item.size || item.color) && (
+                        <div className="mt-1 flex flex-wrap gap-1">
+                          {item.size && (
+                            <span className="rounded border border-border bg-background px-1.5 py-px text-[11px] font-medium text-muted-foreground">
+                              Talla: {item.size}
+                            </span>
+                          )}
+                          {item.color && (
+                            <span className="rounded border border-border bg-background px-1.5 py-px text-[11px] font-medium text-muted-foreground">
+                              Color: {item.color}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    <span className="shrink-0 font-mono text-sm font-semibold text-foreground tabular-nums">
+                      ×{item.quantity}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Dirección */}
           <div className="space-y-2 px-5 py-4">
@@ -397,6 +554,9 @@ function PedidoCard({
         </div>
       </div>
 
+      {/* Productos pedidos */}
+      <ProductList items={pedido.lineItems} />
+
       {/* Dirección */}
       {hasAddress && (
         <div className="mx-4 mb-3 overflow-hidden rounded-xl bg-muted/40 px-3 py-2.5">
@@ -549,7 +709,28 @@ function PedidosTableView({
                     <span className="text-muted-foreground">—</span>
                   )}
                 </td>
-                <td className="px-4 py-3 tabular-nums text-foreground">{p.items}</td>
+                <td className="px-4 py-3">
+                  {p.lineItems.length > 0 ? (
+                    <div className="flex items-center gap-2">
+                      <div className="flex -space-x-2">
+                        {p.lineItems.slice(0, 3).map((item, i) => (
+                          <div key={i} className="ring-2 ring-card rounded-lg">
+                            <ProductThumb
+                              src={item.designCoverImageUrl || item.coverImageUrl}
+                              alt={item.productName}
+                              size={32}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                      <span className="text-xs text-muted-foreground tabular-nums">
+                        {p.items}
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="tabular-nums text-foreground">{p.items}</span>
+                  )}
+                </td>
                 <td className="px-4 py-3 font-mono tabular-nums text-foreground">{p.total}</td>
                 <td className="px-4 py-3">
                   <Badge variant={ESTADO_BADGE_VARIANT[p.estado]}>
