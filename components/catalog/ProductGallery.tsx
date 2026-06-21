@@ -27,7 +27,7 @@ export function ProductGallery({ images, name }: ProductGalleryProps) {
   return (
     <div className="flex flex-col gap-3 min-w-0">
       {/* Main image */}
-      <div className="group relative aspect-square overflow-hidden rounded-2xl border border-border bg-muted/20">
+      <div className="group relative aspect-3/4 sm:aspect-square overflow-hidden rounded-2xl border border-border bg-muted/20">
         {hasSrc ? (
           <Image
             key={src}

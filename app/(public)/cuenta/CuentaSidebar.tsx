@@ -89,7 +89,7 @@ export function CuentaSidebar({ sidebarUser }: { sidebarUser: SidebarUser }) {
   return (
     <>
       {/* ── DESKTOP SIDEBAR ──────────────────────────── */}
-      <aside className="hidden lg:flex lg:w-60 lg:shrink-0 lg:flex-col border-r border-border bg-card animate-slide-up">
+      <aside className="hidden lg:flex lg:w-60 lg:shrink-0 lg:flex-col lg:sticky lg:top-0 lg:h-screen border-r border-border bg-card animate-slide-up">
 
         {/* Logo + back to store */}
         <div className="flex items-center justify-between border-b border-border px-4 py-3.5">
