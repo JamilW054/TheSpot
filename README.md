@@ -1,4 +1,4 @@
-# Buxxep Web 21/6 v1
+# Buxxep Web 21/6 v2
 
 Plataforma de diseño y tienda de ropa: landing pública, zona de usuario con editor de diseños (canvas con arrastrar y soltar) y panel de admin.
 
