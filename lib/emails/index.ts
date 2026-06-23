@@ -11,6 +11,11 @@ import {
 } from "./templates/compra";
 import { type OtpEmailData, otpEmailHtml, otpEmailText } from "./templates/otp";
 import {
+  type PaymentLinkEmailData,
+  paymentLinkEmailHtml,
+  paymentLinkEmailText,
+} from "./templates/payment-link";
+import {
   type ResetPasswordEmailData,
   resetPasswordEmailHtml,
   resetPasswordEmailText,
@@ -54,6 +59,19 @@ export async function sendCompraEmail(to: string, data: CompraEmailData) {
     subject: `Pedido confirmado #${data.orderNumber} — Buxxep`,
     html: compraEmailHtml(data),
     text: compraEmailText(data),
+  });
+}
+
+export async function sendPaymentLinkEmail(
+  to: string,
+  data: PaymentLinkEmailData,
+) {
+  return getResend().emails.send({
+    from: FROM,
+    to,
+    subject: "Solicitud de pago disponible — Buxxep",
+    html: paymentLinkEmailHtml(data),
+    text: paymentLinkEmailText(data),
   });
 }
 

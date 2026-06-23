@@ -1,4 +1,4 @@
-import { resolveUserRole } from "@/lib/auth/roles";
+import { ROLE, resolveUserRole } from "@/lib/auth/roles";
 import { createClient } from "@/lib/supabase/server";
 
 /** Solo usuarios con `profiles.role === admin`. Lanza si no hay sesión o no es admin. */
@@ -27,7 +27,7 @@ export async function requireAdmin(): Promise<{ userId: string }> {
     user.email,
     typeof pr === "string" || typeof pr === "number" ? pr : undefined,
   );
-  if (role !== "admin") {
+  if (role !== ROLE.ADMIN) {
     throw new Error("No autorizado.");
   }
   return { userId: user.id };

@@ -3,12 +3,16 @@
 import { Check, Plus, Star } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { PaymentMethodSelector } from "@/components/payment/PaymentMethodSelector";
 import { useCart } from "@/contexts/cart-context";
 import { checkoutAction } from "@/lib/actions/checkout";
 import { validateCouponAction } from "@/lib/actions/coupons";
+import { requestPaymentLinkForOrder } from "@/lib/actions/payments";
 import type { ShippingMethod } from "@/lib/db";
 import type { Address } from "@/lib/db/addresses";
+import type { PaymentMethodOption } from "@/lib/db/payments";
 import { formatDOPFromCents } from "@/lib/format-currency";
 import type { CatalogProduct } from "@/types";
 
@@ -114,14 +118,26 @@ export function CheckoutContent({
   products,
   savedAddresses,
   shippingMethods,
+  paymentMethods,
 }: {
   products: CatalogProduct[];
   savedAddresses: Address[];
   shippingMethods: ShippingMethod[];
+  paymentMethods: PaymentMethodOption[];
 }) {
-  const { items } = useCart();
+  const router = useRouter();
+  const { items, clearCart } = useCart();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Método de pago: por defecto el primero activo y no deshabilitado
+  // (Payment Links). Azul se muestra deshabilitado.
+  const activeMethod =
+    paymentMethods.find((m) => !m.isDisabled && m.isActive) ?? null;
+  const [selectedMethodCode, setSelectedMethodCode] = useState<string>(
+    activeMethod?.code ?? "payment_link",
+  );
+  const isAzul = selectedMethodCode === "azul";
 
   const defaultAddress =
     savedAddresses.find((a) => a.isDefault) ?? savedAddresses[0] ?? null;
@@ -248,21 +264,41 @@ export function CheckoutContent({
       shippingMethodId: selectedShippingId,
       couponCode: appliedCoupon,
     });
-    setLoading(false);
-    if (result.ok) {
+    if (!result.ok) {
+      setLoading(false);
+      setError(result.error);
+      return;
+    }
+
+    const orderId = result.result.orderId;
+
+    // ── Azul: redirección a la pasarela (deshabilitado por ahora) ──
+    if (isAzul) {
       const redirectForm = document.createElement("form");
       redirectForm.method = "POST";
       redirectForm.action = "/api/pagos/azul/enviar";
       const input = document.createElement("input");
       input.type = "hidden";
       input.name = "orderId";
-      input.value = result.result.orderId;
+      input.value = orderId;
       redirectForm.appendChild(input);
       document.body.appendChild(redirectForm);
       redirectForm.submit();
       return;
     }
-    setError(result.error);
+
+    // ── Payment Link: crear solicitud de pago y llevar al Centro de pagos ──
+    const linkResult = await requestPaymentLinkForOrder(orderId);
+    setLoading(false);
+    if (!linkResult.ok) {
+      setError(linkResult.error);
+      return;
+    }
+    clearCart();
+    router.push("/cuenta/pagos");
+    // Fuerza datos frescos en el Centro de pagos (evita la caché del router,
+    // que mostraría la página sin la nueva solicitud / sin la vista previa).
+    router.refresh();
   };
 
   if (items.length === 0) {
@@ -582,6 +618,20 @@ export function CheckoutContent({
             )}
           </div>
 
+          {/* Método de pago */}
+          {paymentMethods.length > 0 && (
+            <div className="border-t border-border p-5 sm:p-6 space-y-3">
+              <p className="text-sm font-semibold text-foreground">
+                Método de pago
+              </p>
+              <PaymentMethodSelector
+                methods={paymentMethods}
+                value={selectedMethodCode}
+                onChange={setSelectedMethodCode}
+              />
+            </div>
+          )}
+
           <div className="border-t border-border p-5 sm:p-6">
             <dl className="mb-4 space-y-1.5 text-sm">
               <div className="flex justify-between gap-4">
@@ -623,11 +673,16 @@ export function CheckoutContent({
               disabled={loading}
               className="w-full rounded-[10px] bg-primary py-3 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-60 disabled:pointer-events-none"
             >
-              {loading ? "Procesando…" : "Pagar con AZUL"}
+              {loading
+                ? "Procesando…"
+                : isAzul
+                  ? "Pagar con AZUL"
+                  : "Solicitar enlace de pago"}
             </button>
             <p className="mt-3 text-center text-xs text-muted-foreground">
-              Serás redirigido al pago seguro de Banco Popular (AZUL). Al
-              confirmar aceptas el pedido.
+              {isAzul
+                ? "Serás redirigido al pago seguro de Banco Popular (AZUL). Al confirmar aceptas el pedido."
+                : "Confirmaremos tu pedido y te enviaremos un enlace de pago seguro. Podrás verlo en tu Centro de pagos."}
             </p>
           </div>
         </div>

@@ -21,6 +21,7 @@ import {
   Tag,
   Ticket,
   Truck,
+  Wallet,
   Warehouse,
   Zap,
 } from "lucide-react";
@@ -29,6 +30,7 @@ import { usePathname } from "next/navigation";
 import { Fragment } from "react";
 import type { NavItem } from "@/config/navigation";
 import { ADMIN_NAV, APP_NAV } from "@/config/navigation";
+import { ROLE } from "@/lib/auth/roles";
 import { useAuth } from "@/lib/auth-context";
 
 export type SidebarVariant = "app" | "admin";
@@ -67,6 +69,7 @@ const ADMIN_ICONS: Record<
   Zap,
   Bell,
   Truck,
+  Wallet,
   Warehouse,
   HelpCircle,
 };
@@ -108,7 +111,7 @@ export function AppSidebar({
   const rawItems = NAV_BY_VARIANT[variant];
   const items =
     variant === "app"
-      ? rawItems.filter((item) => !item.adminOnly || user?.role === "admin")
+      ? rawItems.filter((item) => !item.adminOnly || user?.role === ROLE.ADMIN)
       : rawItems;
   const hiddenOnDesktop = collapsed;
 
@@ -220,7 +223,10 @@ export function AppSidebar({
           <div className="border-t border-border p-3">
             <button
               type="button"
-              onClick={() => { logout(); onClose?.(); }}
+              onClick={() => {
+                logout();
+                onClose?.();
+              }}
               className="flex w-full items-center gap-2.5 rounded-[10px] px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
             >
               <LogOut className="size-4 shrink-0" aria-hidden />

@@ -109,6 +109,35 @@ export interface NotificationRow {
   created_at: string;
 }
 
+export interface PaymentMethodRow {
+  id: string;
+  code: string;
+  name: string;
+  description: string | null;
+  is_active: boolean;
+  is_disabled: boolean;
+  badge_label: string | null;
+  sort_order: number;
+}
+
+export interface PaymentRequestRow {
+  id: string;
+  user_id: string;
+  reference_number: string;
+  amount_cents: number;
+  currency: string;
+  description: string | null;
+  payment_method_id: string;
+  payment_url: string | null;
+  status: string;
+  expires_at: string | null;
+  sent_at: string | null;
+  paid_at: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 // ---------------------------------------------------------------------------
 // Columnas
 // ---------------------------------------------------------------------------
@@ -128,6 +157,10 @@ const FLASH_ITEM_COLS =
   "id, flash_sale_id, product_id, discount_percent_override, stock_limit, sort_order";
 const WAREHOUSE_COLS = "id, name, address, city, country_code, is_active";
 const NOTIF_COLS = "id, type, target, title, body, link_path, created_at";
+const PAYMENT_METHOD_COLS =
+  "id, code, name, description, is_active, is_disabled, badge_label, sort_order";
+const PAYMENT_REQUEST_COLS =
+  "id, user_id, reference_number, amount_cents, currency, description, payment_method_id, payment_url, status, expires_at, sent_at, paid_at, created_by, created_at, updated_at";
 
 // ---------------------------------------------------------------------------
 // Repositorios
@@ -189,6 +222,18 @@ export const warehousesRepo = new Repository<WarehouseRow>({
 export const notificationsRepo = new Repository<NotificationRow>({
   table: "notifications",
   columns: NOTIF_COLS,
+  defaultOrderBy: { column: "created_at", ascending: false },
+});
+
+export const paymentMethodsRepo = new Repository<PaymentMethodRow>({
+  table: "payment_methods",
+  columns: PAYMENT_METHOD_COLS,
+  defaultOrderBy: { column: "sort_order" },
+});
+
+export const paymentRequestsRepo = new Repository<PaymentRequestRow>({
+  table: "payment_requests",
+  columns: PAYMENT_REQUEST_COLS,
   defaultOrderBy: { column: "created_at", ascending: false },
 });
 

@@ -1,3 +1,5 @@
+import { SITE_URL as SITE } from "../site";
+
 export interface ResetPasswordEmailData {
   name: string;
   resetUrl: string;
@@ -28,7 +30,7 @@ export function resetPasswordEmailHtml({
         <!-- Logo -->
         <tr>
           <td align="center" style="padding-bottom:40px;">
-            <a href="https://buxxep.vercel.app" style="text-decoration:none;display:inline-block;">
+            <a href="${SITE}" style="text-decoration:none;display:inline-block;">
               <div style="font-size:11px;font-weight:700;letter-spacing:6px;text-transform:uppercase;color:#3cc8f7;margin-bottom:6px;text-align:center;">STREETWEAR</div>
               <div style="font-size:36px;font-weight:900;letter-spacing:-1px;color:#f4f4f5;line-height:1;text-transform:uppercase;">BUX<span style="color:#3cc8f7;">XEP</span></div>
             </a>
@@ -115,9 +117,9 @@ export function resetPasswordEmailHtml({
             <p style="margin:0 0 10px;font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#3cc8f7;">BUXXEP</p>
             <p style="margin:0 0 10px;font-size:12px;color:#3d3d42;">República Dominicana · ${new Date().getFullYear()}</p>
             <p style="margin:0;font-size:12px;">
-              <a href="https://buxxep.vercel.app/privacidad" style="color:#52525b;text-decoration:none;margin:0 8px;">Privacidad</a>
+              <a href="${SITE}/privacidad" style="color:#52525b;text-decoration:none;margin:0 8px;">Privacidad</a>
               <span style="color:#27272a;">·</span>
-              <a href="https://buxxep.vercel.app/terminos" style="color:#52525b;text-decoration:none;margin:0 8px;">Términos</a>
+              <a href="${SITE}/terminos" style="color:#52525b;text-decoration:none;margin:0 8px;">Términos</a>
             </p>
           </td>
         </tr>

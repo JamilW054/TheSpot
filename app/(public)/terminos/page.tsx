@@ -28,8 +28,8 @@ export default function TerminosPage() {
         <Section title="1. Aceptación de los términos">
           <p>
             Al acceder y utilizar la plataforma Buxxep (en adelante "el Servicio"), accesible en{" "}
-            <a href="https://buxxep.vercel.app" className="text-primary hover:underline">
-              buxxep.vercel.app
+            <a href="https://buxxep.com" className="text-primary hover:underline">
+              buxxep.com
             </a>
             , aceptas quedar vinculado por estos Términos y Condiciones. Si no estás de acuerdo con
             alguna parte de estos términos, no podrás utilizar el Servicio.

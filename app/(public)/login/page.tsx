@@ -1,9 +1,10 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { ArrowLeft, CheckCircle, Eye, EyeOff, Mail } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Eye, EyeOff, ArrowLeft, Mail, CheckCircle } from "lucide-react";
+import { Suspense, useEffect, useState } from "react";
+import { ROLE } from "@/lib/auth/roles";
 import { useAuth } from "@/lib/auth-context";
 
 function LoginForm() {
@@ -32,7 +33,7 @@ function LoginForm() {
       redirectTo.startsWith("/") &&
       !redirectTo.startsWith("//") &&
       redirectTo.length < 500;
-    if (user.role === "admin") {
+    if (user.role === ROLE.ADMIN) {
       router.replace(
         safeRedirect && redirectTo.startsWith("/admin") ? redirectTo : "/admin",
       );
@@ -95,15 +96,17 @@ function LoginForm() {
     return (
       <div className="flex flex-1 flex-col items-center justify-center px-4 py-12">
         <div className="w-full max-w-md animate-slide-up">
-
           {forgotSent ? (
             <div className="rounded-[18px] border border-border bg-card p-8 text-center">
               <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
                 <Mail className="size-8 text-primary" aria-hidden />
               </div>
-              <h1 className="text-lg font-bold text-foreground">Revisa tu correo</h1>
+              <h1 className="text-lg font-bold text-foreground">
+                Revisa tu correo
+              </h1>
               <p className="mx-auto mt-3 max-w-65 text-sm text-muted-foreground leading-relaxed">
-                Si existe una cuenta con ese correo, recibirás un enlace para restablecer tu contraseña.
+                Si existe una cuenta con ese correo, recibirás un enlace para
+                restablecer tu contraseña.
               </p>
               <div className="mt-2 flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
                 <CheckCircle className="size-3.5 text-green-500" aria-hidden />
@@ -138,7 +141,10 @@ function LoginForm() {
               </div>
               <form onSubmit={handleForgot} noValidate className="space-y-4">
                 <div>
-                  <label className="mb-1.5 block text-sm font-medium text-foreground" htmlFor="forgotEmail">
+                  <label
+                    className="mb-1.5 block text-sm font-medium text-foreground"
+                    htmlFor="forgotEmail"
+                  >
                     Correo electrónico
                   </label>
                   <input
@@ -153,7 +159,9 @@ function LoginForm() {
                     className="h-11 w-full rounded-[10px] border border-border bg-card px-4 text-sm text-foreground placeholder:text-muted-foreground/50 outline-none transition focus:border-primary focus:ring-1 focus:ring-primary disabled:opacity-50"
                   />
                   {forgotError && (
-                    <p role="alert" className="mt-1 text-xs text-destructive">{forgotError}</p>
+                    <p role="alert" className="mt-1 text-xs text-destructive">
+                      {forgotError}
+                    </p>
                   )}
                 </div>
                 <button
@@ -166,7 +174,6 @@ function LoginForm() {
               </form>
             </>
           )}
-
         </div>
       </div>
     );
@@ -176,7 +183,6 @@ function LoginForm() {
   return (
     <div className="flex flex-1 flex-col items-center justify-center px-4 py-12">
       <div className="w-full max-w-md animate-slide-up">
-
         <div className="mb-8 text-center">
           <h1 className="text-2xl font-black tracking-tight text-foreground">
             Iniciar sesión
@@ -187,9 +193,11 @@ function LoginForm() {
         </div>
 
         <form onSubmit={handleSubmit} noValidate className="space-y-4">
-
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-foreground" htmlFor="email">
+            <label
+              className="mb-1.5 block text-sm font-medium text-foreground"
+              htmlFor="email"
+            >
               Correo electrónico
             </label>
             <input
@@ -206,7 +214,10 @@ function LoginForm() {
 
           <div>
             <div className="mb-1.5 flex items-center justify-between">
-              <label className="text-sm font-medium text-foreground" htmlFor="password">
+              <label
+                className="text-sm font-medium text-foreground"
+                htmlFor="password"
+              >
                 Contraseña
               </label>
               <button
@@ -236,15 +247,24 @@ function LoginForm() {
                 tabIndex={-1}
                 onClick={() => setShowPassword((p) => !p)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                aria-label={
+                  showPassword ? "Ocultar contraseña" : "Mostrar contraseña"
+                }
               >
-                {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                {showPassword ? (
+                  <EyeOff className="size-4" />
+                ) : (
+                  <Eye className="size-4" />
+                )}
               </button>
             </div>
           </div>
 
           {error && (
-            <p role="alert" className="rounded-[10px] bg-destructive/10 px-4 py-3 text-sm text-destructive">
+            <p
+              role="alert"
+              className="rounded-[10px] bg-destructive/10 px-4 py-3 text-sm text-destructive"
+            >
               {error}
             </p>
           )}
@@ -260,7 +280,10 @@ function LoginForm() {
 
         <p className="mt-6 text-center text-sm text-muted-foreground">
           ¿No tienes cuenta?{" "}
-          <Link href="/registro" className="font-medium text-primary hover:underline underline-offset-2">
+          <Link
+            href="/registro"
+            className="font-medium text-primary hover:underline underline-offset-2"
+          >
             Regístrate
           </Link>
         </p>

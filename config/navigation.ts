@@ -75,6 +75,12 @@ export const ADMIN_NAV: NavItem[] = [
     adminSection: "Ventas",
   },
   {
+    label: "Gestión de pagos",
+    href: "/admin/pagos",
+    icon: "Wallet",
+    adminSection: "Ventas",
+  },
+  {
     label: "Catálogo",
     href: "/admin/catalogo",
     icon: "Store",

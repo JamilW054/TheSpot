@@ -1,3 +1,5 @@
+import { SITE_URL as SITE } from "../site";
+
 export interface BienvenidaEmailData {
   name: string;
   email: string;
@@ -26,7 +28,7 @@ export function bienvenidaEmailHtml({
         <!-- Logo -->
         <tr>
           <td align="center" style="padding-bottom:36px;">
-            <a href="https://buxxep.vercel.app" style="text-decoration:none;display:inline-block;">
+            <a href="${SITE}" style="text-decoration:none;display:inline-block;">
               <div style="font-size:11px;font-weight:700;letter-spacing:6px;text-transform:uppercase;color:#3cc8f7;margin-bottom:6px;text-align:center;">STREETWEAR</div>
               <div style="font-size:36px;font-weight:900;letter-spacing:-1px;color:#f4f4f5;line-height:1;text-transform:uppercase;">BUX<span style="color:#3cc8f7;">XEP</span></div>
             </a>
@@ -106,7 +108,7 @@ export function bienvenidaEmailHtml({
               <table width="100%" cellpadding="0" cellspacing="0">
                 <tr>
                   <td align="center">
-                    <a href="https://buxxep.vercel.app/catalogo" style="display:inline-block;background:#3cc8f7;color:#080808;font-size:14px;font-weight:800;text-decoration:none;padding:15px 44px;border-radius:8px;letter-spacing:2px;text-transform:uppercase;">
+                    <a href="${SITE}/catalogo" style="display:inline-block;background:#3cc8f7;color:#080808;font-size:14px;font-weight:800;text-decoration:none;padding:15px 44px;border-radius:8px;letter-spacing:2px;text-transform:uppercase;">
                       Explorar catálogo →
                     </a>
                   </td>
@@ -133,11 +135,11 @@ export function bienvenidaEmailHtml({
             <p style="margin:0 0 10px;font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#3cc8f7;">BUXXEP</p>
             <p style="margin:0 0 10px;font-size:12px;color:#3d3d42;">República Dominicana · ${new Date().getFullYear()}</p>
             <p style="margin:0;font-size:12px;">
-              <a href="https://buxxep.vercel.app/privacidad" style="color:#52525b;text-decoration:none;margin:0 8px;">Privacidad</a>
+              <a href="${SITE}/privacidad" style="color:#52525b;text-decoration:none;margin:0 8px;">Privacidad</a>
               <span style="color:#27272a;">·</span>
-              <a href="https://buxxep.vercel.app/terminos" style="color:#52525b;text-decoration:none;margin:0 8px;">Términos</a>
+              <a href="${SITE}/terminos" style="color:#52525b;text-decoration:none;margin:0 8px;">Términos</a>
               <span style="color:#27272a;">·</span>
-              <a href="https://buxxep.vercel.app/devoluciones" style="color:#52525b;text-decoration:none;margin:0 8px;">Devoluciones</a>
+              <a href="${SITE}/devoluciones" style="color:#52525b;text-decoration:none;margin:0 8px;">Devoluciones</a>
             </p>
           </td>
         </tr>
@@ -157,5 +159,5 @@ export function bienvenidaEmailText({
   name,
   email,
 }: BienvenidaEmailData): string {
-  return `BUXXEP — Bienvenido al crew\n\nHey ${name},\n\nTu cuenta fue creada con: ${email}\n\nExplora el catálogo: https://buxxep.vercel.app/catalogo\n\n— BUXXEP · República Dominicana`;
+  return `BUXXEP — Bienvenido al crew\n\nHey ${name},\n\nTu cuenta fue creada con: ${email}\n\nExplora el catálogo: ${SITE}/catalogo\n\n— BUXXEP · República Dominicana`;
 }

@@ -87,7 +87,7 @@ export async function POST(request: Request) {
 
   await supabase
     .from("orders")
-    .update({ payment_provider: "AZUL" })
+    .update({ payment_provider: "AZUL", payment_type: "AZUL_PAYMENT" })
     .eq("id", row.id);
 
   const orderNumber = row.id;

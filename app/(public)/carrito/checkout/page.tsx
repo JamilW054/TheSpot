@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getProducts, getShippingMethods } from "@/lib/db";
 import { getAddresses } from "@/lib/db/addresses";
+import { getPaymentMethods } from "@/lib/db/payments";
 import { createClient } from "@/lib/supabase/server";
 import { CheckoutContent } from "./CheckoutContent";
 
@@ -22,11 +23,13 @@ export default async function CheckoutPage() {
   if (!user) {
     redirect(`/login?redirect=${encodeURIComponent(CHECKOUT_PATH)}`);
   }
-  const [products, savedAddresses, shippingMethods] = await Promise.all([
-    getProducts(),
-    getAddresses(),
-    getShippingMethods(),
-  ]);
+  const [products, savedAddresses, shippingMethods, paymentMethods] =
+    await Promise.all([
+      getProducts(),
+      getAddresses(),
+      getShippingMethods(),
+      getPaymentMethods(),
+    ]);
   return (
     <article className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-2 sm:pt-4 pb-16 sm:pb-20">
       <nav className="mb-4 sm:mb-5" aria-label="Navegación">
@@ -66,6 +69,7 @@ export default async function CheckoutPage() {
         products={products}
         savedAddresses={savedAddresses}
         shippingMethods={shippingMethods}
+        paymentMethods={paymentMethods}
       />
     </article>
   );

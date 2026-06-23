@@ -25,7 +25,7 @@ const BOT_BAR = `<div style="height:2px;background:linear-gradient(90deg,#3cc8f7
 const LOGO = `
   <tr>
     <td align="center" style="padding-bottom:40px;">
-      <a href="https://buxxep.vercel.app" style="text-decoration:none;display:inline-block;">
+      <a href="https://buxxep.com" style="text-decoration:none;display:inline-block;">
         <div style="font-size:11px;font-weight:700;letter-spacing:6px;text-transform:uppercase;color:#3cc8f7;margin-bottom:6px;text-align:center;">STREETWEAR</div>
         <div style="font-size:36px;font-weight:900;letter-spacing:-1px;color:#f4f4f5;line-height:1;text-transform:uppercase;">BUX<span style="color:#3cc8f7;">XEP</span></div>
       </a>
@@ -38,9 +38,9 @@ const FOOTER = `
       <p style="margin:0 0 10px;font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#3cc8f7;">BUXXEP</p>
       <p style="margin:0 0 10px;font-size:12px;color:#3d3d42;">República Dominicana · ${YEAR}</p>
       <p style="margin:0;font-size:12px;">
-        <a href="https://buxxep.vercel.app/privacidad" style="color:#52525b;text-decoration:none;margin:0 8px;">Privacidad</a>
+        <a href="https://buxxep.com/privacidad" style="color:#52525b;text-decoration:none;margin:0 8px;">Privacidad</a>
         <span style="color:#27272a;">·</span>
-        <a href="https://buxxep.vercel.app/terminos" style="color:#52525b;text-decoration:none;margin:0 8px;">Términos</a>
+        <a href="https://buxxep.com/terminos" style="color:#52525b;text-decoration:none;margin:0 8px;">Términos</a>
       </p>
     </td>
   </tr>`;
@@ -169,7 +169,7 @@ const bienvenidaHtml = wrap(`
         <table width="100%" cellpadding="0" cellspacing="0">
           <tr>
             <td align="center">
-              <a href="https://buxxep.vercel.app/catalogo" style="display:inline-block;background:#3cc8f7;color:#080808;font-size:14px;font-weight:800;text-decoration:none;padding:15px 44px;border-radius:8px;letter-spacing:2px;text-transform:uppercase;">
+              <a href="https://buxxep.com/catalogo" style="display:inline-block;background:#3cc8f7;color:#080808;font-size:14px;font-weight:800;text-decoration:none;padding:15px 44px;border-radius:8px;letter-spacing:2px;text-transform:uppercase;">
                 Explorar catálogo →
               </a>
             </td>
@@ -312,7 +312,7 @@ ids.resetPassword = await createAndPublish(
     {
       key: "reset_url",
       type: "string",
-      fallbackValue: "https://buxxep.vercel.app",
+      fallbackValue: "https://buxxep.com",
     },
     { key: "expires_in_minutes", type: "number", fallbackValue: 60 },
   ],

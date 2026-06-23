@@ -9,7 +9,9 @@ import {
   useMemo,
   useState,
 } from "react";
+import { syncProfileEmail } from "@/lib/actions/profile";
 import {
+  ROLE_DB,
   resolveUserRole,
   roleFromEmail,
   type UserRole,
@@ -68,21 +70,66 @@ function userFromSession(
   };
 }
 
+/**
+ * Crea la fila en `profiles` si aún no existe (1:1 con auth.users).
+ * Sustituye al trigger de base de datos: el perfil se materializa en código la
+ * primera vez que el usuario tiene sesión (registro con auto-confirm o primer
+ * login tras confirmar el correo). `username` es NOT NULL, así que cae al local
+ * del email si el metadata no trae uno; el `id` único evita duplicados.
+ */
+async function ensureProfile(
+  supabase: ReturnType<typeof createClient>,
+  session: Session,
+): Promise<void> {
+  const u = session.user;
+  const meta = (u.user_metadata ?? {}) as {
+    full_name?: string;
+    name?: string;
+    username?: string;
+    phone?: string;
+  };
+  const username =
+    meta.username?.trim() ||
+    u.email?.split("@")[0]?.trim() ||
+    `user_${u.id.slice(0, 8)}`;
+  const fullName = (meta.full_name ?? meta.name)?.trim() || null;
+  const phone = meta.phone?.trim() || null;
+
+  await supabase.from("profiles").upsert(
+    {
+      id: u.id,
+      username,
+      full_name: fullName,
+      phone,
+      role: ROLE_DB.CLIENT,
+    },
+    { onConflict: "id", ignoreDuplicates: true },
+  );
+}
+
 async function enrichUserFromProfile(
   supabase: ReturnType<typeof createClient>,
   session: Session | null,
 ): Promise<User | null> {
   const base = userFromSession(session);
-  if (!base) return null;
-  const { data: profile, error } = await supabase
+  if (!base || !session) return base;
+  let { data: profile, error } = await supabase
     .from("profiles")
     .select("role")
     .eq("id", base.id)
     .maybeSingle();
+  // Si el perfil no existe aún, lo creamos y reintentamos la lectura.
+  if (!error && !profile) {
+    await ensureProfile(supabase, session);
+    ({ data: profile, error } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", base.id)
+      .maybeSingle());
+  }
   if (error) return base;
-  // role es smallint: 0 = admin, cualquier otro = client
+  // role es smallint en `profiles`: ROLE_DB.ADMIN (0) = admin, resto = client.
   const pr = profile?.role;
-  const roleStr = pr === 0 ? "admin" : pr === 1 ? "client" : undefined;
   return {
     ...base,
     role: resolveUserRole(
@@ -241,6 +288,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (error) {
         setIsLoading(false);
         throw new Error(error.message ?? "No se pudo crear la cuenta.");
+      }
+      // Guarda el correo en profiles (el perfil ya lo creó el trigger). El
+      // user.id existe aunque falte confirmar el correo. Best-effort.
+      if (data.user?.id) {
+        void syncProfileEmail(data.user.id, email);
       }
       if (data.session) {
         const u = await enrichUserFromProfile(supabase, data.session);

@@ -1,7 +1,15 @@
 "use client";
 
 import { ChevronDown } from "lucide-react";
-import { useEffect, useId, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
+import { createPortal } from "react-dom";
 
 export interface SelectMenuOption {
   value: string;
@@ -39,7 +47,14 @@ export function SelectMenu({
   const generatedId = useId();
   const id = idProp ?? generatedId;
   const containerRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
+  const [coords, setCoords] = useState<{
+    top: number;
+    left: number;
+    width: number;
+  } | null>(null);
   const [internalValue, setInternalValue] = useState(
     controlledValue ?? defaultValue,
   );
@@ -49,11 +64,34 @@ export function SelectMenu({
     if (controlledValue !== undefined) setInternalValue(controlledValue);
   }, [controlledValue]);
 
-  // Close on outside click
+  // El menú se renderiza en un portal con posición `fixed` para que ningún
+  // ancestro con `overflow-hidden` (p.ej. la tarjeta de la tabla) lo recorte.
+  const updateCoords = useCallback(() => {
+    const el = triggerRef.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    setCoords({ top: r.bottom + 4, left: r.left, width: r.width });
+  }, []);
+
+  useLayoutEffect(() => {
+    if (!open) return;
+    updateCoords();
+    window.addEventListener("scroll", updateCoords, true);
+    window.addEventListener("resize", updateCoords);
+    return () => {
+      window.removeEventListener("scroll", updateCoords, true);
+      window.removeEventListener("resize", updateCoords);
+    };
+  }, [open, updateCoords]);
+
+  // Close on outside click (trigger y menú viven en árboles DOM distintos).
   useEffect(() => {
     if (!open) return;
     const handler = (e: MouseEvent) => {
-      if (!containerRef.current?.contains(e.target as Node)) setOpen(false);
+      const t = e.target as Node;
+      if (containerRef.current?.contains(t)) return;
+      if (menuRef.current?.contains(t)) return;
+      setOpen(false);
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
@@ -94,6 +132,7 @@ export function SelectMenu({
 
       {/* Trigger */}
       <button
+        ref={triggerRef}
         id={id}
         type="button"
         disabled={disabled}
@@ -106,7 +145,9 @@ export function SelectMenu({
             : "border-border text-foreground hover:border-primary/40"
         }`}
       >
-        <span className={`truncate ${!displayLabel ? "text-muted-foreground" : ""}`}>
+        <span
+          className={`truncate ${!displayLabel ? "text-muted-foreground" : ""}`}
+        >
           {displayLabel ?? placeholder}
         </span>
         <ChevronDown
@@ -115,55 +156,66 @@ export function SelectMenu({
         />
       </button>
 
-      {/* Dropdown */}
-      {open && (
-        <div
-          role="listbox"
-          aria-label={label}
-          className="absolute z-50 mt-1 w-full min-w-[180px] overflow-hidden rounded-[12px] border border-border bg-card shadow-2xl"
-        >
-          <div className="max-h-56 overflow-y-auto py-1">
-            {/* Empty option */}
-            {options.length === 0 && (
-              <p className="px-4 py-3 text-sm text-muted-foreground">
-                Sin opciones
-              </p>
-            )}
-            {options.map((opt) => {
-              const isSelected = opt.value === internalValue;
-              return (
-                <button
-                  key={opt.value}
-                  type="button"
-                  role="option"
-                  aria-selected={isSelected}
-                  onClick={() => handleSelect(opt.value)}
-                  className={`flex w-full items-center gap-3 px-3 py-2.5 text-sm text-left transition-colors hover:bg-muted/50 ${
-                    isSelected ? "text-foreground" : "text-muted-foreground"
-                  }`}
-                >
-                  {/* Radio circle */}
-                  <span
-                    className={`flex size-[18px] shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
-                      isSelected
-                        ? "border-primary bg-primary"
-                        : "border-border bg-transparent"
+      {/* Dropdown (portal con posición fixed para no quedar recortado) */}
+      {open &&
+        coords &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <div
+            ref={menuRef}
+            role="listbox"
+            aria-label={label}
+            style={{
+              position: "fixed",
+              top: coords.top,
+              left: coords.left,
+              width: coords.width,
+            }}
+            className="z-60 overflow-hidden rounded-lg border border-border bg-card shadow-2xl"
+          >
+            <div className="max-h-56 overflow-y-auto py-1">
+              {/* Empty option */}
+              {options.length === 0 && (
+                <p className="px-4 py-3 text-sm text-muted-foreground">
+                  Sin opciones
+                </p>
+              )}
+              {options.map((opt) => {
+                const isSelected = opt.value === internalValue;
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    role="option"
+                    aria-selected={isSelected}
+                    onClick={() => handleSelect(opt.value)}
+                    className={`flex w-full items-center gap-3 px-3 py-2.5 text-sm text-left transition-colors hover:bg-muted/50 ${
+                      isSelected ? "text-foreground" : "text-muted-foreground"
                     }`}
-                    aria-hidden
                   >
-                    {isSelected && (
-                      <span className="size-[7px] rounded-full bg-primary-foreground" />
-                    )}
-                  </span>
-                  <span className={isSelected ? "font-medium" : ""}>
-                    {opt.label}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
+                    {/* Radio circle */}
+                    <span
+                      className={`flex size-4.5 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
+                        isSelected
+                          ? "border-primary bg-primary"
+                          : "border-border bg-transparent"
+                      }`}
+                      aria-hidden
+                    >
+                      {isSelected && (
+                        <span className="size-1.75 rounded-full bg-primary-foreground" />
+                      )}
+                    </span>
+                    <span className={isSelected ? "font-medium" : ""}>
+                      {opt.label}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }

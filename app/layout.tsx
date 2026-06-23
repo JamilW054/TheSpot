@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const SITE_URL = "https://buxxep.vercel.app";
+const SITE_URL = "https://buxxep.com";
 // Use /banner/og.jpg (1200×630, <600 KB) for WhatsApp & social. Generate with: pnpm run og:image
 const OG_IMAGE_PATH = "/banner/og.jpg";
 const FAVICON_PATH = "/favicon.jpg";

@@ -1,24 +1,25 @@
 "use client";
 
-import Link from "next/link";
-import Image from "next/image";
-import { usePathname, useRouter } from "next/navigation";
 import {
-  Package,
-  Heart,
-  MapPin,
-  Tag,
+  ArrowLeft,
   Bell,
+  Heart,
   LogOut,
-  Trophy,
+  MapPin,
+  Package,
+  ShoppingCart,
   Star,
   Store,
-  ArrowLeft,
-  ShoppingCart,
+  Tag,
+  Trophy,
+  Wallet,
 } from "lucide-react";
-import { useAuth } from "@/lib/auth-context";
+import Image from "next/image";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import { useCart } from "@/contexts/cart-context";
 import { useWishlist } from "@/contexts/wishlist-context";
+import { useAuth } from "@/lib/auth-context";
 
 interface SidebarUser {
   name: string;
@@ -63,6 +64,7 @@ export function CuentaSidebar({ sidebarUser }: { sidebarUser: SidebarUser }) {
           badge: itemCount || undefined,
         },
         { href: "/cuenta/pedidos", icon: Package, label: "Mis pedidos" },
+        { href: "/cuenta/pagos", icon: Wallet, label: "Centro de pagos" },
         {
           href: "/cuenta/wishlist",
           icon: Heart,
@@ -90,7 +92,6 @@ export function CuentaSidebar({ sidebarUser }: { sidebarUser: SidebarUser }) {
     <>
       {/* ── DESKTOP SIDEBAR ──────────────────────────── */}
       <aside className="hidden lg:flex lg:w-60 lg:shrink-0 lg:flex-col lg:sticky lg:top-0 lg:h-screen border-r border-border bg-card animate-slide-up">
-
         {/* Logo + back to store */}
         <div className="flex items-center justify-between border-b border-border px-4 py-3.5">
           <Link href="/" className="flex items-center">
@@ -169,7 +170,6 @@ export function CuentaSidebar({ sidebarUser }: { sidebarUser: SidebarUser }) {
               <div className="mx-4 my-2 h-px bg-border" />
             </div>
           ))}
-
         </nav>
 
         {/* Logout */}
@@ -190,10 +190,12 @@ export function CuentaSidebar({ sidebarUser }: { sidebarUser: SidebarUser }) {
 
       {/* ── MOBILE HEADER ────────────────────────────── */}
       <div className="lg:hidden border-b border-border bg-card">
-
         {/* Top bar: logo + back + user + logout */}
         <div className="flex items-center gap-2 px-3 py-2.5 border-b border-border/60">
-          <Link href="/catalogo" className="flex items-center gap-1 rounded-md p-1.5 text-muted-foreground hover:bg-muted/60 hover:text-foreground transition-colors">
+          <Link
+            href="/catalogo"
+            className="flex items-center gap-1 rounded-md p-1.5 text-muted-foreground hover:bg-muted/60 hover:text-foreground transition-colors"
+          >
             <ArrowLeft className="size-4" aria-hidden />
           </Link>
           <Link href="/" className="flex items-center">
@@ -228,23 +230,25 @@ export function CuentaSidebar({ sidebarUser }: { sidebarUser: SidebarUser }) {
           className="flex gap-1 overflow-x-auto scrollbar-hide px-3 py-2"
           aria-label="Cuenta"
         >
-          {sections.flatMap((s) => s.items).map((item) => {
-            const active = isActive(item.href);
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-all duration-150 whitespace-nowrap ${
-                  active
-                    ? "bg-primary/15 text-primary"
-                    : "text-muted-foreground hover:bg-muted/40 hover:text-foreground"
-                }`}
-              >
-                <item.icon className="size-3.5 shrink-0" aria-hidden />
-                {item.label}
-              </Link>
-            );
-          })}
+          {sections
+            .flatMap((s) => s.items)
+            .map((item) => {
+              const active = isActive(item.href);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-all duration-150 whitespace-nowrap ${
+                    active
+                      ? "bg-primary/15 text-primary"
+                      : "text-muted-foreground hover:bg-muted/40 hover:text-foreground"
+                  }`}
+                >
+                  <item.icon className="size-3.5 shrink-0" aria-hidden />
+                  {item.label}
+                </Link>
+              );
+            })}
         </nav>
       </div>
     </>

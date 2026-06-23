@@ -25,8 +25,8 @@ export default function PrivacidadPage() {
           <p>
             Buxxep, con operaciones en la República Dominicana, es responsable del tratamiento de
             los datos personales recopilados a través de{" "}
-            <a href="https://buxxep.vercel.app" className="text-primary hover:underline">
-              buxxep.vercel.app
+            <a href="https://buxxep.com" className="text-primary hover:underline">
+              buxxep.com
             </a>
             . Para cualquier consulta relativa a tus datos, contáctanos en{" "}
             <a href="https://instagram.com/buxxep" className="text-primary hover:underline">

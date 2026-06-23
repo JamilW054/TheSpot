@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { CartNavLink } from "@/components/layout/CartNavLink";
 import { Button } from "@/components/ui";
+import { ROLE } from "@/lib/auth/roles";
 import { useAuth } from "@/lib/auth-context";
 
 function MenuIcon({ className }: { className?: string }) {
@@ -111,7 +112,7 @@ export function Navbar({
 
       <div className="flex min-w-0 items-center gap-2">
         {!hideCart ? <CartNavLink /> : null}
-        {sessionRole === "admin" && !hideCart ? (
+        {sessionRole === ROLE.ADMIN && !hideCart ? (
           <Link
             href="/admin"
             className="hidden text-sm font-medium text-primary underline-offset-4 hover:underline sm:inline shrink-0"

@@ -13,6 +13,7 @@ const TYPE_LABEL: Record<string, string> = {
   order: "Pedido",
   delivery: "Envío",
   promo: "Promoción",
+  payment: "Pago",
   system: "Sistema",
 };
 

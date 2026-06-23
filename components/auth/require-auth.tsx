@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { ROLE } from "@/lib/auth/roles";
 import { useAuth } from "@/lib/auth-context";
 
 interface RequireAuthProps {
@@ -23,7 +24,7 @@ export function RequireAuth({
       router.replace("/login");
       return;
     }
-    if (requireAdmin && user.role !== "admin") {
+    if (requireAdmin && user.role !== ROLE.ADMIN) {
       router.replace("/cuenta");
     }
   }, [user, isLoading, requireAdmin, router]);
@@ -41,7 +42,7 @@ export function RequireAuth({
   if (!user) {
     return null;
   }
-  if (requireAdmin && user.role !== "admin") {
+  if (requireAdmin && user.role !== ROLE.ADMIN) {
     return null;
   }
 

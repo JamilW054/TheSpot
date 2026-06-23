@@ -7,15 +7,15 @@ async function getUsers() {
   const supabase = createServiceClient();
   const { data } = await supabase
     .from("profiles")
-    .select("id, name, username, full_name")
-    .order("name", { ascending: true });
+    .select("id, username, full_name")
+    .is("deleted_at", null)
+    .order("full_name", { ascending: true, nullsFirst: false });
   return (data ?? []).map((p: Record<string, string | null>) => ({
     id: p.id as string,
     display:
       (p.full_name as string | null) ??
       (p.username as string | null) ??
-      (p.name as string | null) ??
-      p.id as string,
+      (p.id as string),
   }));
 }
 
