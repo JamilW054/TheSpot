@@ -1,5 +1,9 @@
 import { createServerClient } from "@supabase/ssr";
-import { NextResponse, type NextRequest } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
+import {
+  ACCOUNT_EXPIRED_MESSAGE,
+  resolveAccountStatus,
+} from "@/lib/auth/account-status";
 
 const PROTECTED_PREFIXES = [
   "/admin",
@@ -47,6 +51,25 @@ export async function middleware(request: NextRequest) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
+  // Guard de sesión del servidor: con una sesión válida, resuelve el estado de
+  // eliminación de la cuenta. Restaura si está dentro de los 30 días; si venció,
+  // cierra la sesión de inmediato y bloquea el acceso. Esta verificación DEBE ser
+  // server-side (no confiar en el cliente). resolveAccountStatus es fail-open.
+  if (user) {
+    const status = await resolveAccountStatus(user.id);
+    if (status === "expired") {
+      await supabase.auth.signOut();
+      const loginUrl = new URL("/login", request.url);
+      loginUrl.searchParams.set("error", ACCOUNT_EXPIRED_MESSAGE);
+      const redirect = NextResponse.redirect(loginUrl);
+      // Copia las cookies de cierre de sesión que setAll dejó en supabaseResponse.
+      for (const cookie of supabaseResponse.cookies.getAll()) {
+        redirect.cookies.set(cookie);
+      }
+      return redirect;
+    }
+  }
 
   // Redirige al login si la ruta requiere auth y no hay sesión válida.
   if (!user && isProtectedPath(request.nextUrl.pathname)) {

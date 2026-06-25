@@ -9,6 +9,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import { checkAccountStatusOnLogin } from "@/lib/actions/account";
 import { syncProfileEmail } from "@/lib/actions/profile";
 import {
   ROLE_DB,
@@ -254,6 +255,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
           msg = `Error al iniciar sesión: ${raw} (${code || "sin código"})`;
         }
         throw new Error(msg);
+      }
+      // Iniciar sesión dentro de los 30 días restaura la cuenta; si venció el
+      // período de gracia, el servidor cierra la sesión y la bloqueamos aquí.
+      const account = await checkAccountStatusOnLogin();
+      if (account.status === "expired") {
+        await supabase.auth.signOut();
+        setUser(null);
+        setIsLoading(false);
+        throw new Error(account.message ?? "Esta cuenta fue eliminada.");
       }
       const u = await enrichUserFromProfile(supabase, data.session);
       setUser(u);

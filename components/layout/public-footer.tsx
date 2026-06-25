@@ -109,6 +109,9 @@ export function PublicFooter() {
               <Link href="/cookies" className="hover:text-foreground transition-colors">
                 Cookies
               </Link>
+              <Link href="/eliminar-cuenta" className="hover:text-foreground transition-colors">
+                Eliminar cuenta
+              </Link>
             </nav>
           </div>
 
@@ -125,9 +128,8 @@ export function PublicFooter() {
                     <rect width="20" height="16" x="2" y="4" rx="2"/>
                     <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
                   </svg>
-                  {/* TODO: reemplaza con tu email real */}
-                  <a href="mailto:soporte@buxxep.com" className="hover:text-foreground transition-colors break-all">
-                    soporte@buxxep.com
+                  <a href="mailto:soportebuxxep@gmail.com" className="hover:text-foreground transition-colors break-all">
+                    soportebuxxep@gmail.com
                   </a>
                 </li>
                 <li className="flex items-start gap-2">
@@ -135,9 +137,8 @@ export function PublicFooter() {
                   <svg className="size-4 mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden>
                     <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.44 2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.91a16 16 0 0 0 6 6l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.73 16.92z"/>
                   </svg>
-                  {/* TODO: reemplaza con tu número real */}
-                  <a href="tel:+18095550000" className="hover:text-foreground transition-colors">
-                    +1 (809) 555-0000
+                  <a href="tel:+18098289979" className="hover:text-foreground transition-colors">
+                    809-828-9979
                   </a>
                 </li>
               </ul>
@@ -223,6 +224,10 @@ export function PublicFooter() {
             <span aria-hidden>·</span>
             <Link href="/cookies" className="hover:text-muted-foreground transition-colors">
               Cookies
+            </Link>
+            <span aria-hidden>·</span>
+            <Link href="/eliminar-cuenta" className="hover:text-muted-foreground transition-colors">
+              Eliminar cuenta
             </Link>
           </div>
           <p className="shrink-0">

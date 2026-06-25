@@ -3,10 +3,14 @@ import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Términos y Condiciones — Buxxep",
-  description: "Lee los términos y condiciones de uso de la plataforma Buxxep.",
+  description:
+    "Lee los términos y condiciones de uso de la plataforma de comercio electrónico BUXXEP.",
 };
 
-const LAST_UPDATED = "13 de mayo de 2026";
+const LAST_UPDATED = "24 de junio de 2026";
+const VERSION = "v1.0";
+const SUPPORT_EMAIL = "soportebuxxep@gmail.com";
+const SUPPORT_PHONE = "809-828-9979";
 
 export default function TerminosPage() {
   return (
@@ -19,145 +23,173 @@ export default function TerminosPage() {
           Términos y Condiciones
         </h1>
         <p className="text-sm text-muted-foreground">
-          Última actualización: {LAST_UPDATED}
+          Versión {VERSION} · Última actualización: {LAST_UPDATED}
         </p>
       </div>
 
       <div className="space-y-8 text-sm leading-relaxed text-muted-foreground">
-
         <Section title="1. Aceptación de los términos">
           <p>
-            Al acceder y utilizar la plataforma Buxxep (en adelante "el Servicio"), accesible en{" "}
-            <a href="https://buxxep.com" className="text-primary hover:underline">
-              buxxep.com
-            </a>
-            , aceptas quedar vinculado por estos Términos y Condiciones. Si no estás de acuerdo con
-            alguna parte de estos términos, no podrás utilizar el Servicio.
+            Al acceder y utilizar BUXXEP (en adelante, "el Servicio") —su sitio
+            web y su aplicación móvil para iOS y Android— aceptas quedar
+            vinculado por estos Términos y Condiciones. Si no estás de acuerdo
+            con alguna parte, no podrás utilizar el Servicio.
           </p>
         </Section>
 
         <Section title="2. Descripción del servicio">
           <p>
-            Buxxep es una plataforma de comercio electrónico de moda personalizada con sede en la
-            República Dominicana. Ofrecemos:
+            BUXXEP es una plataforma de comercio electrónico operada desde la
+            República Dominicana y disponible en Latinoamérica. A través del
+            Servicio puedes:
           </p>
           <ul className="mt-3 list-inside list-disc space-y-1 pl-2">
-            <li>Editor en línea para crear diseños personalizados en prendas de vestir.</li>
-            <li>Catálogo de productos de streetwear (camisetas, hoodies y más).</li>
-            <li>Procesamiento de pedidos y entrega en territorio dominicano.</li>
+            <li>Explorar el catálogo de productos y sus variantes.</li>
+            <li>Realizar compras y gestionar tus pedidos.</li>
+            <li>Aplicar cupones y descuentos.</li>
+            <li>Hacer seguimiento de tus envíos.</li>
+            <li>Guardar productos en tu lista de deseos.</li>
+            <li>Administrar múltiples direcciones de entrega.</li>
           </ul>
         </Section>
 
-        <Section title="3. Cuentas de usuario">
+        <Section title="3. Requisitos de edad">
           <p>
-            Para realizar compras debes crear una cuenta proporcionando un correo electrónico válido
-            y una contraseña. Eres responsable de mantener la confidencialidad de tus credenciales y
-            de toda actividad que ocurra bajo tu cuenta. Debes notificarnos de inmediato ante
-            cualquier uso no autorizado.
-          </p>
-          <p className="mt-3">
-            Buxxep se reserva el derecho de suspender o cancelar cuentas que violen estos términos o
-            que sean utilizadas de forma fraudulenta.
+            Debes tener al menos 13 años para usar el Servicio. Los usuarios
+            mayores de 13 y menores de 18 años solo pueden utilizarlo bajo la
+            supervisión de un padre, madre o tutor legal, quien asume la
+            responsabilidad de las compras realizadas.
           </p>
         </Section>
 
-        <Section title="4. Pedidos y pagos">
+        <Section title="4. Registro y responsabilidad de la cuenta">
           <p>
-            Al realizar un pedido aceptas pagar el precio indicado más los costos de envío
-            aplicables. Los precios están expresados en pesos dominicanos (DOP) e incluyen el ITBIS
-            cuando corresponda.
+            Para comprar debes crear una cuenta con un correo electrónico válido
+            y una contraseña. Eres responsable de mantener la confidencialidad
+            de tus credenciales y de toda actividad realizada bajo tu cuenta.
+            Debes notificarnos de inmediato ante cualquier uso no autorizado.
           </p>
           <p className="mt-3">
-            Los pagos se procesan a través de <strong className="text-foreground">Azul</strong>,
-            procesador de pagos autorizado en la República Dominicana. Buxxep no almacena datos de
-            tarjetas bancarias.
-          </p>
-          <p className="mt-3">
-            Un pedido se considera confirmado únicamente cuando el pago es aprobado por la pasarela
-            de pago.
+            Puedes eliminar tu cuenta en cualquier momento; revisa el
+            procedimiento y el período de recuperación en{" "}
+            <Link
+              href="/eliminar-cuenta"
+              className="text-primary hover:underline underline-offset-2"
+            >
+              Eliminar Cuenta
+            </Link>
+            . BUXXEP puede suspender o cancelar cuentas que infrinjan estos
+            términos o se usen de forma fraudulenta.
           </p>
         </Section>
 
-        <Section title="5. Producción y tiempos de entrega">
+        <Section title="5. Proceso de compra y pagos">
           <p>
-            Los productos personalizados son fabricados bajo pedido. Los tiempos estimados de
-            entrega son:
+            Al realizar un pedido aceptas pagar el precio indicado más los
+            costos de envío aplicables. Un pedido constituye una oferta
+            vinculante de compra y se considera confirmado únicamente cuando el
+            pago es aprobado.
           </p>
-          <ul className="mt-3 list-inside list-disc space-y-1 pl-2">
-            <li>
-              <strong className="text-foreground">Producción:</strong> 3 a 7 días hábiles.
-            </li>
-            <li>
-              <strong className="text-foreground">Entrega en Santo Domingo:</strong> 1 a 2 días
-              hábiles.
-            </li>
-            <li>
-              <strong className="text-foreground">Entrega en el interior del país:</strong> 3 a 5
-              días hábiles.
-            </li>
-          </ul>
           <p className="mt-3">
-            Estos tiempos son estimados y pueden variar por causas ajenas a Buxxep.
+            Los pagos se procesan a través de{" "}
+            <strong className="text-foreground">
+              AZUL (Servicios Digitales Popular)
+            </strong>
+            , pasarela que cumple el estándar PCI-DSS.{" "}
+            <strong className="text-foreground">
+              BUXXEP no almacena datos de tarjetas (número ni CVV).
+            </strong>
+          </p>
+          <p className="mt-3">
+            Los precios y la disponibilidad de los productos están sujetos a
+            cambios sin previo aviso.
           </p>
         </Section>
 
-        <Section title="6. Propiedad intelectual">
+        <Section title="6. Envíos y entregas">
           <p>
-            Al subir o crear un diseño en nuestra plataforma, declaras que posees los derechos
-            necesarios sobre dicho contenido o tienes permiso para usarlo. Buxxep no se
-            responsabiliza por infracciones de derechos de autor cometidas por los usuarios.
-          </p>
-          <p className="mt-3">
-            La marca Buxxep, el logotipo, el software y los contenidos propios de la plataforma son
-            propiedad exclusiva de Buxxep y están protegidos por las leyes de propiedad intelectual
-            de la República Dominicana.
+            Los plazos de entrega que mostramos son estimados y pueden variar
+            por causas ajenas a BUXXEP. Cuando esté disponible, te
+            proporcionaremos un código de seguimiento para conocer el estado de
+            tu envío.
           </p>
         </Section>
 
-        <Section title="7. Conducta del usuario">
+        <Section title="7. Devoluciones, cancelaciones y reembolsos">
+          <p>
+            Las solicitudes de devolución, cancelación o reembolso se rigen por
+            nuestra{" "}
+            <Link
+              href="/devoluciones"
+              className="text-primary hover:underline underline-offset-2"
+            >
+              Política de Devoluciones
+            </Link>
+            . Los reembolsos aprobados se procesan por el mismo método de pago
+            utilizado en la compra.
+          </p>
+        </Section>
+
+        <Section title="8. Propiedad intelectual">
+          <p>
+            Al subir o crear contenido en la plataforma, declaras que posees los
+            derechos necesarios o cuentas con permiso para usarlo. La marca
+            BUXXEP, su logotipo, su software y los contenidos propios están
+            protegidos por las leyes de propiedad intelectual de la República
+            Dominicana y no pueden usarse sin autorización.
+          </p>
+        </Section>
+
+        <Section title="9. Conducta del usuario">
           <p>Queda prohibido utilizar el Servicio para:</p>
           <ul className="mt-3 list-inside list-disc space-y-1 pl-2">
             <li>Publicar contenido ofensivo, difamatorio, obsceno o ilegal.</li>
             <li>Infringir derechos de terceros.</li>
-            <li>Intentar acceder sin autorización a sistemas o cuentas ajenas.</li>
-            <li>Realizar actividades que puedan dañar, deshabilitar o sobrecargar el Servicio.</li>
+            <li>Acceder sin autorización a sistemas o cuentas ajenas.</li>
+            <li>
+              Realizar actividades que dañen, deshabiliten o sobrecarguen el
+              Servicio.
+            </li>
           </ul>
         </Section>
 
-        <Section title="8. Limitación de responsabilidad">
+        <Section title="10. Limitación de responsabilidad">
           <p>
-            En la medida máxima permitida por la ley dominicana, Buxxep no será responsable por
-            daños indirectos, incidentales, especiales o consecuentes derivados del uso o la
-            imposibilidad de uso del Servicio.
+            En la medida máxima permitida por la ley dominicana, BUXXEP no será
+            responsable por daños indirectos, incidentales, especiales o
+            consecuentes derivados del uso o la imposibilidad de uso del
+            Servicio.
           </p>
         </Section>
 
-        <Section title="9. Modificaciones">
+        <Section title="11. Modificaciones y ley aplicable">
           <p>
-            Nos reservamos el derecho de modificar estos términos en cualquier momento. Los cambios
-            entrarán en vigor al publicarse en esta página. El uso continuado del Servicio después
-            de publicados los cambios constituye la aceptación de los nuevos términos.
+            Podemos modificar estos términos en cualquier momento; los cambios
+            entran en vigor al publicarse en esta página y el uso continuado del
+            Servicio implica su aceptación. Estos términos se rigen por las
+            leyes de la República Dominicana, cuyos tribunales serán competentes
+            para resolver cualquier disputa.
           </p>
         </Section>
 
-        <Section title="10. Ley aplicable y jurisdicción">
+        <Section title="12. Contacto">
           <p>
-            Estos términos se rigen por las leyes de la República Dominicana. Cualquier disputa
-            derivada de su interpretación o ejecución será resuelta ante los tribunales competentes
-            de Santo Domingo, República Dominicana.
-          </p>
-        </Section>
-
-        <Section title="11. Contacto">
-          <p>
-            Para consultas sobre estos términos puedes contactarnos en Instagram{" "}
-            <a href="https://instagram.com/buxxep" className="text-primary hover:underline">
-              @buxxep
+            Correo:{" "}
+            <a
+              href={`mailto:${SUPPORT_EMAIL}`}
+              className="text-primary hover:underline underline-offset-2"
+            >
+              {SUPPORT_EMAIL}
+            </a>{" "}
+            · Teléfono:{" "}
+            <a
+              href={`tel:+1${SUPPORT_PHONE.replace(/-/g, "")}`}
+              className="text-primary hover:underline underline-offset-2"
+            >
+              {SUPPORT_PHONE}
             </a>
-            .
           </p>
         </Section>
-
       </div>
 
       <LegalNav current="terminos" />
@@ -165,7 +197,13 @@ export default function TerminosPage() {
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
   return (
     <section>
       <h2 className="mb-3 text-base font-semibold text-foreground">{title}</h2>
@@ -176,12 +214,13 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 function LegalNav({ current }: { current: string }) {
   const links = [
-    { href: "/terminos",     label: "Términos" },
-    { href: "/privacidad",   label: "Privacidad" },
-    { href: "/cookies",      label: "Cookies" },
+    { href: "/terminos", label: "Términos" },
+    { href: "/privacidad", label: "Privacidad" },
+    { href: "/cookies", label: "Cookies" },
     { href: "/devoluciones", label: "Devoluciones" },
-    { href: "/entrega",      label: "Entrega" },
-    { href: "/seguridad",    label: "Seguridad" },
+    { href: "/entrega", label: "Entrega" },
+    { href: "/seguridad", label: "Seguridad" },
+    { href: "/eliminar-cuenta", label: "Eliminar cuenta" },
   ];
   return (
     <div className="mt-12 border-t border-border pt-8">

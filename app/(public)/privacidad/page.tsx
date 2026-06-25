@@ -3,179 +3,279 @@ import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Política de Privacidad — Buxxep",
-  description: "Conoce cómo Buxxep recopila, usa y protege tu información personal.",
+  description:
+    "Conoce cómo Buxxep recopila, usa, comparte y protege tu información personal, y los derechos que tienes sobre tus datos.",
 };
 
-const LAST_UPDATED = "13 de mayo de 2026";
+const LAST_UPDATED = "24 de junio de 2026";
+const VERSION = "v1.0";
+const SUPPORT_EMAIL = "soportebuxxep@gmail.com";
+const SUPPORT_PHONE = "809-828-9979";
 
 export default function PrivacidadPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-12 sm:py-16">
       <div className="mb-10">
-        <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-primary">Legal</p>
+        <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-primary">
+          Legal
+        </p>
         <h1 className="mb-3 text-2xl font-bold text-foreground sm:text-3xl">
           Política de Privacidad
         </h1>
-        <p className="text-sm text-muted-foreground">Última actualización: {LAST_UPDATED}</p>
+        <p className="text-sm text-muted-foreground">
+          Versión {VERSION} · Última actualización: {LAST_UPDATED}
+        </p>
       </div>
 
       <div className="space-y-8 text-sm leading-relaxed text-muted-foreground">
-
-        <Section title="1. Responsable del tratamiento">
+        <section>
           <p>
-            Buxxep, con operaciones en la República Dominicana, es responsable del tratamiento de
-            los datos personales recopilados a través de{" "}
-            <a href="https://buxxep.com" className="text-primary hover:underline">
-              buxxep.com
-            </a>
-            . Para cualquier consulta relativa a tus datos, contáctanos en{" "}
-            <a href="https://instagram.com/buxxep" className="text-primary hover:underline">
-              @buxxep
+            BUXXEP es una plataforma de comercio electrónico operada desde la
+            República Dominicana y disponible en Latinoamérica, con aplicación
+            móvil (iOS y Android) y sitio web. Esta política explica qué datos
+            personales tratamos y con qué fines. Para cualquier consulta,
+            escríbenos a{" "}
+            <a
+              href={`mailto:${SUPPORT_EMAIL}`}
+              className="text-primary hover:underline underline-offset-2"
+            >
+              {SUPPORT_EMAIL}
+            </a>{" "}
+            o llámanos al{" "}
+            <a
+              href={`tel:+1${SUPPORT_PHONE.replace(/-/g, "")}`}
+              className="text-primary hover:underline underline-offset-2"
+            >
+              {SUPPORT_PHONE}
             </a>
             .
           </p>
-        </Section>
+        </section>
 
-        <Section title="2. Datos que recopilamos">
-          <p>Recopilamos los siguientes tipos de información:</p>
+        <Section title="1. Datos que recopilamos">
+          <p>
+            <strong className="text-foreground">
+              Datos que nos facilitas:
+            </strong>
+          </p>
           <ul className="mt-3 list-inside list-disc space-y-2 pl-2">
             <li>
-              <strong className="text-foreground">Datos de cuenta:</strong> nombre, dirección de
-              correo electrónico y contraseña (encriptada).
+              <strong className="text-foreground">Cuenta y perfil:</strong>{" "}
+              nombre de usuario, nombre completo, foto de avatar (almacenada en
+              Cloudflare R2), teléfono y rol. El correo electrónico y la
+              contraseña (con hashing) los gestiona Supabase Auth.
             </li>
             <li>
-              <strong className="text-foreground">Datos de pedido:</strong> dirección de entrega,
-              productos adquiridos, monto pagado y referencia de transacción.
+              <strong className="text-foreground">Direcciones:</strong> nombre,
+              apellido, dirección (línea 1 y 2), ciudad, estado o provincia,
+              código postal, país y teléfono.
             </li>
             <li>
-              <strong className="text-foreground">Diseños creados:</strong> imágenes y elementos
-              guardados en el editor de diseño.
+              <strong className="text-foreground">Pedidos:</strong> productos,
+              cantidades, variantes y tallas, precios, dirección de envío
+              (copia), correo de contacto, notas, código de seguimiento y fecha
+              estimada de entrega.
             </li>
             <li>
-              <strong className="text-foreground">Datos de navegación:</strong> dirección IP, tipo
-              de navegador, páginas visitadas y tiempo de sesión (mediante cookies de analítica).
+              <strong className="text-foreground">Pagos:</strong> referencias de
+              cada transacción (identificador, código de autorización, monto,
+              moneda y estado). Los pagos se procesan con la pasarela AZUL
+              (Servicios Digitales Popular), que cumple PCI-DSS.{" "}
+              <strong className="text-foreground">
+                BUXXEP no almacena el número de tarjeta ni el CVV.
+              </strong>
+            </li>
+            <li>
+              <strong className="text-foreground">Verificación (OTP):</strong>{" "}
+              correo, código de un solo uso y dirección IP del solicitante.
+            </li>
+            <li>
+              <strong className="text-foreground">
+                Actividad en la plataforma:
+              </strong>{" "}
+              reseñas, lista de deseos, carrito, notificaciones y tokens de
+              dispositivo para notificaciones push, y los diseños que creas.
             </li>
           </ul>
+          <p className="mt-4">
+            <strong className="text-foreground">
+              Datos que recopilamos automáticamente:
+            </strong>{" "}
+            tipo de dispositivo, sistema operativo, identificadores de
+            dispositivo, dirección IP, tipo de conexión, tokens de sesión e
+            historial de uso (pantallas, búsquedas y productos vistos).
+          </p>
         </Section>
 
-        <Section title="3. Finalidades del tratamiento">
+        <Section title="2. Finalidad del tratamiento">
           <p>Utilizamos tus datos para:</p>
           <ul className="mt-3 list-inside list-disc space-y-1 pl-2">
-            <li>Gestionar tu cuenta y autenticar tu identidad.</li>
-            <li>Procesar, confirmar y entregar tus pedidos.</li>
-            <li>Enviarte notificaciones transaccionales (confirmación de compra, OTP, etc.).</li>
-            <li>Mejorar el funcionamiento y la experiencia de la plataforma.</li>
-            <li>Cumplir con obligaciones legales y fiscales en la República Dominicana.</li>
+            <li>Crear y gestionar tu cuenta y autenticar tu identidad.</li>
+            <li>Procesar, cobrar y entregar tus pedidos.</li>
+            <li>Enviarte notificaciones sobre el estado de tus pedidos.</li>
+            <li>Gestionar cupones y descuentos.</li>
+            <li>Brindarte soporte y atención al cliente.</li>
+            <li>Garantizar la seguridad y prevenir el fraude.</li>
+            <li>Cumplir obligaciones legales, fiscales y contables.</li>
           </ul>
         </Section>
 
-        <Section title="4. Base jurídica">
+        <Section title="3. Compartición con terceros">
           <p>
-            El tratamiento de tus datos se fundamenta en la ejecución del contrato de compraventa,
-            tu consentimiento expreso al crear una cuenta, y el cumplimiento de obligaciones legales
-            aplicables en la República Dominicana (Ley No. 172-13 sobre protección de datos
-            personales).
-          </p>
-        </Section>
-
-        <Section title="5. Compartición de datos con terceros">
-          <p>
-            No vendemos ni alquilamos tu información personal. Compartimos datos únicamente con:
+            <strong className="text-foreground">
+              No vendemos tus datos personales.
+            </strong>{" "}
+            Los compartimos únicamente con los proveedores que hacen posible el
+            servicio (encargados del tratamiento):
           </p>
           <ul className="mt-3 list-inside list-disc space-y-2 pl-2">
             <li>
-              <strong className="text-foreground">Azul</strong> — procesador de pagos, para
-              gestionar transacciones con tarjeta.
+              <strong className="text-foreground">Supabase, Inc.</strong> — base
+              de datos PostgreSQL y autenticación (servidores en EE. UU.).
             </li>
             <li>
-              <strong className="text-foreground">Supabase</strong> — proveedor de base de datos y
-              autenticación (servidores en la nube).
+              <strong className="text-foreground">Cloudflare R2</strong> —
+              almacenamiento de imágenes y avatares.
             </li>
             <li>
-              <strong className="text-foreground">Cloudflare R2</strong> — almacenamiento de
-              imágenes y diseños.
+              <strong className="text-foreground">
+                AZUL (Servicios Digitales Popular)
+              </strong>{" "}
+              — procesamiento de pagos (cumple PCI-DSS).
             </li>
             <li>
-              <strong className="text-foreground">Resend</strong> — servicio de envío de correos
-              transaccionales.
+              <strong className="text-foreground">
+                Proveedores de logística y mensajería
+              </strong>{" "}
+              — para entregar tus pedidos.
             </li>
             <li>
-              Autoridades competentes cuando sea requerido por ley.
+              <strong className="text-foreground">
+                Proveedores de correo y notificaciones
+              </strong>{" "}
+              — para enviarte avisos transaccionales y push.
+            </li>
+            <li>Autoridades competentes cuando la ley lo exija.</li>
+          </ul>
+        </Section>
+
+        <Section title="4. Tus derechos">
+          <p>
+            Puedes ejercer tus derechos sobre tus datos personales
+            escribiéndonos a{" "}
+            <a
+              href={`mailto:${SUPPORT_EMAIL}`}
+              className="text-primary hover:underline underline-offset-2"
+            >
+              {SUPPORT_EMAIL}
+            </a>
+            :
+          </p>
+          <ul className="mt-3 list-inside list-disc space-y-1 pl-2">
+            <li>
+              <strong className="text-foreground">Acceso:</strong> conocer qué
+              datos tuyos tratamos.
+            </li>
+            <li>
+              <strong className="text-foreground">Rectificación:</strong>{" "}
+              corregir datos inexactos.
+            </li>
+            <li>
+              <strong className="text-foreground">Supresión:</strong> eliminar
+              tu cuenta y datos personales.
+            </li>
+            <li>
+              <strong className="text-foreground">Portabilidad:</strong> recibir
+              tus datos en un formato estructurado.
+            </li>
+            <li>
+              <strong className="text-foreground">Oposición:</strong> oponerte a
+              ciertos tratamientos.
+            </li>
+            <li>
+              <strong className="text-foreground">Limitación:</strong>{" "}
+              restringir el tratamiento en determinadas circunstancias.
             </li>
           </ul>
+        </Section>
+
+        <Section title="5. Retención y eliminación de datos">
+          <p>
+            Conservamos tus datos mientras tu cuenta esté activa. Cuando
+            solicitas eliminar tu cuenta, esta se marca como eliminada y se
+            inicia un período de recuperación de 30 días: si inicias sesión
+            nuevamente con el mismo correo dentro de ese plazo, tu cuenta se
+            restaura. Pasados los 30 días, tu cuenta y tus datos personales se
+            eliminan de forma permanente.
+          </p>
+          <p className="mt-3">
+            Conservamos los comprobantes de compras y pagos (pedidos y
+            transacciones) aun después de eliminar la cuenta, cuando lo exijan
+            obligaciones fiscales, contables o de prevención de fraude. Consulta
+            el procedimiento completo en{" "}
+            <Link
+              href="/eliminar-cuenta"
+              className="text-primary hover:underline underline-offset-2"
+            >
+              Eliminar Cuenta
+            </Link>
+            .
+          </p>
         </Section>
 
         <Section title="6. Transferencias internacionales">
           <p>
-            Algunos de nuestros proveedores (Supabase, Cloudflare, Resend) procesan datos fuera de
-            la República Dominicana. En todos los casos exigimos garantías contractuales equivalentes
-            al nivel de protección establecido por la legislación dominicana.
+            Algunos proveedores procesan datos en servidores ubicados fuera de
+            la República Dominicana, principalmente en los Estados Unidos (por
+            ejemplo, Supabase). En todos los casos exigimos garantías
+            contractuales adecuadas para proteger tu información.
           </p>
         </Section>
 
-        <Section title="7. Conservación de datos">
+        <Section title="7. Seguridad">
           <p>
-            Conservamos tus datos personales mientras tu cuenta esté activa o sea necesario para
-            cumplir las finalidades descritas. Los datos de transacciones se conservan por un período
-            mínimo de 5 años conforme a la legislación tributaria dominicana.
+            Aplicamos medidas técnicas y organizativas para proteger tus datos:
+            cifrado en tránsito (HTTPS/TLS), almacenamiento de contraseñas con
+            hashing, aislamiento de la información por usuario, control de
+            acceso por roles y la no conservación de números de tarjeta ni CVV.
           </p>
         </Section>
 
-        <Section title="8. Tus derechos">
+        <Section title="8. Privacidad de menores">
           <p>
-            Conforme a la Ley No. 172-13 y legislación aplicable, tienes derecho a:
+            BUXXEP no está dirigido a menores de 13 años y no recopilamos
+            conscientemente datos de menores de esa edad. Si detectamos que
+            hemos recopilado datos de un menor de 13 años, los eliminaremos.
           </p>
-          <ul className="mt-3 list-inside list-disc space-y-1 pl-2">
-            <li>
-              <strong className="text-foreground">Acceso:</strong> conocer qué datos tuyos
-              procesamos.
-            </li>
-            <li>
-              <strong className="text-foreground">Rectificación:</strong> corregir datos inexactos.
-            </li>
-            <li>
-              <strong className="text-foreground">Cancelación:</strong> solicitar la eliminación de
-              tus datos cuando ya no sean necesarios.
-            </li>
-            <li>
-              <strong className="text-foreground">Oposición:</strong> oponerte al tratamiento en
-              determinadas circunstancias.
-            </li>
-          </ul>
-          <p className="mt-3">
-            Para ejercer estos derechos contáctanos en{" "}
-            <a href="https://instagram.com/buxxep" className="text-primary hover:underline">
-              @buxxep
+        </Section>
+
+        <Section title="9. Cambios a esta política">
+          <p>
+            Podemos actualizar esta Política de Privacidad. Publicaremos la
+            versión vigente en esta página y, ante cambios significativos, te lo
+            notificaremos por los medios disponibles. Esta política se rige por
+            las leyes de la República Dominicana.
+          </p>
+        </Section>
+
+        <Section title="Contacto">
+          <p>
+            Correo:{" "}
+            <a
+              href={`mailto:${SUPPORT_EMAIL}`}
+              className="text-primary hover:underline underline-offset-2"
+            >
+              {SUPPORT_EMAIL}
+            </a>{" "}
+            · Teléfono:{" "}
+            <a
+              href={`tel:+1${SUPPORT_PHONE.replace(/-/g, "")}`}
+              className="text-primary hover:underline underline-offset-2"
+            >
+              {SUPPORT_PHONE}
             </a>
-            .
           </p>
         </Section>
-
-        <Section title="9. Seguridad">
-          <p>
-            Implementamos medidas técnicas y organizativas para proteger tus datos: cifrado en
-            tránsito (TLS), almacenamiento seguro de contraseñas (hash), y acceso restringido a
-            bases de datos mediante roles y políticas de seguridad a nivel de fila (RLS) de
-            Supabase.
-          </p>
-        </Section>
-
-        <Section title="10. Menores de edad">
-          <p>
-            El Servicio no está dirigido a menores de 18 años. No recopilamos conscientemente datos
-            de menores. Si detectamos que hemos recopilado datos de un menor sin el consentimiento
-            paterno, los eliminaremos de inmediato.
-          </p>
-        </Section>
-
-        <Section title="11. Cambios en esta política">
-          <p>
-            Podemos actualizar esta Política de Privacidad periódicamente. Te notificaremos de
-            cambios significativos por correo electrónico o mediante un aviso destacado en la
-            plataforma.
-          </p>
-        </Section>
-
       </div>
 
       <LegalNav current="privacidad" />
@@ -183,7 +283,13 @@ export default function PrivacidadPage() {
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
   return (
     <section>
       <h2 className="mb-3 text-base font-semibold text-foreground">{title}</h2>
@@ -194,12 +300,13 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 function LegalNav({ current }: { current: string }) {
   const links = [
-    { href: "/terminos",     label: "Términos" },
-    { href: "/privacidad",   label: "Privacidad" },
-    { href: "/cookies",      label: "Cookies" },
+    { href: "/terminos", label: "Términos" },
+    { href: "/privacidad", label: "Privacidad" },
+    { href: "/cookies", label: "Cookies" },
     { href: "/devoluciones", label: "Devoluciones" },
-    { href: "/entrega",      label: "Entrega" },
-    { href: "/seguridad",    label: "Seguridad" },
+    { href: "/entrega", label: "Entrega" },
+    { href: "/seguridad", label: "Seguridad" },
+    { href: "/eliminar-cuenta", label: "Eliminar cuenta" },
   ];
   return (
     <div className="mt-12 border-t border-border pt-8">
