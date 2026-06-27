@@ -201,9 +201,14 @@ export async function getCart(): Promise<CartLine[]> {
 /** Líneas guardadas para después. */
 export async function getSavedForLater(): Promise<CartLine[]> {
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return [];
   const { data, error } = await supabase
     .from("cart_items")
     .select(CART_SELECT)
+    .eq("user_id", user.id)
     .eq("saved_for_later", true)
     .order("created_at", { ascending: true });
   if (error) return [];
@@ -215,9 +220,14 @@ export async function getSavedForLater(): Promise<CartLine[]> {
 /** Número total de unidades en el carrito activo. */
 export async function getCartCount(): Promise<number> {
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return 0;
   const { data, error } = await supabase
     .from("cart_items")
     .select("quantity")
+    .eq("user_id", user.id)
     .eq("saved_for_later", false);
   if (error) return 0;
   return (data ?? []).reduce(

@@ -496,15 +496,20 @@ async function fetchOrdersPedidos(
   return ordersData.map((r) => rowToPedido(r, lineItemsByOrder[r.id] ?? []));
 }
 
-/** Orders for current user (RLS). */
+/** Orders for current user. Filtra por user_id además de RLS (defensa en profundidad). */
 export async function getOrders(): Promise<Pedido[]> {
   return withNetworkFallback(async () => {
     const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return [];
     const { data, error } = await supabase
       .from("orders")
       .select(
         "id, user_id, status, payment_status, shipping_address, contact_email, total_cents, created_at",
       )
+      .eq("user_id", user.id)
       .order("created_at", { ascending: false });
     if (error) throw toError(error);
     return fetchOrdersPedidos((data ?? []) as unknown as OrderRow[], supabase);
