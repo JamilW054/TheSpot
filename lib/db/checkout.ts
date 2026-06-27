@@ -1,6 +1,8 @@
 import { getCart } from "@/lib/db/cart";
 import { incrementCouponUsage, validateCoupon } from "@/lib/db/coupons";
 import type { ShippingAddress } from "@/lib/db/orders";
+import { getOrderNotificationEmail } from "@/lib/db/settings";
+import { sendNewOrderAdminEmail } from "@/lib/emails";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 
 /**
@@ -211,6 +213,41 @@ export async function checkoutFromCart(
     .delete()
     .eq("user_id", user.id)
     .eq("saved_for_later", false);
+
+  // 9. Aviso por correo al admin (best-effort: no revierte el pedido si falla).
+  try {
+    const adminEmail = await getOrderNotificationEmail();
+    const addressParts = [
+      shippingAddress.address_line1,
+      shippingAddress.address_line2,
+      shippingAddress.city,
+      shippingAddress.state,
+      shippingAddress.postal_code,
+      shippingAddress.country_code,
+    ].filter((p): p is string => Boolean(p?.trim()));
+    await sendNewOrderAdminEmail(adminEmail, {
+      orderNumber: orderId.slice(0, 8).toUpperCase(),
+      orderId,
+      customerName: shippingAddress.full_name || "Cliente",
+      customerEmail: shippingAddress.email ?? input.shipping.email.trim(),
+      customerPhone: shippingAddress.phone,
+      shippingAddress: addressParts.length ? addressParts.join(", ") : null,
+      items: cart.map((l) => ({
+        name: l.productName,
+        quantity: l.quantity,
+        size: l.size,
+        color: l.color,
+        unitPrice: l.unitPriceCents,
+      })),
+      subtotal: subtotalCents,
+      shipping: shippingCents,
+      discount: discountCents,
+      total: totalCents,
+      currency: "DOP",
+    });
+  } catch {
+    // Silencioso: el aviso al admin nunca debe tumbar el checkout del cliente.
+  }
 
   return {
     orderId,
