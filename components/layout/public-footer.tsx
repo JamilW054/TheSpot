@@ -21,6 +21,10 @@ const PAYMENT_METHODS = [
   { id: "jcb",        label: "JCB",              src: `${CDN_FLAT}/jcb.svg` },
   { id: "apple-pay",  label: "Apple Pay",        src: `${CDN_PAYREXX}/card_apple-pay.svg` },
   { id: "google-pay", label: "Google Pay",       src: `${CDN_PAYREXX}/card_google-pay.svg` },
+  { id: "visa-secure",  label: "Visa Secure",           src: "/landing/cards-logos/visa-secure_blu_2021.png" },
+  { id: "mc-id-check",  label: "Mastercard ID Check",   src: "/landing/cards-logos/mastercardidentitycheck.png" },
+  { id: "visa-logo",    label: "Visa",                  src: "/landing/cards-logos/Visa-Logo-2005.jpg" },
+  { id: "mastercard-logo", label: "Mastercard",         src: "/landing/cards-logos/mastercard-logo.jpg" },
 ] as const;
 
 // ---------------------------------------------------------------------------
@@ -166,22 +170,25 @@ export function PublicFooter() {
             </div>
 
             <div className="flex flex-wrap gap-2">
-              {PAYMENT_METHODS.map(({ id, label, src }) => (
-                <div
-                  key={id}
-                  className="w-[54px] h-[34px] rounded-md overflow-hidden shadow-sm opacity-90 hover:opacity-100 transition-opacity"
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={src}
-                    alt={label}
-                    title={label}
-                    className="w-full h-full object-cover"
-                    loading="lazy"
-                    decoding="async"
-                  />
-                </div>
-              ))}
+              {PAYMENT_METHODS.map(({ id, label, src }) => {
+                const isBadge = ["visa-secure", "mc-id-check", "visa-logo", "mastercard-logo"].includes(id);
+                return (
+                  <div
+                    key={id}
+                    className={`w-[54px] h-[34px] rounded-md overflow-hidden shadow-sm opacity-90 hover:opacity-100 transition-opacity ${isBadge ? "bg-white p-0.5" : ""}`}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={src}
+                      alt={label}
+                      title={label}
+                      className={`w-full h-full ${isBadge ? "object-contain" : "object-cover"}`}
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  </div>
+                );
+              })}
             </div>
           </div>
 
