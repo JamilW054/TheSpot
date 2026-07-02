@@ -1,5 +1,6 @@
 import { formatDOPFromCents } from "@/lib/format-currency";
 import { formatDateTime } from "@/lib/format-date";
+import { isSuccessfulPaymentStatus } from "@/lib/payments/status";
 import type {
   OrderPaymentStatus,
   Pedido,
@@ -63,7 +64,7 @@ export const statusMap: Record<string, PedidoEstado> = {
 export function dbToAppPaymentStatus(
   value: string | null | undefined,
 ): OrderPaymentStatus {
-  if (value === "paid") return "paid";
+  if (isSuccessfulPaymentStatus(value)) return "paid";
   if (value === "failed" || value === "declined") return "declined";
   return "pending";
 }
@@ -101,8 +102,16 @@ export interface OrderItemRow {
   design_id: string | null;
   product_snapshot?: OrderItemSnapshot | null;
   designs?:
-    | { name: string | null; thumbnail_url: string | null; preview_url: string | null }
-    | { name: string | null; thumbnail_url: string | null; preview_url: string | null }[]
+    | {
+        name: string | null;
+        thumbnail_url: string | null;
+        preview_url: string | null;
+      }
+    | {
+        name: string | null;
+        thumbnail_url: string | null;
+        preview_url: string | null;
+      }[]
     | null;
 }
 
@@ -123,7 +132,10 @@ export function rowToLineItem(row: OrderItemRow): PedidoLineItem {
   };
 }
 
-export function rowToPedido(row: OrderRow, lineItems: PedidoLineItem[]): Pedido {
+export function rowToPedido(
+  row: OrderRow,
+  lineItems: PedidoLineItem[],
+): Pedido {
   return {
     id: row.id,
     cliente: customerNameFromOrder(row.shipping_address, row.contact_email),
@@ -133,7 +145,13 @@ export function rowToPedido(row: OrderRow, lineItems: PedidoLineItem[]): Pedido 
     totalCents: row.total_cents,
     estado: statusMap[row.status] ?? "pendiente",
     paymentStatus: dbToAppPaymentStatus(row.payment_status),
-    createdAt: formatDateTime(row.created_at, { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }),
+    createdAt: formatDateTime(row.created_at, {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    }),
     shipping: shippingFromRow(row.shipping_address, row.contact_email),
   };
 }

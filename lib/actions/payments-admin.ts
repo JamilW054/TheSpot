@@ -2,8 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth/require-admin";
-import { sendPaymentLinkEmail } from "@/lib/emails";
+import { markLinkedOrderAsPaid, onOrderPaymentSucceeded } from "@/lib/db";
+import { sendPaymentConfirmedEmail, sendPaymentLinkEmail } from "@/lib/emails";
 import { formatDOPFromCents } from "@/lib/format-currency";
+import { formatDateTime } from "@/lib/format-date";
 import { type PaymentStatus, paymentStatusMeta } from "@/lib/payments/status";
 import { createServiceClient } from "@/lib/supabase/server";
 
@@ -49,6 +51,37 @@ async function getCustomer(
     user?.email?.split("@")[0] ||
     "Cliente";
   return { email: user?.email ?? null, name };
+}
+
+/** Envía un correo transaccional (no bloqueante) y registra el intento en `email_logs`. */
+async function sendAndLogEmail(
+  supabase: ReturnType<typeof createServiceClient>,
+  params: {
+    requestId: string;
+    email: string;
+    emailType: string;
+    send: () => Promise<unknown>;
+  },
+): Promise<void> {
+  let deliveryStatus = "sent";
+  let providerResponse: unknown = null;
+  try {
+    const res = await params.send();
+    providerResponse = res;
+    if ((res as { error?: unknown } | undefined)?.error)
+      deliveryStatus = "failed";
+  } catch (e) {
+    deliveryStatus = "failed";
+    providerResponse = { message: e instanceof Error ? e.message : String(e) };
+  }
+  await supabase.from("email_logs").insert({
+    payment_request_id: params.requestId,
+    recipient_email: params.email,
+    email_type: params.emailType,
+    delivery_status: deliveryStatus,
+    provider_response: providerResponse,
+    sent_at: new Date().toISOString(),
+  });
 }
 
 function revalidatePaymentPaths() {
@@ -134,34 +167,21 @@ export async function adminSendPaymentLink(
     // 4. Correo + registro de entrega (no bloqueante).
     const { email, name } = await getCustomer(supabase, userId);
     if (email) {
-      let deliveryStatus = "sent";
-      let providerResponse: unknown = null;
-      try {
-        const res = await sendPaymentLinkEmail(email, {
-          name,
-          referenceNumber: reference,
-          amountCents,
-          currency: "DOP",
-          description,
-          statusLabel: "Enlace enviado",
-          methodLabel: method.name as string,
-          paymentUrl,
-        });
-        providerResponse = res;
-        if ((res as { error?: unknown })?.error) deliveryStatus = "failed";
-      } catch (e) {
-        deliveryStatus = "failed";
-        providerResponse = {
-          message: e instanceof Error ? e.message : String(e),
-        };
-      }
-      await supabase.from("email_logs").insert({
-        payment_request_id: requestId,
-        recipient_email: email,
-        email_type: "payment_link",
-        delivery_status: deliveryStatus,
-        provider_response: providerResponse,
-        sent_at: new Date().toISOString(),
+      await sendAndLogEmail(supabase, {
+        requestId,
+        email,
+        emailType: "payment_link",
+        send: () =>
+          sendPaymentLinkEmail(email, {
+            name,
+            referenceNumber: reference,
+            amountCents,
+            currency: "DOP",
+            description,
+            statusLabel: "Enlace enviado",
+            methodLabel: method.name as string,
+            paymentUrl,
+          }),
       });
     }
 
@@ -187,18 +207,21 @@ export async function adminUpdatePaymentStatus(
 
     const { data: current } = await supabase
       .from("payment_requests")
-      .select("id, user_id, status, reference_number, amount_cents")
+      .select(
+        "id, user_id, status, reference_number, amount_cents, currency, description, order_id, payment_methods(name)",
+      )
       .eq("id", requestId)
       .maybeSingle();
     if (!current) throw new Error("Solicitud no encontrada.");
     const previousStatus = current.status as PaymentStatus;
     if (previousStatus === newStatus) return ok(requestId);
 
+    const paidAtIso = new Date().toISOString();
     const patch: Record<string, unknown> = {
       status: newStatus,
       updated_at: new Date().toISOString(),
     };
-    if (newStatus === "paid") patch.paid_at = new Date().toISOString();
+    if (newStatus === "paid") patch.paid_at = paidAtIso;
     if (newStatus === "link_sent") patch.sent_at = new Date().toISOString();
 
     const { error: updErr } = await supabase
@@ -225,6 +248,57 @@ export async function adminUpdatePaymentStatus(
       link_path: "/cuenta/pagos",
       created_by: admin.userId,
     });
+
+    if (newStatus === "paid") {
+      const orderId = current.order_id as string | null;
+      if (orderId) {
+        // Enlaza el pago confirmado con su pedido: así cuenta para el sorteo
+        // y dispara el recibo de compra (con productos), igual que el
+        // retorno de Azul.
+        const transitioned = await markLinkedOrderAsPaid(orderId);
+        if (transitioned) {
+          await onOrderPaymentSucceeded({
+            orderId,
+            paymentMethodLabel: "Payment Link",
+            paidAtIso,
+          });
+        }
+      } else {
+        // Solicitud manual sin pedido asociado: no hay productos que listar
+        // ni compra que contar para el sorteo, pero el cliente sí debe
+        // recibir una confirmación de que su pago quedó registrado.
+        const { email, name } = await getCustomer(
+          supabase,
+          current.user_id as string,
+        );
+        if (email) {
+          const method = (current.payment_methods ?? {}) as {
+            name?: string;
+          };
+          await sendAndLogEmail(supabase, {
+            requestId,
+            email,
+            emailType: "payment_confirmed",
+            send: () =>
+              sendPaymentConfirmedEmail(email, {
+                name,
+                referenceNumber: current.reference_number as string,
+                amountCents: current.amount_cents as number,
+                currency: (current.currency as string) ?? "DOP",
+                description: (current.description as string | null) ?? null,
+                methodLabel: method.name ?? "Payment Link",
+                paidAtLabel: formatDateTime(paidAtIso, {
+                  day: "2-digit",
+                  month: "long",
+                  year: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                }),
+              }),
+          });
+        }
+      }
+    }
 
     revalidatePaymentPaths();
     return ok(requestId);
@@ -303,34 +377,21 @@ export async function adminResendPaymentLink(
       current.user_id as string,
     );
     if (email) {
-      let deliveryStatus = "sent";
-      let providerResponse: unknown = null;
-      try {
-        const res = await sendPaymentLinkEmail(email, {
-          name,
-          referenceNumber: reference,
-          amountCents,
-          currency: (current.currency as string) ?? "DOP",
-          description: (current.description as string | null) ?? null,
-          statusLabel: "Enlace enviado",
-          methodLabel: method.name ?? "Payment Link",
-          paymentUrl: url,
-        });
-        providerResponse = res;
-        if ((res as { error?: unknown })?.error) deliveryStatus = "failed";
-      } catch (e) {
-        deliveryStatus = "failed";
-        providerResponse = {
-          message: e instanceof Error ? e.message : String(e),
-        };
-      }
-      await supabase.from("email_logs").insert({
-        payment_request_id: requestId,
-        recipient_email: email,
-        email_type: "payment_link",
-        delivery_status: deliveryStatus,
-        provider_response: providerResponse,
-        sent_at: new Date().toISOString(),
+      await sendAndLogEmail(supabase, {
+        requestId,
+        email,
+        emailType: "payment_link",
+        send: () =>
+          sendPaymentLinkEmail(email, {
+            name,
+            referenceNumber: reference,
+            amountCents,
+            currency: (current.currency as string) ?? "DOP",
+            description: (current.description as string | null) ?? null,
+            statusLabel: "Enlace enviado",
+            methodLabel: method.name ?? "Payment Link",
+            paymentUrl: url,
+          }),
       });
     }
 

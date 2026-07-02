@@ -1,7 +1,9 @@
-import { unstable_cache } from "next/cache";
+import { revalidateTag, unstable_cache } from "next/cache";
+import { SUCCESSFUL_PAYMENT_STATUSES } from "@/lib/payments/status";
 import { createServiceClient } from "@/lib/supabase/server";
 
 const DEFAULT_GOAL = 20000;
+const GIVEAWAY_STATS_CACHE_TAG = "giveaway-stats";
 
 /** Meta del sorteo (compras pagadas). Env opcional: `GIVEAWAY_GOAL_PURCHASES` o `NEXT_PUBLIC_GIVEAWAY_GOAL_PURCHASES`. */
 export function getGiveawayGoalPurchases(): number {
@@ -22,7 +24,7 @@ async function fetchPaidPurchaseCountUncached(): Promise<number> {
   const paidRes = await supabase
     .from("orders")
     .select("*", { count: "exact", head: true })
-    .eq("payment_status", "paid")
+    .in("payment_status", SUCCESSFUL_PAYMENT_STATUSES)
     .neq("status", "cancelled");
 
   if (!paidRes.error && typeof paidRes.count === "number") {
@@ -43,11 +45,20 @@ export async function getGiveawayPaidPurchaseCount(): Promise<number> {
     return await unstable_cache(
       fetchPaidPurchaseCountUncached,
       ["giveaway-paid-purchase-count"],
-      { revalidate: 60 },
+      { revalidate: 60, tags: [GIVEAWAY_STATS_CACHE_TAG] },
     )();
   } catch {
     return 0;
   }
+}
+
+/**
+ * Invalida el caché de 60s del contador del sorteo para que la siguiente
+ * carga refleje al instante una compra recién confirmada (Azul o Payment
+ * Link). Llamar únicamente desde un Server Action o Route Handler.
+ */
+export function refreshGiveawayStats(): void {
+  revalidateTag(GIVEAWAY_STATS_CACHE_TAG, { expire: 0 });
 }
 
 /** Enteros para copy RD (p. ej. 20.000). */

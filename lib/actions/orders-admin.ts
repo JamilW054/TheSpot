@@ -2,6 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth/require-admin";
+import { markLinkedOrderAsPaid, onOrderPaymentSucceeded } from "@/lib/db";
+import { paymentTypeMeta } from "@/lib/payments/status";
 import { createServiceClient } from "@/lib/supabase/server";
 
 export type OrderFulfillmentStatus =
@@ -39,11 +41,35 @@ export async function adminSetOrdersStatus(
   if (unique.length === 0) return;
   const supabase = createServiceClient();
   const patch = mapFulfillment(status);
-  const { error } = await supabase
-    .from("orders")
-    .update({ ...patch, updated_at: new Date().toISOString() })
-    .in("id", unique);
-  if (error) throw new Error(error.message);
+
+  if (status === "paid") {
+    // Transición atómica por pedido — mismo mecanismo que usan el retorno de
+    // Azul y el panel de Payment Link (`markLinkedOrderAsPaid`). Si el admin
+    // repite la acción sobre un pedido que ya estaba pagado, esta llamada no
+    // hace nada: no se recuenta para el sorteo ni se reenvía el recibo.
+    for (const orderId of unique) {
+      if (await markLinkedOrderAsPaid(orderId)) {
+        const { data: order } = await supabase
+          .from("orders")
+          .select("payment_type")
+          .eq("id", orderId)
+          .maybeSingle();
+        await onOrderPaymentSucceeded({
+          orderId,
+          paymentMethodLabel: paymentTypeMeta(
+            (order?.payment_type as string | null) ?? null,
+          ).label,
+          paidAtIso: new Date().toISOString(),
+        });
+      }
+    }
+  } else {
+    const { error } = await supabase
+      .from("orders")
+      .update({ ...patch, updated_at: new Date().toISOString() })
+      .in("id", unique);
+    if (error) throw new Error(error.message);
+  }
 
   // Registrar el cambio en el historial de cada pedido.
   await supabase.from("order_status_history").insert(

@@ -1,11 +1,18 @@
 import { NextResponse } from "next/server";
-import { sendOtpEmail, sendBienvenidaEmail, sendCompraEmail } from "@/lib/emails";
+import {
+  sendBienvenidaEmail,
+  sendCompraEmail,
+  sendOtpEmail,
+} from "@/lib/emails";
 
 const TEST_TO = "lacretalasemilla@gmail.com";
 
 export async function GET() {
   if (process.env.NODE_ENV === "production") {
-    return NextResponse.json({ error: "Solo disponible en desarrollo." }, { status: 403 });
+    return NextResponse.json(
+      { error: "Solo disponible en desarrollo." },
+      { status: 403 },
+    );
   }
 
   const results: Record<string, unknown> = {};
@@ -40,13 +47,27 @@ export async function GET() {
       orderId: "ord_01jwtest000000000",
       orderNumber: "BXP-2026-001",
       items: [
-        { name: "Hoodie Buxxep Classic", quantity: 1, size: "L", unitPrice: 250000 },
-        { name: "Camiseta Drop Signature", quantity: 2, size: "M", unitPrice: 120000 },
+        {
+          name: "Hoodie Buxxep Classic",
+          quantity: 1,
+          size: "L",
+          unitPrice: 250000,
+        },
+        {
+          name: "Camiseta Drop Signature",
+          quantity: 2,
+          size: "M",
+          unitPrice: 120000,
+        },
       ],
       subtotal: 490000,
       shipping: 0,
+      tax: 0,
       total: 490000,
       currency: "DOP",
+      purchaseDate: "01 de julio de 2026, 03:45 p. m.",
+      paymentMethodLabel: "Pago con Azul",
+      paymentStatusLabel: "Pagado",
     });
     results.compra = { ok: true, id: r.data?.id };
   } catch (e) {

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { useAdminFeedback } from "@/contexts/admin-feedback-context";
 
 interface TiendaForm {
   nombre: string;
@@ -39,13 +40,14 @@ const LOGISTICA_INITIAL: LogisticaForm = {
 };
 
 export function MockConfigForm() {
+  const { showSuccess } = useAdminFeedback();
   const [tienda, setTienda] = useState<TiendaForm>(TIENDA_INITIAL);
   const [produccion, setProduccion] =
     useState<ProduccionForm>(PRODUCCION_INITIAL);
   const [logistica, setLogistica] = useState<LogisticaForm>(LOGISTICA_INITIAL);
 
   const handleGuardar = () => {
-    alert("Guardado (mock)");
+    showSuccess("Guardado (mock)");
   };
 
   return (

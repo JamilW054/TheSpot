@@ -6,6 +6,7 @@ export interface OrderItem {
   size?: string;
   color?: string;
   unitPrice: number;
+  imageUrl?: string | null;
 }
 
 export interface CompraEmailData {
@@ -15,16 +16,32 @@ export interface CompraEmailData {
   items: OrderItem[];
   subtotal: number;
   shipping: number;
+  /** Impuestos en centavos. Se omite la fila si es 0/undefined. */
+  tax?: number;
   total: number;
   currency?: string;
+  /** Fecha de compra ya formateada (es-DO). */
+  purchaseDate?: string;
+  /** Método de pago usado ("Payment Link" | "Pago con Azul"). */
+  paymentMethodLabel?: string;
+  /** Etiqueta del estado del pago (p.ej. "Pagado"). */
+  paymentStatusLabel?: string;
 }
 
-function formatPrice(cents: number, currency = "DOP"): string {
+export function formatPrice(cents: number, currency = "DOP"): string {
   return new Intl.NumberFormat("es-DO", {
     style: "currency",
     currency,
     minimumFractionDigits: 2,
   }).format(cents / 100);
+}
+
+/** Fila de detalle (etiqueta a la izquierda, valor a la derecha). Mismo patrón que payment-link.ts / payment-confirmed.ts. */
+function detailRow(label: string, value: string, accent = false): string {
+  return `<tr>
+    <td style="padding:11px 0;border-bottom:1px solid #edf1f7;font-size:13px;color:#7a8899;">${label}</td>
+    <td style="padding:11px 0;border-bottom:1px solid #edf1f7;text-align:right;font-size:13px;font-weight:600;color:${accent ? "#1e90ff" : "#0d1b2e"};">${value}</td>
+  </tr>`;
 }
 
 export function compraEmailHtml(data: CompraEmailData): string {
@@ -35,8 +52,12 @@ export function compraEmailHtml(data: CompraEmailData): string {
     items,
     subtotal,
     shipping,
+    tax = 0,
     total,
     currency = "DOP",
+    purchaseDate,
+    paymentMethodLabel,
+    paymentStatusLabel,
   } = data;
   const fmt = (c: number) => formatPrice(c, currency);
 
@@ -44,16 +65,23 @@ export function compraEmailHtml(data: CompraEmailData): string {
     .map(
       (item) => `
         <tr>
-          <td style="padding:14px 0;border-bottom:1px solid #1a1a1d;vertical-align:top;">
-            <div style="font-size:13px;font-weight:700;color:#f4f4f5;text-transform:uppercase;letter-spacing:0.5px;">${item.name}</div>
-            ${item.size ? `<div style="margin-top:3px;font-size:11px;font-weight:600;color:#3cc8f7;letter-spacing:2px;text-transform:uppercase;">TALLA ${item.size}</div>` : ""}
-            ${item.color ? `<div style="margin-top:3px;font-size:11px;font-weight:600;color:#3cc8f7;letter-spacing:2px;text-transform:uppercase;">COLOR ${item.color}</div>` : ""}
+          <td style="padding:16px 0;border-bottom:1px solid #edf1f7;vertical-align:top;width:56px;">
+            ${
+              item.imageUrl
+                ? `<img src="${item.imageUrl}" alt="" width="56" height="56" style="display:block;width:56px;height:56px;border-radius:10px;object-fit:cover;border:1px solid #e4eaf2;" />`
+                : `<div style="width:56px;height:56px;border-radius:10px;background:#f7f9fc;border:1px solid #e4eaf2;"></div>`
+            }
           </td>
-          <td style="padding:14px 8px;border-bottom:1px solid #1a1a1d;text-align:center;vertical-align:top;">
-            <span style="display:inline-block;background:#1a1a1d;border-radius:6px;padding:3px 10px;font-size:12px;font-weight:700;color:#a1a1aa;">×${item.quantity}</span>
+          <td style="padding:16px 0 16px 14px;border-bottom:1px solid #edf1f7;vertical-align:top;">
+            <div style="font-size:13px;font-weight:700;color:#0d1b2e;">${item.name}</div>
+            ${item.size ? `<div style="margin-top:3px;font-size:11px;font-weight:600;color:#1e90ff;letter-spacing:0.5px;text-transform:uppercase;">Talla ${item.size}</div>` : ""}
+            ${item.color ? `<div style="margin-top:3px;font-size:11px;font-weight:600;color:#1e90ff;letter-spacing:0.5px;text-transform:uppercase;">Color ${item.color}</div>` : ""}
           </td>
-          <td style="padding:14px 0;border-bottom:1px solid #1a1a1d;text-align:right;vertical-align:top;">
-            <span style="font-size:14px;font-weight:700;color:#f4f4f5;">${fmt(item.unitPrice * item.quantity)}</span>
+          <td style="padding:16px 0;border-bottom:1px solid #edf1f7;text-align:center;vertical-align:top;white-space:nowrap;">
+            <span style="display:inline-block;background:#f7f9fc;border:1px solid #e4eaf2;border-radius:6px;padding:3px 10px;font-size:12px;font-weight:700;color:#7a8899;">×${item.quantity}</span>
+          </td>
+          <td style="padding:16px 0;border-bottom:1px solid #edf1f7;text-align:right;vertical-align:top;white-space:nowrap;">
+            <span style="font-size:14px;font-weight:700;color:#0d1b2e;">${fmt(item.unitPrice * item.quantity)}</span>
           </td>
         </tr>`,
     )
@@ -62,157 +90,280 @@ export function compraEmailHtml(data: CompraEmailData): string {
   return `<!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="color-scheme" content="light only" />
+  <meta name="supported-color-schemes" content="light only" />
   <title>Pedido confirmado — Buxxep</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap');
+
+    :root { color-scheme: light only; supported-color-schemes: light only; }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background-color: #e8edf5;
+      color-scheme: light only;
+      font-family: 'Outfit', 'Segoe UI', Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .email-wrapper { width: 100%; background-color: #e8edf5; padding: 40px 16px; }
+
+    .email-container {
+      max-width: 580px;
+      margin: 0 auto;
+      background-color: #ffffff;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 8px 40px rgba(0, 100, 220, 0.10);
+    }
+
+    .email-header {
+      background: linear-gradient(145deg, #1565c0 0%, #1e90ff 60%, #42a8ff 100%);
+      padding: 40px 32px 36px;
+      text-align: center;
+    }
+
+    .email-header img.logo {
+      height: 54px;
+      width: auto;
+      display: inline-block;
+      filter: drop-shadow(0 3px 14px rgba(0,0,0,0.30));
+    }
+
+    .email-body { padding: 48px 44px 40px; text-align: center; }
+
+    .email-body h1 {
+      color: #0d1b2e;
+      font-size: 26px;
+      font-weight: 700;
+      margin: 0 0 10px;
+      letter-spacing: -0.3px;
+      line-height: 1.2;
+    }
+
+    .email-body .subtitle {
+      color: #7a8899;
+      font-size: 14px;
+      margin: 0 0 32px;
+      line-height: 1.6;
+    }
+
+    .message-box {
+      background-color: #f7f9fc;
+      border-radius: 14px;
+      padding: 24px 28px;
+      margin-bottom: 24px;
+      text-align: left;
+      border: 1px solid #e4eaf2;
+    }
+
+    .message-box .greeting { color: #0d1b2e; font-size: 15px; font-weight: 600; margin-bottom: 10px; }
+    .message-box .message-text { color: #5a6a7d; font-size: 14px; line-height: 1.75; }
+    .message-box .message-text strong { color: #1e90ff; font-weight: 600; }
+
+    .details-table { width: 100%; border-collapse: collapse; margin-bottom: 28px; }
+
+    .section-label {
+      text-align: left;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #1e90ff;
+      margin-bottom: 12px;
+    }
+
+    .items-table { width: 100%; border-collapse: collapse; margin-bottom: 24px; text-align: left; }
+
+    .totals-box {
+      background-color: #f7f9fc;
+      border: 1px solid #e4eaf2;
+      border-radius: 14px;
+      margin-bottom: 28px;
+      text-align: left;
+    }
+
+    .cta-button {
+      display: inline-block;
+      background-color: #1e90ff;
+      color: #ffffff !important;
+      text-decoration: none;
+      padding: 15px 44px;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      font-family: 'Outfit', 'Segoe UI', Arial, sans-serif;
+    }
+
+    .expire-note { color: #b0bbc8; font-size: 12px; margin: 20px 0 0; line-height: 1.6; }
+
+    .email-footer {
+      border-top: 1px solid #edf1f7;
+      padding: 24px 32px;
+      text-align: center;
+      background-color: #fafbfd;
+    }
+
+    .social-links { margin-bottom: 14px; text-align: center; }
+
+    .social-icon {
+      display: inline-block;
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background-color: #ffffff;
+      border: 1px solid #e4eaf2;
+      text-align: center;
+      text-decoration: none;
+      vertical-align: middle;
+      margin: 0 5px;
+    }
+
+    .footer-copy { color: #b0bbc8; font-size: 11px; margin-top: 6px; }
+    .footer-copy a { color: #9aaabb; text-decoration: none; }
+
+    @media only screen and (max-width: 480px) {
+      .email-body { padding: 36px 24px 28px; }
+      .email-body h1 { font-size: 22px; }
+      .message-box { padding: 18px 20px; }
+      .cta-button { padding: 14px 32px; font-size: 14px; }
+    }
+  </style>
 </head>
-<body style="margin:0;padding:0;background:#080808;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+<body>
+  <div class="email-wrapper">
+    <div class="email-container">
 
-  <!-- Top cyan bar -->
-  <div style="height:4px;background:linear-gradient(90deg,#3cc8f7 0%,#5dd4f9 50%,#0e7fa3 100%);"></div>
+      <!-- HEADER -->
+      <div class="email-header">
+        <img class="logo"
+          src="https://res.cloudinary.com/dluvlekdz/image/upload/v1779596794/buxxep-transparent_rjze1q.png"
+          alt="Buxxep" />
+      </div>
 
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#080808;padding:48px 16px 56px;">
-    <tr><td align="center">
-      <table width="100%" cellpadding="0" cellspacing="0" style="max-width:540px;">
+      <!-- CUERPO -->
+      <div class="email-body">
 
-        <!-- Logo -->
-        <tr>
-          <td align="center" style="padding-bottom:36px;">
-            <a href="${SITE}" style="text-decoration:none;display:inline-block;">
-              <div style="font-size:11px;font-weight:700;letter-spacing:6px;text-transform:uppercase;color:#3cc8f7;margin-bottom:6px;text-align:center;">STREETWEAR</div>
-              <div style="font-size:36px;font-weight:900;letter-spacing:-1px;color:#f4f4f5;line-height:1;text-transform:uppercase;">BUX<span style="color:#3cc8f7;">XEP</span></div>
-            </a>
-          </td>
-        </tr>
+        <!-- Ícono confirmado -->
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto 28px;">
+          <tr>
+            <td align="center" valign="middle"
+              style="width:72px;height:72px;background-color:#e8f9ef;border-radius:50%;">
+              <img src="https://img.icons8.com/ios/32/16a34a/checkmark--v1.png"
+                alt="" width="32" height="32" style="display:block;margin:0 auto;" />
+            </td>
+          </tr>
+        </table>
 
-        <!-- Card -->
-        <tr>
-          <td style="background:#111113;border:1px solid #1e1e22;border-radius:16px;overflow:hidden;">
+        <h1>¡Pedido confirmado!</h1>
+        <p class="subtitle">Gracias por tu compra, ${name}</p>
 
-            <!-- Hero banner -->
-            <div style="background:linear-gradient(135deg,#0d2a1a 0%,#111113 55%,#0d0d0f 100%);padding:44px 40px 40px;text-align:center;">
-              <div style="height:3px;background:linear-gradient(90deg,transparent,#3cc8f7,transparent);margin-bottom:32px;"></div>
-              <div style="display:inline-block;width:60px;height:60px;background:#0a2016;border:1.5px solid #22c55e;border-radius:50%;text-align:center;line-height:60px;font-size:26px;margin-bottom:16px;">✓</div>
-              <div style="font-size:11px;font-weight:700;letter-spacing:5px;text-transform:uppercase;color:#22c55e;margin-bottom:10px;">PAGO APROBADO</div>
-              <h1 style="margin:0;font-size:30px;font-weight:900;color:#f4f4f5;line-height:1.1;letter-spacing:-0.5px;text-transform:uppercase;">
-                Pedido<br/><span style="color:#3cc8f7;">confirmado</span>
-              </h1>
-            </div>
+        <!-- Mensaje -->
+        <div class="message-box">
+          <p class="greeting">Hola, ${name}</p>
+          <p class="message-text">
+            Recibimos tu pago y tu pedido <strong>#${orderNumber}</strong> ya está
+            confirmado en <strong>Buxxep</strong>. Entrará en producción en las
+            próximas horas y te avisaremos con cada actualización de estado.
+          </p>
+        </div>
 
-            <!-- Body -->
-            <div style="padding:32px 40px 40px;">
+        <!-- Detalles del pedido -->
+        <table class="details-table" role="presentation" cellpadding="0" cellspacing="0" border="0">
+          ${detailRow("Pedido", `#${orderNumber}`, true)}
+          ${purchaseDate ? detailRow("Fecha", purchaseDate) : ""}
+          ${paymentMethodLabel ? detailRow("Método de pago", paymentMethodLabel) : ""}
+          ${detailRow("Estado", paymentStatusLabel ?? "Pagado")}
+        </table>
 
-              <!-- Order badge -->
-              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+        <!-- Resumen del pedido -->
+        <div class="section-label">Resumen del pedido</div>
+        <table class="items-table" role="presentation" cellpadding="0" cellspacing="0" border="0">
+          ${itemRows}
+        </table>
+
+        <!-- Totales -->
+        <table class="totals-box" role="presentation" cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="padding:20px 24px 4px;">
+              <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
                 <tr>
-                  <td style="background:#0d0d0f;border:1px solid #1e1e22;border-radius:10px;padding:16px 20px;">
-                    <table width="100%" cellpadding="0" cellspacing="0">
-                      <tr>
-                        <td>
-                          <div style="font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#52525b;margin-bottom:4px;">PEDIDO</div>
-                          <div style="font-size:18px;font-weight:900;color:#3cc8f7;letter-spacing:1px;font-family:'Courier New',Courier,monospace;">#${orderNumber}</div>
-                        </td>
-                        <td style="text-align:right;">
-                          <div style="font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#52525b;margin-bottom:4px;">CLIENTE</div>
-                          <div style="font-size:14px;font-weight:700;color:#f4f4f5;">${name}</div>
-                        </td>
-                      </tr>
-                    </table>
+                  <td style="font-size:13px;color:#7a8899;padding-bottom:10px;">Subtotal</td>
+                  <td style="font-size:13px;color:#0d1b2e;text-align:right;padding-bottom:10px;">${fmt(subtotal)}</td>
+                </tr>
+                <tr>
+                  <td style="font-size:13px;color:#7a8899;padding-bottom:10px;">Envío</td>
+                  <td style="font-size:13px;text-align:right;padding-bottom:10px;">${shipping === 0 ? '<span style="color:#16a34a;font-weight:700;">GRATIS</span>' : `<span style="color:#0d1b2e;">${fmt(shipping)}</span>`}</td>
+                </tr>
+                ${
+                  tax > 0
+                    ? `<tr>
+                  <td style="font-size:13px;color:#7a8899;padding-bottom:10px;">Impuestos</td>
+                  <td style="font-size:13px;color:#0d1b2e;text-align:right;padding-bottom:10px;">${fmt(tax)}</td>
+                </tr>`
+                    : ""
+                }
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="border-top:1px solid #e4eaf2;padding:16px 24px;">
+              <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
+                <tr>
+                  <td style="font-size:12px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#7a8899;">Total</td>
+                  <td style="text-align:right;">
+                    <span style="font-size:24px;font-weight:700;color:#1e90ff;">${fmt(total)}</span>
                   </td>
                 </tr>
               </table>
+            </td>
+          </tr>
+        </table>
 
-              <!-- Greeting -->
-              <p style="margin:0 0 28px;font-size:14px;color:#71717a;line-height:1.8;">
-                Gracias por tu compra, <strong style="color:#a1a1aa;">${name}</strong>. Tu pedido está siendo procesado y lo tendrás listo pronto.
-              </p>
+        <a href="${SITE}/cuenta/pedidos" class="cta-button">
+          Ver mis pedidos &rarr;
+        </a>
 
-              <!-- Items label -->
-              <div style="font-size:10px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:#3cc8f7;margin-bottom:4px;">PRODUCTOS</div>
-              <div style="height:1px;background:#1e1e22;margin-bottom:0;"></div>
+        <p class="expire-note">
+          ¿Preguntas sobre tu pedido? Escríbenos por Instagram
+          <a href="https://instagram.com/buxxep" style="color:#1e90ff;text-decoration:none;font-weight:600;">@buxxep</a>.
+        </p>
 
-              <!-- Items -->
-              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
-                ${itemRows}
-              </table>
+      </div>
 
-              <!-- Totals -->
-              <table width="100%" cellpadding="0" cellspacing="0" style="background:#0d0d0f;border:1px solid #1e1e22;border-radius:10px;padding:0;margin-bottom:32px;">
-                <tr>
-                  <td style="padding:12px 20px 8px;">
-                    <table width="100%" cellpadding="0" cellspacing="0">
-                      <tr>
-                        <td style="font-size:13px;color:#71717a;padding-bottom:8px;">Subtotal</td>
-                        <td style="font-size:13px;color:#a1a1aa;text-align:right;padding-bottom:8px;">${fmt(subtotal)}</td>
-                      </tr>
-                      <tr>
-                        <td style="font-size:13px;color:#71717a;padding-bottom:12px;">Envío</td>
-                        <td style="font-size:13px;text-align:right;padding-bottom:12px;">${shipping === 0 ? '<span style="color:#22c55e;font-weight:700;">GRATIS</span>' : `<span style="color:#a1a1aa;">${fmt(shipping)}</span>`}</td>
-                      </tr>
-                    </table>
-                  </td>
-                </tr>
-                <tr>
-                  <td style="border-top:1px solid #1e1e22;padding:14px 20px;">
-                    <table width="100%" cellpadding="0" cellspacing="0">
-                      <tr>
-                        <td style="font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#71717a;">TOTAL</td>
-                        <td style="text-align:right;">
-                          <span style="font-size:22px;font-weight:900;color:#3cc8f7;">${fmt(total)}</span>
-                        </td>
-                      </tr>
-                    </table>
-                  </td>
-                </tr>
-              </table>
+      <!-- FOOTER -->
+      <div class="email-footer">
 
-              <!-- CTA -->
-              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
-                <tr>
-                  <td align="center">
-                    <a href="${SITE}/cuenta/pedidos" style="display:inline-block;background:#3cc8f7;color:#080808;font-size:13px;font-weight:800;text-decoration:none;padding:14px 40px;border-radius:8px;letter-spacing:2px;text-transform:uppercase;">
-                      Ver mis pedidos →
-                    </a>
-                  </td>
-                </tr>
-              </table>
+        <div class="social-links">
+          <a href="https://www.instagram.com/buxxep/" class="social-icon" title="Instagram" target="_blank">
+            <img src="https://img.icons8.com/ios/18/555e6d/instagram-new--v1.png"
+              alt="Instagram" width="18" height="18" style="display:block;margin:10px auto 0;" />
+          </a>
+          <a href="${SITE}" class="social-icon" title="buxxep.com" target="_blank">
+            <img src="https://img.icons8.com/ios/18/555e6d/globe--v1.png"
+              alt="buxxep.com" width="18" height="18" style="display:block;margin:10px auto 0;" />
+          </a>
+        </div>
 
-              <!-- Info -->
-              <div style="background:#0d0d0f;border:1px solid #1e1e22;border-radius:10px;padding:16px 20px;">
-                <div style="font-size:12px;font-weight:700;color:#f4f4f5;margin-bottom:6px;text-transform:uppercase;letter-spacing:1px;">📦 ¿Qué sigue?</div>
-                <p style="margin:0;font-size:12px;color:#52525b;line-height:1.7;">
-                  Tu pedido entra en producción en las próximas horas. Recibirás actualizaciones de estado. ¿Dudas? Escríbenos en
-                  <a href="https://instagram.com/buxxep" style="color:#3cc8f7;text-decoration:none;font-weight:700;">@buxxep</a>.
-                </p>
-              </div>
+        <p class="footer-copy">
+          ID: ${orderId}<br />
+          © ${new Date().getFullYear()} Buxxep · República Dominicana
+        </p>
+        <p class="footer-copy">
+          <a href="${SITE}/privacidad">Privacidad</a> ·
+          <a href="${SITE}/terminos">Términos</a> ·
+          <a href="${SITE}/devoluciones">Devoluciones</a>
+        </p>
 
-            </div>
-          </td>
-        </tr>
+      </div>
 
-        <!-- Footer -->
-        <tr>
-          <td align="center" style="padding-top:32px;">
-            <p style="margin:0 0 8px;font-size:10px;color:#27272a;font-family:'Courier New',Courier,monospace;">ID: ${orderId}</p>
-            <p style="margin:0 0 10px;font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#3cc8f7;">BUXXEP</p>
-            <p style="margin:0 0 10px;font-size:12px;color:#3d3d42;">República Dominicana · ${new Date().getFullYear()}</p>
-            <p style="margin:0;font-size:12px;">
-              <a href="${SITE}/privacidad" style="color:#52525b;text-decoration:none;margin:0 8px;">Privacidad</a>
-              <span style="color:#27272a;">·</span>
-              <a href="${SITE}/terminos" style="color:#52525b;text-decoration:none;margin:0 8px;">Términos</a>
-              <span style="color:#27272a;">·</span>
-              <a href="${SITE}/devoluciones" style="color:#52525b;text-decoration:none;margin:0 8px;">Devoluciones</a>
-            </p>
-          </td>
-        </tr>
-
-      </table>
-    </td></tr>
-  </table>
-
-  <!-- Bottom bar -->
-  <div style="height:2px;background:linear-gradient(90deg,#3cc8f7 0%,#5dd4f9 50%,#0e7fa3 100%);"></div>
-
+    </div>
+  </div>
 </body>
 </html>`;
 }
@@ -220,12 +371,17 @@ export function compraEmailHtml(data: CompraEmailData): string {
 export function compraEmailText(data: CompraEmailData): string {
   const {
     name,
+    orderId,
     orderNumber,
     items,
     subtotal,
     shipping,
+    tax = 0,
     total,
     currency = "DOP",
+    purchaseDate,
+    paymentMethodLabel,
+    paymentStatusLabel,
   } = data;
   const fmt = (c: number) => formatPrice(c, currency);
   const lines = items
@@ -234,5 +390,13 @@ export function compraEmailText(data: CompraEmailData): string {
         `  - ${i.name}${[i.size, i.color].filter(Boolean).length ? ` (${[i.size, i.color].filter(Boolean).join(", ")})` : ""} x${i.quantity}: ${fmt(i.unitPrice * i.quantity)}`,
     )
     .join("\n");
-  return `BUXXEP — Pedido confirmado #${orderNumber}\n\nHola ${name},\n\n${lines}\n\nSubtotal: ${fmt(subtotal)}\nEnvío: ${shipping === 0 ? "GRATIS" : fmt(shipping)}\nTOTAL: ${fmt(total)}\n\n${SITE}/cuenta/pedidos\n\n— BUXXEP`;
+  const metaLines = [
+    `ID: ${orderId}`,
+    purchaseDate ? `Fecha: ${purchaseDate}` : null,
+    paymentMethodLabel ? `Método de pago: ${paymentMethodLabel}` : null,
+    `Estado: ${paymentStatusLabel ?? "Pagado"}`,
+  ]
+    .filter(Boolean)
+    .join("\n");
+  return `BUXXEP — Pedido confirmado #${orderNumber}\n\nHola ${name},\n\n${metaLines}\n\n${lines}\n\nSubtotal: ${fmt(subtotal)}\nEnvío: ${shipping === 0 ? "GRATIS" : fmt(shipping)}${tax > 0 ? `\nImpuestos: ${fmt(tax)}` : ""}\nTOTAL: ${fmt(total)}\n\n${SITE}/cuenta/pedidos\n\n— BUXXEP`;
 }

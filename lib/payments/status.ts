@@ -103,6 +103,30 @@ export function isTerminalStatus(status: string): boolean {
   return status === "paid" || status === "cancelled" || status === "expired";
 }
 
+/**
+ * Estados de pago que representan una compra exitosa a nivel de pedido
+ * (`orders.payment_status`). La BD solo admite 'pending'|'paid'|'declined'
+ * (constraint de la migración 00004), pero la comparación se hace aquí sin
+ * distinción de mayúsculas y tolera sinónimos de proveedores ('completed',
+ * 'successful', etc.) para no romper si esa restricción cambia. Punto único
+ * de verdad reutilizado por el conteo del sorteo y el envío del recibo, para
+ * que Azul y Payment Link se comporten igual.
+ */
+export const SUCCESSFUL_PAYMENT_STATUSES: readonly string[] = [
+  "paid",
+  "completed",
+  "successful",
+  "succeeded",
+  "done",
+];
+
+export function isSuccessfulPaymentStatus(
+  status: string | null | undefined,
+): boolean {
+  if (!status) return false;
+  return SUCCESSFUL_PAYMENT_STATUSES.includes(status.trim().toLowerCase());
+}
+
 /** Método de pago (código en BD `payment_methods.code`). */
 export type PaymentMethodCode = "payment_link" | "azul";
 

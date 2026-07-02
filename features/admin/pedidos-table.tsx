@@ -12,11 +12,11 @@ import {
   PlayCircle,
   Trash2,
   X,
-  AlertTriangle,
 } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { Badge } from "@/components/ui/badge";
+import { ConfirmDialog, type ConfirmDialogState } from "@/components/ui/confirm-dialog";
 import { Input } from "@/components/ui/input";
 import { SelectMenu } from "@/components/ui/select-menu";
 import type { FilterEstado, Pedido, PedidoEstado, PedidosTableProps } from "@/types";
@@ -210,82 +210,6 @@ function ProductList({
           + {extra} producto{extra > 1 ? "s" : ""} más
         </p>
       )}
-    </div>
-  );
-}
-
-// ─── Confirm Modal ────────────────────────────────────────────────────────────
-
-interface ConfirmState {
-  title: string;
-  description: string;
-  confirmLabel: string;
-  variant: "danger" | "default";
-  onConfirm: () => void;
-}
-
-function ConfirmModal({
-  state,
-  onCancel,
-}: {
-  state: ConfirmState;
-  onCancel: () => void;
-}) {
-  const confirmRef = useRef<HTMLButtonElement>(null);
-
-  useEffect(() => {
-    confirmRef.current?.focus();
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onCancel();
-    };
-    document.addEventListener("keydown", handler);
-    return () => document.removeEventListener("keydown", handler);
-  }, [onCancel]);
-
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center"
-      role="dialog"
-      aria-modal="true"
-    >
-      <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-        onClick={onCancel}
-      />
-      <div className="relative z-10 w-full max-w-sm rounded-2xl border border-border bg-card shadow-2xl">
-        <div className="flex items-start gap-3 p-5">
-          {state.variant === "danger" && (
-            <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-destructive/10">
-              <AlertTriangle className="size-4.5 text-destructive" />
-            </div>
-          )}
-          <div className="min-w-0 flex-1 pt-0.5">
-            <p className="text-sm font-semibold text-foreground">{state.title}</p>
-            <p className="mt-1 text-sm text-muted-foreground">{state.description}</p>
-          </div>
-        </div>
-        <div className="flex justify-end gap-2 border-t border-border px-5 py-4">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="rounded-xl border border-border bg-background px-4 py-2 text-sm font-medium text-foreground hover:bg-muted transition-colors"
-          >
-            Cancelar
-          </button>
-          <button
-            ref={confirmRef}
-            type="button"
-            onClick={state.onConfirm}
-            className={`rounded-xl px-4 py-2 text-sm font-semibold transition-opacity hover:opacity-90 ${
-              state.variant === "danger"
-                ? "bg-destructive text-white"
-                : "bg-primary text-primary-foreground"
-            }`}
-          >
-            {state.confirmLabel}
-          </button>
-        </div>
-      </div>
     </div>
   );
 }
@@ -793,7 +717,7 @@ export function PedidosTable({
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [view, setView] = useState<"cards" | "table">("cards");
   const [detailPedido, setDetailPedido] = useState<Pedido | null>(null);
-  const [confirmState, setConfirmState] = useState<ConfirmState | null>(null);
+  const [confirmState, setConfirmState] = useState<ConfirmDialogState | null>(null);
 
   // Persist view preference
   useEffect(() => {
@@ -814,7 +738,7 @@ export function PedidosTable({
   const handleSelectAll = (checked: boolean) =>
     setSelectedIds(checked ? new Set(filtered.map((p) => p.id)) : new Set());
 
-  const showConfirm = useCallback((opts: ConfirmState) => setConfirmState(opts), []);
+  const showConfirm = useCallback((opts: ConfirmDialogState) => setConfirmState(opts), []);
   const closeConfirm = useCallback(() => setConfirmState(null), []);
 
   // ── Bulk: marcar en proceso
@@ -932,7 +856,7 @@ export function PedidosTable({
     <>
       {/* Modals */}
       {confirmState && (
-        <ConfirmModal state={confirmState} onCancel={closeConfirm} />
+        <ConfirmDialog state={confirmState} onCancel={closeConfirm} />
       )}
       {detailPedido && (
         <DetailModal pedido={detailPedido} onClose={() => setDetailPedido(null)} />

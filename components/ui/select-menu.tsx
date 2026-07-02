@@ -51,7 +51,8 @@ export function SelectMenu({
   const menuRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
   const [coords, setCoords] = useState<{
-    top: number;
+    top?: number;
+    bottom?: number;
     left: number;
     width: number;
   } | null>(null);
@@ -66,12 +67,23 @@ export function SelectMenu({
 
   // El menú se renderiza en un portal con posición `fixed` para que ningún
   // ancestro con `overflow-hidden` (p.ej. la tarjeta de la tabla) lo recorte.
+  // Si no hay espacio suficiente debajo del trigger (filas al final de una
+  // lista larga), el menú se abre hacia arriba en su lugar.
   const updateCoords = useCallback(() => {
     const el = triggerRef.current;
     if (!el) return;
     const r = el.getBoundingClientRect();
-    setCoords({ top: r.bottom + 4, left: r.left, width: r.width });
-  }, []);
+    const estimatedMenuHeight = Math.min(options.length * 40 + 8, 232);
+    const spaceBelow = window.innerHeight - r.bottom;
+    const spaceAbove = r.top;
+    const openUp =
+      spaceBelow < estimatedMenuHeight + 8 && spaceAbove > spaceBelow;
+    setCoords(
+      openUp
+        ? { bottom: window.innerHeight - r.top + 4, left: r.left, width: r.width }
+        : { top: r.bottom + 4, left: r.left, width: r.width },
+    );
+  }, [options.length]);
 
   useLayoutEffect(() => {
     if (!open) return;
@@ -167,7 +179,9 @@ export function SelectMenu({
             aria-label={label}
             style={{
               position: "fixed",
-              top: coords.top,
+              ...(coords.top !== undefined
+                ? { top: coords.top }
+                : { bottom: coords.bottom }),
               left: coords.left,
               width: coords.width,
             }}

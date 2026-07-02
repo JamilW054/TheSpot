@@ -5,6 +5,7 @@ import {
   CalendarDays,
   ChevronDown,
   ExternalLink,
+  Eye,
   IdCard,
   Loader2,
   Mail,
@@ -21,6 +22,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
 import { PaymentTypeBadge } from "@/components/payment/PaymentTypeBadge";
+import { Badge } from "@/components/ui/badge";
+import {
+  ConfirmDialog,
+  type ConfirmDialogState,
+} from "@/components/ui/confirm-dialog";
 import { Input } from "@/components/ui/input";
 import { SelectMenu } from "@/components/ui/select-menu";
 import { useAdminFeedback } from "@/contexts/admin-feedback-context";
@@ -74,6 +80,12 @@ export function PaymentsManager({
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [busyId, setBusyId] = useState<string | null>(null);
   const [sendRow, setSendRow] = useState<AdminPaymentRequest | null>(null);
+  const [detailsRow, setDetailsRow] = useState<AdminPaymentRequest | null>(
+    null,
+  );
+  const [confirmState, setConfirmState] = useState<ConfirmDialogState | null>(
+    null,
+  );
   const [, startTransition] = useTransition();
 
   const filtered = useMemo(() => {
@@ -130,9 +142,7 @@ export function PaymentsManager({
       } else {
         setRows((prev) =>
           prev.map((r) =>
-            r.id === id
-              ? { ...r, status: "link_sent", paymentUrl: url }
-              : r,
+            r.id === id ? { ...r, status: "link_sent", paymentUrl: url } : r,
           ),
         );
         setSendRow(null);
@@ -142,22 +152,25 @@ export function PaymentsManager({
   }
 
   function handleDelete(id: string, reference: string) {
-    if (
-      !confirm(
-        `¿Eliminar la solicitud ${reference}? Esta acción es permanente.`,
-      )
-    )
-      return;
-    setBusyId(id);
-    startTransition(async () => {
-      const res = await adminDeletePaymentRequest(id);
-      setBusyId(null);
-      if (res.error) {
-        showError(res.error);
-      } else {
-        setRows((prev) => prev.filter((r) => r.id !== id));
-        showSuccess("Solicitud eliminada.");
-      }
+    setConfirmState({
+      title: "¿Eliminar solicitud?",
+      description: `Se eliminará la solicitud ${reference}. Esta acción es permanente.`,
+      confirmLabel: "Eliminar",
+      variant: "danger",
+      onConfirm: () => {
+        setConfirmState(null);
+        setBusyId(id);
+        startTransition(async () => {
+          const res = await adminDeletePaymentRequest(id);
+          setBusyId(null);
+          if (res.error) {
+            showError(res.error);
+          } else {
+            setRows((prev) => prev.filter((r) => r.id !== id));
+            showSuccess("Solicitud eliminada.");
+          }
+        });
+      },
     });
   }
 
@@ -237,22 +250,22 @@ export function PaymentsManager({
         <>
           {/* ── Tabla (desktop) ── */}
           <div className="hidden overflow-x-auto rounded-[14px] border border-border bg-card lg:block">
-            <table className="w-full min-w-[900px] table-fixed text-sm">
+            <table className="w-full min-w-287.5 table-fixed text-sm">
               <colgroup>
-                <col className="w-[140px]" />
+                <col className="w-32.5" />
                 <col />
-                <col className="w-[110px]" />
-                <col className="w-[120px]" />
-                <col className="w-[150px]" />
-                <col className="w-[170px]" />
-                <col className="w-[90px]" />
-                <col className="w-[170px]" />
+                <col className="w-37.5" />
+                <col className="w-30" />
+                <col className="w-37.5" />
+                <col className="w-42.5" />
+                <col className="w-22.5" />
+                <col className="w-42.5" />
               </colgroup>
               <thead>
                 <tr className="border-b border-border bg-muted/30 text-left text-xs uppercase tracking-wide text-muted-foreground">
                   <th className="px-3 py-3 font-medium">Referencia</th>
                   <th className="px-3 py-3 font-medium">Cliente</th>
-                  <th className="px-3 py-3 font-medium">Monto</th>
+                  <th className="px-3 py-3 text-right font-medium">Monto</th>
                   <th className="px-3 py-3 font-medium">Tipo</th>
                   <th className="px-3 py-3 font-medium">Estado</th>
                   <th className="px-3 py-3 font-medium">Creado</th>
@@ -281,7 +294,7 @@ export function PaymentsManager({
                         </p>
                       )}
                     </td>
-                    <td className="whitespace-nowrap px-3 py-3 font-semibold text-foreground">
+                    <td className="whitespace-nowrap px-3 py-3 text-right font-semibold tabular-nums text-foreground">
                       {formatDOPFromCents(r.amountCents)}
                     </td>
                     <td className="px-3 py-3">
@@ -303,6 +316,14 @@ export function PaymentsManager({
                     </td>
                     <td className="px-3 py-3">
                       <div className="flex items-center justify-end gap-1">
+                        <button
+                          type="button"
+                          onClick={() => setDetailsRow(r)}
+                          title="Ver detalles"
+                          className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                        >
+                          <Eye className="size-4" aria-hidden />
+                        </button>
                         {r.status !== "paid" && (
                           <button
                             type="button"
@@ -398,6 +419,13 @@ export function PaymentsManager({
                     {formatDateTime(r.createdAt)}
                   </span>
                   <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => setDetailsRow(r)}
+                      className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+                    >
+                      <Eye className="size-4" aria-hidden />
+                    </button>
                     {r.status !== "paid" && (
                       <button
                         type="button"
@@ -444,6 +472,177 @@ export function PaymentsManager({
           onSend={(url) => handleSend(sendRow.id, url)}
         />
       )}
+
+      {/* Modal: ver todos los detalles de la solicitud y del cliente */}
+      {detailsRow && (
+        <PaymentDetailsModal
+          row={detailsRow}
+          onClose={() => setDetailsRow(null)}
+        />
+      )}
+
+      {/* Modal: confirmar acciones destructivas (reemplaza window.confirm) */}
+      {confirmState && (
+        <ConfirmDialog
+          state={confirmState}
+          onCancel={() => setConfirmState(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+/**
+ * Modal de solo lectura con todos los detalles de una solicitud de pago y de
+ * su cliente. Se abre con el ícono de ojo en la lista/tabla.
+ */
+function PaymentDetailsModal({
+  row,
+  onClose,
+}: {
+  row: AdminPaymentRequest;
+  onClose: () => void;
+}) {
+  const statusMeta = paymentStatusMeta(row.status);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <button
+        type="button"
+        aria-label="Cerrar"
+        onClick={onClose}
+        className="absolute inset-0 bg-black/50"
+      />
+      <div className="relative z-10 max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-[16px] border border-border bg-card shadow-xl">
+        {/* Header */}
+        <div className="flex items-start justify-between gap-3 border-b border-border/60 p-5">
+          <div className="min-w-0">
+            <h2 className="text-base font-semibold text-foreground">
+              Detalles de la solicitud
+            </h2>
+            <p className="mt-0.5 font-mono text-xs font-semibold text-primary">
+              {row.referenceNumber}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="shrink-0 rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            title="Cerrar"
+          >
+            <X className="size-4" aria-hidden />
+          </button>
+        </div>
+
+        {/* Resumen del pago */}
+        <div className="space-y-3 border-b border-border/60 p-5">
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-2xl font-bold tracking-tight text-foreground">
+              {formatDOPFromCents(row.amountCents)}
+            </p>
+            <div className="flex items-center gap-2">
+              <PaymentTypeBadge type={row.paymentType} />
+              <Badge variant={statusMeta.badge}>{statusMeta.label}</Badge>
+            </div>
+          </div>
+          {row.description && (
+            <p className="text-sm text-muted-foreground">{row.description}</p>
+          )}
+          <div className="grid grid-cols-2 gap-3 pt-1">
+            <CustomerDetail
+              icon={CalendarDays}
+              label="Creado"
+              value={formatDateTime(row.createdAt)}
+            />
+            <CustomerDetail
+              icon={Send}
+              label="Enviado"
+              value={row.sentAt ? formatDateTime(row.sentAt) : "—"}
+            />
+            <CustomerDetail
+              icon={Wallet}
+              label="Pagado"
+              value={row.paidAt ? formatDateTime(row.paidAt) : "—"}
+            />
+            <CustomerDetail
+              icon={Mail}
+              label="Correo"
+              value={
+                row.emailDeliveryStatus === "sent"
+                  ? "Enviado"
+                  : row.emailDeliveryStatus === "failed"
+                    ? "Falló"
+                    : "—"
+              }
+            />
+          </div>
+          {row.paymentUrl && (
+            <a
+              href={row.paymentUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
+            >
+              <ExternalLink className="size-3.5" aria-hidden />
+              Abrir enlace de pago
+            </a>
+          )}
+        </div>
+
+        {/* Datos del cliente (siempre visibles) */}
+        <div className="p-5">
+          <h3 className="mb-3 text-sm font-semibold text-foreground">
+            Cliente
+          </h3>
+          <div className="space-y-2.5 rounded-[10px] border border-border bg-muted/20 p-3">
+            <CustomerDetail
+              icon={User}
+              label="Nombre"
+              value={row.customerName}
+            />
+            {row.customerUsername && (
+              <CustomerDetail
+                icon={User}
+                label="Usuario"
+                value={`@${row.customerUsername}`}
+              />
+            )}
+            <CustomerDetail
+              icon={Mail}
+              label="Correo"
+              value={row.customerEmail ?? "Sin correo registrado"}
+            />
+            <CustomerDetail
+              icon={Phone}
+              label="Teléfono"
+              value={row.customerPhone ?? "—"}
+            />
+            <CustomerDetail
+              icon={CalendarDays}
+              label="Cliente desde"
+              value={
+                row.customerSince ? formatDateTime(row.customerSince) : "—"
+              }
+            />
+            <CustomerDetail
+              icon={IdCard}
+              label="ID de usuario"
+              value={row.userId}
+            />
+          </div>
+        </div>
+
+        {/* Acciones */}
+        <div className="flex items-center justify-end gap-2 border-t border-border/60 p-5">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-[10px] border border-border bg-transparent px-4 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            Cerrar
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

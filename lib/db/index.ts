@@ -73,6 +73,7 @@ import {
   getCategoryCoverByCategoryId,
 } from "./categories";
 import { DESIGN_SELECT, type DesignRow, rowToDesign } from "./designs";
+import { refreshGiveawayStats } from "./giveaway-stats";
 import { type LineaRow, rowToLinea } from "./lineas";
 import {
   customerNameFromOrder,
@@ -92,6 +93,7 @@ import {
   rowToCatalogProduct,
   tagsFromRow,
 } from "./products";
+import { sendOrderReceiptEmail } from "./receipts";
 
 export {
   formatGiveawayNumber,
@@ -617,6 +619,76 @@ function normalizeProvider(provider: string): string {
   return allowed.includes(p) ? p : "azul";
 }
 
+/**
+ * Intenta transicionar un pedido a `payment_status = 'paid'` de forma atómica:
+ * el UPDATE solo afecta filas que todavía NO estén pagadas, así que Postgres
+ * serializa escrituras concurrentes sobre la misma fila y como mucho una gana.
+ * Devuelve la fila si esta llamada hizo la transición, o `null` si el pedido
+ * ya estaba pagado (webhook duplicado, confirmación repetida o carrera con
+ * otra solicitud). Único punto de entrada al conteo del sorteo y al recibo de
+ * compra — lo usan tanto Azul como Payment Link (ver `markLinkedOrderAsPaid`).
+ */
+async function tryTransitionOrderToPaid(
+  supabase: ReturnType<typeof createServiceClient>,
+  orderId: string,
+): Promise<{ id: string; total_cents: number } | null> {
+  const { data, error } = await supabase
+    .from("orders")
+    .update({
+      payment_status: "paid",
+      status: "confirmed",
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", orderId)
+    .or("payment_status.is.null,payment_status.neq.paid")
+    .select("id, total_cents")
+    .maybeSingle();
+  if (error) throw toError(error);
+  return (data as { id: string; total_cents: number } | null) ?? null;
+}
+
+export interface OrderPaymentSucceededInput {
+  orderId: string;
+  /** Etiqueta legible del método usado ("Pago con Azul" | "Payment Link"). */
+  paymentMethodLabel: string;
+  /** Momento de confirmación del pago (ISO). */
+  paidAtIso: string;
+}
+
+/**
+ * Efectos posteriores a una compra confirmada: refresca el caché del contador
+ * del sorteo (para que la próxima carga lo refleje al instante, sin esperar
+ * los 60s de `unstable_cache`) y envía el recibo de compra. Llamar solo
+ * cuando `tryTransitionOrderToPaid` / `markLinkedOrderAsPaid` devolvió una
+ * transición real — así nunca se ejecuta dos veces para el mismo pedido. El
+ * envío del recibo nunca revierte ni bloquea el flujo de pago si falla.
+ */
+export async function onOrderPaymentSucceeded(
+  input: OrderPaymentSucceededInput,
+): Promise<void> {
+  refreshGiveawayStats();
+  try {
+    await sendOrderReceiptEmail(input);
+  } catch (e) {
+    console.error("[RECIBO] Error enviando el recibo de compra", {
+      orderId: input.orderId,
+      error: e,
+    });
+  }
+}
+
+/**
+ * Marca como pagado el pedido asociado a una solicitud de Payment Link (panel
+ * admin) o a un cambio manual de estado de pedido. Devuelve `true` si esta
+ * llamada realizó la transición (el llamador debe entonces invocar
+ * `onOrderPaymentSucceeded`); `false` si el pedido ya estaba pagado.
+ */
+export async function markLinkedOrderAsPaid(orderId: string): Promise<boolean> {
+  const supabase = createServiceClient();
+  const row = await tryTransitionOrderToPaid(supabase, orderId);
+  return row !== null;
+}
+
 /** Persiste resultado del POST de AZUL: actualiza orders + registra payment_transactions. */
 export async function updateOrderPaymentStatusFromGateway(
   params: UpdateOrderPaymentFromGatewayInput,
@@ -626,22 +698,30 @@ export async function updateOrderPaymentStatusFromGateway(
   const nowIso = new Date().toISOString();
   const dbPaymentStatus = approved ? "paid" : "failed";
 
-  // Estado del pedido y del pago a nivel de orders.
-  const orderPatch: Record<string, unknown> = {
-    payment_status: dbPaymentStatus,
-    updated_at: nowIso,
-  };
-  if (approved) orderPatch.status = "confirmed";
+  let amountCents: number;
 
-  const { data: orderRow, error: orderErr } = await supabase
-    .from("orders")
-    .update(orderPatch)
-    .eq("id", params.orderId)
-    .select("total_cents")
-    .single();
-  if (orderErr) throw toError(orderErr);
-  const amountCents =
-    (orderRow as { total_cents?: number } | null)?.total_cents ?? 0;
+  if (approved) {
+    const transitioned = await tryTransitionOrderToPaid(
+      supabase,
+      params.orderId,
+    );
+    if (!transitioned) {
+      // Confirmación duplicada (webhook repetido o carrera): el pedido ya
+      // estaba pagado. No se reinserta la transacción ni se reenvía el recibo.
+      return;
+    }
+    amountCents = transitioned.total_cents;
+  } else {
+    const { data: orderRow, error: orderErr } = await supabase
+      .from("orders")
+      .update({ payment_status: dbPaymentStatus, updated_at: nowIso })
+      .eq("id", params.orderId)
+      .select("total_cents")
+      .single();
+    if (orderErr) throw toError(orderErr);
+    amountCents =
+      (orderRow as { total_cents?: number } | null)?.total_cents ?? 0;
+  }
 
   // Registro de la transacción de pago.
   const { error: txErr } = await supabase.from("payment_transactions").insert({
@@ -660,6 +740,14 @@ export async function updateOrderPaymentStatusFromGateway(
     metadata: params.rawResponse,
   });
   if (txErr) throw toError(txErr);
+
+  if (approved) {
+    await onOrderPaymentSucceeded({
+      orderId: params.orderId,
+      paymentMethodLabel: "Pago con Azul",
+      paidAtIso: nowIso,
+    });
+  }
 }
 
 /** Consulta pública: obtiene el estado de un pedido por ID (sin auth). Usa service role. */

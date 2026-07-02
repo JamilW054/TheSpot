@@ -126,7 +126,7 @@ export function CategoryForm({
       }
       setImageUrl(u);
     } catch (e) {
-      alert(e instanceof Error ? e.message : "Error al subir la imagen.");
+      showError(e instanceof Error ? e.message : "Error al subir la imagen.");
     } finally {
       setUploadBusy(false);
       if (fileRef.current) fileRef.current.value = "";
