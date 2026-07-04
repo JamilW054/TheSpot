@@ -25,30 +25,51 @@ pnpm install
 
 ## Scripts
 
-| Comando        | Descripción                    |
-|----------------|--------------------------------|
-| `pnpm dev`     | Servidor de desarrollo         |
-| `pnpm build`   | Build de producción            |
-| `pnpm start`   | Servidor de producción         |
-| `pnpm lint`    | Biome check                    |
-| `pnpm format`  | Biome format --write           |
+| Comando               | Descripción                                        |
+|-----------------------|----------------------------------------------------|
+| `pnpm dev`            | Servidor de desarrollo                             |
+| `pnpm build`          | Build de producción                                |
+| `pnpm start`          | Servidor de producción                             |
+| `pnpm test`           | Tests (Vitest)                                     |
+| `pnpm lint`           | Biome check                                        |
+| `pnpm format`         | Biome format --write                               |
+| `pnpm db:start`       | Stack local de Supabase (requiere Docker)          |
+| `pnpm db:new <n>`     | Nueva migración en `supabase/migrations`           |
+| `pnpm db:push`        | Aplica migraciones al proyecto vinculado           |
+| `pnpm db:reset`       | Recrea la base local con todas las migraciones     |
+| `pnpm db:types`       | Genera tipos TS de la base (`src/database/types`)  |
 
 ## Estructura del proyecto
 
+Todo el código de la aplicación vive en `src/`. El alias `@/` apunta a `src/`
+(`@/components`, `@/database`, `@/lib`, …); no usar imports relativos profundos.
+
 ```
-├── app/
-│   ├── (public)/          # Landing, login, registro
-│   ├── (app)/             # Zona autenticada: mis diseños, editor, líneas, guía, recursos, soporte
-│   └── admin/             # Panel admin: dashboard, pedidos, configuración
-├── components/
-│   ├── auth/              # RequireAuth, protección de rutas
-│   ├── editor/            # Canvas, drop zone, sidebar herramientas, panel derecho
-│   ├── layout/            # AppShell, Navbar, Sidebar, PageLayout
-│   └── ui/                # Button, Card, Input, Badge, etc.
-├── config/                # Navegación, herramientas del editor, mock data
-├── lib/                   # AuthContext (mock), design tokens
-├── types/                 # Design, Linea, Pedido, CanvasElement, Mockup
-└── hooks/
+├── src/
+│   ├── app/               # App Router: rutas, layouts y API routes (controladores finos)
+│   │   ├── (public)/      # Landing, catálogo, carrito, checkout, cuenta, legal
+│   │   ├── (app)/         # Zona autenticada: editor, líneas, guía, recursos, soporte
+│   │   ├── admin/         # Panel admin: dashboard, pedidos, catálogo, configuración
+│   │   └── api/           # Rutas API: validan input y delegan en servicios
+│   ├── features/          # Módulos por funcionalidad (admin, payments, designs, lineas)
+│   │   └── payments/services/  # Lógica de negocio de pagos (AZUL checkout/retorno)
+│   ├── components/        # UI reutilizable (ui/, layout/, catalog/, editor/, …)
+│   ├── contexts/          # React contexts (cart, wishlist, admin feedback)
+│   ├── database/          # Capa de datos: repositories/ + tipos generados (ver su README)
+│   ├── lib/               # Integraciones y utilidades:
+│   │   ├── supabase/      #   clientes browser/server/service-role (único punto de init)
+│   │   ├── resend/        #   emails transaccionales + PDF de recibos (único punto de init)
+│   │   ├── payments/      #   protocolo AZUL (firmas, montos)
+│   │   ├── storage/       #   Cloudflare R2
+│   │   ├── auth/          #   roles, sesión, guards (requireAdmin)
+│   │   └── actions/       #   Server Actions (casos de uso de negocio)
+│   ├── config/            # Navegación, herramientas del editor, mock data
+│   ├── hooks/             # Hooks compartidos
+│   ├── types/             # Tipos y DTOs compartidos
+│   └── proxy.ts       # Guard de sesión/rutas protegidas (antes middleware.ts)
+├── supabase/              # CLI de Supabase: config.toml + migrations/ (no mover a src/)
+├── public/                # Assets estáticos
+└── scripts/               # Scripts de mantenimiento (bootstrap admin, OG image, Resend)
 ```
 
 ## Rutas

@@ -6,6 +6,9 @@
     "ignoredBuiltDependencies": [
       "sharp",
       "unrs-resolver"
+    ],
+    "onlyBuiltDependencies": [
+      "supabase"
     ]
   },
   "scripts": {
@@ -16,7 +19,15 @@
     "lint": "biome check",
     "format": "biome format --write",
     "og:image": "node scripts/generate-og-image.mjs",
-    "bootstrap-admin": "bun scripts/bootstrap-admin.ts"
+    "bootstrap-admin": "bun scripts/bootstrap-admin.ts",
+    "supabase": "supabase",
+    "db:start": "supabase start",
+    "db:stop": "supabase stop",
+    "db:new": "supabase migration new",
+    "db:push": "supabase db push",
+    "db:reset": "supabase db reset",
+    "db:types": "supabase gen types typescript --local --schema public > src/database/types/database.types.ts",
+    "db:types:linked": "supabase gen types typescript --linked --schema public > src/database/types/database.types.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1041.0",
@@ -32,6 +43,7 @@
     "next": "16.1.6",
     "react": "19.2.3",
     "react-dom": "19.2.3",
+    "recharts": "^3.9.1",
     "resend": "^6.12.3"
   },
   "devDependencies": {
@@ -41,6 +53,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "sharp": "^0.33.5",
+    "supabase": "^2.109.0",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^3.2.4"

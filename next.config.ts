@@ -1,6 +1,10 @@
+import path from "node:path";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Evita que Next infiera la raíz del workspace desde lockfiles externos
+  // (hay un bun.lock en el home del usuario).
+  turbopack: { root: path.resolve(__dirname) },
   env: {
     NEXT_PUBLIC_SUPABASE_URL:
       process.env.EXPO_PUBLIC_SUPABASE_URL ??

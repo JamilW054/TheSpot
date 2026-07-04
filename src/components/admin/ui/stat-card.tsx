@@ -1,0 +1,78 @@
+import { TrendingDown, TrendingUp } from "lucide-react";
+import type { ReactNode } from "react";
+import { AdminCard } from "./admin-card";
+
+export interface StatCardProps {
+  /** Etiqueta caption (12px uppercase, tracking 0.05em). */
+  label: string;
+  /** Valor grande (escala tipográfica, tabular-nums). */
+  value: string | number;
+  /** Texto secundario bajo el valor. */
+  sub?: string;
+  /** Icono funcional (trazo fino). */
+  icon?: ReactNode;
+  /** Variación vs. periodo anterior, en %. Positiva = verde, negativa = roja. */
+  deltaPct?: number | null;
+  /** Resalta el valor con el acento de marca Buxxep. */
+  accent?: boolean;
+}
+
+/**
+ * Stat Block (DESIGN.md): la métrica se establece solo con escala
+ * tipográfica — label caption arriba, valor 30px/600 con tracking apretado.
+ */
+export function StatCard({
+  label,
+  value,
+  sub,
+  icon,
+  deltaPct,
+  accent = false,
+}: StatCardProps) {
+  const hasDelta = deltaPct != null && Number.isFinite(deltaPct);
+  const deltaUp = hasDelta && (deltaPct as number) >= 0;
+  return (
+    <AdminCard className="p-5">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-xs font-medium uppercase tracking-[0.05em] text-muted-foreground">
+          {label}
+        </p>
+        {icon ? (
+          <span
+            className={`flex size-8 shrink-0 items-center justify-center rounded-[10px] ${
+              accent
+                ? "bg-(--admin-brand-soft) text-(--admin-brand-strong)"
+                : "bg-muted text-muted-foreground"
+            }`}
+            aria-hidden
+          >
+            {icon}
+          </span>
+        ) : null}
+      </div>
+      <p className="mt-3 truncate text-3xl font-semibold tabular-nums tracking-[-0.025em] text-foreground">
+        {value}
+      </p>
+      {(sub || hasDelta) && (
+        <div className="mt-1.5 flex items-center gap-2 text-sm text-muted-foreground">
+          {hasDelta ? (
+            <span
+              className={`inline-flex items-center gap-1 font-medium tabular-nums ${
+                deltaUp ? "text-(--admin-success)" : "text-(--admin-danger)"
+              }`}
+            >
+              {deltaUp ? (
+                <TrendingUp className="size-3.5" aria-hidden />
+              ) : (
+                <TrendingDown className="size-3.5" aria-hidden />
+              )}
+              {deltaUp ? "+" : ""}
+              {(deltaPct as number).toFixed(1)}%
+            </span>
+          ) : null}
+          {sub ? <span className="truncate">{sub}</span> : null}
+        </div>
+      )}
+    </AdminCard>
+  );
+}

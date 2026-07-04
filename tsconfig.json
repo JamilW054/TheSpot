@@ -17,10 +17,10 @@
     "jsx": "react-jsx",
     "incremental": true,
     "plugins": [{ "name": "next" }],
-    "paths": { "@/*": ["./*"] }
+    "paths": { "@/*": ["./src/*"] }
   },
   "include": [
-    "types/setup.d.ts",
+    "src/types/setup.d.ts",
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
