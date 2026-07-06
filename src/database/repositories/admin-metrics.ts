@@ -79,8 +79,8 @@ interface MetricsOrderRow {
   id: string;
   status: string;
   payment_status: string | null;
-  payment_provider: string | null;
-  azul_transaction_id: string | null;
+  /** "AZUL_PAYMENT" | "PAYMENT_LINK" — ver PAYMENT_TYPE en lib/payments/status.ts. */
+  payment_type: string | null;
   total_cents: number;
   created_at: string;
 }
@@ -141,10 +141,7 @@ function isPaid(o: MetricsOrderRow): boolean {
 }
 
 function isAzul(o: MetricsOrderRow): boolean {
-  return (
-    o.azul_transaction_id != null ||
-    (o.payment_provider ?? "").toUpperCase().includes("AZUL")
-  );
+  return o.payment_type === "AZUL_PAYMENT";
 }
 
 function categoryNameFromRow(row: MetricsProductRow): string | null {
@@ -199,7 +196,7 @@ export async function getAdminDashboardMetrics(): Promise<AdminDashboardMetrics>
       supabase
         .from("orders")
         .select(
-          "id, status, payment_status, payment_provider, azul_transaction_id, total_cents, created_at",
+          "id, status, payment_status, payment_type, total_cents, created_at",
         )
         .gte("created_at", windowIso)
         .order("created_at", { ascending: false }),
@@ -400,8 +397,14 @@ export async function getAdminDashboardMetrics(): Promise<AdminDashboardMetrics>
       },
       totalOrders: orders.length,
     };
-  } catch {
+  } catch (error) {
     // El dashboard nunca debe tumbar el panel: sin datos ≠ error fatal.
+    // Se registra igual — un fallo silencioso disfrazado de "sin datos" es
+    // imposible de diagnosticar.
+    console.error(
+      "[admin-metrics] Error calculando métricas del dashboard",
+      error,
+    );
     return EMPTY_METRICS;
   }
 }

@@ -4,20 +4,17 @@ import {
 } from "@/database/repositories";
 import { buildAzulRequestAuthHash, escapeHtml } from "@/lib/payments/azul";
 import {
-  getAzulMerchantIdentifier,
-  getAzulSigningSecret,
-} from "@/lib/payments/azul-env";
+  getAzulPaymentPageConfig,
+  validateAzulConfig,
+} from "@/lib/payments/azul-config";
+import type {
+  PaymentGateway,
+  PaymentGatewayRedirectInput,
+  PaymentGatewayRedirectResult,
+} from "@/lib/payments/gateway";
 import { createClient } from "@/lib/supabase/server";
 
-export type AzulCheckoutResult =
-  | { ok: true; html: string }
-  | { ok: false; status: number; message: string };
-
-function paymentPageUrl(): string {
-  return process.env.AZUL_SANDBOX === "true"
-    ? "https://pruebas.azul.com.do/PaymentPage/Default.aspx"
-    : "https://pagos.azul.com.do/PaymentPage/Default.aspx";
-}
+export type AzulCheckoutResult = PaymentGatewayRedirectResult;
 
 /**
  * Valida sesión y pedido, marca el pedido como pago AZUL y construye el HTML
@@ -28,24 +25,21 @@ export async function prepareAzulPaymentRedirect(params: {
   baseUrl: string;
 }): Promise<AzulCheckoutResult> {
   const { orderId, baseUrl } = params;
-  const merchantId = getAzulMerchantIdentifier();
-  const authKey = getAzulSigningSecret();
-  const merchantName = process.env.AZUL_MERCHANT_NAME?.trim() ?? "BUXXEP STORE";
+  const config = getAzulPaymentPageConfig();
+  const validation = validateAzulConfig(config);
 
-  if (!merchantId || !authKey) {
-    const missing: string[] = [];
-    if (!merchantId) {
-      missing.push(
-        "MerchantId: AZUL_MERCHANT_ID o bien AZUL_USE_CLIENT_KEY_AS_MERCHANT_ID=true + AZUL_CLIENT_KEY",
-      );
-    }
-    if (!authKey) {
-      missing.push("secreto firma: AZUL_SECRET_KEY (o AZUL_AUTH_KEY)");
-    }
+  if (!validation.ok) {
+    console.error(
+      "[AZUL] Configuración incompleta al crear solicitud de pago",
+      {
+        orderId,
+        missing: validation.missing,
+      },
+    );
     return {
       ok: false,
       status: 500,
-      message: `Config AZUL incompleta (${missing.join("; ")}). En local: revisa .env y reinicia el dev server. En Vercel/hosting: añade las mismas variables en Project Settings → Environment Variables.`,
+      message: `Config AZUL incompleta (${validation.missing.join("; ")}). En local: revisa .env y reinicia el dev server. En Vercel/hosting: añade las mismas variables en Project Settings → Environment Variables.`,
     };
   }
 
@@ -63,6 +57,10 @@ export async function prepareAzulPaymentRedirect(params: {
 
   const order = await getOrderPaymentInfoForUser(orderId, user.id);
   if (!order) {
+    console.warn("[AZUL] Pedido no encontrado al crear solicitud de pago", {
+      orderId,
+      userId: user.id,
+    });
     return { ok: false, status: 404, message: "Pedido no encontrado." };
   }
 
@@ -71,48 +69,70 @@ export async function prepareAzulPaymentRedirect(params: {
   }
 
   if (order.total_cents <= 0) {
+    console.error("[AZUL] Total de pedido inválido", {
+      orderId,
+      totalCents: order.total_cents,
+    });
     return { ok: false, status: 400, message: "Total del pedido inválido." };
   }
 
   await markOrderAsAzulPayment(order.id);
+  console.info("[AZUL] Solicitud de pago creada", {
+    orderId: order.id,
+    amountCents: order.total_cents,
+    sandbox: config.sandbox,
+  });
 
   const orderNumber = order.id;
   const amount = String(order.total_cents);
-  const itbis = process.env.AZUL_ITBIS_CENTS?.trim() ?? "0";
 
-  const approvedUrl = `${baseUrl}/pagos/exitoso`;
-  const declinedUrl = `${baseUrl}/pagos/rechazado`;
-  const cancelUrl = `${baseUrl}/carrito`;
+  // ApprovedUrl/DeclinedUrl apuntan al MISMO route handler que ResponsePostUrl:
+  // AZUL redirige aquí el navegador del cliente (GET, con el resultado
+  // firmado en el querystring) — a diferencia del webhook POST, este camino
+  // sí llega a localhost, así que es el que confirma el pago en desarrollo.
+  // `processAzulReturn` decide éxito/rechazo leyendo el propio payload y solo
+  // entonces redirige a la página de resultado — nunca se procesa dentro del
+  // render de una página (Next.js prohíbe revalidateTag ahí).
+  const approvedUrl = `${baseUrl}/api/pagos/azul/retorno`;
+  const declinedUrl = `${baseUrl}/api/pagos/azul/retorno`;
+  // CancelUrl no pasa por ResponsePostUrl (no hay transacción que relayar), así
+  // que el orderId va en la propia URL: es la única forma de saber qué pedido
+  // se canceló cuando AZUL redirige el navegador aquí directamente.
+  const cancelUrl = `${baseUrl}/api/pagos/azul/cancelar?orderId=${encodeURIComponent(orderNumber)}`;
   const responsePostUrl = `${baseUrl}/api/pagos/azul/retorno`;
 
-  const authHash = buildAzulRequestAuthHash({
-    merchantId,
-    merchantName,
-    merchantType:
-      process.env.AZUL_MERCHANT_TYPE?.trim() ?? "Comercio electronico",
-    currencyCode: process.env.AZUL_CURRENCY_CODE?.trim() ?? "$",
+  const authHashInput = {
+    merchantId: config.merchantId,
+    merchantName: config.merchantName,
+    merchantType: config.merchantType,
+    currencyCode: config.currencyCode,
     orderNumber,
     amount,
-    ITBIS: itbis,
+    ITBIS: config.itbisCents,
     approvedUrl,
     declinedUrl,
     cancelUrl,
+    // Se envía en el POST, así que DEBE participar en el hash (tras CancelUrl).
+    responsePostUrl,
     useCustomField1: "1",
     customField1Label: "orderId",
     customField1Value: orderNumber,
     useCustomField2: "0",
-    authKey,
-  });
+    authKey: config.secretKey,
+  };
+  const authHash = buildAzulRequestAuthHash(authHashInput);
+  console.info("[AZUL] AuthHash generado", { orderId: order.id });
 
   const fields: Record<string, string> = {
-    MerchantId: merchantId,
-    MerchantName: merchantName,
-    MerchantType:
-      process.env.AZUL_MERCHANT_TYPE?.trim() ?? "Comercio electronico",
-    CurrencyCode: process.env.AZUL_CURRENCY_CODE?.trim() ?? "$",
+    MerchantId: config.merchantId,
+    // Presente en el formulario del ejemplo oficial; NO participa en el hash.
+    TrxType: "Sale",
+    MerchantName: config.merchantName,
+    MerchantType: config.merchantType,
+    CurrencyCode: config.currencyCode,
     OrderNumber: orderNumber,
     Amount: amount,
-    ITBIS: itbis,
+    ITBIS: config.itbisCents,
     ApprovedUrl: approvedUrl,
     DeclinedUrl: declinedUrl,
     CancelUrl: cancelUrl,
@@ -139,7 +159,7 @@ export async function prepareAzulPaymentRedirect(params: {
 <head><meta charset="utf-8"/><title>Redirigiendo a AZUL…</title></head>
 <body>
 <p>Redirigiendo al pago seguro…</p>
-<form id="azul" method="post" action="${escapeHtml(paymentPageUrl())}">
+<form id="azul" method="post" action="${escapeHtml(config.paymentPageUrl)}">
 ${inputs}
 <noscript><button type="submit">Continuar al pago</button></noscript>
 </form>
@@ -147,5 +167,17 @@ ${inputs}
 </body>
 </html>`;
 
+  console.info("[AZUL] Redirección construida", {
+    orderId: order.id,
+    paymentPageUrl: config.paymentPageUrl,
+  });
+
   return { ok: true, html };
 }
+
+/** Adaptador `PaymentGateway` — permite invocar AZUL desde código genérico de pasarelas. */
+export const azulGateway: PaymentGateway = {
+  code: "azul",
+  createRedirect: (input: PaymentGatewayRedirectInput) =>
+    prepareAzulPaymentRedirect(input),
+};

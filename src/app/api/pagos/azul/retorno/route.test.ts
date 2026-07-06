@@ -103,6 +103,7 @@ describe("POST /api/pagos/azul/retorno", () => {
     const request = buildRequest(
       buildSignedPayload({
         ResponseCode: "51",
+        ISOCode: "51",
         ResponseMessage: "Fondos insuficientes",
       }),
     );

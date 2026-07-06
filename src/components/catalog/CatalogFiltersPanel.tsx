@@ -1,25 +1,24 @@
-"use client";
-
 import {
   ArrowDownWideNarrow,
   ArrowUpWideNarrow,
   Layers,
+  Palette,
   Search,
   Shirt,
   Sparkles,
   Tags,
   Wallet,
+  X,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import type { CategoryRow } from "@/database/repositories";
 import type { CatalogPrecio, CatalogQueryParts } from "@/lib/catalog-query";
 import {
   CATALOG_PRECIO_LABELS,
   catalogQueryHref,
   catalogQueryOmit,
 } from "@/lib/catalog-query";
-import type { CategoryRow } from "@/database/repositories";
 
 function thumbNeedsUnoptimized(src: string): boolean {
   return src.includes("placehold.co");
@@ -34,6 +33,7 @@ export interface CatalogFiltersPanelProps {
   coverByCategoryId: Record<string, string>;
   filters: CatalogQueryParts;
   tagOptions: string[];
+  colorOptions: { label: string; hex: string | null }[];
 }
 
 const PRECIO_BANDS: { value: CatalogPrecio }[] = [
@@ -48,18 +48,17 @@ export function CatalogFiltersPanel({
   coverByCategoryId,
   filters,
   tagOptions,
+  colorOptions,
 }: CatalogFiltersPanelProps) {
-  const [q, setQ] = useState("");
   const activeSlug = filters.categoria;
-
-  const filtered = useMemo(() => {
-    const s = q.trim().toLowerCase();
-    if (!s) return categories;
-    return categories.filter(
-      (c) =>
-        c.name.toLowerCase().includes(s) || c.slug.toLowerCase().includes(s),
-    );
-  }, [categories, q]);
+  const hasActiveFilters = Boolean(
+    filters.categoria ||
+      filters.orden ||
+      filters.etiqueta ||
+      filters.precio ||
+      filters.color ||
+      filters.busqueda,
+  );
 
   const rowBase =
     "flex items-center gap-3 rounded-lg border px-2.5 py-2 text-sm transition-all outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background";
@@ -80,20 +79,51 @@ export function CatalogFiltersPanel({
 
   return (
     <div className="space-y-5 p-4 sm:p-5">
-      <div className="relative">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-sm font-bold uppercase tracking-wide text-foreground">
+          Filtros
+        </p>
+        {hasActiveFilters ? (
+          <Link
+            href="/catalogo"
+            scroll={false}
+            className="inline-flex items-center gap-1 rounded-lg border border-primary/40 bg-primary/10 px-2.5 py-1.5 text-xs font-semibold text-primary transition-colors hover:bg-primary/20"
+          >
+            <X className="size-3.5" aria-hidden />
+            Limpiar filtros
+          </Link>
+        ) : null}
+      </div>
+
+      <form action="/catalogo" method="GET" className="relative">
+        {filters.categoria ? (
+          <input type="hidden" name="categoria" value={filters.categoria} />
+        ) : null}
+        {filters.orden ? (
+          <input type="hidden" name="orden" value={filters.orden} />
+        ) : null}
+        {filters.etiqueta ? (
+          <input type="hidden" name="etiqueta" value={filters.etiqueta} />
+        ) : null}
+        {filters.precio ? (
+          <input type="hidden" name="precio" value={filters.precio} />
+        ) : null}
+        {filters.color ? (
+          <input type="hidden" name="color" value={filters.color} />
+        ) : null}
         <Search
           className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
           aria-hidden
         />
         <input
           type="search"
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="Buscar categoría…"
+          name="q"
+          defaultValue={filters.busqueda ?? ""}
+          placeholder="Buscar"
           className="w-full rounded-lg border border-border/90 bg-muted/40 py-2.5 pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground transition-colors focus:border-primary/45 focus:outline-none focus:ring-2 focus:ring-ring/35"
           autoComplete="off"
         />
-      </div>
+      </form>
 
       <section aria-labelledby="panel-sort">
         <p id="panel-sort" className={sectionTitle}>
@@ -167,6 +197,52 @@ export function CatalogFiltersPanel({
         </div>
       </section>
 
+      {colorOptions.length > 0 ? (
+        <>
+          <div className="h-px bg-linear-to-r from-transparent via-border to-transparent" />
+          <section aria-labelledby="panel-color">
+            <p id="panel-color" className={sectionTitle}>
+              <Palette className="size-3.5 text-primary/80" aria-hidden />
+              Color
+            </p>
+            <div className="mt-2.5 grid grid-cols-5 gap-2.5 sm:grid-cols-6">
+              {colorOptions.map((c) => {
+                const key = c.label.toLowerCase();
+                const on = filters.color === key;
+                const href = on
+                  ? catalogQueryHref(catalogQueryOmit(filters, "color"))
+                  : catalogQueryHref({ ...filters, color: key });
+                return (
+                  <Link
+                    key={c.label}
+                    href={href}
+                    scroll={false}
+                    title={c.label}
+                    className="flex flex-col items-center gap-1"
+                  >
+                    <span
+                      className={`flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 transition-all ${
+                        on
+                          ? "border-primary shadow-[0_0_0_2px_rgba(60,200,247,0.25)]"
+                          : "border-border/70 hover:border-primary/45"
+                      }`}
+                      style={c.hex ? { backgroundColor: c.hex } : undefined}
+                    >
+                      {!c.hex ? (
+                        <span className="size-full bg-linear-to-br from-rose-400 via-amber-300 to-sky-400" />
+                      ) : null}
+                    </span>
+                    <span className="max-w-13 truncate text-center text-[10px] font-medium leading-tight text-muted-foreground">
+                      {fmtTag(c.label)}
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
+          </section>
+        </>
+      ) : null}
+
       {tagOptions.length > 0 ? (
         <>
           <div className="h-px bg-linear-to-r from-transparent via-border to-transparent" />
@@ -208,7 +284,7 @@ export function CatalogFiltersPanel({
           <Layers className="size-3.5 text-primary/80" aria-hidden />
           Categorías
         </p>
-        <nav className="mt-2.5 flex max-h-[min(48vh,440px)] flex-col gap-1 overflow-y-auto pr-1 [-ms-overflow-style:none] [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-border">
+        <nav className="mt-2.5 flex max-h-[min(48vh,440px)] flex-col gap-1 overflow-y-auto pr-2 [scrollbar-width:thin] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-primary/45 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-track]:bg-muted/50">
           <Link
             href={catalogQueryHref(catalogQueryOmit(filters, "categoria"))}
             scroll={false}
@@ -220,7 +296,7 @@ export function CatalogFiltersPanel({
             <span className="font-medium leading-snug">Todo el catálogo</span>
           </Link>
 
-          {filtered.map((cat) => {
+          {categories.map((cat) => {
             const selected = activeSlug === cat.slug;
             const href = selected
               ? catalogQueryHref(catalogQueryOmit(filters, "categoria"))
@@ -257,12 +333,6 @@ export function CatalogFiltersPanel({
             );
           })}
         </nav>
-
-        {filtered.length === 0 ? (
-          <p className="mt-3 text-center text-xs text-muted-foreground">
-            No hay categorías que coincidan.
-          </p>
-        ) : null}
       </section>
     </div>
   );

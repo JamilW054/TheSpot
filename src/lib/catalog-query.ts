@@ -9,6 +9,7 @@ export interface CatalogQueryParts {
   orden?: CatalogOrden;
   etiqueta?: string;
   precio?: CatalogPrecio;
+  color?: string;
   busqueda?: string;
 }
 
@@ -41,6 +42,7 @@ export function catalogQueryHref(parts: CatalogQueryParts): string {
   if (parts.orden) p.set("orden", parts.orden);
   if (parts.etiqueta) p.set("etiqueta", parts.etiqueta);
   if (parts.precio) p.set("precio", parts.precio);
+  if (parts.color) p.set("color", parts.color);
   if (parts.busqueda) p.set("q", parts.busqueda);
   const q = p.toString();
   return q ? `/catalogo?${q}` : "/catalogo";
@@ -84,12 +86,14 @@ export function catalogFiltersFromRecord(
   const precio = parseCatalogPrecio(first("precio"));
   const etiquetaRaw = first("etiqueta")?.trim().toLowerCase();
   const categoriaRaw = first("categoria")?.trim();
+  const colorRaw = first("color")?.trim().toLowerCase();
   const busquedaRaw = first("q")?.trim();
   return {
     ...(categoriaRaw ? { categoria: categoriaRaw } : {}),
     ...(orden ? { orden } : {}),
     ...(etiquetaRaw ? { etiqueta: etiquetaRaw } : {}),
     ...(precio ? { precio } : {}),
+    ...(colorRaw ? { color: colorRaw } : {}),
     ...(busquedaRaw ? { busqueda: busquedaRaw } : {}),
   };
 }

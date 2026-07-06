@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { X } from "lucide-react";
+import Link from "next/link";
 import type { CatalogQueryParts } from "@/lib/catalog-query";
 import {
   CATALOG_ORDEN_LABELS,
@@ -47,6 +47,13 @@ export function CatalogFilterChips({
       key: "precio",
       label: CATALOG_PRECIO_LABELS[filters.precio],
       href: catalogQueryHref(catalogQueryOmit(filters, "precio")),
+    });
+  }
+  if (filters.color) {
+    chips.push({
+      key: "color",
+      label: fmtTag(filters.color),
+      href: catalogQueryHref(catalogQueryOmit(filters, "color")),
     });
   }
 

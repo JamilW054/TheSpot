@@ -2,16 +2,19 @@ import { PageLayout } from "@/components/layout";
 import {
   getCommissionRates,
   getOrderNotificationEmail,
+  getStoreConfig,
 } from "@/database/repositories/settings";
 import { CommissionsForm } from "./CommissionsForm";
-import { MockConfigForm } from "./MockConfigForm";
 import { OrderNotificationForm } from "./OrderNotificationForm";
+import { StoreConfigForm } from "./StoreConfigForm";
 
 export default async function AdminConfigPage() {
-  const [orderNotificationEmail, commissionRates] = await Promise.all([
-    getOrderNotificationEmail(),
-    getCommissionRates(),
-  ]);
+  const [orderNotificationEmail, commissionRates, storeConfig] =
+    await Promise.all([
+      getOrderNotificationEmail(),
+      getCommissionRates(),
+      getStoreConfig(),
+    ]);
 
   return (
     <PageLayout title="Configuración">
@@ -21,7 +24,7 @@ export default async function AdminConfigPage() {
           initialAzulPercent={commissionRates.azulPct}
           initialG3deonPercent={commissionRates.g3deonPct}
         />
-        <MockConfigForm />
+        <StoreConfigForm initial={storeConfig} />
       </div>
     </PageLayout>
   );

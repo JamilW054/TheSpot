@@ -659,62 +659,83 @@ export function ProductForm({
           </div>
 
           {/* Panel de rentabilidad calculado en vivo */}
-          <dl className="flex flex-wrap gap-x-8 gap-y-4 rounded-[10px] border border-border bg-muted/40 p-4">
-            <div className="min-w-[132px] flex-1 space-y-1.5">
-              <dt className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                Precio de venta
-              </dt>
-              <dd className="text-base font-semibold tabular-nums text-foreground">
-                {formatDOPFromCents(profit.priceCents)}
-              </dd>
-            </div>
-            <div className="min-w-[132px] flex-1 space-y-1.5">
-              <dt className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                Comisión AZUL ({commissionRates.azulPct}%)
-              </dt>
-              <dd className="text-base font-semibold tabular-nums text-foreground">
-                −{formatDOPFromCents(profit.azulCommissionCents)}
-              </dd>
-            </div>
-            <div className="min-w-[132px] flex-1 space-y-1.5">
-              <dt className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                Comisión G3DEON ({commissionRates.g3deonPct}%)
-              </dt>
-              <dd className="text-base font-semibold tabular-nums text-foreground">
-                −{formatDOPFromCents(profit.g3deonCommissionCents)}
-              </dd>
-            </div>
-            <div className="min-w-[132px] flex-1 space-y-1.5">
-              <dt className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                Beneficio neto
-              </dt>
-              <dd
-                className={`text-base font-semibold tabular-nums ${
-                  profit.netProfitCents < 0
-                    ? "text-destructive"
-                    : "text-foreground"
-                }`}
-              >
-                {formatDOPFromCents(profit.netProfitCents)}
-              </dd>
-            </div>
-            <div className="min-w-[132px] flex-1 space-y-1.5">
-              <dt className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                Margen
-              </dt>
-              <dd
-                className={`text-base font-semibold tabular-nums ${
-                  (profit.marginPct ?? 0) < 0
-                    ? "text-destructive"
-                    : "text-foreground"
-                }`}
-              >
-                {profit.marginPct != null
-                  ? `${profit.marginPct.toFixed(1)}%`
-                  : "—"}
-              </dd>
-            </div>
-          </dl>
+          <div className="space-y-2">
+            <dl className="flex flex-wrap gap-x-8 gap-y-4 rounded-[10px] border border-border bg-muted/40 p-4">
+              <div className="min-w-[132px] flex-1 space-y-1.5">
+                <dt className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                  Precio de venta
+                </dt>
+                <dd className="text-base font-semibold tabular-nums text-foreground">
+                  {formatDOPFromCents(profit.priceCents)}
+                </dd>
+              </div>
+              <div className="min-w-[132px] flex-1 space-y-1.5">
+                <dt className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                  Ganancia bruta
+                </dt>
+                <dd
+                  className={`text-base font-semibold tabular-nums ${
+                    profit.grossProfitCents < 0
+                      ? "text-destructive"
+                      : "text-foreground"
+                  }`}
+                >
+                  {formatDOPFromCents(profit.grossProfitCents)}
+                </dd>
+              </div>
+              <div className="min-w-[132px] flex-1 space-y-1.5">
+                <dt className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                  Comisión AZUL ({commissionRates.azulPct}%)
+                </dt>
+                <dd className="text-base font-semibold tabular-nums text-foreground">
+                  −{formatDOPFromCents(profit.azulCommissionCents)}
+                </dd>
+              </div>
+              <div className="min-w-[132px] flex-1 space-y-1.5">
+                <dt className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                  Comisión G3DEON ({commissionRates.g3deonPct}% de la ganancia)
+                </dt>
+                <dd className="text-base font-semibold tabular-nums text-foreground">
+                  −{formatDOPFromCents(profit.g3deonCommissionCents)}
+                </dd>
+              </div>
+              <div className="min-w-[132px] flex-1 space-y-1.5">
+                <dt className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                  Beneficio neto
+                </dt>
+                <dd
+                  className={`text-base font-semibold tabular-nums ${
+                    profit.netProfitCents < 0
+                      ? "text-destructive"
+                      : "text-foreground"
+                  }`}
+                >
+                  {formatDOPFromCents(profit.netProfitCents)}
+                </dd>
+              </div>
+              <div className="min-w-[132px] flex-1 space-y-1.5">
+                <dt className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                  Margen
+                </dt>
+                <dd
+                  className={`text-base font-semibold tabular-nums ${
+                    (profit.marginPct ?? 0) < 0
+                      ? "text-destructive"
+                      : "text-foreground"
+                  }`}
+                >
+                  {profit.marginPct != null
+                    ? `${profit.marginPct.toFixed(1)}%`
+                    : "—"}
+                </dd>
+              </div>
+            </dl>
+            <p className="px-1 text-[11px] leading-relaxed text-muted-foreground">
+              La comisión G3DEON se calcula sobre la ganancia bruta (precio −
+              coste), no sobre el precio de venta. Si el precio de venta es
+              igual o menor al coste, la comisión G3DEON es RD$0.00.
+            </p>
+          </div>
         </section>
 
         {/* ── Variantes e inventario ── */}

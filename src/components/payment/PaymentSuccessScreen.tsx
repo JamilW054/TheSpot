@@ -20,7 +20,7 @@ export function PaymentSuccessScreen({
   }, [clearCart]);
 
   return (
-    <main className="mx-auto w-full max-w-lg px-4 py-16 sm:px-6">
+    <div className="mx-auto w-full max-w-lg">
       <div className="rounded-2xl border border-primary/25 bg-card p-8 text-center shadow-sm sm:p-10">
         <div className="mx-auto flex size-16 items-center justify-center rounded-full bg-primary/15 text-primary">
           <svg
@@ -48,9 +48,15 @@ export function PaymentSuccessScreen({
           Pago AZUL
         </p>
         <h1 className="mt-2 text-2xl font-bold text-foreground">
-          ¡Pago exitoso!
+          ¡Gracias por tu compra!
         </h1>
-        <p className="mt-1 text-sm font-medium text-foreground">
+        <p className="mt-1 text-sm text-muted-foreground">
+          Tu pago fue procesado con éxito.
+        </p>
+        <p className="mt-1 text-sm font-semibold tracking-wide text-primary">
+          Pedido #{paymentResult.orderId.slice(0, 8).toUpperCase()}
+        </p>
+        <p className="mt-2 text-sm font-medium text-foreground">
           {paymentResult.merchantName}
         </p>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -104,19 +110,19 @@ export function PaymentSuccessScreen({
 
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
           <Link
-            href="/catalogo"
+            href={`/cuenta/pedidos/${paymentResult.orderId}`}
             className="inline-flex justify-center rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground"
+          >
+            Ver pedido
+          </Link>
+          <Link
+            href="/catalogo"
+            className="inline-flex justify-center rounded-xl border border-border px-5 py-3 text-sm font-semibold text-foreground"
           >
             Seguir comprando
           </Link>
-          <Link
-            href="/cuenta/pedidos"
-            className="inline-flex justify-center rounded-xl border border-border px-5 py-3 text-sm font-semibold text-foreground"
-          >
-            Mis pedidos
-          </Link>
         </div>
       </div>
-    </main>
+    </div>
   );
 }

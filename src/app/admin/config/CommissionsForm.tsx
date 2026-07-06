@@ -59,9 +59,11 @@ export function CommissionsForm({
             />
           </div>
           <p className="text-xs text-muted-foreground">
-            Ambas se descuentan del precio de venta al calcular el beneficio
-            neto y el margen de cada producto: beneficio = precio − coste −
-            (precio × %AZUL) − (precio × %G3DEON).
+            AZUL se cobra sobre el precio de venta (comisión de la pasarela de
+            pago). G3DEON se cobra solo sobre la ganancia del producto (precio −
+            coste) — si no hay ganancia, la comisión G3DEON es RD$0.00.
+            Beneficio neto = precio − coste − (precio × %AZUL) − (ganancia ×
+            %G3DEON).
           </p>
           <button
             type="submit"

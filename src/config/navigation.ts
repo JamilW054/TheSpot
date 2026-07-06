@@ -81,6 +81,12 @@ export const ADMIN_NAV: NavItem[] = [
     adminSection: "Ventas",
   },
   {
+    label: "Métodos de pago",
+    href: "/admin/metodos-pago",
+    icon: "CreditCard",
+    adminSection: "Ventas",
+  },
+  {
     label: "Catálogo",
     href: "/admin/catalogo",
     icon: "Store",

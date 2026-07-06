@@ -87,6 +87,7 @@ import {
 } from "./orders";
 import {
   type AdminProductRow,
+  colorsFromVariants,
   PRODUCT_ADMIN_SELECT,
   PRODUCT_ADMIN_SELECT_LEGACY,
   PRODUCT_CATALOG_SELECT,
@@ -123,6 +124,7 @@ export interface GetProductsOptions {
   orden?: CatalogOrden;
   etiqueta?: string;
   precio?: CatalogPrecio;
+  color?: string;
   busqueda?: string;
 }
 
@@ -141,6 +143,33 @@ export async function getPublishedCatalogTags(): Promise<string[]> {
       if (slug) set.add(slug);
     }
     return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, []);
+}
+
+/** Colores distintos (label + hex) entre variantes activas de productos publicados. */
+export async function getPublishedCatalogColors(): Promise<
+  { label: string; hex: string | null }[]
+> {
+  return withNetworkFallback(async () => {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("products")
+      .select("product_variants(attributes, is_active, sort_order)")
+      .eq("is_active", true);
+    if (error) throw toError(error);
+    const byKey = new Map<string, { label: string; hex: string | null }>();
+    for (const row of data ?? []) {
+      const colors = colorsFromVariants(
+        (row as unknown as ProductRow).product_variants,
+      );
+      for (const c of colors) {
+        const key = c.label.toLowerCase();
+        if (!byKey.has(key)) byKey.set(key, c);
+      }
+    }
+    return Array.from(byKey.values()).sort((a, b) =>
+      a.label.localeCompare(b.label),
+    );
   }, []);
 }
 
@@ -207,6 +236,15 @@ export async function getProducts(
           .map((row) => (row as unknown as ProductRow).id),
       );
       products = products.filter((p) => tagged.has(p.id));
+    }
+
+    // Filtro por color: se aplica en memoria sobre `colors` (derivado de
+    // product_variants.attributes, no es una columna filtrable en SQL).
+    const color = options?.color?.trim().toLowerCase();
+    if (color) {
+      products = products.filter((p) =>
+        p.colors.some((c) => c.label.toLowerCase() === color),
+      );
     }
 
     return products;
@@ -651,10 +689,16 @@ export async function getOrderPaymentInfoForUser(
 /** Marca el pedido como pago AZUL antes de redirigir a la pasarela. */
 export async function markOrderAsAzulPayment(orderId: string): Promise<void> {
   const supabase = await createClient();
-  await supabase
+  const { error } = await supabase
     .from("orders")
-    .update({ payment_provider: "AZUL", payment_type: "AZUL_PAYMENT" })
+    .update({ payment_type: "AZUL_PAYMENT" })
     .eq("id", orderId);
+  if (error) {
+    console.error("[markOrderAsAzulPayment] No se pudo marcar el pedido", {
+      orderId,
+      error,
+    });
+  }
 }
 
 export interface UpdateOrderPaymentFromGatewayInput {

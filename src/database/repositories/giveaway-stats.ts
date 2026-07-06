@@ -1,5 +1,4 @@
 import { revalidateTag, unstable_cache } from "next/cache";
-import { SUCCESSFUL_PAYMENT_STATUSES } from "@/lib/payments/status";
 import { createServiceClient } from "@/lib/supabase/server";
 
 const DEFAULT_GOAL = 20000;
@@ -21,25 +20,25 @@ export function getGiveawayGoalPurchases(): number {
 async function fetchPaidPurchaseCountUncached(): Promise<number> {
   const supabase = createServiceClient();
 
-  const paidRes = await supabase
+  // `payment_status` es un ENUM nativo de Postgres (pending|paid|failed|
+  // refunded|partially_refunded) — "paid" es el único valor que representa
+  // una compra confirmada. Filtrar con `.in()` contra alias como "completed"
+  // hace que Postgres rechace la consulta entera (22P02: valor de enum
+  // inválido), no que simplemente no haga match.
+  const { count, error } = await supabase
     .from("orders")
     .select("*", { count: "exact", head: true })
-    .in("payment_status", SUCCESSFUL_PAYMENT_STATUSES)
+    .eq("payment_status", "paid")
     .neq("status", "cancelled");
 
-  if (!paidRes.error && typeof paidRes.count === "number") {
-    return paidRes.count;
+  if (error) {
+    console.error("[giveaway-stats] Error contando compras pagadas", error);
+    return 0;
   }
-
-  const legacyRes = await supabase
-    .from("orders")
-    .select("*", { count: "exact", head: true })
-    .in("status", ["paid", "shipped"]);
-
-  return legacyRes.count ?? 0;
+  return count ?? 0;
 }
 
-/** Pedidos contados como compra realizada: `payment_status = paid` (excl. cancelados); si falla, legacy `status` pagado/enviado. Cache 60s. */
+/** Pedidos contados como compra realizada: `payment_status = 'paid'` (excl. cancelados). Cache 60s. */
 export async function getGiveawayPaidPurchaseCount(): Promise<number> {
   try {
     return await unstable_cache(
@@ -47,7 +46,8 @@ export async function getGiveawayPaidPurchaseCount(): Promise<number> {
       ["giveaway-paid-purchase-count"],
       { revalidate: 60, tags: [GIVEAWAY_STATS_CACHE_TAG] },
     )();
-  } catch {
+  } catch (error) {
+    console.error("[giveaway-stats] Error obteniendo conteo (cache)", error);
     return 0;
   }
 }

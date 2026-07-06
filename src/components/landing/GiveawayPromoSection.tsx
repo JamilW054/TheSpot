@@ -58,7 +58,16 @@ export function GiveawayPromoSection({
 }: GiveawayPromoSectionProps) {
   const goal = Math.max(1, Math.floor(goalPurchases));
   const current = Math.max(0, Math.floor(paidPurchaseCount));
-  const pct = Math.min(100, Math.round((current / goal) * 100));
+  const rawPct = (current / goal) * 100;
+  /** Porcentaje real, redondeado — para el texto y los lectores de pantalla. */
+  const pct = Math.min(100, Math.round(rawPct));
+  /**
+   * Porcentaje para el ANCHO VISUAL de la barra: con metas grandes (20,000),
+   * unas pocas compras redondean a 0% y la barra se ve muerta aunque sí haya
+   * avance. Se le da un mínimo visible (2%) apenas hay 1+ compra pagada, sin
+   * tocar el porcentaje real que se comunica en el texto/aria.
+   */
+  const visualPct = current > 0 ? Math.max(2, Math.min(100, rawPct)) : 0;
   const formattedGoal = formatGiveawayNumber(goal);
   const formattedCount = formatGiveawayNumber(current);
 
@@ -70,7 +79,6 @@ export function GiveawayPromoSection({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-14 sm:py-20 lg:py-24">
         {/* 3-col hero: content | moto image | participation */}
         <div className="grid gap-10 lg:grid-cols-[1fr_auto_1fr] lg:items-center lg:gap-12">
-
           {/* ── Left: headline + prizes ── */}
           <div className="flex flex-col gap-6">
             <div className="flex flex-wrap gap-2">
@@ -107,11 +115,17 @@ export function GiveawayPromoSection({
                 </p>
                 <ul className="mt-3 space-y-2.5 text-xs font-medium leading-snug text-muted-foreground sm:text-sm">
                   <li className="flex gap-2.5">
-                    <Bike className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden />
+                    <Bike
+                      className="mt-0.5 size-4 shrink-0 text-primary"
+                      aria-hidden
+                    />
                     <span>1 ganador moto Vengala 250</span>
                   </li>
                   <li className="flex gap-2.5">
-                    <ShoppingBag className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden />
+                    <ShoppingBag
+                      className="mt-0.5 size-4 shrink-0 text-primary"
+                      aria-hidden
+                    />
                     <span>10 ganadores RD$1.500 en compras</span>
                   </li>
                 </ul>
@@ -157,9 +171,13 @@ export function GiveawayPromoSection({
               <div className="text-center space-y-1">
                 <p className="text-sm font-semibold text-foreground sm:text-base">
                   Llevamos{" "}
-                  <span className="tabular-nums text-primary">{formattedCount}</span>{" "}
+                  <span className="tabular-nums text-primary">
+                    {formattedCount}
+                  </span>{" "}
                   de{" "}
-                  <span className="tabular-nums text-foreground">{formattedGoal}</span>{" "}
+                  <span className="tabular-nums text-foreground">
+                    {formattedGoal}
+                  </span>{" "}
                   compras pagadas
                 </p>
                 <p className="text-xs leading-relaxed text-muted-foreground">
@@ -175,9 +193,9 @@ export function GiveawayPromoSection({
                 aria-label="Avance de compras pagadas hacia la meta del sorteo"
                 className="flex items-center gap-3 text-[11px] font-semibold tabular-nums text-muted-foreground sm:text-xs"
               >
-                <span>0</span>
+                <span>{formattedCount}</span>
                 <div className="min-w-0 flex-1">
-                  <StripedProgressFill idSuffix="main" pct={pct} />
+                  <StripedProgressFill idSuffix="main" pct={visualPct} />
                 </div>
                 <span className="flex items-center gap-1 whitespace-nowrap">
                   {formattedGoal}
@@ -188,8 +206,8 @@ export function GiveawayPromoSection({
                 ★ Se eligen los ganadores ★
               </p>
               <p className="sr-only" aria-live="polite">
-                Sorteo: {formattedCount} de {formattedGoal} compras pagadas.
-                La meta está al {pct} por ciento.
+                Sorteo: {formattedCount} de {formattedGoal} compras pagadas. La
+                meta está al {pct} por ciento.
               </p>
             </div>
 

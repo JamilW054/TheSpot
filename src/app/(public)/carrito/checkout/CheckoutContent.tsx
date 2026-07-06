@@ -7,12 +7,12 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { PaymentMethodSelector } from "@/components/payment/PaymentMethodSelector";
 import { useCart } from "@/contexts/cart-context";
-import { checkoutAction } from "@/lib/actions/checkout";
-import { validateCouponAction } from "@/lib/actions/coupons";
-import { requestPaymentLinkForOrder } from "@/lib/actions/payments";
 import type { ShippingMethod } from "@/database/repositories";
 import type { Address } from "@/database/repositories/addresses";
 import type { PaymentMethodOption } from "@/database/repositories/payments";
+import { checkoutAction } from "@/lib/actions/checkout";
+import { validateCouponAction } from "@/lib/actions/coupons";
+import { requestPaymentLinkForOrder } from "@/lib/actions/payments";
 import { formatDOPFromCents } from "@/lib/format-currency";
 import type { CatalogProduct } from "@/types";
 
@@ -130,8 +130,7 @@ export function CheckoutContent({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Método de pago: por defecto el primero activo y no deshabilitado
-  // (Payment Links). Azul se muestra deshabilitado.
+  // Método de pago: por defecto el primero activo y no deshabilitado.
   const activeMethod =
     paymentMethods.find((m) => !m.isDisabled && m.isActive) ?? null;
   const [selectedMethodCode, setSelectedMethodCode] = useState<string>(
@@ -272,7 +271,7 @@ export function CheckoutContent({
 
     const orderId = result.result.orderId;
 
-    // ── Azul: redirección a la pasarela (deshabilitado por ahora) ──
+    // ── Azul: auto-envía un form POST a la pasarela hospedada ──
     if (isAzul) {
       const redirectForm = document.createElement("form");
       redirectForm.method = "POST";

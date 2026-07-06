@@ -1,6 +1,10 @@
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import type { ProductReview } from "@/types";
 
+interface ReviewProfileJoin {
+  username?: string | null;
+}
+
 export interface ReviewRow {
   id: string;
   product_id: string;
@@ -9,6 +13,14 @@ export interface ReviewRow {
   title: string | null;
   body: string | null;
   created_at: string;
+  /** Join `profiles(username)` — PostgREST puede devolver objeto o array de 1. */
+  profiles?: ReviewProfileJoin | ReviewProfileJoin[] | null;
+}
+
+/** Username del autor a partir del join `profiles`; null si no se pidió el join. */
+function usernameFromRow(row: ReviewRow): string | null {
+  const p = Array.isArray(row.profiles) ? row.profiles[0] : row.profiles;
+  return p?.username?.trim() || null;
 }
 
 export function rowToReview(row: ReviewRow): ProductReview {
@@ -16,7 +28,7 @@ export function rowToReview(row: ReviewRow): ProductReview {
     id: row.id,
     productId: row.product_id,
     userId: row.user_id,
-    userName: null,
+    userName: usernameFromRow(row),
     rating: row.rating,
     title: row.title ?? null,
     body: row.body ?? null,
@@ -27,13 +39,22 @@ export function rowToReview(row: ReviewRow): ProductReview {
 const REVIEW_SELECT =
   "id, product_id, user_id, rating, title, body, created_at";
 
+/** Select con el username del autor — para listados públicos (todas las reseñas). */
+const REVIEW_SELECT_WITH_AUTHOR = `${REVIEW_SELECT}, profiles(username)`;
+
+/**
+ * Reseñas públicas de un producto, con el username del autor. Usa service
+ * role para el join: `profiles` solo permite `select` del propio perfil vía
+ * RLS, pero el username de cada reseñador es información ya pública (la
+ * reseña en sí lo es) — se necesita cruzar perfiles ajenos para mostrarla.
+ */
 export async function getProductReviews(
   productId: string,
 ): Promise<ProductReview[]> {
-  const supabase = await createClient();
+  const supabase = createServiceClient();
   const { data, error } = await supabase
     .from("reviews")
-    .select(REVIEW_SELECT)
+    .select(REVIEW_SELECT_WITH_AUTHOR)
     .eq("product_id", productId)
     .is("deleted_at", null)
     .order("created_at", { ascending: false });
@@ -41,7 +62,7 @@ export async function getProductReviews(
     console.error("[getProductReviews]", error.message);
     return [];
   }
-  return (data ?? []).map((row) => rowToReview(row as ReviewRow));
+  return ((data ?? []) as unknown as ReviewRow[]).map(rowToReview);
 }
 
 /** Returns the current user's review for a product, or null. */

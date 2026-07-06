@@ -95,3 +95,45 @@ export async function getCommissionRates(): Promise<{
   ]);
   return { azulPct, g3deonPct };
 }
+
+export const STORE_CONFIG_KEY = "store_config";
+
+/** Datos generales de la tienda, producción y logística (/admin/config). */
+export interface StoreConfig {
+  nombre: string;
+  direccion: string;
+  contacto: string;
+  telefono: string;
+  plazoDias: number;
+  tiposProducto: string;
+  envioActivo: boolean;
+  zonas: string;
+}
+
+export const DEFAULT_STORE_CONFIG: StoreConfig = {
+  nombre: "",
+  direccion: "",
+  contacto: "",
+  telefono: "",
+  plazoDias: 5,
+  tiposProducto: "",
+  envioActivo: true,
+  zonas: "",
+};
+
+/** Lee la configuración de tienda; cae a los valores por defecto si no existe o está corrupta. */
+export async function getStoreConfig(): Promise<StoreConfig> {
+  const raw = await getSetting(STORE_CONFIG_KEY);
+  if (!raw) return DEFAULT_STORE_CONFIG;
+  try {
+    const parsed = JSON.parse(raw) as Partial<StoreConfig>;
+    return { ...DEFAULT_STORE_CONFIG, ...parsed };
+  } catch {
+    return DEFAULT_STORE_CONFIG;
+  }
+}
+
+/** Guarda la configuración de tienda como un único valor JSON. */
+export async function setStoreConfig(config: StoreConfig): Promise<void> {
+  await setSetting(STORE_CONFIG_KEY, JSON.stringify(config));
+}

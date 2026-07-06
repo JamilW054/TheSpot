@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { PaymentCatalogShowcase } from "@/components/payment/PaymentCatalogShowcase";
 import { PaymentSuccessScreen } from "@/components/payment/PaymentSuccessScreen";
 import { getOrderStatusById } from "@/database/repositories";
 import type { PaymentResult } from "@/types";
@@ -14,6 +15,12 @@ export default async function PagoExitosoPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const params = await searchParams;
+
+  // Página puramente de presentación: la confirmación del pago (verificar
+  // firma, marcar el pedido pagado, etc.) ocurre en el route handler
+  // /api/pagos/azul/retorno (ApprovedUrl/DeclinedUrl/ResponsePostUrl apuntan
+  // ahí), que redirige aquí con `?orderId=…` ya limpio. Nunca se procesa el
+  // pago dentro del render — Next.js prohíbe revalidateTag ahí.
   const orderIdParam = params.orderId;
   const orderId = Array.isArray(orderIdParam) ? orderIdParam[0] : orderIdParam;
   if (!orderId) {
@@ -63,5 +70,13 @@ export default async function PagoExitosoPage({
     description: "Compra de productos",
   };
 
-  return <PaymentSuccessScreen paymentResult={paymentResult} />;
+  return (
+    <main className="mx-auto w-full max-w-5xl px-4 py-16 sm:px-6">
+      <PaymentSuccessScreen paymentResult={paymentResult} />
+      <PaymentCatalogShowcase
+        title="¿Te quedaste con ganas de más?"
+        subtitle="Sigue viendo el catálogo — hay más piezas esperándote."
+      />
+    </main>
+  );
 }

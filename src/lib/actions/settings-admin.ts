@@ -5,7 +5,9 @@ import {
   AZUL_COMMISSION_PERCENT_KEY,
   G3DEON_COMMISSION_PERCENT_KEY,
   ORDER_NOTIFICATION_EMAIL_KEY,
+  type StoreConfig,
   setSetting,
+  setStoreConfig,
 } from "@/database/repositories/settings";
 import { requireAdmin } from "@/lib/auth/require-admin";
 
@@ -70,6 +72,42 @@ export async function updateCommissionPercents(
     ]);
     revalidatePath("/admin/config");
     revalidatePath("/admin/catalogo");
+    return { ok: true };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "Error inesperado." };
+  }
+}
+
+/**
+ * Guarda los datos generales de tienda, producción y logística. Solo admin.
+ */
+export async function updateStoreConfig(
+  _prev: SettingsActionState | undefined,
+  fd: FormData,
+): Promise<SettingsActionState> {
+  try {
+    await requireAdmin();
+    const str = (key: string) => fd.get(key)?.toString().trim() ?? "";
+    const plazoDiasRaw = Number.parseInt(str("plazo_dias"), 10);
+
+    const config: StoreConfig = {
+      nombre: str("nombre"),
+      direccion: str("direccion"),
+      contacto: str("contacto"),
+      telefono: str("telefono"),
+      plazoDias:
+        Number.isFinite(plazoDiasRaw) && plazoDiasRaw > 0 ? plazoDiasRaw : 5,
+      tiposProducto: str("tipos_producto"),
+      envioActivo: fd.get("envio_activo") === "on",
+      zonas: str("zonas"),
+    };
+
+    if (config.contacto && !EMAIL_RE.test(config.contacto)) {
+      throw new Error("El correo de contacto no es válido.");
+    }
+
+    await setStoreConfig(config);
+    revalidatePath("/admin/config");
     return { ok: true };
   } catch (e) {
     return { error: e instanceof Error ? e.message : "Error inesperado." };

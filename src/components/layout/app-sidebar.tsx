@@ -3,6 +3,7 @@
 import {
   BarChart2,
   Bell,
+  CreditCard,
   FileText,
   FolderTree,
   HelpCircle,
@@ -72,6 +73,7 @@ const ADMIN_ICONS: Record<
   Wallet,
   Warehouse,
   HelpCircle,
+  CreditCard,
 };
 
 function navItemActive(
