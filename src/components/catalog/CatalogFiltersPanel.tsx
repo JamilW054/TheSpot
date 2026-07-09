@@ -1,6 +1,7 @@
 import {
   ArrowDownWideNarrow,
   ArrowUpWideNarrow,
+  ChevronDown,
   Layers,
   Palette,
   Search,
@@ -16,6 +17,7 @@ import type { CategoryRow } from "@/database/repositories";
 import type { CatalogPrecio, CatalogQueryParts } from "@/lib/catalog-query";
 import {
   CATALOG_PRECIO_LABELS,
+  CATALOG_PRECIO_RANGE_LABELS,
   catalogQueryHref,
   catalogQueryOmit,
 } from "@/lib/catalog-query";
@@ -61,25 +63,25 @@ export function CatalogFiltersPanel({
   );
 
   const rowBase =
-    "flex items-center gap-3 rounded-lg border px-2.5 py-2 text-sm transition-all outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background";
-  const rowInactive =
-    "border-transparent bg-muted/35 text-foreground hover:border-border/90 hover:bg-muted/55";
-  const rowActive =
-    "border-primary/50 bg-primary/[0.12] text-foreground shadow-[inset_0_0_0_1px_rgba(60,200,247,0.18)]";
+    "flex items-center gap-3 rounded-md px-2 py-2 text-sm transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background";
+  const rowInactive = "text-foreground hover:bg-muted/50";
+  const rowActive = "bg-muted font-semibold text-foreground";
 
   const pillBase =
-    "inline-flex items-center justify-center gap-1 rounded-lg border px-2.5 py-2 text-center text-[11px] font-semibold leading-tight transition-colors sm:text-xs";
+    "inline-flex items-center justify-center gap-1 rounded-md border px-2.5 py-2 text-center text-[11px] font-semibold leading-tight transition-colors sm:text-xs";
   const pillOff =
-    "border-border/80 bg-muted/30 text-muted-foreground hover:border-primary/35 hover:bg-muted/50 hover:text-foreground";
-  const pillOn =
-    "border-primary/55 bg-primary/20 text-foreground shadow-[inset_0_0_0_1px_rgba(60,200,247,0.2)]";
+    "border-border/75 bg-transparent text-muted-foreground hover:border-foreground/40 hover:text-foreground";
+  const pillOn = "border-primary bg-primary text-primary-foreground";
 
-  const sectionTitle =
-    "flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground";
+  const sectionSummary =
+    "flex w-full cursor-pointer list-none items-center justify-between py-3.5 text-[11px] font-bold uppercase tracking-[0.14em] text-foreground outline-none focus-visible:text-primary [&::-webkit-details-marker]:hidden marker:hidden";
+  const sectionTitle = "flex items-center gap-2";
+  const sectionChevron =
+    "size-3.5 shrink-0 text-muted-foreground transition-transform duration-200 group-open:rotate-180";
 
   return (
-    <div className="space-y-5 p-4 sm:p-5">
-      <div className="flex items-center justify-between gap-2">
+    <div className="flex flex-col p-4 sm:p-5">
+      <div className="flex items-center justify-between gap-2 pb-4">
         <p className="text-sm font-bold uppercase tracking-wide text-foreground">
           Filtros
         </p>
@@ -87,7 +89,7 @@ export function CatalogFiltersPanel({
           <Link
             href="/catalogo"
             scroll={false}
-            className="inline-flex items-center gap-1 rounded-lg border border-primary/40 bg-primary/10 px-2.5 py-1.5 text-xs font-semibold text-primary transition-colors hover:bg-primary/20"
+            className="inline-flex items-center gap-1 rounded-md border border-primary/40 bg-primary/10 px-2.5 py-1.5 text-xs font-semibold text-primary transition-colors hover:bg-primary/20"
           >
             <X className="size-3.5" aria-hidden />
             Limpiar filtros
@@ -95,7 +97,7 @@ export function CatalogFiltersPanel({
         ) : null}
       </div>
 
-      <form action="/catalogo" method="GET" className="relative">
+      <form action="/catalogo" method="GET" className="relative pb-4">
         {filters.categoria ? (
           <input type="hidden" name="categoria" value={filters.categoria} />
         ) : null}
@@ -120,92 +122,108 @@ export function CatalogFiltersPanel({
           name="q"
           defaultValue={filters.busqueda ?? ""}
           placeholder="Buscar"
-          className="w-full rounded-lg border border-border/90 bg-muted/40 py-2.5 pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground transition-colors focus:border-primary/45 focus:outline-none focus:ring-2 focus:ring-ring/35"
+          className="w-full rounded-md border border-border/80 bg-transparent py-2.5 pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground transition-colors focus:border-primary/60 focus:outline-none focus:ring-2 focus:ring-ring/35"
           autoComplete="off"
         />
       </form>
 
-      <section aria-labelledby="panel-sort">
-        <p id="panel-sort" className={sectionTitle}>
-          <Sparkles className="size-3.5 text-primary/80" aria-hidden />
-          Ordenar
-        </p>
-        <div className="mt-2.5 grid grid-cols-2 gap-1.5">
-          <Link
-            href={catalogQueryHref(catalogQueryOmit(filters, "orden"))}
-            scroll={false}
-            className={`${pillBase} col-span-2 ${!filters.orden ? pillOn : pillOff}`}
-          >
-            Catálogo
-          </Link>
-          <Link
-            href={catalogQueryHref({ ...filters, orden: "precio-menor" })}
-            scroll={false}
-            className={`${pillBase} ${filters.orden === "precio-menor" ? pillOn : pillOff}`}
-          >
-            <ArrowUpWideNarrow
-              className="size-3 shrink-0 opacity-90"
-              aria-hidden
-            />
-            Precio ↑
-          </Link>
-          <Link
-            href={catalogQueryHref({ ...filters, orden: "precio-mayor" })}
-            scroll={false}
-            className={`${pillBase} ${filters.orden === "precio-mayor" ? pillOn : pillOff}`}
-          >
-            <ArrowDownWideNarrow
-              className="size-3 shrink-0 opacity-90"
-              aria-hidden
-            />
-            Precio ↓
-          </Link>
-          <Link
-            href={catalogQueryHref({ ...filters, orden: "az" })}
-            scroll={false}
-            className={`${pillBase} col-span-2 ${filters.orden === "az" ? pillOn : pillOff}`}
-          >
-            Nombre A-Z
-          </Link>
-        </div>
-      </section>
+      <div className="divide-y divide-border/70 border-t border-border/70">
+        <details className="group" open>
+          <summary className={sectionSummary}>
+            <span className={sectionTitle}>
+              <Sparkles className="size-3.5 text-primary/80" aria-hidden />
+              Ordenar
+            </span>
+            <ChevronDown className={sectionChevron} aria-hidden />
+          </summary>
+          <div className="grid grid-cols-2 gap-1.5 pb-4">
+            <Link
+              href={catalogQueryHref(catalogQueryOmit(filters, "orden"))}
+              scroll={false}
+              className={`${pillBase} col-span-2 ${!filters.orden ? pillOn : pillOff}`}
+            >
+              Catálogo
+            </Link>
+            <Link
+              href={catalogQueryHref({ ...filters, orden: "precio-menor" })}
+              scroll={false}
+              className={`${pillBase} ${filters.orden === "precio-menor" ? pillOn : pillOff}`}
+            >
+              <ArrowUpWideNarrow
+                className="size-3 shrink-0 opacity-90"
+                aria-hidden
+              />
+              Precio ↑
+            </Link>
+            <Link
+              href={catalogQueryHref({ ...filters, orden: "precio-mayor" })}
+              scroll={false}
+              className={`${pillBase} ${filters.orden === "precio-mayor" ? pillOn : pillOff}`}
+            >
+              <ArrowDownWideNarrow
+                className="size-3 shrink-0 opacity-90"
+                aria-hidden
+              />
+              Precio ↓
+            </Link>
+            <Link
+              href={catalogQueryHref({ ...filters, orden: "az" })}
+              scroll={false}
+              className={`${pillBase} col-span-2 ${filters.orden === "az" ? pillOn : pillOff}`}
+            >
+              Nombre A-Z
+            </Link>
+          </div>
+        </details>
 
-      <div className="h-px bg-linear-to-r from-transparent via-border to-transparent" />
+        <details className="group" open>
+          <summary className={sectionSummary}>
+            <span className={sectionTitle}>
+              <Wallet className="size-3.5 text-primary/80" aria-hidden />
+              Precio
+            </span>
+            <ChevronDown className={sectionChevron} aria-hidden />
+          </summary>
+          <div className="grid grid-cols-3 gap-1.5 pb-4">
+            {PRECIO_BANDS.map(({ value }) => {
+              const on = filters.precio === value;
+              const href = on
+                ? catalogQueryHref(catalogQueryOmit(filters, "precio"))
+                : catalogQueryHref({ ...filters, precio: value });
+              return (
+                <Link
+                  key={value}
+                  href={href}
+                  scroll={false}
+                  title={CATALOG_PRECIO_RANGE_LABELS[value]}
+                  className={`${pillBase} flex-col gap-0.5 px-1 py-2 ${on ? pillOn : pillOff}`}
+                >
+                  <span>{CATALOG_PRECIO_LABELS[value]}</span>
+                  <span
+                    className={`text-[9px] font-normal normal-case ${on ? "text-primary-foreground/80" : "text-muted-foreground"}`}
+                  >
+                    {value === "economico"
+                      ? "< $2,000"
+                      : value === "medio"
+                        ? "$2,000–6,000"
+                        : "> $6,000"}
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
+        </details>
 
-      <section aria-labelledby="panel-price">
-        <p id="panel-price" className={sectionTitle}>
-          <Wallet className="size-3.5 text-primary/80" aria-hidden />
-          Precio
-        </p>
-        <div className="mt-2.5 grid grid-cols-3 gap-1.5">
-          {PRECIO_BANDS.map(({ value }) => {
-            const on = filters.precio === value;
-            const href = on
-              ? catalogQueryHref(catalogQueryOmit(filters, "precio"))
-              : catalogQueryHref({ ...filters, precio: value });
-            return (
-              <Link
-                key={value}
-                href={href}
-                scroll={false}
-                className={`${pillBase} flex-col gap-0.5 px-1 py-2 ${on ? pillOn : pillOff}`}
-              >
-                <span>{CATALOG_PRECIO_LABELS[value]}</span>
-              </Link>
-            );
-          })}
-        </div>
-      </section>
-
-      {colorOptions.length > 0 ? (
-        <>
-          <div className="h-px bg-linear-to-r from-transparent via-border to-transparent" />
-          <section aria-labelledby="panel-color">
-            <p id="panel-color" className={sectionTitle}>
-              <Palette className="size-3.5 text-primary/80" aria-hidden />
-              Color
-            </p>
-            <div className="mt-2.5 grid grid-cols-5 gap-2.5 sm:grid-cols-6">
+        {colorOptions.length > 0 ? (
+          <details className="group" open>
+            <summary className={sectionSummary}>
+              <span className={sectionTitle}>
+                <Palette className="size-3.5 text-primary/80" aria-hidden />
+                Color
+              </span>
+              <ChevronDown className={sectionChevron} aria-hidden />
+            </summary>
+            <div className="grid grid-cols-5 gap-2.5 pb-4 sm:grid-cols-6">
               {colorOptions.map((c) => {
                 const key = c.label.toLowerCase();
                 const on = filters.color === key;
@@ -239,19 +257,19 @@ export function CatalogFiltersPanel({
                 );
               })}
             </div>
-          </section>
-        </>
-      ) : null}
+          </details>
+        ) : null}
 
-      {tagOptions.length > 0 ? (
-        <>
-          <div className="h-px bg-linear-to-r from-transparent via-border to-transparent" />
-          <section aria-labelledby="panel-tags">
-            <p id="panel-tags" className={sectionTitle}>
-              <Tags className="size-3.5 text-primary/80" aria-hidden />
-              Etiquetas
-            </p>
-            <div className="mt-2.5 flex flex-wrap gap-1.5">
+        {tagOptions.length > 0 ? (
+          <details className="group" open>
+            <summary className={sectionSummary}>
+              <span className={sectionTitle}>
+                <Tags className="size-3.5 text-primary/80" aria-hidden />
+                Etiquetas
+              </span>
+              <ChevronDown className={sectionChevron} aria-hidden />
+            </summary>
+            <div className="flex flex-wrap gap-1.5 pb-4">
               {tagOptions.map((tag) => {
                 const on = filters.etiqueta === tag;
                 const href = on
@@ -264,8 +282,8 @@ export function CatalogFiltersPanel({
                     scroll={false}
                     className={`rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors ${
                       on
-                        ? "border-primary/55 bg-primary/15 text-foreground"
-                        : "border-border/70 bg-muted/25 text-muted-foreground hover:border-primary/35 hover:text-foreground"
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-border/75 bg-transparent text-muted-foreground hover:border-foreground/40 hover:text-foreground"
                     }`}
                   >
                     {fmtTag(tag)}
@@ -273,67 +291,68 @@ export function CatalogFiltersPanel({
                 );
               })}
             </div>
-          </section>
-        </>
-      ) : null}
+          </details>
+        ) : null}
 
-      <div className="h-px bg-linear-to-r from-transparent via-border to-transparent" />
-
-      <section aria-labelledby="panel-cats">
-        <p id="panel-cats" className={sectionTitle}>
-          <Layers className="size-3.5 text-primary/80" aria-hidden />
-          Categorías
-        </p>
-        <nav className="mt-2.5 flex max-h-[min(48vh,440px)] flex-col gap-1 overflow-y-auto pr-2 [scrollbar-width:thin] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-primary/45 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-track]:bg-muted/50">
-          <Link
-            href={catalogQueryHref(catalogQueryOmit(filters, "categoria"))}
-            scroll={false}
-            className={`${rowBase} ${!activeSlug ? rowActive : rowInactive}`}
-          >
-            <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted/80 text-muted-foreground ring-1 ring-border/50">
-              <Shirt className="size-5 opacity-55" aria-hidden />
+        <details className="group" open>
+          <summary className={sectionSummary}>
+            <span className={sectionTitle}>
+              <Layers className="size-3.5 text-primary/80" aria-hidden />
+              Categorías
             </span>
-            <span className="font-medium leading-snug">Todo el catálogo</span>
-          </Link>
+            <ChevronDown className={sectionChevron} aria-hidden />
+          </summary>
+          <nav className="flex flex-col gap-0.5 pb-4">
+            <Link
+              href={catalogQueryHref(catalogQueryOmit(filters, "categoria"))}
+              scroll={false}
+              className={`${rowBase} ${!activeSlug ? rowActive : rowInactive}`}
+            >
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-muted/80 text-muted-foreground">
+                <Shirt className="size-4.5 opacity-55" aria-hidden />
+              </span>
+              <span className="leading-snug">Todo el catálogo</span>
+            </Link>
 
-          {categories.map((cat) => {
-            const selected = activeSlug === cat.slug;
-            const href = selected
-              ? catalogQueryHref(catalogQueryOmit(filters, "categoria"))
-              : catalogQueryHref({ ...filters, categoria: cat.slug });
-            const cover = cat.image_url?.trim() || coverByCategoryId[cat.id];
+            {categories.map((cat) => {
+              const selected = activeSlug === cat.slug;
+              const href = selected
+                ? catalogQueryHref(catalogQueryOmit(filters, "categoria"))
+                : catalogQueryHref({ ...filters, categoria: cat.slug });
+              const cover = cat.image_url?.trim() || coverByCategoryId[cat.id];
 
-            return (
-              <Link
-                key={cat.id}
-                href={href}
-                scroll={false}
-                className={`${rowBase} ${selected ? rowActive : rowInactive}`}
-              >
-                <span className="relative size-10 shrink-0 overflow-hidden rounded-lg bg-muted ring-1 ring-border/60">
-                  {cover ? (
-                    <Image
-                      src={cover}
-                      alt=""
-                      fill
-                      sizes="40px"
-                      className="object-cover"
-                      unoptimized={thumbNeedsUnoptimized(cover)}
-                    />
-                  ) : (
-                    <span className="flex size-full items-center justify-center text-muted-foreground">
-                      <Shirt className="size-5 opacity-45" aria-hidden />
-                    </span>
-                  )}
-                </span>
-                <span className="min-w-0 flex-1 font-medium leading-snug line-clamp-2">
-                  {cat.name}
-                </span>
-              </Link>
-            );
-          })}
-        </nav>
-      </section>
+              return (
+                <Link
+                  key={cat.id}
+                  href={href}
+                  scroll={false}
+                  className={`${rowBase} ${selected ? rowActive : rowInactive}`}
+                >
+                  <span className="relative size-9 shrink-0 overflow-hidden rounded-md bg-muted">
+                    {cover ? (
+                      <Image
+                        src={cover}
+                        alt=""
+                        fill
+                        sizes="36px"
+                        className="object-cover"
+                        unoptimized={thumbNeedsUnoptimized(cover)}
+                      />
+                    ) : (
+                      <span className="flex size-full items-center justify-center text-muted-foreground">
+                        <Shirt className="size-4.5 opacity-45" aria-hidden />
+                      </span>
+                    )}
+                  </span>
+                  <span className="min-w-0 flex-1 leading-snug line-clamp-2">
+                    {cat.name}
+                  </span>
+                </Link>
+              );
+            })}
+          </nav>
+        </details>
+      </div>
     </div>
   );
 }

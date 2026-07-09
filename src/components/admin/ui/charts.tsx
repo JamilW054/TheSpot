@@ -277,11 +277,14 @@ export function DonutChart({
           </div>
         ) : null}
       </div>
-      <ul className="grid w-full gap-2">
+      <ul className="grid w-full min-w-0 gap-2">
         {data.map((slice, i) => {
           const pct = Math.round((slice.value / total) * 100);
           return (
-            <li key={slice.name} className="flex items-center gap-2 text-sm">
+            <li
+              key={slice.name}
+              className="flex min-w-0 items-center gap-2 text-sm"
+            >
               <span
                 className="size-2.5 shrink-0 rounded-full"
                 style={{
@@ -293,10 +296,10 @@ export function DonutChart({
               <span className="min-w-0 flex-1 truncate text-muted-foreground">
                 {slice.name}
               </span>
-              <span className="font-medium tabular-nums text-foreground">
+              <span className="shrink-0 font-medium tabular-nums text-foreground">
                 {valueFormatter(slice.value)}
               </span>
-              <span className="w-9 text-right text-xs tabular-nums text-muted-foreground">
+              <span className="w-9 shrink-0 text-right text-xs tabular-nums text-muted-foreground">
                 {pct}%
               </span>
             </li>

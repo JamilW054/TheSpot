@@ -104,6 +104,13 @@ export const CATALOG_PRECIO_LABELS: Record<CatalogPrecio, string> = {
   premium: "Premium",
 };
 
+/** Rango legible por banda (RD$), en sincronía con los umbrales de `getProducts`. */
+export const CATALOG_PRECIO_RANGE_LABELS: Record<CatalogPrecio, string> = {
+  economico: "Menos de RD$2,000",
+  medio: "RD$2,000 – RD$6,000",
+  premium: "Más de RD$6,000",
+};
+
 export const CATALOG_ORDEN_LABELS: Record<CatalogOrden, string> = {
   recientes: "Novedades",
   "precio-menor": "Precio ↑",

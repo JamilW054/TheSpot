@@ -195,13 +195,17 @@ export async function getProducts(
       query = query.ilike("name", `%${busqueda}%`);
     }
 
+    // Bandas de precio definidas por el cliente: Accesible < RD$2,000,
+    // Medio RD$2,000–6,000, Premium > RD$6,000 (base_price_cents en céntimos).
     const band = options?.precio;
     if (band === "economico") {
-      query = query.lt("base_price_cents", 2400);
+      query = query.lt("base_price_cents", 200_000);
     } else if (band === "medio") {
-      query = query.gte("base_price_cents", 2400).lt("base_price_cents", 2700);
+      query = query
+        .gte("base_price_cents", 200_000)
+        .lt("base_price_cents", 600_000);
     } else if (band === "premium") {
-      query = query.gte("base_price_cents", 2700);
+      query = query.gte("base_price_cents", 600_000);
     }
 
     const orden = options?.orden;

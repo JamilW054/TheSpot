@@ -15,6 +15,8 @@ export interface StatCardProps {
   deltaPct?: number | null;
   /** Resalta el valor con el acento de marca Buxxep. */
   accent?: boolean;
+  /** Color del valor principal — "danger" para cifras negativas (p. ej. pérdida neta). */
+  valueTone?: "default" | "danger";
 }
 
 /**
@@ -28,6 +30,7 @@ export function StatCard({
   icon,
   deltaPct,
   accent = false,
+  valueTone = "default",
 }: StatCardProps) {
   const hasDelta = deltaPct != null && Number.isFinite(deltaPct);
   const deltaUp = hasDelta && (deltaPct as number) >= 0;
@@ -50,7 +53,11 @@ export function StatCard({
           </span>
         ) : null}
       </div>
-      <p className="mt-3 truncate text-3xl font-semibold tabular-nums tracking-[-0.025em] text-foreground">
+      <p
+        className={`mt-3 truncate text-3xl font-semibold tabular-nums tracking-[-0.025em] ${
+          valueTone === "danger" ? "text-(--admin-danger)" : "text-foreground"
+        }`}
+      >
         {value}
       </p>
       {(sub || hasDelta) && (

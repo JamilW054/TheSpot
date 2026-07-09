@@ -7,13 +7,17 @@ import {
   CircleDollarSign,
   Clock,
   CreditCard,
+  HandCoins,
+  Info,
   PackageX,
+  Percent,
   Plus,
   ShoppingCart,
   Tag,
   TrendingUp,
   Trophy,
   Users,
+  Wallet,
   Zap,
 } from "lucide-react";
 import Link from "next/link";
@@ -33,7 +37,10 @@ import {
   RevenueAreaChart,
   StatCard,
 } from "@/components/admin/ui";
-import type { AdminDashboardMetrics } from "@/database/repositories/admin-metrics";
+import type {
+  AdminDashboardMetrics,
+  MonthlyCommissionSummary,
+} from "@/database/repositories/admin-metrics";
 import { formatDOPFromCents } from "@/lib/format-currency";
 import { formatDate } from "@/lib/format-date";
 import type { Pedido } from "@/types";
@@ -138,11 +145,13 @@ const PEDIDO_COLUMNS: DataTableColumn<Pedido>[] = [
 export interface AdminDashboardClientProps {
   metrics: AdminDashboardMetrics;
   recentPedidos: Pedido[];
+  commissions: MonthlyCommissionSummary;
 }
 
 export function AdminDashboardClient({
   metrics,
   recentPedidos,
+  commissions,
 }: AdminDashboardClientProps) {
   const today = formatDate(new Date().toISOString(), {
     weekday: "long",
@@ -151,6 +160,9 @@ export function AdminDashboardClient({
     year: "numeric",
   });
   const todayCapitalized = today.charAt(0).toUpperCase() + today.slice(1);
+  const commissionMonthLabel =
+    commissions.monthLabel.charAt(0).toUpperCase() +
+    commissions.monthLabel.slice(1);
 
   const paymentSlices = [
     {
@@ -259,6 +271,75 @@ export function AdminDashboardClient({
           sub="últimos 180 días"
           icon={<CreditCard className="size-4" />}
         />
+      </section>
+
+      {/* ── Comisiones adeudadas este mes (AZUL + G3DEON) ── */}
+      <section aria-label="Comisiones del mes" className="space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-sm font-semibold tracking-tight text-foreground">
+            Comisiones · {commissionMonthLabel}
+          </h2>
+          <Link
+            href="/admin/config"
+            className="flex items-center gap-1 text-xs font-medium text-(--admin-brand-strong) hover:opacity-80"
+          >
+            Ajustar porcentajes <ArrowRight className="size-3" aria-hidden />
+          </Link>
+        </div>
+
+        {commissions.itemsRevenueCents > 0 &&
+        commissions.costCoveragePct < 100 ? (
+          <div className="flex items-start gap-2.5 rounded-3xl border border-border bg-(--admin-warning-soft) px-5 py-3.5 text-sm text-foreground">
+            <Info
+              className="mt-0.5 size-4 shrink-0 text-(--admin-warning)"
+              aria-hidden
+            />
+            <p>
+              Solo el{" "}
+              <span className="font-semibold">
+                {commissions.costCoveragePct.toFixed(0)}%
+              </span>{" "}
+              del ingreso de este mes corresponde a productos con coste
+              registrado — la ganancia y la comisión G3DEON reales podrían
+              ser menores que lo mostrado.{" "}
+              <Link
+                href="/admin/catalogo"
+                className="font-medium text-(--admin-brand-strong) hover:underline"
+              >
+                Completar costes
+              </Link>
+            </p>
+          </div>
+        ) : null}
+
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <StatCard
+            label="Procesado por AZUL"
+            value={formatDOPFromCents(commissions.azulRevenueCents)}
+            sub={`${commissions.azulOrdersCount} pedido${commissions.azulOrdersCount !== 1 ? "s" : ""} pagados`}
+            icon={<CreditCard className="size-4" />}
+          />
+          <StatCard
+            label="A pagar a AZUL"
+            value={formatDOPFromCents(commissions.azulCommissionCents)}
+            sub={`${commissions.azulPct}% de lo procesado`}
+            icon={<Percent className="size-4" />}
+          />
+          <StatCard
+            label="A pagar a G3DEON"
+            value={formatDOPFromCents(commissions.g3deonCommissionCents)}
+            sub={`${commissions.g3deonPct}% de la ganancia bruta`}
+            icon={<HandCoins className="size-4" />}
+          />
+          <StatCard
+            label="Ganancia neta del mes"
+            value={formatDOPFromCents(commissions.netProfitCents)}
+            sub="ingresos − coste − ambas comisiones"
+            icon={<Wallet className="size-4" />}
+            valueTone={commissions.netProfitCents < 0 ? "danger" : "default"}
+            accent={commissions.netProfitCents >= 0}
+          />
+        </div>
       </section>
 
       {/* ── KPIs: catálogo y clientes ── */}

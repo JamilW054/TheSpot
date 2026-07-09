@@ -80,7 +80,7 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
             alt={product.name}
             fill
             className="object-cover transition-transform duration-700 group-hover/card:scale-[1.05]"
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 22vw"
+            sizes="(max-width: 480px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 320px"
             unoptimized={imageNeedsUnoptimized(product.coverImage)}
           />
         ) : (

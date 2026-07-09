@@ -24,20 +24,14 @@ function isSandboxEnabled(): boolean {
   return v === "true" || v === "1" || v === "yes";
 }
 
-// URLs oficiales del manual de Página de Pago AZUL. Ojo: el ambiente de
-// pruebas NO usa Default.aspx (así aparece en la tabla de URLs de la doc y en
-// el action del formulario del ejemplo oficial); producción sí.
-const SANDBOX_PAYMENT_PAGE_URL = "https://pruebas.azul.com.do/PaymentPage/";
+// URL oficial del manual de Página de Pago AZUL. Se usa siempre, incluso en
+// sandbox: `AZUL_SANDBOX` solo afecta credenciales/flags, no el endpoint.
 const PRODUCTION_PAYMENT_PAGE_URL =
   "https://pagos.azul.com.do/PaymentPage/Default.aspx";
 
-/** URL del formulario hospedado de AZUL, con overrides opcionales por entorno. */
-function resolvePaymentPageUrl(sandbox: boolean): string {
-  const override = sandbox
-    ? readAzulEnv("AZUL_SANDBOX_URL")
-    : readAzulEnv("AZUL_PRODUCTION_URL");
-  if (override) return override;
-  return sandbox ? SANDBOX_PAYMENT_PAGE_URL : PRODUCTION_PAYMENT_PAGE_URL;
+/** URL del formulario hospedado de AZUL, con override opcional. */
+function resolvePaymentPageUrl(): string {
+  return readAzulEnv("AZUL_PRODUCTION_URL") || PRODUCTION_PAYMENT_PAGE_URL;
 }
 
 export interface AzulPaymentPageConfig {
@@ -66,7 +60,7 @@ export function getAzulPaymentPageConfig(): AzulPaymentPageConfig {
   const sandbox = isSandboxEnabled();
   return {
     sandbox,
-    paymentPageUrl: resolvePaymentPageUrl(sandbox),
+    paymentPageUrl: resolvePaymentPageUrl(),
     merchantId: getAzulMerchantIdentifier(),
     merchantName: readAzulEnv("AZUL_MERCHANT_NAME") || "BUXXEP STORE",
     merchantType: readAzulEnv("AZUL_MERCHANT_TYPE") || "ECommerce",
