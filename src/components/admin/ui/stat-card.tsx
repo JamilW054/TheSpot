@@ -17,6 +17,8 @@ export interface StatCardProps {
   accent?: boolean;
   /** Color del valor principal — "danger" para cifras negativas (p. ej. pérdida neta). */
   valueTone?: "default" | "danger";
+  /** Tamaño del valor. "sm" para textos largos (p. ej. nombre de producto). */
+  valueSize?: "default" | "sm";
 }
 
 /**
@@ -31,6 +33,7 @@ export function StatCard({
   deltaPct,
   accent = false,
   valueTone = "default",
+  valueSize = "default",
 }: StatCardProps) {
   const hasDelta = deltaPct != null && Number.isFinite(deltaPct);
   const deltaUp = hasDelta && (deltaPct as number) >= 0;
@@ -54,7 +57,11 @@ export function StatCard({
         ) : null}
       </div>
       <p
-        className={`mt-3 truncate text-3xl font-semibold tabular-nums tracking-[-0.025em] ${
+        className={`mt-3 font-semibold tabular-nums tracking-[-0.025em] ${
+          valueSize === "sm"
+            ? "line-clamp-2 text-sm leading-snug"
+            : "truncate text-3xl"
+        } ${
           valueTone === "danger" ? "text-(--admin-danger)" : "text-foreground"
         }`}
       >

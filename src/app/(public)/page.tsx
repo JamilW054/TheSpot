@@ -33,8 +33,6 @@ async function getClothDesignImageUrls(): Promise<string[]> {
   }
 }
 
-const MODEL_ACTITUD = "/people/modelo-actitud.png";
-
 const TICKER_ITEMS = [
   { id: "t1", text: "NUEVA COLECCIÓN 2025" },
   { id: "t2", text: "ENVÍO A TODO EL PAÍS" },
@@ -68,6 +66,45 @@ export default async function PublicPage() {
   const giveawayGoal = getGiveawayGoalPurchases();
   const featured = products.slice(0, 6);
   const clothSlice = clothDesigns.slice(0, 3);
+
+  // Bento — un producto representativo por categoría (usando la foto del
+  // producto). Rellena con otros productos hasta llegar a 6 cajas.
+  const bentoCards: {
+    image: string | null;
+    label: string;
+    title: string;
+    description: string;
+    href: string;
+  }[] = [];
+  const usedProductIds = new Set<string>();
+  for (const cat of categories) {
+    if (bentoCards.length >= 6) break;
+    const product = products.find(
+      (p) => p.categorySlug === cat.slug && p.coverImage,
+    );
+    if (!product) continue;
+    usedProductIds.add(product.id);
+    bentoCards.push({
+      image: product.coverImage,
+      label: cat.name,
+      title: product.name,
+      description: product.price,
+      href: `/catalogo/${product.slug}`,
+    });
+  }
+  // Completar hasta 6 con productos aún no usados.
+  for (const product of products) {
+    if (bentoCards.length >= 6) break;
+    if (usedProductIds.has(product.id) || !product.coverImage) continue;
+    usedProductIds.add(product.id);
+    bentoCards.push({
+      image: product.coverImage,
+      label: "Destacado",
+      title: product.name,
+      description: product.price,
+      href: `/catalogo/${product.slug}`,
+    });
+  }
 
   return (
     <article className="flex flex-col bg-background text-foreground overflow-x-hidden">
@@ -384,41 +421,6 @@ export default async function PublicPage() {
         </section>
       )}
 
-      {/* ─── 4. TEMPORADA ────────────────────────────────────────────── */}
-      <section className="hidden sm:flex relative w-full overflow-hidden min-h-[55vh] sm:min-h-[60vh] items-center">
-        <Image
-          src={MODEL_ACTITUD}
-          alt=""
-          fill
-          className="object-cover object-center"
-          sizes="100vw"
-        />
-        <div className="absolute inset-0 bg-linear-to-r from-black/85 via-black/55 to-transparent" />
-        <div className={`relative z-10 ${C} w-full py-20`}>
-          <ScrollReveal>
-            <p className="text-[11px] font-bold uppercase tracking-[0.35em] text-primary mb-3">
-              Ahora disponible
-            </p>
-            <h2 className="text-[clamp(2rem,5vw,3.5rem)] font-black uppercase tracking-tight text-white leading-tight max-w-xl">
-              Colección
-              <br />
-              <span className="text-primary">Temporada 2025</span>
-            </h2>
-            <p className="mt-4 text-white/75 max-w-sm text-sm leading-relaxed">
-              Prendas frescas y modernas pensadas para la nueva temporada.
-            </p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Link
-                href="/catalogo?orden=recientes"
-                className="inline-flex items-center justify-center rounded-xl bg-white text-black px-7 py-3 text-sm font-bold hover:bg-white/90 transition-colors"
-              >
-                Ver colección →
-              </Link>
-            </div>
-          </ScrollReveal>
-        </div>
-      </section>
-
       {/* ─── 5. MODELOS EN TELA ──────────────────────────────────────── */}
       {clothSlice.length > 0 && (
         <section
@@ -486,21 +488,23 @@ export default async function PublicPage() {
         <ScrollReveal>
           <div className="mb-8">
             <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-primary">
-              Buxxep · Calidad
+              Buxxep · Explora
             </p>
             <h2
               id="sec-bento"
               className="mt-1 text-xl sm:text-2xl font-black uppercase tracking-tight text-foreground"
             >
-              Hecho para el día a día{" "}
-              <span className="landing-wavy-underline">fuerte</span>
+              Lo mejor de cada{" "}
+              <span className="landing-wavy-underline">categoría</span>
             </h2>
             <p className="mt-2 text-muted-foreground text-sm max-w-md">
-              Prendas que aguantan el ritmo. Calidad real para el día a día.
+              Una pieza destacada de cada categoría. Toca cualquiera para ver el
+              producto.
             </p>
           </div>
         </ScrollReveal>
         <MagicBento
+          cards={bentoCards}
           textAutoHide
           enableStars
           enableSpotlight
@@ -517,70 +521,92 @@ export default async function PublicPage() {
 
       {/* ─── 7. CÓMO FUNCIONA ────────────────────────────────────────── */}
       <section
-        className="hidden sm:block w-full border-t border-border bg-muted/30"
+        className="w-full border-t border-border bg-background"
         aria-labelledby="sec-how"
       >
         <div className={`${C} py-20 sm:py-28`}>
+          {/* Header */}
           <ScrollReveal>
-            <div className="text-center mb-16">
-              <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-primary mb-3">
-                Buxxep · Proceso
-              </p>
-              <h2
-                id="sec-how"
-                className="text-2xl sm:text-4xl font-black uppercase tracking-tight text-foreground"
-              >
-                Cómo funciona
-              </h2>
+            <div className="mb-12 flex flex-col gap-6 sm:mb-14 md:flex-row md:items-end md:justify-between">
+              <div>
+                <div className="mb-5 flex items-center gap-3">
+                  <span aria-hidden className="h-0.5 w-9 bg-primary" />
+                  <span className="text-[11px] font-semibold uppercase tracking-[0.25em] text-muted-foreground">
+                    Cómo funciona
+                  </span>
+                </div>
+                <h2
+                  id="sec-how"
+                  className="text-4xl font-semibold tracking-tight text-foreground leading-[1.05] sm:text-5xl lg:text-6xl"
+                >
+                  Compra en
+                  <br />
+                  tres pasos
+                </h2>
+              </div>
             </div>
           </ScrollReveal>
-          <ol className="grid grid-cols-1 divide-y divide-border sm:grid-cols-3 sm:divide-y-0 sm:divide-x">
+
+          {/* Steps */}
+          <ol className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {[
               {
                 step: "01",
                 title: "Elige tu prenda",
-                text: "Entra al catálogo, explora por categoria y encuentra la prenda que mas te guste. Sin complicaciones.",
-                href: "/catalogo",
-                cta: "Ver catalogo",
+                text: "Entra al catálogo, explora por categoría y encuentra la prenda que más te guste.",
               },
               {
                 step: "02",
                 title: "Añade al carrito",
-                text: "Selecciona la prenda y añadela al carrito con un solo clic. Rapido, sencillo y sin registros obligatorios.",
-                href: "/catalogo",
-                cta: "Comprar ahora",
+                text: "Selecciona la prenda y añádela al carrito con un solo clic. Rápido y sencillo.",
               },
               {
                 step: "03",
                 title: "Paga con Azul",
-                text: "Completa tu compra de forma 100 % segura a traves de Azul, pasarela de pagos certificada para tarjetas dominicanas.",
-                href: "/carrito",
-                cta: "Ver carrito",
+                text: "Completa tu compra 100 % segura con Azul, la pasarela certificada para tarjetas dominicanas.",
               },
             ].map((item, i) => (
-              <ScrollReveal key={item.step} delay={i * 120} className="h-full">
-                <li className="flex flex-col gap-6 px-0 py-10 sm:px-10 sm:py-0">
-                  <span className="text-[5rem] sm:text-[6rem] font-black tabular-nums leading-none text-primary/20">
+              <ScrollReveal key={item.step} delay={i * 100} className="h-full">
+                <li className="relative flex h-full min-h-[200px] overflow-hidden rounded-2xl border border-border p-7 transition-colors duration-300 hover:border-foreground/30">
+                  {/* watermark number */}
+                  <span
+                    aria-hidden
+                    className="pointer-events-none absolute -bottom-4 left-3 select-none text-[9rem] font-semibold leading-none tabular-nums text-foreground/[0.06]"
+                  >
                     {item.step}
                   </span>
-                  <div className="space-y-2">
-                    <h3 className="text-lg sm:text-xl font-bold text-foreground">
+                  <div className="relative mt-auto ml-auto w-3/5 self-center">
+                    <h3 className="text-lg font-semibold text-foreground">
                       {item.title}
                     </h3>
-                    <p className="text-muted-foreground text-sm leading-relaxed">
+                    <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                       {item.text}
                     </p>
                   </div>
-                  <Link
-                    href={item.href}
-                    className="mt-auto inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline underline-offset-2"
-                  >
-                    {item.cta} →
-                  </Link>
                 </li>
               </ScrollReveal>
             ))}
           </ol>
+
+          {/* CTA */}
+          <ScrollReveal>
+            <div className="mt-12 flex flex-col gap-6 border-t border-border pt-10 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm font-bold uppercase tracking-wide text-foreground">
+                  ¿Listo para empezar?
+                </p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Explora el catálogo y encuentra tu próxima prenda.
+                </p>
+              </div>
+              <Link
+                href="/catalogo"
+                className="inline-flex items-center justify-center rounded-full bg-primary px-8 py-3.5 text-sm font-bold text-background transition-opacity hover:opacity-90"
+              >
+                Ver catálogo
+              </Link>
+            </div>
+          </ScrollReveal>
         </div>
       </section>
 

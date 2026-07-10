@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useEffect, useCallback, useState } from "react";
+import Link from "next/link";
 import { gsap } from "gsap";
 import "./MagicBento.css";
 
@@ -520,10 +521,12 @@ const MagicBento = ({
   glowColor = DEFAULT_GLOW_COLOR,
   clickEffect = true,
   enableMagnetism = true,
+  cards,
 }) => {
   const gridRef = useRef(null);
   const isMobile = useMobileDetection();
   const shouldDisableAnimations = disableAnimations || isMobile;
+  const items = cards && cards.length > 0 ? cards : cardData;
 
   return (
     <>
@@ -538,7 +541,7 @@ const MagicBento = ({
       )}
 
       <BentoCardGrid gridRef={gridRef}>
-        {cardData.map((card, index) => {
+        {items.map((card, index) => {
           const baseClassName = `magic-bento-card ${textAutoHide ? "magic-bento-card--text-autohide" : ""} ${enableBorderGlow ? "magic-bento-card--border-glow" : ""}`;
           const cardProps = {
             className: baseClassName,
@@ -579,6 +582,13 @@ const MagicBento = ({
                     {card.description}
                   </p>
                 </div>
+                {card.href && (
+                  <Link
+                    href={card.href}
+                    className="magic-bento-card__link"
+                    aria-label={card.title}
+                  />
+                )}
               </ParticleCard>
             );
           }
@@ -714,6 +724,13 @@ const MagicBento = ({
                   {card.description}
                 </p>
               </div>
+              {card.href && (
+                <Link
+                  href={card.href}
+                  className="magic-bento-card__link"
+                  aria-label={card.title}
+                />
+              )}
             </div>
           );
         })}

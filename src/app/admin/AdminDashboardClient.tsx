@@ -334,7 +334,7 @@ export function AdminDashboardClient({
           <StatCard
             label="Ganancia neta del mes"
             value={formatDOPFromCents(commissions.netProfitCents)}
-            sub="ingresos − coste − ambas comisiones"
+            sub="lo que le queda a Buxxep tras comisiones"
             icon={<Wallet className="size-4" />}
             valueTone={commissions.netProfitCents < 0 ? "danger" : "default"}
             accent={commissions.netProfitCents >= 0}
@@ -368,6 +368,7 @@ export function AdminDashboardClient({
         <StatCard
           label="Más vendido"
           value={metrics.bestSeller ? metrics.bestSeller.name : "—"}
+          valueSize="sm"
           sub={
             metrics.bestSeller
               ? `${metrics.bestSeller.units} uds · ${formatDOPFromCents(metrics.bestSeller.revenueCents)}`

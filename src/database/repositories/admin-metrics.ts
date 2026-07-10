@@ -9,6 +9,7 @@ import {
   computeAzulCommissionCents,
   computeG3deonCommissionCents,
 } from "@/lib/pricing";
+import { ROLE_DB } from "@/lib/auth/roles";
 import { createServiceClient } from "@/lib/supabase/server";
 import {
   DEFAULT_AZUL_COMMISSION_PERCENT,
@@ -62,7 +63,7 @@ export interface AdminDashboardMetrics {
   /** Productos activos con inventario bajo (1–umbral). */
   lowStockCount: number;
   lowStockProducts: LowStockProduct[];
-  /** Clientes registrados (perfiles no eliminados). */
+  /** Clientes registrados (solo rol cliente, sin admins ni perfiles eliminados). */
   registeredCustomers: number;
   /** Producto más vendido por unidades en la ventana. */
   bestSeller: TopProduct | null;
@@ -221,7 +222,8 @@ export async function getAdminDashboardMetrics(): Promise<AdminDashboardMetrics>
       supabase
         .from("profiles")
         .select("id", { count: "exact", head: true })
-        .is("deleted_at", null),
+        .is("deleted_at", null)
+        .eq("role", ROLE_DB.CLIENT),
     ]);
 
     if (ordersRes.error) throw ordersRes.error;
