@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { processAzulReturn } from "@/features/payments/services/azul-return.service";
 import type { AzulReturnPayload } from "@/lib/payments/azul";
-import { readAzulEnv } from "@/lib/payments/azul-env";
 
 function normalizePayload(formData: FormData): AzulReturnPayload {
   const payload: AzulReturnPayload = {};
@@ -28,8 +27,7 @@ export async function POST(request: Request) {
   try {
     const formData = await request.formData();
     const payload = normalizePayload(formData);
-    const baseUrl =
-      readAzulEnv("AZUL_RETURN_BASE_URL") || new URL(request.url).origin;
+    const baseUrl = new URL(request.url).origin;
 
     const outcome = await processAzulReturn(payload, baseUrl);
     if (outcome.kind === "redirect") {
@@ -56,7 +54,7 @@ export async function GET(request: Request) {
   try {
     const url = new URL(request.url);
     const payload = payloadFromSearchParams(url.searchParams);
-    const baseUrl = readAzulEnv("AZUL_RETURN_BASE_URL") || url.origin;
+    const baseUrl = url.origin;
 
     const outcome = await processAzulReturn(payload, baseUrl);
     if (outcome.kind === "redirect") {

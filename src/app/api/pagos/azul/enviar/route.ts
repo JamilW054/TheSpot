@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { readAzulEnv } from "@/lib/payments/azul-env";
 import { getPaymentGateway } from "@/lib/payments/gateway-registry";
 
 /**
@@ -19,12 +18,10 @@ export async function POST(request: Request) {
     orderId = fd.get("orderId")?.toString().trim() ?? "";
   }
 
-  // Dominio para las URLs de retorno: por defecto, el mismo desde el que se
-  // inició el pago (localhost en dev, buxxep.com en prod). Así el cliente
-  // siempre vuelve al sitio donde estaba — con su sesión intacta.
-  // AZUL_RETURN_BASE_URL permite forzar uno (p.ej. un túnel público).
-  const baseUrl =
-    readAzulEnv("AZUL_RETURN_BASE_URL") || new URL(request.url).origin;
+  // Dominio para las URLs de retorno: el mismo desde el que se inició el
+  // pago (localhost en dev, buxxep.com en prod). Así el cliente siempre
+  // vuelve al sitio donde estaba — con su sesión intacta.
+  const baseUrl = new URL(request.url).origin;
 
   const gateway = getPaymentGateway("azul");
   if (!gateway) {
