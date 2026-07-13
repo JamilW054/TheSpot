@@ -6,6 +6,7 @@ import {
   CreditCard,
   FileText,
   FolderTree,
+  Handshake,
   HelpCircle,
   Image as ImageIcon,
   Layers,
@@ -74,6 +75,7 @@ const ADMIN_ICONS: Record<
   Warehouse,
   HelpCircle,
   CreditCard,
+  Handshake,
 };
 
 function navItemActive(

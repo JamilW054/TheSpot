@@ -12,11 +12,6 @@ import { formatDOPFromCents } from "@/lib/format-currency";
 
 export const dynamic = "force-dynamic";
 
-const compactDOP = new Intl.NumberFormat("es-DO", {
-  notation: "compact",
-  maximumFractionDigits: 1,
-});
-
 export default async function AdminReportesPage() {
   const metrics = await getAdminDashboardMetrics();
 
@@ -104,10 +99,7 @@ export default async function AdminReportesPage() {
           description="Pedidos pagados · últimos 30 días"
           className="lg:col-span-2"
         >
-          <RevenueAreaChart
-            data={metrics.revenueSeries}
-            valueFormatter={(v) => `RD$${compactDOP.format(v)}`}
-          />
+          <RevenueAreaChart data={metrics.revenueSeries} format="dop-compact" />
         </ChartCard>
         <ChartCard title="Estado de pagos" description="Últimos 180 días">
           <DonutChart
@@ -130,7 +122,7 @@ export default async function AdminReportesPage() {
             data={metrics.monthlySeries}
             height={220}
             seriesName="Ingresos"
-            valueFormatter={(v) => `RD$${compactDOP.format(v)}`}
+            format="dop-compact"
             color="#8b5cf6"
           />
         </ChartCard>

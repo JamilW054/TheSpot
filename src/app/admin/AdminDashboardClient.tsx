@@ -41,16 +41,11 @@ import type {
   AdminDashboardMetrics,
   MonthlyCommissionSummary,
 } from "@/database/repositories/admin-metrics";
+import type { PartnerMonthlyStatement } from "@/database/repositories/partners";
+import { PartnerDashboardCard } from "@/features/admin/partner-dashboard-card";
 import { formatDOPFromCents } from "@/lib/format-currency";
 import { formatDate } from "@/lib/format-date";
 import type { Pedido } from "@/types";
-
-/* ── Formato de moneda compacto para ejes/tooltips (valores en DOP) ── */
-const compactDOP = new Intl.NumberFormat("es-DO", {
-  notation: "compact",
-  maximumFractionDigits: 1,
-});
-const formatAxisDOP = (v: number) => `RD$${compactDOP.format(v)}`;
 
 const ESTADO_BADGE: Record<
   Pedido["estado"],
@@ -146,12 +141,15 @@ export interface AdminDashboardClientProps {
   metrics: AdminDashboardMetrics;
   recentPedidos: Pedido[];
   commissions: MonthlyCommissionSummary;
+  /** Liquidación del mes en curso de cada socio activo (módulo de socios). */
+  partners: PartnerMonthlyStatement[];
 }
 
 export function AdminDashboardClient({
   metrics,
   recentPedidos,
   commissions,
+  partners,
 }: AdminDashboardClientProps) {
   const today = formatDate(new Date().toISOString(), {
     weekday: "long",
@@ -300,8 +298,8 @@ export function AdminDashboardClient({
                 {commissions.costCoveragePct.toFixed(0)}%
               </span>{" "}
               del ingreso de este mes corresponde a productos con coste
-              registrado — la ganancia y la comisión G3DEON reales podrían
-              ser menores que lo mostrado.{" "}
+              registrado — la ganancia y la comisión G3DEON reales podrían ser
+              menores que lo mostrado.{" "}
               <Link
                 href="/admin/catalogo"
                 className="font-medium text-(--admin-brand-strong) hover:underline"
@@ -312,7 +310,7 @@ export function AdminDashboardClient({
           </div>
         ) : null}
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <StatCard
             label="Procesado por AZUL"
             value={formatDOPFromCents(commissions.azulRevenueCents)}
@@ -326,12 +324,6 @@ export function AdminDashboardClient({
             icon={<Percent className="size-4" />}
           />
           <StatCard
-            label="A pagar a G3DEON"
-            value={formatDOPFromCents(commissions.g3deonCommissionCents)}
-            sub={`${commissions.g3deonPct}% de la ganancia bruta`}
-            icon={<HandCoins className="size-4" />}
-          />
-          <StatCard
             label="Ganancia neta del mes"
             value={formatDOPFromCents(commissions.netProfitCents)}
             sub="lo que le queda a Buxxep tras comisiones"
@@ -340,6 +332,48 @@ export function AdminDashboardClient({
             accent={commissions.netProfitCents >= 0}
           />
         </div>
+      </section>
+
+      {/* ── Socios y terceros: liquidación del mes en curso ── */}
+      {/* Antes había aquí una tarjeta fija de G3DEON. Ahora se pinta una por
+          socio activo, con datos de `partner_monthly_statements` — se recalcula
+          en cada carga, así que refleja al instante un pago nuevo, un cambio de
+          ganancia o una reconfiguración del socio. */}
+      <section aria-label="Socios y terceros" className="space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-sm font-semibold tracking-tight text-foreground">
+            Socios · {commissionMonthLabel}
+          </h2>
+          <Link
+            href="/admin/socios"
+            className="flex items-center gap-1 text-xs font-medium text-(--admin-brand-strong) hover:opacity-80"
+          >
+            Gestionar socios <ArrowRight className="size-3" aria-hidden />
+          </Link>
+        </div>
+
+        {partners.length === 0 ? (
+          <EmptyState
+            icon={<HandCoins className="size-5" />}
+            title="No hay socios activos."
+            description="Registra un socio para ver aquí cuánto se le debe cada mes."
+            action={
+              <Link
+                href="/admin/socios"
+                className="inline-flex items-center gap-2 rounded-[18px] bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
+              >
+                <Plus className="size-4" aria-hidden />
+                Nuevo socio
+              </Link>
+            }
+          />
+        ) : (
+          <div className="grid gap-4 lg:grid-cols-2">
+            {partners.map((p) => (
+              <PartnerDashboardCard key={p.partnerId} statement={p} />
+            ))}
+          </div>
+        )}
       </section>
 
       {/* ── KPIs: catálogo y clientes ── */}
@@ -389,10 +423,7 @@ export function AdminDashboardClient({
           description="Pedidos pagados · últimos 30 días"
           className="lg:col-span-2"
         >
-          <RevenueAreaChart
-            data={metrics.revenueSeries}
-            valueFormatter={formatAxisDOP}
-          />
+          <RevenueAreaChart data={metrics.revenueSeries} format="dop-compact" />
         </ChartCard>
         <ChartCard title="Estado de pagos" description="Últimos 180 días">
           <DonutChart
@@ -416,7 +447,7 @@ export function AdminDashboardClient({
             data={metrics.monthlySeries}
             height={220}
             seriesName="Ingresos"
-            valueFormatter={formatAxisDOP}
+            format="dop-compact"
             color="#8b5cf6"
           />
         </ChartCard>

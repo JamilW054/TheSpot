@@ -1,3 +1,4 @@
+import type { PartnerRow } from "@/database/repositories/partners";
 import type {
   BannerRow,
   BrandRow,
@@ -8,6 +9,8 @@ import type {
   SubcategoryRow,
   WarehouseRow,
 } from "@/database/repositories/repositories";
+import { formatDOPFromCents } from "@/lib/format-currency";
+import { currentMonthStart } from "@/lib/partners";
 import type { ResourceField, ResourceFieldOption } from "./resource-form";
 
 /** céntimos → string DOP para inputs money. */
@@ -473,6 +476,172 @@ export function flashSaleFields(initial?: FlashSaleRow): ResourceField[] {
       required: true,
       colSpan: 1,
       defaultValue: localDt(initial?.ends_at),
+    },
+  ];
+}
+
+/**
+ * Configuración de un socio / tercero. Los campos de las dos estrategias
+ * (porcentaje y monto fijo) se muestran a la vez: la validación del dominio
+ * (`validatePartnerInput`) exige el que corresponde al tipo elegido y limpia el
+ * otro, así que rellenar de más es inocuo.
+ */
+export function partnerFields(initial?: PartnerRow): ResourceField[] {
+  return [
+    {
+      name: "name",
+      label: "Nombre",
+      type: "text",
+      required: true,
+      colSpan: 1,
+      defaultValue: initial?.name ?? "",
+      placeholder: "Ej. G3DEON",
+    },
+    {
+      name: "legal_name",
+      label: "Razón social (opcional)",
+      type: "text",
+      colSpan: 1,
+      defaultValue: initial?.legal_name ?? "",
+    },
+    {
+      name: "payment_type",
+      label: "Tipo de pago",
+      type: "select",
+      required: true,
+      colSpan: 1,
+      defaultValue: initial?.payment_type ?? "percentage",
+      options: [
+        { value: "percentage", label: "Porcentaje" },
+        { value: "fixed", label: "Monto fijo" },
+      ],
+    },
+    {
+      name: "percentage_base",
+      label: "Base del porcentaje",
+      type: "select",
+      required: true,
+      colSpan: 1,
+      defaultValue: initial?.percentage_base ?? "gross_profit",
+      options: [
+        { value: "gross_profit", label: "Ganancia bruta (ingreso − coste)" },
+        { value: "net_profit", label: "Ganancia neta (tras comisión AZUL)" },
+        { value: "revenue", label: "Ingreso procesado" },
+      ],
+      help: "Solo aplica si el tipo de pago es Porcentaje.",
+    },
+    {
+      name: "percentage_rate",
+      label: "Porcentaje (%)",
+      type: "number",
+      colSpan: 1,
+      min: 0,
+      max: 100,
+      step: 0.001,
+      defaultValue: initial?.percentage_rate ?? "",
+      help: "Obligatorio si el tipo de pago es Porcentaje.",
+    },
+    {
+      name: "fixed_amount_dop",
+      label: "Monto fijo mensual (DOP)",
+      type: "money",
+      colSpan: 1,
+      defaultValue: dop(initial?.fixed_amount_cents),
+      help: "Obligatorio si el tipo de pago es Monto fijo.",
+    },
+    {
+      name: "starts_on",
+      label: "Devenga desde",
+      type: "date",
+      colSpan: 1,
+      defaultValue: initial?.starts_on ?? "",
+      help: "Vacío = desde el alta del socio.",
+    },
+    {
+      name: "ends_on",
+      label: "Devenga hasta",
+      type: "date",
+      colSpan: 1,
+      defaultValue: initial?.ends_on ?? "",
+      help: "Vacío = indefinido. Corta el devengo sin borrar el histórico.",
+    },
+    {
+      name: "notes",
+      label: "Notas",
+      type: "textarea",
+      defaultValue: initial?.notes ?? "",
+    },
+    {
+      name: "active",
+      label: "Activo",
+      type: "checkbox",
+      defaultValue: initial?.active ?? true,
+      help: "Los socios inactivos no aparecen en el dashboard.",
+    },
+  ];
+}
+
+/**
+ * Alta de un pago a un socio. El socio va fijo (viene de su ficha).
+ *
+ * La referencia no está aquí: la genera el backend salvo que el admin active la
+ * suya, y eso es un campo condicional que el formulario genérico no cubre — vive
+ * en `PartnerPaymentForm` (ver `PaymentReferenceField`).
+ *
+ * `balanceCents` solo alimenta la ayuda del importe. El tope real lo impone el
+ * servidor contra las cifras del momento (`assertPaymentWithinBalance`): lo que
+ * el formulario muestre puede estar rancio.
+ */
+export function partnerPaymentFields(
+  partnerId: string,
+  balanceCents: number,
+): ResourceField[] {
+  const today = new Date().toISOString().slice(0, 10);
+  const pending = formatDOPFromCents(Math.max(0, balanceCents));
+  return [
+    {
+      name: "partner_id",
+      label: "Socio",
+      type: "select",
+      required: true,
+      defaultValue: partnerId,
+      options: [{ value: partnerId, label: "Socio actual" }],
+      colSpan: 1,
+    },
+    {
+      name: "amount_dop",
+      label: "Importe (DOP)",
+      type: "money",
+      required: true,
+      colSpan: 1,
+      defaultValue: "",
+      help:
+        balanceCents > 0
+          ? `Máximo ${pending} (lo que queda por pagar este mes). Un importe negativo revierte un pago anterior.`
+          : "Este mes no tiene saldo pendiente. Solo se admite un importe negativo (reverso de un pago anterior).",
+    },
+    {
+      name: "payment_date",
+      label: "Fecha del pago",
+      type: "date",
+      required: true,
+      colSpan: 1,
+      defaultValue: today,
+    },
+    {
+      name: "period_month",
+      label: "Mes que liquida",
+      type: "month",
+      required: true,
+      colSpan: 1,
+      defaultValue: currentMonthStart().slice(0, 7),
+      help: "El mes cuya deuda salda este pago, no la fecha en que se pagó.",
+    },
+    {
+      name: "notes",
+      label: "Notas",
+      type: "textarea",
+      defaultValue: "",
     },
   ];
 }

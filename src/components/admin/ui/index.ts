@@ -9,6 +9,7 @@ export {
   BarsChart,
   CHART_COLORS,
   ChartCard,
+  type ChartValueFormat,
   DonutChart,
   type DonutSlice,
   RankedBarList,

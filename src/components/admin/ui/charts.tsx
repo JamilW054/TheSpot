@@ -18,6 +18,38 @@ import {
 import { AdminCard } from "./admin-card";
 import { EmptyState } from "./empty-state";
 
+/**
+ * Formato del valor en ejes, tooltips y leyendas.
+ *
+ * Es un string y no una función a propósito: los charts son Client Components,
+ * y un Server Component no puede pasarles una función (React no sabe
+ * serializarla al cruzar la frontera). Las páginas de servidor —p. ej.
+ * /admin/reportes— eligen el formato por nombre y la resolución a función ocurre
+ * aquí, ya en el cliente.
+ */
+export type ChartValueFormat = "number" | "dop-compact";
+
+const compactDOP = new Intl.NumberFormat("es-DO", {
+  notation: "compact",
+  maximumFractionDigits: 1,
+});
+
+const CHART_FORMATTERS: Record<ChartValueFormat, (value: number) => string> = {
+  number: (v) => String(v),
+  "dop-compact": (v) => `RD$${compactDOP.format(v)}`,
+};
+
+/**
+ * `valueFormatter` (función) tiene prioridad y sigue disponible para los Client
+ * Components, que sí pueden pasarla. `format` es la vía para el servidor.
+ */
+function resolveFormatter(
+  valueFormatter: ((value: number) => string) | undefined,
+  format: ChartValueFormat,
+): (value: number) => string {
+  return valueFormatter ?? CHART_FORMATTERS[format];
+}
+
 /* ── Paleta de series: azul Buxxep primero, apoyos desaturados ── */
 export const CHART_COLORS = [
   "#3cc8f7",
@@ -89,8 +121,10 @@ export interface TimeSeriesPoint {
 
 export interface RevenueAreaChartProps {
   data: TimeSeriesPoint[];
-  /** Formatea el valor del tooltip / eje Y (p. ej. moneda). */
+  /** Formatea el valor del tooltip / eje Y. Solo desde Client Components. */
   valueFormatter?: (value: number) => string;
+  /** Formato serializable — úsalo desde Server Components. */
+  format?: ChartValueFormat;
   height?: number;
   seriesName?: string;
 }
@@ -98,10 +132,12 @@ export interface RevenueAreaChartProps {
 /** Área con degradado de marca — ingresos / tendencia en el tiempo. */
 export function RevenueAreaChart({
   data,
-  valueFormatter = (v) => String(v),
+  valueFormatter: valueFormatterProp,
+  format = "number",
   height = 260,
   seriesName = "Ingresos",
 }: RevenueAreaChartProps) {
+  const valueFormatter = resolveFormatter(valueFormatterProp, format);
   if (data.length === 0) return <ChartEmpty height={height} />;
   return (
     <ResponsiveContainer width="100%" height={height}>
@@ -156,7 +192,10 @@ export function RevenueAreaChart({
 
 export interface BarsChartProps {
   data: TimeSeriesPoint[];
+  /** Solo desde Client Components. */
   valueFormatter?: (value: number) => string;
+  /** Formato serializable — úsalo desde Server Components. */
+  format?: ChartValueFormat;
   height?: number;
   seriesName?: string;
   color?: string;
@@ -165,11 +204,13 @@ export interface BarsChartProps {
 /** Barras redondeadas — pedidos / comparativas por periodo. */
 export function BarsChart({
   data,
-  valueFormatter = (v) => String(v),
+  valueFormatter: valueFormatterProp,
+  format = "number",
   height = 260,
   seriesName = "Pedidos",
   color = "var(--admin-brand)",
 }: BarsChartProps) {
+  const valueFormatter = resolveFormatter(valueFormatterProp, format);
   if (data.length === 0) return <ChartEmpty height={height} />;
   return (
     <ResponsiveContainer width="100%" height={height}>
@@ -219,7 +260,10 @@ export interface DonutChartProps {
   /** Texto central (p. ej. total). */
   centerLabel?: string;
   centerValue?: string;
+  /** Solo desde Client Components. */
   valueFormatter?: (value: number) => string;
+  /** Formato serializable — úsalo desde Server Components. */
+  format?: ChartValueFormat;
 }
 
 /** Donut con leyenda lateral — distribución por categoría / estado. */
@@ -228,8 +272,10 @@ export function DonutChart({
   height = 220,
   centerLabel,
   centerValue,
-  valueFormatter = (v) => String(v),
+  valueFormatter: valueFormatterProp,
+  format = "number",
 }: DonutChartProps) {
+  const valueFormatter = resolveFormatter(valueFormatterProp, format);
   const total = data.reduce((s, d) => s + d.value, 0);
   if (data.length === 0 || total === 0) return <ChartEmpty height={height} />;
   return (
@@ -320,11 +366,16 @@ export interface RankedItem {
 /** Lista clasificada con barras de progreso — top productos. */
 export function RankedBarList({
   data,
-  valueFormatter = (v) => String(v),
+  valueFormatter: valueFormatterProp,
+  format = "number",
 }: {
   data: RankedItem[];
+  /** Solo desde Client Components. */
   valueFormatter?: (value: number) => string;
+  /** Formato serializable — úsalo desde Server Components. */
+  format?: ChartValueFormat;
 }) {
+  const valueFormatter = resolveFormatter(valueFormatterProp, format);
   if (data.length === 0)
     return (
       <EmptyState

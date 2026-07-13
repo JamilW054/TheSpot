@@ -27,6 +27,8 @@ export type ResourceFieldType =
   | "url"
   | "select"
   | "datetime"
+  | "date"
+  | "month"
   | "color"
   | "image";
 
@@ -257,16 +259,15 @@ function FieldControl({ field }: { field: ResourceField }) {
     );
   }
 
-  const inputType =
-    field.type === "money"
-      ? "text"
-      : field.type === "number"
-        ? "number"
-        : field.type === "url"
-          ? "url"
-          : field.type === "datetime"
-            ? "datetime-local"
-            : "text";
+  const NATIVE_INPUT_TYPE: Partial<Record<ResourceFieldType, string>> = {
+    money: "text",
+    number: "number",
+    url: "url",
+    datetime: "datetime-local",
+    date: "date",
+    month: "month",
+  };
+  const inputType = NATIVE_INPUT_TYPE[field.type] ?? "text";
 
   return (
     <Input

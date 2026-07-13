@@ -5,10 +5,6 @@
  * para mantener las consultas simples y el número de round-trips bajo.
  */
 
-import {
-  computeAzulCommissionCents,
-  computeG3deonCommissionCents,
-} from "@/lib/pricing";
 import { ROLE_DB } from "@/lib/auth/roles";
 import { createServiceClient } from "@/lib/supabase/server";
 import {
@@ -420,22 +416,20 @@ export async function getAdminDashboardMetrics(): Promise<AdminDashboardMetrics>
   }
 }
 
-interface CommissionOrderRow {
-  id: string;
-  total_cents: number;
-  paid_at: string | null;
-}
-
-interface CommissionOrderItemRow {
-  order_id: string;
-  product_id: string | null;
-  quantity: number;
-  unit_price_cents: number | null;
-}
-
-interface CommissionProductRow {
-  id: string;
-  cost_cents: number | null;
+/** Fila de la vista `admin_monthly_commissions` (ver 00029_*.sql). */
+interface MonthlyCommissionRow {
+  month: string;
+  azul_orders_count: number;
+  azul_revenue_cents: number;
+  azul_pct: number;
+  azul_commission_cents: number;
+  items_revenue_cents: number;
+  items_cost_cents: number;
+  revenue_with_cost_cents: number;
+  gross_profit_cents: number;
+  g3deon_pct: number;
+  g3deon_commission_cents: number;
+  net_profit_cents: number;
 }
 
 export interface MonthlyCommissionSummary {
@@ -493,138 +487,66 @@ function emptyCommissionSummary(
  * Comisiones adeudadas este mes calendario a AZUL (pasarela) y a G3DEON
  * (retención sobre ganancia), más la ganancia neta resultante.
  *
- * Se calcula en memoria a partir de pedidos + líneas + coste actual del
- * producto — igual que el resto de este archivo — en vez de vivir en una
- * vista de base de datos: el volumen de pedidos de la tienda es bajo, la
- * fórmula de comisión ya vive en `lib/pricing.ts` como única fuente de
- * verdad, y mantener el cálculo en la capa de aplicación evita una segunda
- * copia de esa lógica de negocio (SQL vs. TS) que habría que mantener
- * sincronizada a mano. Si el volumen de pedidos crece lo suficiente para que
- * esto pese en cada carga del dashboard, es la primera candidata a
- * convertirse en una vista materializada — no antes.
+ * El cálculo vive en la vista `admin_monthly_commissions` (migración 00029):
+ * agrupa los pedidos AZUL pagados por mes de pago (`payment_transactions.paid_at`)
+ * y cruza cada línea con el coste vigente del producto vía
+ * `order_items.variant_id → product_variants.product_id → products.cost_cents`.
+ * Los porcentajes salen de `app_settings`, así que editar la comisión en
+ * /admin/config se refleja aquí sin tocar código.
  *
  * OJO con la agregación: la ganancia bruta se suma primero (ingreso total −
  * coste total de TODAS las líneas), y el piso de "no negativo" del 12% de
- * G3DEON se aplica una sola vez sobre ese TOTAL (vía
- * `computeG3deonCommissionCents`). Es intencional: en la columna "Margen" de
- * /admin/catalogo sí tiene sentido pisar cada producto en 0 por separado
- * (es una vista por producto), pero a nivel de comisión mensual no — un
- * producto vendido con pérdida debe poder compensarse con otro vendido con
+ * G3DEON se aplica una sola vez sobre ese TOTAL. Es intencional: en la columna
+ * "Margen" de /admin/catalogo sí tiene sentido pisar cada producto en 0 por
+ * separado (es una vista por producto), pero a nivel de comisión mensual no —
+ * un producto vendido con pérdida debe poder compensarse con otro vendido con
  * ganancia, igual que en cualquier estado de resultados real.
  */
 export async function getMonthlyCommissionSummary(
   reference: Date = new Date(),
 ): Promise<MonthlyCommissionSummary> {
-  const monthStart = new Date(
-    reference.getFullYear(),
-    reference.getMonth(),
-    1,
-  );
-  const monthEnd = new Date(
-    reference.getFullYear(),
-    reference.getMonth() + 1,
-    1,
-  );
+  const monthStart = new Date(reference.getFullYear(), reference.getMonth(), 1);
   const monthLabel = monthNameLabel.format(monthStart);
+  const monthKey = `${monthStart.getFullYear()}-${String(
+    monthStart.getMonth() + 1,
+  ).padStart(2, "0")}-01`;
 
   try {
     const { azulPct, g3deonPct } = await getCommissionRates();
     const supabase = createServiceClient();
 
-    const { data: orderRows, error: ordersError } = await supabase
-      .from("orders")
-      .select("id, total_cents, paid_at")
-      .eq("payment_type", "AZUL_PAYMENT")
-      .eq("payment_status", "paid")
-      .gte("paid_at", monthStart.toISOString())
-      .lt("paid_at", monthEnd.toISOString());
-    if (ordersError) throw ordersError;
+    const { data, error } = await supabase
+      .from("admin_monthly_commissions")
+      .select("*")
+      .eq("month", monthKey)
+      .maybeSingle();
+    if (error) throw error;
 
-    const orders = (orderRows ?? []) as unknown as CommissionOrderRow[];
-    if (orders.length === 0) {
-      return emptyCommissionSummary(monthLabel, azulPct, g3deonPct);
-    }
+    const row = data as unknown as MonthlyCommissionRow | null;
+    if (!row) return emptyCommissionSummary(monthLabel, azulPct, g3deonPct);
 
-    const orderIds = orders.map((o) => o.id);
-    const azulRevenueCents = orders.reduce((s, o) => s + o.total_cents, 0);
-    const azulCommissionCents = computeAzulCommissionCents(
-      azulRevenueCents,
-      azulPct,
-    );
-
-    const { data: itemRows, error: itemsError } = await supabase
-      .from("order_items")
-      .select("order_id, product_id, quantity, unit_price_cents")
-      .in("order_id", orderIds);
-    if (itemsError) throw itemsError;
-    const items = (itemRows ?? []) as unknown as CommissionOrderItemRow[];
-
-    const productIds = [
-      ...new Set(
-        items
-          .map((it) => it.product_id)
-          .filter((id): id is string => Boolean(id)),
-      ),
-    ];
-    let costByProduct = new Map<string, number>();
-    if (productIds.length > 0) {
-      const { data: productRows, error: productsError } = await supabase
-        .from("products")
-        .select("id, cost_cents")
-        .in("id", productIds);
-      if (productsError) throw productsError;
-      const productsData = (productRows ??
-        []) as unknown as CommissionProductRow[];
-      costByProduct = new Map(
-        productsData.map((p) => [p.id, p.cost_cents ?? 0]),
-      );
-    }
-
-    let itemsRevenueCents = 0;
-    let itemsCostCents = 0;
-    let revenueWithCostCents = 0;
-    for (const it of items) {
-      const lineRevenue = (it.unit_price_cents ?? 0) * it.quantity;
-      const unitCost = it.product_id
-        ? (costByProduct.get(it.product_id) ?? 0)
-        : 0;
-      itemsRevenueCents += lineRevenue;
-      itemsCostCents += unitCost * it.quantity;
-      if (unitCost > 0) revenueWithCostCents += lineRevenue;
-    }
-
-    const grossProfitCents = itemsRevenueCents - itemsCostCents;
-    const g3deonCommissionCents = computeG3deonCommissionCents(
-      itemsRevenueCents,
-      itemsCostCents,
-      g3deonPct,
-    );
-    const netProfitCents =
-      grossProfitCents - azulCommissionCents - g3deonCommissionCents;
-    const costCoveragePct =
-      itemsRevenueCents > 0
-        ? (revenueWithCostCents / itemsRevenueCents) * 100
-        : 0;
+    const itemsRevenueCents = Number(row.items_revenue_cents);
+    const revenueWithCostCents = Number(row.revenue_with_cost_cents);
 
     return {
       monthLabel,
-      azulOrdersCount: orders.length,
-      azulRevenueCents,
-      azulCommissionCents,
-      azulPct,
+      azulOrdersCount: Number(row.azul_orders_count),
+      azulRevenueCents: Number(row.azul_revenue_cents),
+      azulCommissionCents: Number(row.azul_commission_cents),
+      azulPct: Number(row.azul_pct),
       itemsRevenueCents,
-      itemsCostCents,
-      grossProfitCents,
-      g3deonCommissionCents,
-      g3deonPct,
-      netProfitCents,
-      costCoveragePct,
+      itemsCostCents: Number(row.items_cost_cents),
+      grossProfitCents: Number(row.gross_profit_cents),
+      g3deonCommissionCents: Number(row.g3deon_commission_cents),
+      g3deonPct: Number(row.g3deon_pct),
+      netProfitCents: Number(row.net_profit_cents),
+      costCoveragePct:
+        itemsRevenueCents > 0
+          ? (revenueWithCostCents / itemsRevenueCents) * 100
+          : 0,
     };
   } catch (error) {
-    console.error(
-      "[admin-metrics] Error calculando comisiones del mes",
-      error,
-    );
+    console.error("[admin-metrics] Error calculando comisiones del mes", error);
     return emptyCommissionSummary(
       monthLabel,
       DEFAULT_AZUL_COMMISSION_PERCENT,

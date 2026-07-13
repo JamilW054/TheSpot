@@ -159,6 +159,12 @@ export const ADMIN_NAV: NavItem[] = [
     adminSection: "Logística",
   },
   {
+    label: "Socios",
+    href: "/admin/socios",
+    icon: "Handshake",
+    adminSection: "Finanzas",
+  },
+  {
     label: "Reportes",
     href: "/admin/reportes",
     icon: "BarChart2",
