@@ -1,3 +1,4 @@
+import { resolveShippingCents } from "@/config/shipping";
 import { getCart } from "@/database/repositories/cart";
 import { incrementCouponUsage, validateCoupon } from "@/database/repositories/coupons";
 import type { ShippingAddress } from "@/database/repositories/orders";
@@ -121,7 +122,7 @@ export async function checkoutFromCart(
       is_active: boolean;
     } | null;
     if (!m || !m.is_active) throw new Error("Método de envío no disponible.");
-    shippingCents = m.price_cents;
+    shippingCents = resolveShippingCents(subtotalCents, m.price_cents);
     shippingMethodId = m.id;
   }
 

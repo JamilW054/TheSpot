@@ -8,6 +8,7 @@ import { ProductReviews } from "@/components/catalog/ProductReviews";
 import { ShareProductButton } from "@/components/catalog/ShareProductButton";
 import { StickyBuyBar } from "@/components/catalog/StickyBuyBar";
 import { WishlistButton } from "@/components/catalog/WishlistButton";
+import { FREE_SHIPPING_MIN_CENTS } from "@/config/shipping";
 import { getProductBySlug } from "@/database/repositories";
 import { getStockMatrixForProduct } from "@/database/repositories/inventory";
 import {
@@ -236,7 +237,10 @@ export default async function CatalogProductPage({ params }: PageProps) {
                       className="size-4 shrink-0 text-primary"
                       aria-hidden
                     />
-                    <span>Envío gratis en pedidos superiores a DOP 3,000</span>
+                    <span>
+                      Envío gratis en pedidos desde{" "}
+                      {formatDOPFromCents(FREE_SHIPPING_MIN_CENTS)}
+                    </span>
                   </div>
                   <div className="flex items-center gap-3 px-4 py-3 text-sm text-muted-foreground">
                     <ShieldCheck

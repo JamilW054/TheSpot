@@ -5,7 +5,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { FreeShippingProgress } from "@/components/cart/FreeShippingProgress";
 import { PaymentMethodSelector } from "@/components/payment/PaymentMethodSelector";
+import {
+  qualifiesForFreeShipping,
+  resolveShippingCents,
+} from "@/config/shipping";
 import { useCart } from "@/contexts/cart-context";
 import type { ShippingMethod } from "@/database/repositories";
 import type { Address } from "@/database/repositories/addresses";
@@ -166,7 +171,11 @@ export function CheckoutContent({
 
   const selectedShipping =
     shippingMethods.find((m) => m.id === selectedShippingId) ?? null;
-  const shippingCents = selectedShipping?.priceCents ?? 0;
+  const freeShipping = qualifiesForFreeShipping(subtotalCents);
+  const shippingCents = resolveShippingCents(
+    subtotalCents,
+    selectedShipping?.priceCents ?? 0,
+  );
   const discountCents = appliedCoupon ? couponDiscount : 0;
   const totalCents = Math.max(0, subtotalCents - discountCents + shippingCents);
 
@@ -548,6 +557,10 @@ export function CheckoutContent({
           {shippingMethods.length > 0 && (
             <div className="border-t border-border p-5 sm:p-6 space-y-2">
               <p className="text-sm font-semibold text-foreground">Envío</p>
+              <FreeShippingProgress
+                subtotalCents={subtotalCents}
+                className="mb-3"
+              />
               {shippingMethods.map((m) => (
                 <label
                   key={m.id}
@@ -576,10 +589,17 @@ export function CheckoutContent({
                       )}
                     </span>
                   </span>
-                  <span className="font-mono tabular-nums text-foreground">
-                    {m.priceCents === 0
-                      ? "Gratis"
-                      : formatDOPFromCents(m.priceCents)}
+                  <span className="flex items-center gap-1.5 font-mono tabular-nums text-foreground">
+                    {freeShipping && m.priceCents > 0 && (
+                      <span className="text-xs text-muted-foreground line-through">
+                        {formatDOPFromCents(m.priceCents)}
+                      </span>
+                    )}
+                    <span>
+                      {freeShipping || m.priceCents === 0
+                        ? "Gratis"
+                        : formatDOPFromCents(m.priceCents)}
+                    </span>
                   </span>
                 </label>
               ))}

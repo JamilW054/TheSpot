@@ -4,6 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Trash2, Tag, ChevronLeft, Truck } from "lucide-react";
+import { FreeShippingProgress } from "@/components/cart/FreeShippingProgress";
+import { qualifiesForFreeShipping } from "@/config/shipping";
 import { useCart } from "@/contexts/cart-context";
 import { formatDOPFromCents } from "@/lib/format-currency";
 import type { CartItem, CatalogProduct } from "@/types";
@@ -198,9 +200,15 @@ interface ShippingSelectorProps {
   methods: ShippingMethod[];
   selected: string;
   onSelect: (id: string) => void;
+  freeShipping: boolean;
 }
 
-function ShippingSelector({ methods, selected, onSelect }: ShippingSelectorProps) {
+function ShippingSelector({
+  methods,
+  selected,
+  onSelect,
+  freeShipping,
+}: ShippingSelectorProps) {
   return (
     <div className="rounded-[14px] border border-border bg-card p-4">
       <div className="mb-3 flex items-center gap-2">
@@ -248,8 +256,17 @@ function ShippingSelector({ methods, selected, onSelect }: ShippingSelectorProps
                 )}
               </span>
 
-              <span className="shrink-0 font-mono text-sm font-bold text-foreground tabular-nums">
-                {formatDOPFromCents(method.priceCents)}
+              <span className="flex shrink-0 items-center gap-1.5">
+                {freeShipping && method.priceCents > 0 && (
+                  <span className="font-mono text-xs text-muted-foreground line-through tabular-nums">
+                    {formatDOPFromCents(method.priceCents)}
+                  </span>
+                )}
+                <span className="font-mono text-sm font-bold text-foreground tabular-nums">
+                  {freeShipping || method.priceCents === 0
+                    ? "Gratis"
+                    : formatDOPFromCents(method.priceCents)}
+                </span>
               </span>
             </label>
           );
@@ -340,7 +357,7 @@ function OrderSummary({
         <div className="flex items-center justify-between gap-4">
           <span className="text-sm text-muted-foreground">Envío</span>
           <span className="font-mono text-sm font-medium tabular-nums text-foreground">
-            {formatDOPFromCents(shippingCents)}
+            {shippingCents === 0 ? "Gratis" : formatDOPFromCents(shippingCents)}
           </span>
         </div>
         <div className="flex items-baseline justify-between gap-4 border-t border-border pt-2">
@@ -432,7 +449,9 @@ export function CartContent({
 
   const selectedShipping =
     shippingMethods.find((s) => s.id === shippingId) ?? shippingMethods[0];
-  const grandTotalCents = subtotalCents + (selectedShipping?.priceCents ?? 0);
+  const freeShipping = qualifiesForFreeShipping(subtotalCents);
+  const shippingCents = freeShipping ? 0 : (selectedShipping?.priceCents ?? 0);
+  const grandTotalCents = subtotalCents + shippingCents;
   const belowMin = MIN_ORDER_CENTS > 0 && subtotalCents < MIN_ORDER_CENTS;
 
   const handleApplyPromo = () => {
@@ -476,10 +495,13 @@ export function CartContent({
 
         {/* ── Sidebar ── */}
         <aside className="mt-6 space-y-3 lg:mt-0 lg:sticky lg:top-28">
+          <FreeShippingProgress subtotalCents={subtotalCents} />
+
           <ShippingSelector
             methods={shippingMethods}
             selected={shippingId}
             onSelect={setShippingId}
+            freeShipping={freeShipping}
           />
 
           <PromoInput
@@ -492,7 +514,7 @@ export function CartContent({
 
           <OrderSummary
             subtotalCents={subtotalCents}
-            shippingCents={selectedShipping.priceCents}
+            shippingCents={shippingCents}
             grandTotalCents={grandTotalCents}
             belowMin={belowMin}
             minOrderCents={MIN_ORDER_CENTS}
