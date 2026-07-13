@@ -11,8 +11,6 @@ import { formatDOPFromCents } from "@/lib/format-currency";
 import type { CartItem, CatalogProduct } from "@/types";
 import type { ShippingMethod } from "@/database/repositories";
 
-const MIN_ORDER_CENTS = Number(process.env.NEXT_PUBLIC_MIN_ORDER_CENTS ?? "0");
-
 function formatShippingDesc(method: ShippingMethod): string {
   if (method.description) return method.description;
   if (method.minDays != null && method.maxDays != null)
@@ -327,8 +325,6 @@ interface OrderSummaryProps {
   subtotalCents: number;
   shippingCents: number;
   grandTotalCents: number;
-  belowMin: boolean;
-  minOrderCents: number;
   shippingId: string;
   className?: string;
   showCheckoutBtn?: boolean;
@@ -338,8 +334,6 @@ function OrderSummary({
   subtotalCents,
   shippingCents,
   grandTotalCents,
-  belowMin,
-  minOrderCents,
   shippingId,
   className = "",
   showCheckoutBtn = true,
@@ -368,37 +362,14 @@ function OrderSummary({
         </div>
       </div>
 
-      {belowMin && (
-        <div className="mt-3 rounded-[10px] border border-amber-500/30 bg-amber-500/10 px-3 py-2.5">
-          <p className="text-xs font-medium text-amber-500 leading-snug">
-            Monto mínimo:{" "}
-            <span className="font-bold">{formatDOPFromCents(minOrderCents)}</span>
-          </p>
-          <p className="mt-0.5 text-xs text-amber-500/80">
-            Te faltan {formatDOPFromCents(minOrderCents - subtotalCents)} para
-            continuar.
-          </p>
-        </div>
-      )}
-
       {showCheckoutBtn && (
         <>
-          {belowMin ? (
-            <button
-              type="button"
-              disabled
-              className="mt-4 flex w-full cursor-not-allowed items-center justify-center rounded-[10px] bg-muted py-3 text-sm font-semibold text-muted-foreground opacity-50"
-            >
-              Finalizar compra
-            </button>
-          ) : (
-            <Link
-              href={`/carrito/checkout?shipping=${shippingId}`}
-              className="mt-4 flex w-full items-center justify-center rounded-[10px] bg-primary py-3 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
-            >
-              Confirmar y pagar
-            </Link>
-          )}
+          <Link
+            href={`/carrito/checkout?shipping=${shippingId}`}
+            className="mt-4 flex w-full items-center justify-center rounded-[10px] bg-primary py-3 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
+          >
+            Confirmar y pagar
+          </Link>
           <p className="mt-2 text-center text-xs text-muted-foreground">
             Pago seguro en el siguiente paso
           </p>
@@ -452,7 +423,6 @@ export function CartContent({
   const freeShipping = qualifiesForFreeShipping(subtotalCents);
   const shippingCents = freeShipping ? 0 : (selectedShipping?.priceCents ?? 0);
   const grandTotalCents = subtotalCents + shippingCents;
-  const belowMin = MIN_ORDER_CENTS > 0 && subtotalCents < MIN_ORDER_CENTS;
 
   const handleApplyPromo = () => {
     setPromoError("Código inválido o expirado.");
@@ -516,8 +486,6 @@ export function CartContent({
             subtotalCents={subtotalCents}
             shippingCents={shippingCents}
             grandTotalCents={grandTotalCents}
-            belowMin={belowMin}
-            minOrderCents={MIN_ORDER_CENTS}
             shippingId={shippingId}
             showCheckoutBtn
             className="hidden lg:block"
@@ -536,22 +504,12 @@ export function CartContent({
               {formatDOPFromCents(grandTotalCents)}
             </p>
           </div>
-          {belowMin ? (
-            <button
-              type="button"
-              disabled
-              className="flex-1 cursor-not-allowed rounded-[10px] bg-muted py-3 text-sm font-semibold text-muted-foreground opacity-50"
-            >
-              Finalizar compra
-            </button>
-          ) : (
-            <Link
-              href={`/carrito/checkout?shipping=${shippingId}`}
-              className="flex-1 rounded-[10px] bg-primary py-3 text-center text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
-            >
-              Confirmar y pagar
-            </Link>
-          )}
+          <Link
+            href={`/carrito/checkout?shipping=${shippingId}`}
+            className="flex-1 rounded-[10px] bg-primary py-3 text-center text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
+          >
+            Confirmar y pagar
+          </Link>
         </div>
       </div>
     </>
