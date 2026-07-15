@@ -45,28 +45,49 @@
     (function () {
       var msg = document.getElementById('msg');
 
-      function fail(text) {
+      // Mensaje ÚNICO para el usuario final: no le sirve el motivo técnico, sólo
+      // saber que algo falló y qué hacer. El detalle real va a la consola.
+      function fail(reason) {
+        if (reason) console.error('[azul-redirect]', reason);
         document.getElementById('spinner').style.display = 'none';
         msg.className = 'err';
-        msg.textContent = text;
+        msg.textContent = 'Ocurrió un problema al abrir el pago. Vuelve a la app e inténtalo de nuevo.';
       }
 
       // Los campos llegan en el fragmento (#), no en el querystring: así no viajan
       // a los logs de este servidor. Formato: #<JSON url-encoded>.
       var raw = window.location.hash ? window.location.hash.slice(1) : '';
-      if (!raw) { fail('Faltan los datos del pago. Vuelve a la app e inténtalo de nuevo.'); return; }
+      if (!raw) { fail('hash vacío'); return; }
 
       var data;
       try {
         data = JSON.parse(decodeURIComponent(raw));
       } catch (e) {
-        fail('No se pudieron leer los datos del pago. Vuelve a la app e inténtalo de nuevo.');
+        fail('JSON inválido: ' + e.message);
         return;
       }
 
       if (!data || !data.action || !data.fields) {
-        fail('Datos del pago incompletos. Vuelve a la app e inténtalo de nuevo.');
+        fail('faltan action/fields');
         return;
+      }
+
+      // El destino del POST SÓLO puede ser AZUL. Sin esto, un enlace manipulado
+      // (#...action:"sitio-malo"...) haría que esta página envíe el formulario a
+      // donde diga el atacante. Se exige https y un dominio azul.com.do.
+      function isAzul(url) {
+        try {
+          var u = new URL(url);
+          return u.protocol === 'https:' &&
+                 (u.hostname === 'azul.com.do' || u.hostname.endsWith('.azul.com.do'));
+        } catch (e) { return false; }
+      }
+      if (!isAzul(data.action)) {
+        fail('destino no permitido: ' + data.action);
+        return;
+      }
+      if (data.alternate && !isAzul(data.alternate)) {
+        data.alternate = null; // ignora un alterno manipulado, no abortes
       }
 
       var form = document.createElement('form');
@@ -107,6 +128,7 @@
   </script>
 
   <noscript>
+    <p class="err">Ocurrió un problema al abrir el pago. Vuelve a la app e inténtalo de nuevo.</p>
   </noscript>
 </body>
 </html>
