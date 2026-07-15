@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { consumeRateLimit, requestIp } from "@/lib/auth/rate-limit";
 import { verifyOtp } from "@/lib/otp";
 
 const ERROR_MESSAGES: Record<string, string> = {
@@ -10,12 +11,29 @@ const ERROR_MESSAGES: Record<string, string> = {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const email = typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
+    const email =
+      typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
     const code = typeof body?.code === "string" ? body.code.trim() : "";
     const purpose = typeof body?.purpose === "string" ? body.purpose : "verify";
 
     if (!email || !code) {
-      return NextResponse.json({ error: "Email y código son requeridos." }, { status: 400 });
+      return NextResponse.json(
+        { error: "Email y código son requeridos." },
+        { status: 400 },
+      );
+    }
+
+    const allowed = await consumeRateLimit({
+      action: `otp-verify:${purpose}`,
+      identifier: `${requestIp(request)}:${email}`,
+      maxAttempts: 10,
+      windowSeconds: 10 * 60,
+    });
+    if (!allowed) {
+      return NextResponse.json(
+        { error: "Demasiados intentos. Solicita un código nuevo más tarde." },
+        { status: 429, headers: { "Retry-After": "600" } },
+      );
     }
 
     const result = await verifyOtp(email, code, purpose);

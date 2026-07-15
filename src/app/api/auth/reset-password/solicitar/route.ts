@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { consumeRateLimit, requestIp } from "@/lib/auth/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 
 export async function POST(request: Request) {
@@ -9,6 +10,19 @@ export async function POST(request: Request) {
 
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return NextResponse.json({ error: "Email inválido." }, { status: 400 });
+    }
+
+    const allowed = await consumeRateLimit({
+      action: "password-reset",
+      identifier: `${requestIp(request)}:${email}`,
+      maxAttempts: 3,
+      windowSeconds: 15 * 60,
+    });
+    if (!allowed) {
+      return NextResponse.json(
+        { ok: true },
+        { status: 202, headers: { "Retry-After": "900" } },
+      );
     }
 
     // Usa el origin real de la request para que funcione en local y en producción

@@ -217,9 +217,10 @@ export default function PrivacidadPage() {
           </p>
           <p className="mt-3">
             Conservamos los comprobantes de compras y pagos (pedidos y
-            transacciones) aun después de eliminar la cuenta, cuando lo exijan
-            obligaciones fiscales, contables o de prevención de fraude. Consulta
-            el procedimiento completo en{" "}
+            transacciones) durante un mínimo de 5 años después de la compra
+            cuando lo exijan obligaciones fiscales, contables o de prevención de
+            fraude. Su acceso queda restringido y no se utilizarán para otros
+            fines. Consulta el procedimiento completo en{" "}
             <Link
               href="/eliminar-cuenta"
               className="text-primary hover:underline underline-offset-2"

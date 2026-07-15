@@ -189,6 +189,24 @@ export default function TerminosPage() {
             </a>
           </p>
         </Section>
+
+        <Section title="13. Privacidad y eliminación de cuenta">
+          <p>
+            El tratamiento de datos personales se rige por nuestra{" "}
+            <Link href="/privacidad" className="text-primary hover:underline">
+              Política de Privacidad
+            </Link>
+            . Puedes solicitar la eliminación desde la aplicación, desde la web
+            o por correo siguiendo el procedimiento de{" "}
+            <Link
+              href="/eliminar-cuenta"
+              className="text-primary hover:underline"
+            >
+              Eliminación de Cuenta
+            </Link>
+            , sin necesidad de reinstalar la aplicación.
+          </p>
+        </Section>
       </div>
 
       <LegalNav current="terminos" />

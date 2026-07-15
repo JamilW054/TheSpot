@@ -4,6 +4,7 @@ import { CatalogCategoryNav } from "@/components/catalog/CatalogCategoryNav";
 import { CatalogFilterChips } from "@/components/catalog/CatalogFilterChips";
 import { CatalogFiltersToggleButton } from "@/components/catalog/CatalogFiltersToggleButton";
 import { CatalogMobileFilters } from "@/components/catalog/CatalogMobileFilters";
+import { CatalogPagination } from "@/components/catalog/CatalogPagination";
 import { CatalogSidebar } from "@/components/catalog/CatalogSidebar";
 import { CatalogSupabaseDebugLog } from "@/components/catalog/CatalogSupabaseDebugLog";
 import { ProductCard } from "@/components/catalog/ProductCard";
@@ -18,6 +19,7 @@ import {
 import { catalogFiltersFromRecord } from "@/lib/catalog-query";
 
 export const dynamic = "force-dynamic";
+const PRODUCTS_PER_PAGE = 24;
 
 export const metadata = {
   title: "Catálogo | Buxxep",
@@ -31,6 +33,13 @@ interface PageProps {
 export default async function CatalogPage({ searchParams }: PageProps) {
   const raw = await searchParams;
   const filters = catalogFiltersFromRecord(raw);
+  const requestedPageValue = Array.isArray(raw.pagina)
+    ? raw.pagina[0]
+    : raw.pagina;
+  const requestedPage = Math.max(
+    1,
+    Number.parseInt(requestedPageValue ?? "1", 10) || 1,
+  );
 
   const [products, categories, covers, tagOptions, colorOptions] =
     await Promise.all([
@@ -51,6 +60,13 @@ export default async function CatalogPage({ searchParams }: PageProps) {
   const activeCategory = filters.categoria
     ? categories.find((c) => c.slug === filters.categoria)
     : undefined;
+  const totalProducts = products.length;
+  const totalPages = Math.max(1, Math.ceil(totalProducts / PRODUCTS_PER_PAGE));
+  const currentPage = Math.min(requestedPage, totalPages);
+  const pageProducts = products.slice(
+    (currentPage - 1) * PRODUCTS_PER_PAGE,
+    currentPage * PRODUCTS_PER_PAGE,
+  );
 
   return (
     <article className="w-full pb-16">
@@ -97,7 +113,7 @@ export default async function CatalogPage({ searchParams }: PageProps) {
                     : (activeCategory?.name ?? "Todo el catálogo")}
                 </h1>
                 <p className="tabular-nums text-xs font-medium text-muted-foreground">
-                  {products.length} {products.length === 1 ? "pieza" : "piezas"}
+                  {totalProducts} {totalProducts === 1 ? "pieza" : "piezas"}
                 </p>
               </div>
               <CatalogFilterChips
@@ -114,7 +130,7 @@ export default async function CatalogPage({ searchParams }: PageProps) {
               aria-label="Productos"
               className="grid grid-cols-2 gap-2.5 min-[480px]:grid-cols-3 sm:gap-3 md:grid-cols-4 lg:grid-cols-[repeat(auto-fill,minmax(260px,1fr))] lg:gap-5 pb-16"
             >
-              {products.length === 0 ? (
+              {totalProducts === 0 ? (
                 <p className="col-span-full rounded-xl border border-dashed border-border/90 bg-muted/20 px-4 py-14 text-center text-sm text-muted-foreground">
                   No hay productos que coincidan.{" "}
                   <Link
@@ -125,10 +141,15 @@ export default async function CatalogPage({ searchParams }: PageProps) {
                   </Link>
                 </p>
               ) : null}
-              {products.map((product) => (
+              {pageProducts.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
             </section>
+            <CatalogPagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              query={raw}
+            />
           </div>
         </div>
       </CatalogFiltersVisibilityProvider>
