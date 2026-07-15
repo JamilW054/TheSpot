@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { SecurityBadges } from "@/components/ui/security-badges";
 
 export const metadata: Metadata = {
   title: "Seguridad de Datos — Buxxep",
@@ -89,6 +90,9 @@ export default function SeguridadPage() {
             compras en línea. Si una transacción es rechazada por este proceso, significa que no
             pudo verificarse la identidad del portador.
           </p>
+          <div className="mt-4">
+            <SecurityBadges />
+          </div>
         </Section>
 
         <Section title="4. Tarjetas aceptadas">

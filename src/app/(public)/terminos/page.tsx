@@ -5,9 +5,10 @@ export const metadata: Metadata = {
   title: "Términos y Condiciones — Buxxep",
   description:
     "Lee los términos y condiciones de uso de la plataforma de comercio electrónico BUXXEP.",
+  alternates: { canonical: "https://buxxep.com/terminos" },
 };
 
-const LAST_UPDATED = "24 de junio de 2026";
+const LAST_UPDATED = "15 de julio de 2026";
 const VERSION = "v1.0";
 const SUPPORT_EMAIL = "soportebuxxep@gmail.com";
 const SUPPORT_PHONE = "809-828-9979";
@@ -55,10 +56,8 @@ export default function TerminosPage() {
 
         <Section title="3. Requisitos de edad">
           <p>
-            Debes tener al menos 13 años para usar el Servicio. Los usuarios
-            mayores de 13 y menores de 18 años solo pueden utilizarlo bajo la
-            supervisión de un padre, madre o tutor legal, quien asume la
-            responsabilidad de las compras realizadas.
+            Debes tener al menos 18 años para crear una cuenta y utilizar el
+            Servicio. BUXXEP no está dirigido a menores de edad.
           </p>
         </Section>
 

@@ -9,6 +9,7 @@ import { InstagramEmbeds } from "@/components/landing/InstagramEmbeds";
 import { PromoBanners } from "@/components/landing/PromoBanners";
 import { ScrollReveal } from "@/components/landing/ScrollReveal";
 import MagicBento from "@/components/MagicBento";
+import { SecurityBadges } from "@/components/ui/security-badges";
 import {
   getActiveBanners,
   getCategoriesPublic,
@@ -610,7 +611,34 @@ export default async function PublicPage() {
         </div>
       </section>
 
-      {/* ─── 8. INSTAGRAM ───────────────────────────────────────────── */}
+      {/* ─── 8. SEGURIDAD ───────────────────────────────────────────── */}
+      <section className="w-full border-t border-border bg-muted/20">
+        <div
+          className={`${C} flex flex-col gap-6 py-10 sm:flex-row sm:items-center sm:justify-between`}
+        >
+          <ScrollReveal>
+            <div>
+              <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.28em] text-primary">
+                Pagos seguros
+              </p>
+              <p className="max-w-xs text-sm text-muted-foreground">
+                Las transacciones con tarjeta usan autenticación 3D Secure.{" "}
+                <Link
+                  href="/seguridad"
+                  className="text-primary hover:underline"
+                >
+                  Más información →
+                </Link>
+              </p>
+            </div>
+          </ScrollReveal>
+          <ScrollReveal>
+            <SecurityBadges />
+          </ScrollReveal>
+        </div>
+      </section>
+
+      {/* ─── 9. INSTAGRAM ───────────────────────────────────────────── */}
       <div className="hidden sm:block">
         <InstagramEmbeds />
       </div>

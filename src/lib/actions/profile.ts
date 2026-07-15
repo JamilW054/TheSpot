@@ -5,7 +5,7 @@ import {
   updateProfile as dbUpdateProfile,
   type ProfileInput,
 } from "@/database/repositories/profiles";
-import { createServiceClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 
 export type ProfileActionState = { ok?: true; error?: string };
 
@@ -24,6 +24,14 @@ export async function syncProfileEmail(
   const mail = email?.trim().toLowerCase();
   if (!id || !mail) return;
   try {
+    const sessionClient = await createClient();
+    const { data } = await sessionClient.auth.getUser();
+    if (
+      !data.user ||
+      data.user.id !== id ||
+      data.user.email?.toLowerCase() !== mail
+    )
+      return;
     const supabase = createServiceClient();
     await supabase.from("profiles").update({ email: mail }).eq("id", id);
   } catch {

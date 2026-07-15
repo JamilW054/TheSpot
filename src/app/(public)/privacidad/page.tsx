@@ -5,9 +5,10 @@ export const metadata: Metadata = {
   title: "Política de Privacidad — Buxxep",
   description:
     "Conoce cómo Buxxep recopila, usa, comparte y protege tu información personal, y los derechos que tienes sobre tus datos.",
+  alternates: { canonical: "https://buxxep.com/privacidad" },
 };
 
-const LAST_UPDATED = "24 de junio de 2026";
+const LAST_UPDATED = "15 de julio de 2026";
 const VERSION = "v1.0";
 const SUPPORT_EMAIL = "soportebuxxep@gmail.com";
 const SUPPORT_PHONE = "809-828-9979";
@@ -96,14 +97,20 @@ export default function PrivacidadPage() {
               reseñas, lista de deseos, carrito, notificaciones y tokens de
               dispositivo para notificaciones push, y los diseños que creas.
             </li>
+            <li>
+              <strong className="text-foreground">Imágenes:</strong> avatares y
+              archivos que eliges desde la cámara, galería o almacenamiento del
+              dispositivo para crear diseños. Solo accedemos a los archivos que
+              seleccionas.
+            </li>
           </ul>
           <p className="mt-4">
             <strong className="text-foreground">
               Datos que recopilamos automáticamente:
             </strong>{" "}
-            tipo de dispositivo, sistema operativo, identificadores de
-            dispositivo, dirección IP, tipo de conexión, tokens de sesión e
-            historial de uso (pantallas, búsquedas y productos vistos).
+            dirección IP, información técnica necesaria para la seguridad y
+            tokens de sesión. No utilizamos analítica de pantallas, búsquedas o
+            productos vistos mientras no esté implementada.
           </p>
         </Section>
 
@@ -243,9 +250,9 @@ export default function PrivacidadPage() {
 
         <Section title="8. Privacidad de menores">
           <p>
-            BUXXEP no está dirigido a menores de 13 años y no recopilamos
-            conscientemente datos de menores de esa edad. Si detectamos que
-            hemos recopilado datos de un menor de 13 años, los eliminaremos.
+            BUXXEP no está dirigido a menores de 18 años y no recopilamos
+            conscientemente datos de menores. Si detectamos que hemos recopilado
+            datos de un menor, los eliminaremos.
           </p>
         </Section>
 

@@ -6,9 +6,10 @@ export const metadata: Metadata = {
   title: "Eliminar Cuenta — Buxxep",
   description:
     "Cómo eliminar tu cuenta de Buxxep y el período de recuperación de 30 días antes de la eliminación definitiva de tus datos.",
+  alternates: { canonical: "https://buxxep.com/eliminar-cuenta" },
 };
 
-const LAST_UPDATED = "24 de junio de 2026";
+const LAST_UPDATED = "15 de julio de 2026";
 const VERSION = "v1.0";
 const SUPPORT_EMAIL = "soportebuxxep@gmail.com";
 const SUPPORT_PHONE = "809-828-9979";
@@ -59,6 +60,25 @@ export default function EliminarCuentaPage() {
 
         {/* ── Eliminación desde la web (usuarios autenticados) ── */}
         <DeleteAccountButton />
+
+        <section className="rounded-[14px] border border-border bg-card p-5 sm:p-6">
+          <h2 className="mb-3 text-base font-semibold text-foreground">
+            Solicitud sin acceso a la aplicación
+          </h2>
+          <p>
+            Si desinstalaste la aplicación o no puedes iniciar sesión, puedes
+            solicitar la eliminación sin volver a instalarla. Escríbenos desde
+            el correo asociado a tu cuenta con el asunto “Solicitud de
+            eliminación de cuenta Buxxep”. Verificaremos tu identidad y
+            procesaremos la solicitud en un plazo máximo de 30 días.
+          </p>
+          <a
+            href={`mailto:${SUPPORT_EMAIL}?subject=Solicitud%20de%20eliminaci%C3%B3n%20de%20cuenta%20Buxxep`}
+            className="mt-4 inline-flex rounded-[10px] bg-primary px-4 py-2 font-semibold text-primary-foreground hover:opacity-90"
+          >
+            Solicitar eliminación por correo
+          </a>
+        </section>
 
         {/* ── Parte B: política detallada ── */}
         <Section title="Cómo funciona la eliminación">

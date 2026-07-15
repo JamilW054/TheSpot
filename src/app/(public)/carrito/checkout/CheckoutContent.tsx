@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { FreeShippingProgress } from "@/components/cart/FreeShippingProgress";
 import { PaymentMethodSelector } from "@/components/payment/PaymentMethodSelector";
+import { SecurityBadges } from "@/components/ui/security-badges";
 import {
   qualifiesForFreeShipping,
   resolveShippingCents,
@@ -703,6 +704,7 @@ export function CheckoutContent({
                 ? "Serás redirigido al pago seguro de Banco Popular (AZUL). Al confirmar aceptas el pedido."
                 : "Confirmaremos tu pedido y te enviaremos un enlace de pago seguro. Podrás verlo en tu Centro de pagos."}
             </p>
+            {isAzul && <SecurityBadges className="mt-3 justify-center" />}
           </div>
         </div>
       </aside>

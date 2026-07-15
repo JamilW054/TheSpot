@@ -1,10 +1,16 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
+function safeInternalPath(value: string | null): string {
+  if (!value || !value.startsWith("/") || value.startsWith("//"))
+    return "/cuenta";
+  return value;
+}
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const code = searchParams.get("code");
-  const next = searchParams.get("next") ?? "/cuenta";
+  const next = safeInternalPath(searchParams.get("next"));
   const errorParam =
     searchParams.get("error_description") ?? searchParams.get("error");
 
