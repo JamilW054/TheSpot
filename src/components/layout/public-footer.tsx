@@ -95,6 +95,9 @@ export function PublicFooter() {
               Políticas
             </p>
             <nav className="flex flex-col gap-2.5 text-sm text-muted-foreground" aria-label="Políticas del footer">
+              <Link href="/ayuda" className="hover:text-foreground transition-colors">
+                Centro de ayuda
+              </Link>
               <Link href="/devoluciones" className="hover:text-foreground transition-colors">
                 Devoluciones y reembolsos
               </Link>
@@ -209,6 +212,10 @@ export function PublicFooter() {
         {/* ── Barra legal ── */}
         <div className="mt-6 pt-5 border-t border-border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs text-muted-foreground/60">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <Link href="/ayuda" className="hover:text-muted-foreground transition-colors">
+              Ayuda
+            </Link>
+            <span aria-hidden>·</span>
             <Link href="/devoluciones" className="hover:text-muted-foreground transition-colors">
               Devoluciones
             </Link>

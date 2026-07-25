@@ -308,6 +308,7 @@ function Section({
 
 function LegalNav({ current }: { current: string }) {
   const links = [
+    { href: "/ayuda", label: "Ayuda" },
     { href: "/terminos", label: "Términos" },
     { href: "/privacidad", label: "Privacidad" },
     { href: "/cookies", label: "Cookies" },

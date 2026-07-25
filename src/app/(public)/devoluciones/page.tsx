@@ -150,6 +150,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 function LegalNav({ current }: { current: string }) {
   const links = [
+    { href: "/ayuda",        label: "Ayuda" },
     { href: "/terminos",     label: "Términos" },
     { href: "/privacidad",   label: "Privacidad" },
     { href: "/cookies",      label: "Cookies" },
