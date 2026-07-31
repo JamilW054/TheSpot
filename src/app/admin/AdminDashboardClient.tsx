@@ -45,7 +45,15 @@ import type { PartnerMonthlyStatement } from "@/database/repositories/partners";
 import { PartnerDashboardCard } from "@/features/admin/partner-dashboard-card";
 import { formatDOPFromCents } from "@/lib/format-currency";
 import { formatDate } from "@/lib/format-date";
+import {
+  ORDER_STATUS_PARAM,
+  type OrderStatusFilter,
+} from "@/lib/orders/status";
 import type { Pedido } from "@/types";
+
+/** Estado con el que se abre /admin/pedidos para los pedidos sin cobrar. */
+const UNPAID_STATUS: OrderStatusFilter = "pending";
+const UNPAID_ORDERS_HREF = `/admin/pedidos?${ORDER_STATUS_PARAM}=${UNPAID_STATUS}`;
 
 const ESTADO_BADGE: Record<
   Pedido["estado"],
@@ -139,7 +147,10 @@ const PEDIDO_COLUMNS: DataTableColumn<Pedido>[] = [
 
 export interface AdminDashboardClientProps {
   metrics: AdminDashboardMetrics;
+  /** Pedidos recientes ya **pagados** (los únicos que lista el resumen). */
   recentPedidos: Pedido[];
+  /** Total de pedidos sin cobrar; enlazan a /admin/pedidos con ese filtro. */
+  unpaidOrdersCount: number;
   commissions: MonthlyCommissionSummary;
   /** Liquidación del mes en curso de cada socio activo (módulo de socios). */
   partners: PartnerMonthlyStatement[];
@@ -148,6 +159,7 @@ export interface AdminDashboardClientProps {
 export function AdminDashboardClient({
   metrics,
   recentPedidos,
+  unpaidOrdersCount,
   commissions,
   partners,
 }: AdminDashboardClientProps) {
@@ -229,7 +241,7 @@ export function AdminDashboardClient({
             </span>
           </div>
           <Link
-            href="/admin/pedidos"
+            href={UNPAID_ORDERS_HREF}
             className="flex shrink-0 items-center gap-1 text-sm font-medium text-(--admin-warning) hover:opacity-80"
           >
             Revisar <ArrowRight className="size-3.5" aria-hidden />
@@ -546,29 +558,60 @@ export function AdminDashboardClient({
         </AdminCard>
       </section>
 
-      {/* ── Pedidos recientes ── */}
-      <section aria-label="Pedidos recientes" className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold tracking-tight text-foreground">
-            Pedidos recientes
-          </h2>
-          <Link
-            href="/admin/pedidos"
-            className="flex items-center gap-1 text-xs font-medium text-(--admin-brand-strong) hover:opacity-80"
-          >
-            Ver todos <ArrowRight className="size-3" aria-hidden />
-          </Link>
+      {/* ── Pedidos recientes (solo pagados) ── */}
+      <section aria-label="Pedidos pagados recientes" className="space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h2 className="text-sm font-semibold tracking-tight text-foreground">
+              Pedidos recientes
+            </h2>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              Solo pedidos pagados
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            {unpaidOrdersCount > 0 && (
+              <Link
+                href={UNPAID_ORDERS_HREF}
+                className="flex items-center gap-1 text-xs font-medium text-(--admin-warning) hover:opacity-80"
+              >
+                {unpaidOrdersCount} sin pagar
+                <ArrowRight className="size-3" aria-hidden />
+              </Link>
+            )}
+            <Link
+              href="/admin/pedidos"
+              className="flex items-center gap-1 text-xs font-medium text-(--admin-brand-strong) hover:opacity-80"
+            >
+              Ver pagados <ArrowRight className="size-3" aria-hidden />
+            </Link>
+          </div>
         </div>
         <DataTable
           rows={recentPedidos}
           columns={PEDIDO_COLUMNS}
           rowKey={(p) => p.id}
-          ariaLabel="Pedidos recientes"
+          ariaLabel="Pedidos pagados recientes"
           emptyState={
             <EmptyState
               icon={<ShoppingCart className="size-5" />}
-              title="No hay pedidos todavía"
-              description="Los pedidos de la tienda aparecerán aquí en cuanto lleguen."
+              title="No hay pedidos pagados todavía"
+              description={
+                unpaidOrdersCount > 0
+                  ? `Hay ${unpaidOrdersCount} pedido${unpaidOrdersCount !== 1 ? "s" : ""} sin cobrar esperando pago.`
+                  : "Los pedidos aparecerán aquí en cuanto se confirme el cobro."
+              }
+              action={
+                unpaidOrdersCount > 0 ? (
+                  <Link
+                    href={UNPAID_ORDERS_HREF}
+                    className="inline-flex items-center gap-2 rounded-[18px] border border-border bg-card px-4 py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-muted"
+                  >
+                    Ver pedidos sin pagar
+                    <ArrowRight className="size-4" aria-hidden />
+                  </Link>
+                ) : undefined
+              }
             />
           }
         />

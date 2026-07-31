@@ -53,6 +53,7 @@ async function withNetworkFallback<T>(
 
 import type { CatalogOrden, CatalogPrecio } from "@/lib/catalog-query";
 import { formatDOPFromCents } from "@/lib/format-currency";
+import type { OrderStatusFilter } from "@/lib/orders/status";
 import type {
   CatalogProduct,
   Design,
@@ -578,16 +579,75 @@ export async function getOrders(): Promise<Pedido[]> {
   }, []);
 }
 
-/** All orders (admin). Uses service role, bypasses RLS. */
-export async function getOrdersAdmin(): Promise<Pedido[]> {
+/** Subconjunto de PostgREST usado para componer el filtro de estado. */
+interface OrdersQueryBuilder {
+  eq(column: string, value: unknown): this;
+  neq(column: string, value: unknown): this;
+  or(filters: string): this;
+}
+
+/**
+ * Valor de `orders.payment_status` que representa un cobro exitoso. La columna
+ * solo admite 'pending' | 'paid' | 'declined' (`OrderPaymentStatus`; constraint
+ * de la migración 00004 y enum en la BD desplegada), así que el filtro en SQL
+ * compara contra 'paid'. Los sinónimos de `SUCCESSFUL_PAYMENT_STATUSES` sirven
+ * para normalizar respuestas de pasarelas al leerlas, no para consultar aquí:
+ * la BD rechaza cualquier valor fuera del enum.
+ */
+const PAID_PAYMENT_STATUS: OrderPaymentStatus = "paid";
+
+/**
+ * Traduce un `OrderStatusFilter` a condiciones sobre `orders` y las aplica a la
+ * consulta (filtrado en la BD, no en memoria). Los tres estados son excluyentes:
+ * un pedido cancelado nunca aparece en "pagados" ni en "pendientes".
+ */
+function applyOrderStatusFilter<Q extends OrdersQueryBuilder>(
+  query: Q,
+  status: OrderStatusFilter,
+): Q {
+  switch (status) {
+    case "paid":
+      return query
+        .neq("status", "cancelled")
+        .eq("payment_status", PAID_PAYMENT_STATUS);
+    case "cancelled":
+      return query.eq("status", "cancelled");
+    default:
+      // Pendiente = ni cancelado ni cobrado (incluye payment_status nulo).
+      return query
+        .neq("status", "cancelled")
+        .or(
+          `payment_status.is.null,payment_status.neq.${PAID_PAYMENT_STATUS}`,
+        );
+  }
+}
+
+export interface GetOrdersAdminOptions {
+  /** Filtra por estado en la consulta; sin valor devuelve todos los pedidos. */
+  status?: OrderStatusFilter;
+  /** Máximo de filas a traer (vistas resumidas como el dashboard). */
+  limit?: number;
+}
+
+/**
+ * All orders (admin). Uses service role, bypasses RLS.
+ * El filtro y el límite se aplican en la consulta, no en memoria.
+ */
+export async function getOrdersAdmin({
+  status,
+  limit,
+}: GetOrdersAdminOptions = {}): Promise<Pedido[]> {
   return withNetworkFallback(async () => {
     const supabase = createServiceClient();
-    const { data, error } = await supabase
+    let query = supabase
       .from("orders")
       .select(
         "id, user_id, status, payment_status, shipping_address, contact_email, total_cents, created_at",
-      )
-      .order("created_at", { ascending: false });
+      );
+    if (status) query = applyOrderStatusFilter(query, status);
+    let ordered = query.order("created_at", { ascending: false });
+    if (limit !== undefined) ordered = ordered.limit(limit);
+    const { data, error } = await ordered;
     if (error) throw toError(error);
     const rows = (data ?? []) as unknown as OrderRow[];
     const orderIds = rows.map((o) => o.id);
@@ -607,6 +667,25 @@ export async function getOrdersAdmin(): Promise<Pedido[]> {
     }
     return rows.map((r) => rowToPedido(r, lineItemsByOrder[r.id] ?? []));
   }, []);
+}
+
+/**
+ * Nº de pedidos que coinciden con un estado. Cuenta en la BD (`head: true`, sin
+ * traer filas) con el mismo predicado que `getOrdersAdmin`, así el contador y la
+ * lista filtrada nunca se contradicen.
+ */
+export async function countOrdersAdmin(
+  status: OrderStatusFilter,
+): Promise<number> {
+  return withNetworkFallback(async () => {
+    const supabase = createServiceClient();
+    const { count, error } = await applyOrderStatusFilter(
+      supabase.from("orders").select("id", { count: "exact", head: true }),
+      status,
+    );
+    if (error) throw toError(error);
+    return count ?? 0;
+  }, 0);
 }
 
 function coercePaymentStatus(

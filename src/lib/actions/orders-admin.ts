@@ -3,14 +3,16 @@
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { markLinkedOrderAsPaid, onOrderPaymentSucceeded } from "@/database/repositories";
+import type { OrderStatusFilter } from "@/lib/orders/status";
 import { paymentTypeMeta } from "@/lib/payments/status";
 import { createServiceClient } from "@/lib/supabase/server";
 
-export type OrderFulfillmentStatus =
-  | "pending"
-  | "paid"
-  | "shipped"
-  | "cancelled";
+/**
+ * Estados de fulfillment gestionables desde el panel. Los tres filtrables en
+ * "Todos los pedidos" viven en `lib/orders/status` (fuente única) y aquí se
+ * suma `shipped`, que solo se usa como acción en lote.
+ */
+export type OrderFulfillmentStatus = OrderStatusFilter | "shipped";
 
 /**
  * Traduce el estado de fulfillment de la UI a las columnas reales del pedido.

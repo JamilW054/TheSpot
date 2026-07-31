@@ -8,6 +8,7 @@ import {
   LayoutList,
   Mail,
   MapPin,
+  PackageSearch,
   Phone,
   PlayCircle,
   Trash2,
@@ -15,11 +16,17 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { EmptyState } from "@/components/admin/ui";
 import { Badge } from "@/components/ui/badge";
 import { ConfirmDialog, type ConfirmDialogState } from "@/components/ui/confirm-dialog";
 import { Input } from "@/components/ui/input";
-import { SelectMenu } from "@/components/ui/select-menu";
-import type { FilterEstado, Pedido, PedidoEstado, PedidosTableProps } from "@/types";
+import {
+  DEFAULT_ORDER_STATUS_FILTER,
+  ORDER_STATUS_FILTERS,
+  type OrderStatusFilter,
+  orderStatusFilterMeta,
+} from "@/lib/orders/status";
+import type { Pedido, PedidoEstado, PedidosTableProps } from "@/types";
 import type { PedidoLineItem, PedidoShipping } from "@/types/pedido";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -48,35 +55,24 @@ const PAYMENT_COLOR: Record<string, string> = {
   declined: "bg-red-500/10 text-red-600 border-red-500/20",
 };
 
-const FILTER_ESTADO_OPTIONS: { value: FilterEstado; label: string }[] = [
-  { value: "todos", label: "Todos" },
-  { value: "abiertos", label: "Abiertos" },
-  { value: "pendiente", label: "Pendiente" },
-  { value: "en_proceso", label: "En proceso" },
-  { value: "completado", label: "Completado" },
-];
-
 const VIEW_KEY = "admin-pedidos-view";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function estadoMatches(filter: FilterEstado, estado: PedidoEstado): boolean {
-  if (filter === "todos") return true;
-  if (filter === "abiertos") return estado === "pendiente" || estado === "en_proceso";
-  return estado === filter;
-}
-
-function filterPedidos(pedidos: Pedido[], q: string, filter: FilterEstado): Pedido[] {
+/**
+ * Búsqueda sobre los pedidos ya filtrados por estado en la consulta del
+ * servidor (ver `getOrdersAdmin`); aquí no se filtra por estado.
+ */
+function filterPedidos(pedidos: Pedido[], q: string): Pedido[] {
   const query = q.trim().toLowerCase();
-  return pedidos.filter((p) => {
-    const matchSearch =
-      query === "" ||
+  if (query === "") return pedidos;
+  return pedidos.filter(
+    (p) =>
       p.id.toLowerCase().includes(query) ||
       p.cliente.toLowerCase().includes(query) ||
       (p.shipping?.email ?? "").toLowerCase().includes(query) ||
-      (p.shipping?.phone ?? "").toLowerCase().includes(query);
-    return matchSearch && estadoMatches(filter, p.estado);
-  });
+      (p.shipping?.phone ?? "").toLowerCase().includes(query),
+  );
 }
 
 function toggleSet<T>(set: Set<T>, val: T): Set<T> {
@@ -113,6 +109,47 @@ function isExternalImage(src: string): boolean {
     src.includes("imgur.com") ||
     src.includes("unsplash.com") ||
     src.startsWith("http")
+  );
+}
+
+// ─── Status filter ───────────────────────────────────────────────────────────
+
+/**
+ * Filtro de estado en línea (Pagados / Pendientes / Cancelados). Un solo estado
+ * activo a la vez; el cambio se delega al contenedor, que rehace la consulta.
+ */
+function OrderStatusFilterButtons({
+  value,
+  onChange,
+  disabled = false,
+}: {
+  value: OrderStatusFilter;
+  onChange: (status: OrderStatusFilter) => void;
+  disabled?: boolean;
+}) {
+  return (
+    <fieldset className="flex w-full shrink-0 items-center gap-1 rounded-xl border border-border bg-muted/30 p-1 sm:w-auto">
+      <legend className="sr-only">Filtrar pedidos por estado</legend>
+      {ORDER_STATUS_FILTERS.map((status) => {
+        const active = status === value;
+        return (
+          <button
+            key={status}
+            type="button"
+            aria-pressed={active}
+            disabled={disabled}
+            onClick={() => onChange(status)}
+            className={`flex-1 whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 disabled:opacity-60 sm:flex-none ${
+              active
+                ? "bg-background text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {orderStatusFilterMeta(status).label}
+          </button>
+        );
+      })}
+    </fieldset>
   );
 }
 
@@ -707,13 +744,14 @@ function PedidosTableView({
 export function PedidosTable({
   pedidos,
   withFilters = false,
-  initialFilterEstado = "todos",
+  statusFilter = DEFAULT_ORDER_STATUS_FILTER,
+  onStatusFilterChange,
+  isRefreshing = false,
   onMarkEnProceso,
   onMarkCompletado,
   onDelete,
 }: PedidosTableProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterEstado, setFilterEstado] = useState<FilterEstado>(initialFilterEstado);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [view, setView] = useState<"cards" | "table">("cards");
   const [detailPedido, setDetailPedido] = useState<Pedido | null>(null);
@@ -730,9 +768,19 @@ export function PedidosTable({
   };
 
   const filtered = useMemo(
-    () => (withFilters ? filterPedidos(pedidos, searchQuery, filterEstado) : pedidos),
-    [pedidos, searchQuery, filterEstado, withFilters],
+    () => (withFilters ? filterPedidos(pedidos, searchQuery) : pedidos),
+    [pedidos, searchQuery, withFilters],
   );
+
+  // Al cambiar el conjunto de pedidos (otro estado, recarga tras una acción)
+  // se descarta la selección que ya no está en pantalla.
+  useEffect(() => {
+    const visibles = new Set(pedidos.map((p) => p.id));
+    setSelectedIds((prev) => {
+      const next = new Set([...prev].filter((id) => visibles.has(id)));
+      return next.size === prev.size ? prev : next;
+    });
+  }, [pedidos]);
 
   const handleToggleRow = (id: string) => setSelectedIds((prev) => toggleSet(prev, id));
   const handleSelectAll = (checked: boolean) =>
@@ -876,13 +924,11 @@ export function PedidosTable({
                   aria-label="Buscar pedidos"
                 />
               </div>
-              <div className="w-44 shrink-0">
-                <SelectMenu
-                  value={filterEstado}
-                  onChange={(v) => setFilterEstado(v as FilterEstado)}
-                  options={FILTER_ESTADO_OPTIONS}
-                />
-              </div>
+              <OrderStatusFilterButtons
+                value={statusFilter}
+                onChange={(s) => onStatusFilterChange?.(s)}
+                disabled={isRefreshing || !onStatusFilterChange}
+              />
               {/* View toggle */}
               <div className="ml-auto flex shrink-0 items-center gap-1 rounded-xl border border-border bg-muted/30 p-1">
                 <button
@@ -965,9 +1011,21 @@ export function PedidosTable({
 
         {/* Empty state */}
         {filtered.length === 0 && withFilters ? (
-          <p className="rounded-xl border border-border bg-muted/20 px-4 py-10 text-center text-sm text-muted-foreground">
-            No hay resultados con estos filtros.
-          </p>
+          <div className="rounded-xl border border-border bg-muted/20">
+            <EmptyState
+              icon={<PackageSearch className="size-6" />}
+              title={
+                searchQuery.trim()
+                  ? "Sin resultados"
+                  : orderStatusFilterMeta(statusFilter).emptyTitle
+              }
+              description={
+                searchQuery.trim()
+                  ? `Ningún pedido con estado "${orderStatusFilterMeta(statusFilter).label.toLowerCase()}" coincide con tu búsqueda.`
+                  : "Prueba con otro estado para ver más pedidos."
+              }
+            />
+          </div>
         ) : view === "cards" ? (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {filtered.map((p) => (

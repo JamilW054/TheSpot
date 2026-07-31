@@ -179,8 +179,4 @@ export interface CartItem {
 }
 
 // Re-export domain-specific types
-export type {
-  FilterEstado,
-  PedidosTableProps,
-  PedidosTableBodyProps,
-} from "./admin";
+export type { PedidosTableProps, PedidosTableBodyProps } from "./admin";
