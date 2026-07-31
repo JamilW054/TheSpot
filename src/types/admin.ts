@@ -4,7 +4,14 @@
  */
 
 import type { OrderStatusFilter } from "@/lib/orders/status";
-import type { Pedido } from "./pedido";
+import type { Pedido, PedidoEstado } from "./pedido";
+
+/**
+ * Filtro secundario por estado de gestión, sobre los pedidos que ya devolvió la
+ * consulta del servidor (eje distinto al de cobro: ver `OrderStatusFilter`).
+ * "abiertos" = pendiente + en proceso (no completados).
+ */
+export type FilterEstado = "todos" | "abiertos" | PedidoEstado;
 
 /** Props for the PedidosTable component. */
 export interface PedidosTableProps {

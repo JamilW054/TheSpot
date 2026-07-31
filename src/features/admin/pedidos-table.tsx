@@ -2,10 +2,12 @@
 
 import {
   CheckCircle2,
+  ChevronDown,
   Eye,
   ImageIcon,
   LayoutGrid,
   LayoutList,
+  ListFilter,
   Mail,
   MapPin,
   PackageSearch,
@@ -20,13 +22,19 @@ import { EmptyState } from "@/components/admin/ui";
 import { Badge } from "@/components/ui/badge";
 import { ConfirmDialog, type ConfirmDialogState } from "@/components/ui/confirm-dialog";
 import { Input } from "@/components/ui/input";
+import { SelectMenu } from "@/components/ui/select-menu";
 import {
   DEFAULT_ORDER_STATUS_FILTER,
   ORDER_STATUS_FILTERS,
   type OrderStatusFilter,
   orderStatusFilterMeta,
 } from "@/lib/orders/status";
-import type { Pedido, PedidoEstado, PedidosTableProps } from "@/types";
+import type {
+  FilterEstado,
+  Pedido,
+  PedidoEstado,
+  PedidosTableProps,
+} from "@/types";
 import type { PedidoLineItem, PedidoShipping } from "@/types/pedido";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -55,24 +63,53 @@ const PAYMENT_COLOR: Record<string, string> = {
   declined: "bg-red-500/10 text-red-600 border-red-500/20",
 };
 
+/** Opciones del filtro secundario por estado de gestión. */
+const FILTER_ESTADO_OPTIONS: { value: FilterEstado; label: string }[] = [
+  { value: "todos", label: "Todos" },
+  { value: "abiertos", label: "Abiertos" },
+  { value: "pendiente", label: "Pendiente" },
+  { value: "en_proceso", label: "En proceso" },
+  { value: "completado", label: "Completado" },
+];
+
+const ESTADO_PANEL_ID = "pedidos-filtro-gestion";
+
 const VIEW_KEY = "admin-pedidos-view";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
+function estadoMatches(filter: FilterEstado, estado: PedidoEstado): boolean {
+  if (filter === "todos") return true;
+  if (filter === "abiertos") return estado === "pendiente" || estado === "en_proceso";
+  return estado === filter;
+}
+
+function filterEstadoLabel(filter: FilterEstado): string {
+  return (
+    FILTER_ESTADO_OPTIONS.find((o) => o.value === filter)?.label ?? "Todos"
+  );
+}
+
 /**
- * Búsqueda sobre los pedidos ya filtrados por estado en la consulta del
- * servidor (ver `getOrdersAdmin`); aquí no se filtra por estado.
+ * Búsqueda + estado de gestión sobre los pedidos que ya devolvió la consulta
+ * filtrada por cobro (ver `getOrdersAdmin`); ese eje no se filtra aquí.
  */
-function filterPedidos(pedidos: Pedido[], q: string): Pedido[] {
+function filterPedidos(
+  pedidos: Pedido[],
+  q: string,
+  estado: FilterEstado,
+): Pedido[] {
   const query = q.trim().toLowerCase();
-  if (query === "") return pedidos;
-  return pedidos.filter(
-    (p) =>
+  if (query === "" && estado === "todos") return pedidos;
+  return pedidos.filter((p) => {
+    const matchSearch =
+      query === "" ||
       p.id.toLowerCase().includes(query) ||
       p.cliente.toLowerCase().includes(query) ||
       (p.shipping?.email ?? "").toLowerCase().includes(query) ||
-      (p.shipping?.phone ?? "").toLowerCase().includes(query),
-  );
+      (p.shipping?.phone ?? "").toLowerCase().includes(query);
+    return matchSearch && estadoMatches(estado, p.estado);
+  });
 }
 
 function toggleSet<T>(set: Set<T>, val: T): Set<T> {
@@ -752,6 +789,8 @@ export function PedidosTable({
   onDelete,
 }: PedidosTableProps) {
   const [searchQuery, setSearchQuery] = useState("");
+  const [filterEstado, setFilterEstado] = useState<FilterEstado>("todos");
+  const [showEstadoPanel, setShowEstadoPanel] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [view, setView] = useState<"cards" | "table">("cards");
   const [detailPedido, setDetailPedido] = useState<Pedido | null>(null);
@@ -767,9 +806,12 @@ export function PedidosTable({
     localStorage.setItem(VIEW_KEY, v);
   };
 
+  const estadoActivo = filterEstado !== "todos";
+
   const filtered = useMemo(
-    () => (withFilters ? filterPedidos(pedidos, searchQuery) : pedidos),
-    [pedidos, searchQuery, withFilters],
+    () =>
+      withFilters ? filterPedidos(pedidos, searchQuery, filterEstado) : pedidos,
+    [pedidos, searchQuery, filterEstado, withFilters],
   );
 
   // Al cambiar el conjunto de pedidos (otro estado, recarga tras una acción)
@@ -929,6 +971,27 @@ export function PedidosTable({
                 onChange={(s) => onStatusFilterChange?.(s)}
                 disabled={isRefreshing || !onStatusFilterChange}
               />
+              {/* Acceso al filtro secundario por estado de gestión. Cuando hay
+                  uno activo el botón lo muestra, para que nunca se filtre sin
+                  que se vea. */}
+              <button
+                type="button"
+                onClick={() => setShowEstadoPanel((v) => !v)}
+                aria-expanded={showEstadoPanel}
+                aria-controls={ESTADO_PANEL_ID}
+                className={`inline-flex h-9 shrink-0 items-center gap-1.5 rounded-xl border px-3 text-sm font-medium transition-colors ${
+                  estadoActivo
+                    ? "border-primary/50 bg-primary/5 text-foreground"
+                    : "border-border bg-background text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <ListFilter className="size-3.5" aria-hidden />
+                {estadoActivo ? filterEstadoLabel(filterEstado) : "Más estados"}
+                <ChevronDown
+                  className={`size-3.5 transition-transform ${showEstadoPanel ? "rotate-180" : ""}`}
+                  aria-hidden
+                />
+              </button>
               {/* View toggle */}
               <div className="ml-auto flex shrink-0 items-center gap-1 rounded-xl border border-border bg-muted/30 p-1">
                 <button
@@ -957,6 +1020,42 @@ export function PedidosTable({
                 </button>
               </div>
             </div>
+
+            {/* Filtro secundario: estado de gestión sobre el resultado actual */}
+            {showEstadoPanel && (
+              <div
+                id={ESTADO_PANEL_ID}
+                className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-muted/20 px-3 py-2.5"
+              >
+                <label
+                  htmlFor="filtro-estado-gestion"
+                  className="text-xs font-medium text-muted-foreground"
+                >
+                  Estado de gestión
+                </label>
+                <div className="w-44">
+                  <SelectMenu
+                    id="filtro-estado-gestion"
+                    value={filterEstado}
+                    onChange={(v) => setFilterEstado(v as FilterEstado)}
+                    options={FILTER_ESTADO_OPTIONS}
+                  />
+                </div>
+                {estadoActivo && (
+                  <button
+                    type="button"
+                    onClick={() => setFilterEstado("todos")}
+                    className="text-xs font-medium text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+                  >
+                    Quitar filtro
+                  </button>
+                )}
+                <p className="w-full text-xs text-muted-foreground sm:w-auto">
+                  Se aplica sobre los pedidos{" "}
+                  {orderStatusFilterMeta(statusFilter).label.toLowerCase()}.
+                </p>
+              </div>
+            )}
 
             {/* Count + selection info */}
             <div className="flex flex-wrap items-center gap-3 text-sm">
@@ -1015,14 +1114,25 @@ export function PedidosTable({
             <EmptyState
               icon={<PackageSearch className="size-6" />}
               title={
-                searchQuery.trim()
+                searchQuery.trim() || estadoActivo
                   ? "Sin resultados"
                   : orderStatusFilterMeta(statusFilter).emptyTitle
               }
               description={
-                searchQuery.trim()
-                  ? `Ningún pedido con estado "${orderStatusFilterMeta(statusFilter).label.toLowerCase()}" coincide con tu búsqueda.`
+                searchQuery.trim() || estadoActivo
+                  ? `Ningún pedido ${orderStatusFilterMeta(statusFilter).label.toLowerCase()} coincide con estos filtros.`
                   : "Prueba con otro estado para ver más pedidos."
+              }
+              action={
+                estadoActivo ? (
+                  <button
+                    type="button"
+                    onClick={() => setFilterEstado("todos")}
+                    className="inline-flex items-center gap-2 rounded-[10px] border border-border bg-card px-4 py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-muted"
+                  >
+                    Quitar filtro de gestión
+                  </button>
+                ) : undefined
               }
             />
           </div>
