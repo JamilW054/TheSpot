@@ -35,7 +35,7 @@ export function StoreConfigForm({ initial }: { initial: StoreConfig }) {
             label="Nombre de la tienda"
             name="nombre"
             defaultValue={initial.nombre}
-            placeholder="Ej. Buxxep"
+            placeholder="Ej. JW PARFUM"
           />
           <Input
             label="Dirección"
@@ -48,7 +48,7 @@ export function StoreConfigForm({ initial }: { initial: StoreConfig }) {
             type="email"
             name="contacto"
             defaultValue={initial.contacto}
-            placeholder="tienda@buxxep.com"
+            placeholder="jamilwilliams054@gmail.com"
           />
           <Input
             label="Teléfono"

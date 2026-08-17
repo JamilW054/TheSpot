@@ -1,9 +1,5 @@
 import { NextResponse } from "next/server";
-import {
-  sendBienvenidaEmail,
-  sendCompraEmail,
-  sendOtpEmail,
-} from "@/lib/resend";
+import { sendCompraEmail, sendNewOrderAdminEmail } from "@/lib/resend";
 
 const TEST_TO = "lacretalasemilla@gmail.com";
 
@@ -17,56 +13,47 @@ export async function GET() {
 
   const results: Record<string, unknown> = {};
 
-  // 1. OTP email
+  // 1. Aviso de pedido nuevo al admin
   try {
-    const r = await sendOtpEmail(TEST_TO, {
-      name: "Biandy",
-      code: "847291",
-      expiresInMinutes: 10,
+    const r = await sendNewOrderAdminEmail(TEST_TO, {
+      orderNumber: "TEST0001",
+      orderId: "ord_01jwtest000000000",
+      customerName: "Cliente de prueba",
+      customerEmail: TEST_TO,
+      customerPhone: "+1 (809) 000-0000",
+      shippingAddress: "Calle Falsa 123, Santo Domingo",
+      items: [
+        { name: "Noir Intense", quantity: 1, size: "50ml", unitPrice: 285000 },
+        { name: "Fleur Blanche", quantity: 1, size: "100ml", unitPrice: 355000 },
+      ],
+      subtotal: 640000,
+      shipping: 25000,
+      discount: 0,
+      total: 665000,
+      currency: "DOP",
     });
-    results.otp = { ok: true, id: r.data?.id };
+    results.nuevoPedidoAdmin = { ok: true, id: r.data?.id };
   } catch (e) {
-    results.otp = { ok: false, error: String(e) };
+    results.nuevoPedidoAdmin = { ok: false, error: String(e) };
   }
 
-  // 2. Bienvenida email
-  try {
-    const r = await sendBienvenidaEmail(TEST_TO, {
-      name: "Biandy",
-      email: TEST_TO,
-    });
-    results.bienvenida = { ok: true, id: r.data?.id };
-  } catch (e) {
-    results.bienvenida = { ok: false, error: String(e) };
-  }
-
-  // 3. Compra email
+  // 2. Recibo de compra al cliente
   try {
     const r = await sendCompraEmail(TEST_TO, {
-      name: "Biandy",
+      name: "Cliente de prueba",
       orderId: "ord_01jwtest000000000",
-      orderNumber: "BXP-2026-001",
+      orderNumber: "TEST0001",
       items: [
-        {
-          name: "Hoodie Buxxep Classic",
-          quantity: 1,
-          size: "L",
-          unitPrice: 250000,
-        },
-        {
-          name: "Camiseta Drop Signature",
-          quantity: 2,
-          size: "M",
-          unitPrice: 120000,
-        },
+        { name: "Noir Intense", quantity: 1, size: "50ml", unitPrice: 285000 },
+        { name: "Fleur Blanche", quantity: 1, size: "100ml", unitPrice: 355000 },
       ],
-      subtotal: 490000,
-      shipping: 0,
+      subtotal: 640000,
+      shipping: 25000,
       tax: 0,
-      total: 490000,
+      total: 665000,
       currency: "DOP",
       purchaseDate: "01 de julio de 2026, 03:45 p. m.",
-      paymentMethodLabel: "Pago con Azul",
+      paymentMethodLabel: "Pago confirmado por el negocio",
       paymentStatusLabel: "Pagado",
     });
     results.compra = { ok: true, id: r.data?.id };

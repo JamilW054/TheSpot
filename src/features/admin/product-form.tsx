@@ -21,11 +21,7 @@ import {
   adminUpdateProduct,
 } from "@/lib/actions/products-admin";
 import { formatDOPFromCents } from "@/lib/format-currency";
-import {
-  type CommissionRates,
-  computeProductProfit,
-  DEFAULT_COMMISSION_RATES,
-} from "@/lib/pricing";
+import { computeProductProfit } from "@/lib/pricing";
 import { variantKey } from "@/lib/variants";
 import { CategoryForm } from "./category-form";
 import { brandFields } from "./resource-fields";
@@ -61,11 +57,8 @@ interface ProductFormProps {
   categories: CategoryRow[];
   sizePresets: SizePresetRow[];
   brands?: SelectOption[];
-  lineas?: SelectOption[];
   warehouses?: SelectOption[];
   initial?: AdminProductRow;
-  /** Comisiones (%) para el panel de rentabilidad: AZUL y G3DEON. */
-  commissionRates?: CommissionRates;
   onSuccess?: () => void;
   onCancel?: () => void;
 }
@@ -158,10 +151,8 @@ export function ProductForm({
   categories,
   sizePresets,
   brands = [],
-  lineas = [],
   warehouses = [],
   initial,
-  commissionRates = DEFAULT_COMMISSION_RATES,
   onSuccess,
   onCancel,
 }: ProductFormProps) {
@@ -397,9 +388,8 @@ export function ProductForm({
     return computeProductProfit(
       Number.isFinite(price) ? Math.round(price * 100) : 0,
       Number.isFinite(cost) ? Math.round(cost * 100) : 0,
-      commissionRates,
     );
-  }, [priceInput, costInput, commissionRates]);
+  }, [priceInput, costInput]);
   const tagsDefault = initial
     ? tagsFromRow(initial.product_tags).join(", ")
     : "";
@@ -607,20 +597,6 @@ export function ProductForm({
                 ]}
               />
             </div>
-
-            {/* Línea */}
-            <div className="relative">
-              <span className={labelCls}>Línea</span>
-              <SelectMenu
-                name="linea_id"
-                placeholder="Sin línea"
-                defaultValue={initial?.linea_id ?? ""}
-                options={[
-                  { value: "", label: "Sin línea" },
-                  ...lineas.map((l) => ({ value: l.id, label: l.name })),
-                ]}
-              />
-            </div>
           </div>
         </section>
 
@@ -685,36 +661,6 @@ export function ProductForm({
               </div>
               <div className="min-w-[132px] flex-1 space-y-1.5">
                 <dt className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                  Comisión AZUL ({commissionRates.azulPct}%)
-                </dt>
-                <dd className="text-base font-semibold tabular-nums text-foreground">
-                  −{formatDOPFromCents(profit.azulCommissionCents)}
-                </dd>
-              </div>
-              <div className="min-w-[132px] flex-1 space-y-1.5">
-                <dt className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                  Comisión G3DEON ({commissionRates.g3deonPct}% de la ganancia)
-                </dt>
-                <dd className="text-base font-semibold tabular-nums text-foreground">
-                  −{formatDOPFromCents(profit.g3deonCommissionCents)}
-                </dd>
-              </div>
-              <div className="min-w-[132px] flex-1 space-y-1.5">
-                <dt className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                  Beneficio neto
-                </dt>
-                <dd
-                  className={`text-base font-semibold tabular-nums ${
-                    profit.netProfitCents < 0
-                      ? "text-destructive"
-                      : "text-foreground"
-                  }`}
-                >
-                  {formatDOPFromCents(profit.netProfitCents)}
-                </dd>
-              </div>
-              <div className="min-w-[132px] flex-1 space-y-1.5">
-                <dt className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
                   Margen
                 </dt>
                 <dd
@@ -730,11 +676,6 @@ export function ProductForm({
                 </dd>
               </div>
             </dl>
-            <p className="px-1 text-[11px] leading-relaxed text-muted-foreground">
-              La comisión G3DEON se calcula sobre la ganancia bruta (precio −
-              coste), no sobre el precio de venta. Si el precio de venta es
-              igual o menor al coste, la comisión G3DEON es RD$0.00.
-            </p>
           </div>
         </section>
 
@@ -913,15 +854,6 @@ export function ProductForm({
               />
               Publicado en la tienda
             </label>
-            <label className="flex cursor-pointer items-center gap-2.5 text-sm font-medium">
-              <input
-                type="checkbox"
-                name="is_customizable"
-                defaultChecked={initial?.is_customizable ?? false}
-                className="size-4 rounded border-border accent-primary"
-              />
-              Personalizable
-            </label>
           </div>
         </section>
 
@@ -981,6 +913,7 @@ export function ProductForm({
         <CategoryForm
           key={categoryDrawerKey}
           mode="create"
+          categories={categories}
           sizePresets={sizePresets}
           onSuccess={() => {
             setCategoryDrawerOpen(false);

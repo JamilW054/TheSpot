@@ -1,72 +1,35 @@
-import path from "node:path";
-import { readdir } from "fs/promises";
 import Image from "next/image";
 import Link from "next/link";
 import { LandingProductCard } from "@/components/catalog/LandingProductCard";
 import { ProductCard } from "@/components/catalog/ProductCard";
-import { GiveawayPromoSection } from "@/components/landing/GiveawayPromoSection";
-import { InstagramEmbeds } from "@/components/landing/InstagramEmbeds";
-import { PromoBanners } from "@/components/landing/PromoBanners";
 import { ScrollReveal } from "@/components/landing/ScrollReveal";
 import MagicBento from "@/components/MagicBento";
-import { SecurityBadges } from "@/components/ui/security-badges";
 import {
-  getActiveBanners,
   getCategoriesPublic,
   getCategoryCoverByCategoryId,
-  getGiveawayGoalPurchases,
-  getGiveawayPaidPurchaseCount,
   getProducts,
 } from "@/database/repositories";
 
-async function getClothDesignImageUrls(): Promise<string[]> {
-  try {
-    const dir = path.join(process.cwd(), "public", "cloths");
-    const names = await readdir(dir);
-    return names
-      .filter((n) => /\.(jpe?g|jpeg|png|webp)$/i.test(n))
-      .sort((a, b) =>
-        a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" }),
-      )
-      .map((n) => `/cloths/${n}`);
-  } catch {
-    return [];
-  }
-}
-
 const TICKER_ITEMS = [
-  { id: "t1", text: "NUEVA COLECCIÓN 2025" },
+  { id: "t1", text: "PERFUMES ORIGINALES" },
   { id: "t2", text: "ENVÍO A TODO EL PAÍS" },
-  { id: "t3", text: "50% COLECCIÓN HOMBRE" },
-  { id: "t4", text: "PAGOS 100% SEGUROS" },
-  { id: "t5", text: "50% COLECCIÓN MUJER" },
-  { id: "t6", text: "ENVÍOS RÁPIDOS Y SEGUROS" },
-  { id: "t7", text: "PRENDAS DE CALIDAD" },
-  { id: "t8", text: "EXPLORA · ELIGE · COMPRA" },
+  { id: "t3", text: "PEDIDO SIN CUENTA" },
+  { id: "t4", text: "CONFIRMACIÓN POR WHATSAPP" },
+  { id: "t5", text: "PARA ÉL Y PARA ELLA" },
+  { id: "t6", text: "FRAGANCIAS DE NICHO" },
+  { id: "t7", text: "EXPLORA · ELIGE · CONFIRMA" },
 ];
 
 const C = "max-w-7xl mx-auto px-4 sm:px-6";
 const S = "py-16 sm:py-20";
 
 export default async function PublicPage() {
-  const [
-    clothDesigns,
-    giveawayPaidCount,
-    products,
-    categories,
-    covers,
-    banners,
-  ] = await Promise.all([
-    getClothDesignImageUrls(),
-    getGiveawayPaidPurchaseCount(),
+  const [products, categories, covers] = await Promise.all([
     getProducts(),
     getCategoriesPublic(),
     getCategoryCoverByCategoryId(),
-    getActiveBanners(),
   ]);
-  const giveawayGoal = getGiveawayGoalPurchases();
   const featured = products.slice(0, 6);
-  const clothSlice = clothDesigns.slice(0, 3);
 
   // Bento — un producto representativo por categoría (usando la foto del
   // producto). Rellena con otros productos hasta llegar a 6 cajas.
@@ -111,9 +74,6 @@ export default async function PublicPage() {
     <article className="flex flex-col bg-background text-foreground overflow-x-hidden">
       {/* ─── 0. CATÁLOGO ─────────────────────────────────────────────── */}
       <section className="w-full border-b border-border" aria-label="Catálogo">
-        {/* Banners promocionales (desde la base de datos) */}
-        <PromoBanners banners={banners} />
-
         {/* Category tiles — square */}
         {categories.length > 0 && (
           <div className="w-full border-b border-border">
@@ -193,7 +153,7 @@ export default async function PublicPage() {
             </h2>
           </div>
           <span className="rounded-full border border-border bg-muted/40 px-2.5 py-0.5 tabular-nums text-xs font-semibold text-muted-foreground">
-            {products.length} {products.length === 1 ? "pieza" : "piezas"}
+            {products.length} {products.length === 1 ? "producto" : "productos"}
           </span>
         </div>
 
@@ -205,13 +165,7 @@ export default async function PublicPage() {
         </div>
       </section>
 
-      {/* ─── 1. SORTEO ───────────────────────────────────────────────── */}
-      <GiveawayPromoSection
-        paidPurchaseCount={giveawayPaidCount}
-        goalPurchases={giveawayGoal}
-      />
-
-      {/* ─── 2. TICKER ───────────────────────────────────────────────── */}
+      {/* ─── 1. TICKER ───────────────────────────────────────────────── */}
       <div
         className="w-full border-y border-border bg-background py-3 overflow-hidden"
         aria-hidden
@@ -232,7 +186,7 @@ export default async function PublicPage() {
         </div>
       </div>
 
-      {/* ─── 3. CATEGORÍAS ───────────────────────────────────────────── */}
+      {/* ─── 2. CATEGORÍAS ───────────────────────────────────────────── */}
       {categories.length > 0 && (
         <section
           className={`${S} border-t border-border`}
@@ -243,7 +197,7 @@ export default async function PublicPage() {
               <div className="flex items-end justify-between gap-4 mb-6">
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-primary">
-                    Buxxep · Tienda
+                    JW Parfum · Tienda
                   </p>
                   <h2
                     id="sec-cats"
@@ -319,7 +273,7 @@ export default async function PublicPage() {
         </section>
       )}
 
-      {/* ─── 4. PRODUCTOS DESTACADOS ─────────────────────────────────── */}
+      {/* ─── 3. PRODUCTOS DESTACADOS ─────────────────────────────────── */}
       {featured.length > 0 && (
         <section
           className="py-14 sm:py-20 border-t border-border"
@@ -422,66 +376,7 @@ export default async function PublicPage() {
         </section>
       )}
 
-      {/* ─── 5. MODELOS EN TELA ──────────────────────────────────────── */}
-      {clothSlice.length > 0 && (
-        <section
-          className="w-full border-t border-border bg-muted/15"
-          aria-labelledby="sec-cloths"
-        >
-          <div className={`${C} pt-16 sm:pt-20 pb-8`}>
-            <ScrollReveal>
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-primary">
-                    Buxxep · Colección
-                  </p>
-                  <h2
-                    id="sec-cloths"
-                    className="mt-1 text-2xl sm:text-4xl font-black uppercase tracking-tight text-foreground"
-                  >
-                    Prendas{" "}
-                    <span className="landing-wavy-underline">reales</span>
-                  </h2>
-                  <p className="mt-2 max-w-xl text-sm leading-snug text-muted-foreground">
-                    Modelos con nuestras prendas tal como son. Elige la que más
-                    te guste y cómprala directo en el catálogo.
-                  </p>
-                </div>
-                <Link
-                  href="/catalogo"
-                  className="inline-flex shrink-0 items-center justify-center rounded-lg border border-border bg-background px-5 py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-muted"
-                >
-                  Ver catálogo →
-                </Link>
-              </div>
-            </ScrollReveal>
-          </div>
-          <div className={`${C} pb-8 sm:pb-12`}>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
-              {clothSlice.map((src, i) => (
-                <ScrollReveal key={src} delay={i * 80} className="h-full">
-                  <div className="block h-full overflow-hidden relative rounded-2xl">
-                    <div
-                      className="relative w-full"
-                      style={{ minHeight: "70vh" }}
-                    >
-                      <Image
-                        src={src}
-                        alt={`Prenda Buxxep modelo ${i + 1}`}
-                        fill
-                        className="object-cover object-center"
-                        sizes="(max-width:640px) 100vw, 33vw"
-                      />
-                    </div>
-                  </div>
-                </ScrollReveal>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* ─── 6. BENTO / CARACTERÍSTICAS ──────────────────────────────── */}
+      {/* ─── 4. BENTO / CARACTERÍSTICAS ──────────────────────────────── */}
       <section
         className={`hidden sm:block ${S} border-t border-border ${C}`}
         aria-labelledby="sec-bento"
@@ -489,7 +384,7 @@ export default async function PublicPage() {
         <ScrollReveal>
           <div className="mb-8">
             <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-primary">
-              Buxxep · Explora
+              JW Parfum · Explora
             </p>
             <h2
               id="sec-bento"
@@ -499,7 +394,7 @@ export default async function PublicPage() {
               <span className="landing-wavy-underline">categoría</span>
             </h2>
             <p className="mt-2 text-muted-foreground text-sm max-w-md">
-              Una pieza destacada de cada categoría. Toca cualquiera para ver el
+              Un producto destacado de cada categoría. Toca cualquiera para ver el
               producto.
             </p>
           </div>
@@ -520,7 +415,7 @@ export default async function PublicPage() {
         />
       </section>
 
-      {/* ─── 7. CÓMO FUNCIONA ────────────────────────────────────────── */}
+      {/* ─── 5. CÓMO FUNCIONA ────────────────────────────────────────── */}
       <section
         className="w-full border-t border-border bg-background"
         aria-labelledby="sec-how"
@@ -553,18 +448,18 @@ export default async function PublicPage() {
             {[
               {
                 step: "01",
-                title: "Elige tu prenda",
-                text: "Entra al catálogo, explora por categoría y encuentra la prenda que más te guste.",
+                title: "Elige tu perfume",
+                text: "Entra al catálogo, explora por marca o categoría y encuentra la fragancia que más te guste.",
               },
               {
                 step: "02",
-                title: "Añade al carrito",
-                text: "Selecciona la prenda y añádela al carrito con un solo clic. Rápido y sencillo.",
+                title: "Confirma tu pedido",
+                text: "Añádelo al carrito y completa tus datos de contacto — sin necesidad de crear una cuenta.",
               },
               {
                 step: "03",
-                title: "Paga con Azul",
-                text: "Completa tu compra 100 % segura con Azul, la pasarela certificada para tarjetas dominicanas.",
+                title: "Coordina por WhatsApp",
+                text: "Te escribimos para confirmar el pago y la entrega. Sin cobros en línea.",
               },
             ].map((item, i) => (
               <ScrollReveal key={item.step} delay={i * 100} className="h-full">
@@ -597,7 +492,7 @@ export default async function PublicPage() {
                   ¿Listo para empezar?
                 </p>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Explora el catálogo y encuentra tu próxima prenda.
+                  Explora el catálogo y encuentra tu próximo perfume.
                 </p>
               </div>
               <Link
@@ -611,7 +506,7 @@ export default async function PublicPage() {
         </div>
       </section>
 
-      {/* ─── 8. SEGURIDAD ───────────────────────────────────────────── */}
+      {/* ─── 6. CONTACTO DIRECTO ─────────────────────────────────────── */}
       <section className="w-full border-t border-border bg-muted/20">
         <div
           className={`${C} flex flex-col gap-6 py-10 sm:flex-row sm:items-center sm:justify-between`}
@@ -619,10 +514,11 @@ export default async function PublicPage() {
           <ScrollReveal>
             <div>
               <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.28em] text-primary">
-                Pagos seguros
+                Sin pagos en línea
               </p>
-              <p className="max-w-xs text-sm text-muted-foreground">
-                Las transacciones con tarjeta usan autenticación 3D Secure.{" "}
+              <p className="max-w-md text-sm text-muted-foreground">
+                No pedimos tarjeta ni cobramos nada en el sitio: cada pedido
+                se confirma directo contigo por WhatsApp.{" "}
                 <Link
                   href="/seguridad"
                   className="text-primary hover:underline"
@@ -632,16 +528,9 @@ export default async function PublicPage() {
               </p>
             </div>
           </ScrollReveal>
-          <ScrollReveal>
-            <SecurityBadges />
-          </ScrollReveal>
         </div>
       </section>
 
-      {/* ─── 9. INSTAGRAM ───────────────────────────────────────────── */}
-      <div className="hidden sm:block">
-        <InstagramEmbeds />
-      </div>
     </article>
   );
 }

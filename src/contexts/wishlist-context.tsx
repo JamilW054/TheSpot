@@ -1,19 +1,6 @@
 "use client";
 
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
-import {
-  getWishlistEntriesAction,
-  mergeGuestWishlistAction,
-  toggleWishlistAction,
-} from "@/lib/actions/wishlist";
-import { useAuth } from "@/lib/auth-context";
+import { createContext, useCallback, useContext, useEffect, useState } from "react";
 
 interface WishlistContextValue {
   wishlistIds: Set<string>;
@@ -31,7 +18,7 @@ const WishlistContext = createContext<WishlistContextValue>({
   wishlistCount: 0,
 });
 
-const STORAGE_KEY = "buxxep_wishlist";
+const STORAGE_KEY = "jwparfum_wishlist";
 
 function parseStorage(): Record<string, string> {
   try {
@@ -60,69 +47,27 @@ function saveStorage(dates: Record<string, string>) {
 }
 
 export function WishlistProvider({ children }: { children: React.ReactNode }) {
-  const { user } = useAuth();
-  const isLoggedIn = !!user;
-
   const [dates, setDates] = useState<Record<string, string>>({});
   const [mounted, setMounted] = useState(false);
-  const prevUserId = useRef<string | null>(null);
 
   useEffect(() => {
     setDates(parseStorage());
     setMounted(true);
   }, []);
 
-  // Persistir en localStorage solo como invitado.
+  // Sin cuentas de cliente: la lista de deseos vive siempre en localStorage.
   useEffect(() => {
-    if (mounted && !isLoggedIn) saveStorage(dates);
-  }, [dates, mounted, isLoggedIn]);
+    if (mounted) saveStorage(dates);
+  }, [dates, mounted]);
 
-  const refreshFromDb = useCallback(async () => {
-    const entries = await getWishlistEntriesAction();
-    setDates(Object.fromEntries(entries.map((e) => [e.productId, e.addedAt])));
+  const toggleWishlist = useCallback((productId: string) => {
+    setDates((prev) => {
+      const next = { ...prev };
+      if (next[productId]) delete next[productId];
+      else next[productId] = new Date().toISOString();
+      return next;
+    });
   }, []);
-
-  // Transición de sesión: fusionar lista de invitado y cargar la de la BD.
-  useEffect(() => {
-    if (!mounted) return;
-    const uid = user?.id ?? null;
-    if (uid === prevUserId.current) return;
-    prevUserId.current = uid;
-
-    if (!uid) {
-      setDates(parseStorage());
-      return;
-    }
-
-    void (async () => {
-      const guest = parseStorage();
-      const guestIds = Object.keys(guest);
-      if (guestIds.length > 0) {
-        await mergeGuestWishlistAction(guestIds);
-        try {
-          localStorage.removeItem(STORAGE_KEY);
-        } catch {
-          /* ignore */
-        }
-      }
-      await refreshFromDb();
-    })();
-  }, [user, mounted, refreshFromDb]);
-
-  const toggleWishlist = useCallback(
-    (productId: string) => {
-      setDates((prev) => {
-        const next = { ...prev };
-        if (next[productId]) delete next[productId];
-        else next[productId] = new Date().toISOString();
-        return next;
-      });
-      if (isLoggedIn) {
-        void toggleWishlistAction(productId);
-      }
-    },
-    [isLoggedIn],
-  );
 
   const isInWishlist = useCallback(
     (productId: string) => productId in dates,

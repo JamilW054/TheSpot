@@ -15,17 +15,16 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const SITE_URL = "https://buxxep.com";
+const SITE_URL = "https://jwparfum.com";
 // Use /banner/og.jpg (1200×630, <600 KB) for WhatsApp & social. Generate with: pnpm run og:image
 const OG_IMAGE_PATH = "/banner/og.jpg";
 const FAVICON_PATH = "/favicon.jpg";
 
 // Keep under 60 chars for best display on social (e.g. WhatsApp)
-const DEFAULT_TITLE = "Buxxep — Moda atemporal, alma moderna. Streetwear.";
+const DEFAULT_TITLE = "JW PARFUM — Perfumería en línea";
 const DEFAULT_DESCRIPTION =
-  "Diseña y compra ropa personalizada. Camisetas, hoodies y streetwear con tu estilo. Editor visual, calidad y envíos. Moda urbana en República Dominicana.";
-const OG_IMAGE_ALT =
-  "Buxxep — Moda atemporal, alma moderna. Ropa personalizada y streetwear";
+  "Perfumes originales para él y para ella. Catálogo en línea, pedido sin cuenta y confirmación por WhatsApp. Envíos en República Dominicana.";
+const OG_IMAGE_ALT = "JW PARFUM — Perfumería en línea";
 
 const ogImage = {
   url: OG_IMAGE_PATH,
@@ -39,38 +38,35 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
     default: DEFAULT_TITLE,
-    template: "%s | Buxxep",
+    template: "%s | JW PARFUM",
   },
   description: DEFAULT_DESCRIPTION,
-  applicationName: "Buxxep",
+  applicationName: "JW PARFUM",
   keywords: [
-    "Buxxep",
-    "ropa personalizada",
-    "streetwear",
-    "editor de diseño",
-    "camisetas personalizadas",
-    "hoodies",
-    "moda urbana",
+    "JW Parfum",
+    "perfumes",
+    "perfumería",
+    "fragancias",
+    "perfumes originales",
+    "perfumes para hombre",
+    "perfumes para mujer",
     "República Dominicana",
-    "diseño de prendas",
   ],
-  authors: [{ name: "Buxxep", url: SITE_URL }],
-  creator: "Buxxep",
-  publisher: "Buxxep",
+  authors: [{ name: "JW PARFUM", url: SITE_URL }],
+  creator: "JW PARFUM",
+  publisher: "JW PARFUM",
   formatDetection: { email: false, address: false, telephone: false },
   openGraph: {
     type: "website",
     locale: "es_DO",
     url: SITE_URL,
-    siteName: "Buxxep",
+    siteName: "JW PARFUM",
     title: DEFAULT_TITLE,
     description: DEFAULT_DESCRIPTION,
     images: [ogImage],
   },
   twitter: {
     card: "summary_large_image",
-    site: "@buxxep",
-    creator: "@buxxep",
     title: DEFAULT_TITLE,
     description: DEFAULT_DESCRIPTION,
     images: [ogImage],
@@ -89,7 +85,7 @@ export const metadata: Metadata = {
   alternates: {
     canonical: SITE_URL,
   },
-  category: "fashion",
+  category: "shopping",
   icons: {
     icon: [{ url: FAVICON_PATH, type: "image/jpeg" }],
     shortcut: FAVICON_PATH,

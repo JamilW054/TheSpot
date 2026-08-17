@@ -79,7 +79,7 @@ body {
    "clinical blueprint on frosted paper": three-tone surface stack
    (canvas → sidebar → paper), hairline borders, pill geometry (18px
    interactive / 24px containers), ink-filled primary actions.
-   Buxxep blue (#3CC8F7) is the single brand accent: focus rings, active
+   Brand blue (#3CC8F7) is the single brand accent: focus rings, active
    nav, charts, selection — never competes with the ink action color.
    ═══════════════════════════════════════════════════════════════════════════ */
 .admin-scope {
@@ -96,7 +96,7 @@ body {
   --primary-foreground: #fafafa;
   --secondary: #737373;
   --secondary-foreground: #ffffff;
-  /* Buxxep blue: brand accent only */
+  /* Brand blue: accent only */
   --accent: #3cc8f7;
   --accent-foreground: #062a38;
   --ring: #3cc8f7;

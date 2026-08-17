@@ -4,8 +4,10 @@ import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { markLinkedOrderAsPaid, onOrderPaymentSucceeded } from "@/database/repositories";
 import type { OrderStatusFilter } from "@/lib/orders/status";
-import { paymentTypeMeta } from "@/lib/payments/status";
 import { createServiceClient } from "@/lib/supabase/server";
+
+/** Etiqueta genérica para el recibo: no hay pasarela, el cobro lo confirma el admin. */
+const MANUAL_PAYMENT_METHOD_LABEL = "Pago confirmado por el negocio";
 
 /**
  * Estados de fulfillment gestionables desde el panel. Los tres filtrables en
@@ -45,22 +47,14 @@ export async function adminSetOrdersStatus(
   const patch = mapFulfillment(status);
 
   if (status === "paid") {
-    // Transición atómica por pedido — mismo mecanismo que usan el retorno de
-    // Azul y el panel de Payment Link (`markLinkedOrderAsPaid`). Si el admin
-    // repite la acción sobre un pedido que ya estaba pagado, esta llamada no
-    // hace nada: no se recuenta para el sorteo ni se reenvía el recibo.
+    // Transición atómica por pedido: marca el pedido como cobrado a mano
+    // (no hay pasarela). Si el admin repite la acción sobre un pedido que ya
+    // estaba pagado, esta llamada no hace nada: no se reenvía el recibo.
     for (const orderId of unique) {
       if (await markLinkedOrderAsPaid(orderId)) {
-        const { data: order } = await supabase
-          .from("orders")
-          .select("payment_type")
-          .eq("id", orderId)
-          .maybeSingle();
         await onOrderPaymentSucceeded({
           orderId,
-          paymentMethodLabel: paymentTypeMeta(
-            (order?.payment_type as string | null) ?? null,
-          ).label,
+          paymentMethodLabel: MANUAL_PAYMENT_METHOD_LABEL,
           paidAtIso: new Date().toISOString(),
         });
       }
@@ -83,7 +77,6 @@ export async function adminSetOrdersStatus(
   );
 
   revalidatePath("/admin/pedidos");
-  revalidatePath("/admin/facturas");
   revalidatePath("/admin");
 }
 
@@ -93,6 +86,5 @@ export async function adminDeleteOrder(id: string): Promise<void> {
   const { error } = await supabase.from("orders").delete().eq("id", id.trim());
   if (error) throw new Error(error.message);
   revalidatePath("/admin/pedidos");
-  revalidatePath("/admin/facturas");
   revalidatePath("/admin");
 }

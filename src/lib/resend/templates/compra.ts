@@ -22,7 +22,7 @@ export interface CompraEmailData {
   currency?: string;
   /** Fecha de compra ya formateada (es-DO). */
   purchaseDate?: string;
-  /** Método de pago usado ("Payment Link" | "Pago con Azul"). */
+  /** Cómo se confirmó el cobro (p.ej. "Pago confirmado por el negocio"). */
   paymentMethodLabel?: string;
   /** Etiqueta del estado del pago (p.ej. "Pagado"). */
   paymentStatusLabel?: string;
@@ -74,7 +74,7 @@ export function compraEmailHtml(data: CompraEmailData): string {
           </td>
           <td style="padding:16px 0 16px 14px;border-bottom:1px solid #edf1f7;vertical-align:top;">
             <div style="font-size:13px;font-weight:700;color:#0d1b2e;">${item.name}</div>
-            ${item.size ? `<div style="margin-top:3px;font-size:11px;font-weight:600;color:#1e90ff;letter-spacing:0.5px;text-transform:uppercase;">Talla ${item.size}</div>` : ""}
+            ${item.size ? `<div style="margin-top:3px;font-size:11px;font-weight:600;color:#1e90ff;letter-spacing:0.5px;text-transform:uppercase;">Tamaño ${item.size}</div>` : ""}
             ${item.color ? `<div style="margin-top:3px;font-size:11px;font-weight:600;color:#1e90ff;letter-spacing:0.5px;text-transform:uppercase;">Color ${item.color}</div>` : ""}
           </td>
           <td style="padding:16px 0;border-bottom:1px solid #edf1f7;text-align:center;vertical-align:top;white-space:nowrap;">
@@ -95,7 +95,7 @@ export function compraEmailHtml(data: CompraEmailData): string {
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta name="color-scheme" content="light only" />
   <meta name="supported-color-schemes" content="light only" />
-  <title>Pedido confirmado — Buxxep</title>
+  <title>Pedido confirmado — JW PARFUM</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap');
 
@@ -127,11 +127,14 @@ export function compraEmailHtml(data: CompraEmailData): string {
       text-align: center;
     }
 
-    .email-header img.logo {
-      height: 54px;
-      width: auto;
+    .email-header .logo {
       display: inline-block;
-      filter: drop-shadow(0 3px 14px rgba(0,0,0,0.30));
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      color: #ffffff;
+      text-shadow: 0 3px 14px rgba(0,0,0,0.30);
     }
 
     .email-body { padding: 48px 44px 40px; text-align: center; }
@@ -241,9 +244,7 @@ export function compraEmailHtml(data: CompraEmailData): string {
 
       <!-- HEADER -->
       <div class="email-header">
-        <img class="logo"
-          src="https://res.cloudinary.com/dluvlekdz/image/upload/v1779596794/buxxep-transparent_rjze1q.png"
-          alt="Buxxep" />
+        <span class="logo">JW PARFUM</span>
       </div>
 
       <!-- CUERPO -->
@@ -268,8 +269,8 @@ export function compraEmailHtml(data: CompraEmailData): string {
           <p class="greeting">Hola, ${name}</p>
           <p class="message-text">
             Recibimos tu pago y tu pedido <strong>#${orderNumber}</strong> ya está
-            confirmado en <strong>Buxxep</strong>. Entrará en producción en las
-            próximas horas y te avisaremos con cada actualización de estado.
+            confirmado en <strong>JW PARFUM</strong>. Lo estamos preparando para
+            envío y te avisaremos con cada actualización de estado.
           </p>
         </div>
 
@@ -325,13 +326,13 @@ export function compraEmailHtml(data: CompraEmailData): string {
           </tr>
         </table>
 
-        <a href="${SITE}/cuenta/pedidos" class="cta-button">
-          Ver mis pedidos &rarr;
+        <a href="${SITE}/estado-pedido" class="cta-button">
+          Ver estado del pedido &rarr;
         </a>
 
         <p class="expire-note">
-          ¿Preguntas sobre tu pedido? Escríbenos por Instagram
-          <a href="https://instagram.com/buxxep" style="color:#1e90ff;text-decoration:none;font-weight:600;">@buxxep</a>.
+          ¿Preguntas sobre tu pedido? Escríbenos a
+          <a href="mailto:jamilwilliams054@gmail.com" style="color:#1e90ff;text-decoration:none;font-weight:600;">jamilwilliams054@gmail.com</a>.
         </p>
 
       </div>
@@ -340,19 +341,15 @@ export function compraEmailHtml(data: CompraEmailData): string {
       <div class="email-footer">
 
         <div class="social-links">
-          <a href="https://www.instagram.com/buxxep/" class="social-icon" title="Instagram" target="_blank">
-            <img src="https://img.icons8.com/ios/18/555e6d/instagram-new--v1.png"
-              alt="Instagram" width="18" height="18" style="display:block;margin:10px auto 0;" />
-          </a>
-          <a href="${SITE}" class="social-icon" title="buxxep.com" target="_blank">
+          <a href="${SITE}" class="social-icon" title="jwparfum.com" target="_blank">
             <img src="https://img.icons8.com/ios/18/555e6d/globe--v1.png"
-              alt="buxxep.com" width="18" height="18" style="display:block;margin:10px auto 0;" />
+              alt="jwparfum.com" width="18" height="18" style="display:block;margin:10px auto 0;" />
           </a>
         </div>
 
         <p class="footer-copy">
           ID: ${orderId}<br />
-          © ${new Date().getFullYear()} Buxxep · República Dominicana
+          © ${new Date().getFullYear()} JW PARFUM · República Dominicana
         </p>
         <p class="footer-copy">
           <a href="${SITE}/privacidad">Privacidad</a> ·
@@ -398,5 +395,5 @@ export function compraEmailText(data: CompraEmailData): string {
   ]
     .filter(Boolean)
     .join("\n");
-  return `BUXXEP — Pedido confirmado #${orderNumber}\n\nHola ${name},\n\n${metaLines}\n\n${lines}\n\nSubtotal: ${fmt(subtotal)}\nEnvío: ${shipping === 0 ? "GRATIS" : fmt(shipping)}${tax > 0 ? `\nImpuestos: ${fmt(tax)}` : ""}\nTOTAL: ${fmt(total)}\n\n${SITE}/cuenta/pedidos\n\n— BUXXEP`;
+  return `JW PARFUM — Pedido confirmado #${orderNumber}\n\nHola ${name},\n\n${metaLines}\n\n${lines}\n\nSubtotal: ${fmt(subtotal)}\nEnvío: ${shipping === 0 ? "GRATIS" : fmt(shipping)}${tax > 0 ? `\nImpuestos: ${fmt(tax)}` : ""}\nTOTAL: ${fmt(total)}\n\n${SITE}/estado-pedido\n\n— JW PARFUM`;
 }

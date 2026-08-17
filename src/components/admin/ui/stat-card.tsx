@@ -13,7 +13,7 @@ export interface StatCardProps {
   icon?: ReactNode;
   /** Variación vs. periodo anterior, en %. Positiva = verde, negativa = roja. */
   deltaPct?: number | null;
-  /** Resalta el valor con el acento de marca Buxxep. */
+  /** Resalta el valor con el acento de marca. */
   accent?: boolean;
   /** Color del valor principal — "danger" para cifras negativas (p. ej. pérdida neta). */
   valueTone?: "default" | "danger";

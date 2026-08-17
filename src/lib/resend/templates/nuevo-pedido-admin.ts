@@ -25,9 +25,6 @@ export interface NuevoPedidoAdminEmailData {
   currency?: string;
 }
 
-const LOGO_URL =
-  "https://res.cloudinary.com/dluvlekdz/image/upload/v1779596794/buxxep-transparent_rjze1q.png";
-
 function formatPrice(cents: number, currency = "DOP"): string {
   return new Intl.NumberFormat("es-DO", {
     style: "currency",
@@ -63,7 +60,7 @@ export function nuevoPedidoAdminEmailHtml(
             <tr>
               <td style="padding:14px 0;border-bottom:1px solid #edf1f7;vertical-align:top;">
                 <div style="font-size:14px;font-weight:600;color:#0d1b2e;">${item.name}</div>
-                ${item.size ? `<div style="margin-top:3px;font-size:12px;font-weight:600;color:#1e90ff;">Talla ${item.size}</div>` : ""}
+                ${item.size ? `<div style="margin-top:3px;font-size:12px;font-weight:600;color:#1e90ff;">Tamaño ${item.size}</div>` : ""}
                 ${item.color ? `<div style="margin-top:3px;font-size:12px;font-weight:600;color:#1e90ff;">Color ${item.color}</div>` : ""}
               </td>
               <td style="padding:14px 8px;border-bottom:1px solid #edf1f7;text-align:center;vertical-align:top;">
@@ -90,7 +87,7 @@ export function nuevoPedidoAdminEmailHtml(
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <title>Nuevo pedido — Buxxep</title>
+  <title>Nuevo pedido — JW PARFUM</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap');
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -109,7 +106,7 @@ export function nuevoPedidoAdminEmailHtml(
 
       <!-- HEADER -->
       <div style="background:linear-gradient(145deg,#1565c0 0%,#1e90ff 60%,#42a8ff 100%);padding:40px 32px 36px;text-align:center;">
-        <img src="${LOGO_URL}" alt="Buxxep" style="height:54px;width:auto;display:inline-block;filter:drop-shadow(0 3px 14px rgba(0,0,0,0.30));" />
+        <span style="display:inline-block;font-family:Georgia,'Times New Roman',serif;font-size:26px;font-weight:700;letter-spacing:1.5px;color:#ffffff;text-shadow:0 3px 14px rgba(0,0,0,0.30);">JW PARFUM</span>
       </div>
 
       <!-- CUERPO -->
@@ -208,14 +205,11 @@ export function nuevoPedidoAdminEmailHtml(
       <!-- FOOTER -->
       <div style="border-top:1px solid #edf1f7;padding:24px 32px;text-align:center;background-color:#fafbfd;">
         <div style="margin-bottom:14px;text-align:center;">
-          <a href="https://www.instagram.com/buxxep/" title="Instagram" target="_blank" style="display:inline-block;width:38px;height:38px;border-radius:10px;background-color:#ffffff;border:1px solid #e4eaf2;text-align:center;text-decoration:none;vertical-align:middle;margin:0 5px;">
-            <img src="https://img.icons8.com/ios/18/555e6d/instagram-new--v1.png" alt="Instagram" width="18" height="18" style="display:block;margin:10px auto 0;" />
-          </a>
-          <a href="https://www.buxxep.com/" title="buxxep.com" target="_blank" style="display:inline-block;width:38px;height:38px;border-radius:10px;background-color:#ffffff;border:1px solid #e4eaf2;text-align:center;text-decoration:none;vertical-align:middle;margin:0 5px;">
-            <img src="https://img.icons8.com/ios/18/555e6d/globe--v1.png" alt="buxxep.com" width="18" height="18" style="display:block;margin:10px auto 0;" />
+          <a href="${SITE}/" title="jwparfum.com" target="_blank" style="display:inline-block;width:38px;height:38px;border-radius:10px;background-color:#ffffff;border:1px solid #e4eaf2;text-align:center;text-decoration:none;vertical-align:middle;margin:0 5px;">
+            <img src="https://img.icons8.com/ios/18/555e6d/globe--v1.png" alt="jwparfum.com" width="18" height="18" style="display:block;margin:10px auto 0;" />
           </a>
         </div>
-        <p style="color:#b0bbc8;font-size:11px;margin-top:6px;">© ${year} Buxxep</p>
+        <p style="color:#b0bbc8;font-size:11px;margin-top:6px;">© ${year} JW PARFUM</p>
       </div>
 
     </div>
@@ -249,7 +243,7 @@ export function nuevoPedidoAdminEmailText(
     )
     .join("\n");
   const discountLine = discount > 0 ? `\nDescuento: -${fmt(discount)}` : "";
-  return `BUXXEP — Nuevo pedido #${orderNumber}
+  return `JW PARFUM — Nuevo pedido #${orderNumber}
 
 Cliente: ${customerName}
 Correo: ${customerEmail}${customerPhone ? `\nTeléfono: ${customerPhone}` : ""}${shippingAddress ? `\nDirección: ${shippingAddress}` : ""}
@@ -264,5 +258,5 @@ TOTAL: ${fmt(total)}
 Ver en el panel: ${SITE}/admin/pedidos
 ID: ${orderId}
 
-— BUXXEP`;
+— JW PARFUM`;
 }

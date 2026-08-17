@@ -10,6 +10,7 @@ import {
   ListFilter,
   Mail,
   MapPin,
+  MessageCircle,
   PackageSearch,
   Phone,
   PlayCircle,
@@ -23,6 +24,7 @@ import { Badge } from "@/components/ui/badge";
 import { ConfirmDialog, type ConfirmDialogState } from "@/components/ui/confirm-dialog";
 import { Input } from "@/components/ui/input";
 import { SelectMenu } from "@/components/ui/select-menu";
+import { buildAdminOrderWhatsAppLink } from "@/lib/whatsapp";
 import {
   DEFAULT_ORDER_STATUS_FILTER,
   ORDER_STATUS_FILTERS,
@@ -139,6 +141,22 @@ function countryLabel(code: string | null | undefined): string {
   return map[code.toUpperCase()] ?? code.toUpperCase();
 }
 
+/** Enlace wa.me para que el admin le escriba al cliente sobre este pedido (null si no hay teléfono). */
+function whatsappHrefForPedido(pedido: Pedido): string | null {
+  const phone = pedido.shipping?.phone;
+  if (!phone) return null;
+  return buildAdminOrderWhatsAppLink(phone, {
+    orderNumber: pedido.id.slice(0, 8).toUpperCase(),
+    customerName: pedido.cliente,
+    items: pedido.lineItems.map((i) => ({
+      name: i.productName,
+      quantity: i.quantity,
+      size: i.size,
+    })),
+    totalCents: pedido.totalCents,
+  });
+}
+
 function isExternalImage(src: string): boolean {
   if (!src) return false;
   return (
@@ -227,20 +245,14 @@ function ProductThumb({
 
 /** Fila de un producto del pedido: foto + nombre + talla/color + cantidad. */
 function LineItemRow({ item }: { item: PedidoLineItem }) {
-  const img = item.designCoverImageUrl || item.coverImageUrl;
   return (
     <div className="flex items-center gap-2.5">
-      <ProductThumb src={img} alt={item.productName} size={40} />
+      <ProductThumb src={item.coverImageUrl} alt={item.productName} size={40} />
       <div className="min-w-0 flex-1">
         <p className="truncate text-xs font-medium text-foreground">
           {item.productName}
         </p>
         <div className="mt-0.5 flex flex-wrap items-center gap-1">
-          {item.designName && (
-            <span className="truncate text-[11px] text-muted-foreground">
-              {item.designName}
-            </span>
-          )}
           {item.size && (
             <span className="rounded border border-border bg-background px-1.5 py-px text-[10px] font-medium text-muted-foreground">
               {item.size}
@@ -349,6 +361,17 @@ function DetailModal({ pedido, onClose }: { pedido: Pedido; onClose: () => void 
                 <span>{s.phone}</span>
               </div>
             )}
+            {whatsappHrefForPedido(pedido) && (
+              <a
+                href={whatsappHrefForPedido(pedido) ?? undefined}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-1 inline-flex items-center gap-1.5 rounded-lg bg-[#25D366]/10 px-2.5 py-1.5 text-xs font-semibold text-[#25D366] hover:bg-[#25D366]/20 transition-colors"
+              >
+                <MessageCircle className="size-3.5" />
+                Escribir por WhatsApp
+              </a>
+            )}
           </div>
 
           {/* Productos */}
@@ -361,7 +384,7 @@ function DetailModal({ pedido, onClose }: { pedido: Pedido; onClose: () => void 
                 {pedido.lineItems.map((item, i) => (
                   <div key={i} className="flex items-center gap-3">
                     <ProductThumb
-                      src={item.designCoverImageUrl || item.coverImageUrl}
+                      src={item.coverImageUrl}
                       alt={item.productName}
                       size={48}
                     />
@@ -369,11 +392,6 @@ function DetailModal({ pedido, onClose }: { pedido: Pedido; onClose: () => void 
                       <p className="truncate text-sm font-medium text-foreground">
                         {item.productName}
                       </p>
-                      {item.designName && (
-                        <p className="truncate text-xs text-muted-foreground">
-                          {item.designName}
-                        </p>
-                      )}
                       {(item.size || item.color) && (
                         <div className="mt-1 flex flex-wrap gap-1">
                           {item.size && (
@@ -487,6 +505,7 @@ function PedidoCard({
   const s = pedido.shipping;
   const canDelete = pedido.paymentStatus !== "paid";
   const hasAddress = s && (s.addressLine1 || s.city);
+  const whatsappHref = whatsappHrefForPedido(pedido);
 
   return (
     <div
@@ -531,6 +550,17 @@ function PedidoCard({
 
         {/* Action buttons */}
         <div className="flex shrink-0 flex-col gap-1">
+          {whatsappHref && (
+            <a
+              href={whatsappHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Escribir por WhatsApp"
+              className="flex size-8 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground hover:border-[#25D366]/50 hover:text-[#25D366] transition-colors"
+            >
+              <MessageCircle className="size-3.5" />
+            </a>
+          )}
           <button
             type="button"
             onClick={onView}
@@ -714,7 +744,7 @@ function PedidosTableView({
                         {p.lineItems.slice(0, 3).map((item, i) => (
                           <div key={i} className="ring-2 ring-card rounded-lg">
                             <ProductThumb
-                              src={item.designCoverImageUrl || item.coverImageUrl}
+                              src={item.coverImageUrl}
                               alt={item.productName}
                               size={32}
                             />
@@ -747,6 +777,17 @@ function PedidosTableView({
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-1">
+                    {whatsappHrefForPedido(p) && (
+                      <a
+                        href={whatsappHrefForPedido(p) ?? undefined}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title="Escribir por WhatsApp"
+                        className="flex size-7 items-center justify-center rounded-lg border border-border text-muted-foreground hover:border-[#25D366]/50 hover:text-[#25D366] transition-colors"
+                      >
+                        <MessageCircle className="size-3.5" />
+                      </a>
+                    )}
                     <button
                       type="button"
                       onClick={() => onView(p)}

@@ -3,11 +3,10 @@
 import { Check, Heart, Plus } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useCart } from "@/contexts/cart-context";
 import { useWishlist } from "@/contexts/wishlist-context";
-import { useAuth } from "@/lib/auth-context";
 import type { CatalogProduct } from "@/types";
 
 function imageNeedsUnoptimized(src: string): boolean {
@@ -16,10 +15,8 @@ function imageNeedsUnoptimized(src: string): boolean {
 
 export function ProductCard({ product }: { product: CatalogProduct }) {
   const { addItem } = useCart();
-  const { user, isLoading } = useAuth();
   const { toggleWishlist, isInWishlist } = useWishlist();
   const router = useRouter();
-  const pathname = usePathname();
   const [justAdded, setJustAdded] = useState(false);
 
   const saved = isInWishlist(product.id);
@@ -43,10 +40,6 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!isLoading && !user) {
-      router.push(`/login?next=${encodeURIComponent(pathname)}`);
-      return;
-    }
     if (hasSizes) {
       router.push(href);
       return;

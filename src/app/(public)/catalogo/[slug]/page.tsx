@@ -4,19 +4,13 @@ import { notFound } from "next/navigation";
 import { AddToCartButton } from "@/components/catalog/AddToCartButton";
 import { ProductGallery } from "@/components/catalog/ProductGallery";
 import { ProductPageEnter } from "@/components/catalog/ProductPageEnter";
-import { ProductReviews } from "@/components/catalog/ProductReviews";
 import { ShareProductButton } from "@/components/catalog/ShareProductButton";
 import { StickyBuyBar } from "@/components/catalog/StickyBuyBar";
 import { WishlistButton } from "@/components/catalog/WishlistButton";
 import { FREE_SHIPPING_MIN_CENTS } from "@/config/shipping";
 import { getProductBySlug } from "@/database/repositories";
 import { getStockMatrixForProduct } from "@/database/repositories/inventory";
-import {
-  getProductReviews,
-  getUserReviewForProduct,
-} from "@/database/repositories/reviews";
 import { formatDOPFromCents } from "@/lib/format-currency";
-import { createClient } from "@/lib/supabase/server";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -25,9 +19,9 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps) {
   const { slug } = await params;
   const product = await getProductBySlug(slug);
-  if (!product) return { title: "Producto | Buxxep" };
+  if (!product) return { title: "Producto | JW PARFUM" };
   return {
-    title: `${product.name} | Buxxep`,
+    title: `${product.name} | JW PARFUM`,
     description: product.description,
     openGraph: {
       images: product.coverImage ? [{ url: product.coverImage }] : [],
@@ -41,16 +35,7 @@ export default async function CatalogProductPage({ params }: PageProps) {
 
   if (!product) notFound();
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  const [reviews, userExistingReview, stock] = await Promise.all([
-    getProductReviews(product.id),
-    getUserReviewForProduct(product.id),
-    getStockMatrixForProduct(product.id),
-  ]);
+  const stock = await getStockMatrixForProduct(product.id);
 
   const hasDiscount =
     product.originalPriceCents != null &&
@@ -69,9 +54,6 @@ export default async function CatalogProductPage({ params }: PageProps) {
     : "";
 
   const isAvailable = !stock.tracked || stock.totalStock > 0;
-
-  const hasRating = product.ratingAvg != null && product.reviewCount > 0;
-  const ratingFull = hasRating ? Math.round(product.ratingAvg!) : 0;
 
   const gallery =
     product.gallery.length > 0
@@ -159,27 +141,6 @@ export default async function CatalogProductPage({ params }: PageProps) {
                   {product.name}
                 </h1>
 
-                {/* Stars + review count link */}
-                {hasRating && (
-                  <div className="flex items-center gap-2">
-                    <span className="text-yellow-400 text-sm leading-none">
-                      {"★".repeat(ratingFull)}
-                      {"☆".repeat(5 - ratingFull)}
-                    </span>
-                    <span className="text-sm font-bold text-foreground tabular-nums">
-                      {product.ratingAvg!.toFixed(1)}
-                    </span>
-                    <span className="text-muted-foreground/60 text-sm">·</span>
-                    <a
-                      href="#reviews"
-                      className="text-sm text-muted-foreground hover:text-primary transition-colors hover:underline underline-offset-2"
-                    >
-                      {product.reviewCount}{" "}
-                      {product.reviewCount === 1 ? "reseña" : "reseñas"}
-                    </a>
-                  </div>
-                )}
-
                 {/* Price + discount + wishlist */}
                 <div className="flex items-start justify-between gap-3 flex-wrap">
                   <div>
@@ -204,7 +165,7 @@ export default async function CatalogProductPage({ params }: PageProps) {
                       </span>
                     )}
                     <ShareProductButton
-                      url={`${(process.env.NEXT_PUBLIC_SITE_URL ?? "https://buxxep.com").replace(/\/$/, "")}/catalogo/${slug}`}
+                      url={`${(process.env.NEXT_PUBLIC_SITE_URL ?? "https://jwparfum.com").replace(/\/$/, "")}/catalogo/${slug}`}
                       title={product.name}
                       size="md"
                       className="rounded-xl border border-border/60 bg-muted/30 hover:border-primary/50"
@@ -279,20 +240,6 @@ export default async function CatalogProductPage({ params }: PageProps) {
                 )}
               </div>
             </div>
-
-            {/* ── Reviews — full width, below the grid, no inner scroll ── */}
-            <section
-              id="reviews"
-              className="mt-14 border-t border-border/60 pt-12"
-            >
-              <ProductReviews
-                productId={product.id}
-                productSlug={slug}
-                reviews={reviews}
-                currentUserId={user?.id ?? null}
-                userExistingReview={userExistingReview}
-              />
-            </section>
           </div>
         </div>
       </ProductPageEnter>

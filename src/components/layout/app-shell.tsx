@@ -7,26 +7,14 @@ import { AppSidebar } from "./app-sidebar";
 import type { NavbarUser } from "./navbar";
 import { Navbar } from "./navbar";
 
-export type AppShellVariant = "app" | "admin";
-
 export interface AppShellProps {
   children: React.ReactNode;
-  variant?: AppShellVariant;
   user?: NavbarUser | null;
   onLogout?: () => void;
 }
 
-const SHELL_HOME: Record<AppShellVariant, { href: string; label: string }> = {
-  app: { href: "/cuenta", label: "Buxxep" },
-  admin: { href: "/admin", label: "Buxxep Admin" },
-};
-
-export function AppShell({
-  children,
-  variant = "app",
-  user,
-  onLogout,
-}: AppShellProps) {
+/** Shell del panel admin — único login del sitio, no hay cuentas de cliente. */
+export function AppShell({ children, user, onLogout }: AppShellProps) {
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -36,12 +24,9 @@ export function AppShell({
     setSidebarOpen(false);
   }, [pathname]);
 
-  const { href: homeHref, label: homeLabel } = SHELL_HOME[variant];
-
   return (
     <div className="flex min-h-screen bg-background text-foreground">
       <AppSidebar
-        variant={variant}
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
         collapsed={sidebarCollapsed}
@@ -59,20 +44,16 @@ export function AppShell({
       )}
       <div className="flex flex-1 flex-col min-w-0">
         <Navbar
-          homeHref={homeHref}
-          homeLabel={homeLabel}
-          homeLabelShort={variant === "admin" ? "Admin" : undefined}
-          hideCart={variant === "admin"}
+          homeHref="/admin"
+          homeLabel="JW PARFUM Admin"
+          homeLabelShort="Admin"
+          hideCart
           user={user}
           onLogout={onLogout}
           onMenuClick={() => setSidebarOpen(true)}
         />
         <main className="flex-1 min-w-0 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-6 sm:pb-6">
-          <div
-            className={`mx-auto w-full min-w-0 ${
-              variant === "admin" ? "max-w-[1280px]" : "max-w-5xl"
-            }`}
-          >
+          <div className="mx-auto w-full min-w-0 max-w-[1280px]">
             {children}
           </div>
         </main>

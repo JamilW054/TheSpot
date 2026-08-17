@@ -1,18 +1,15 @@
 import { PageLayout } from "@/components/layout";
-import {
-  getCommissionRates,
-  getOrderNotificationEmail,
-  getStoreConfig,
-} from "@/database/repositories/settings";
-import { CommissionsForm } from "./CommissionsForm";
+import { getOrderNotificationEmail, getStoreConfig } from "@/database/repositories/settings";
+import { getStoreWhatsAppNumber } from "@/lib/whatsapp-server";
 import { OrderNotificationForm } from "./OrderNotificationForm";
 import { StoreConfigForm } from "./StoreConfigForm";
+import { WhatsAppNumberForm } from "./WhatsAppNumberForm";
 
 export default async function AdminConfigPage() {
-  const [orderNotificationEmail, commissionRates, storeConfig] =
+  const [orderNotificationEmail, whatsappNumber, storeConfig] =
     await Promise.all([
       getOrderNotificationEmail(),
-      getCommissionRates(),
+      getStoreWhatsAppNumber(),
       getStoreConfig(),
     ]);
 
@@ -20,10 +17,7 @@ export default async function AdminConfigPage() {
     <PageLayout title="Configuración">
       <div className="space-y-6">
         <OrderNotificationForm initialEmail={orderNotificationEmail} />
-        <CommissionsForm
-          initialAzulPercent={commissionRates.azulPct}
-          initialG3deonPercent={commissionRates.g3deonPct}
-        />
+        <WhatsAppNumberForm initialNumber={whatsappNumber} />
         <StoreConfigForm initial={storeConfig} />
       </div>
     </PageLayout>

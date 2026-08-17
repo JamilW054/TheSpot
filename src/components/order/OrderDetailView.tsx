@@ -100,13 +100,9 @@ export function OrderDetailView({
             Fecha: {order.createdAt}
           </p>
           <p className="mt-1 text-sm text-muted-foreground">
-            Pago (AZUL):{" "}
+            Pago:{" "}
             <span className="text-foreground">
-              {order.paymentStatus === "paid"
-                ? "Aprobado"
-                : order.paymentStatus === "declined"
-                  ? "Rechazado"
-                  : "Pendiente"}
+              {order.paymentStatus === "paid" ? "Pagado" : "Pendiente de pago"}
             </span>
           </p>
         </div>
@@ -141,18 +137,6 @@ export function OrderDetailView({
                     </div>
                   )}
                 </div>
-                {item.designCoverImageUrl && (
-                  <div className="relative h-16 w-16 overflow-hidden rounded-lg bg-muted sm:h-20 sm:w-20">
-                    <Image
-                      src={item.designCoverImageUrl}
-                      alt={item.designName ?? "Diseño"}
-                      fill
-                      className="object-cover"
-                      sizes="80px"
-                      unoptimized={isExternalImage(item.designCoverImageUrl)}
-                    />
-                  </div>
-                )}
               </div>
               <div className="min-w-0 flex-1">
                 <p className="font-semibold text-foreground">
@@ -167,12 +151,6 @@ export function OrderDetailView({
                     item.productName
                   )}
                 </p>
-                {item.designName && (
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    Con diseño:{" "}
-                    <span className="text-foreground">{item.designName}</span>
-                  </p>
-                )}
                 {(item.size || item.color) && (
                   <p className="mt-1 flex flex-wrap gap-1.5">
                     {item.size && (

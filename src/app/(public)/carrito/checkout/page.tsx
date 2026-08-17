@@ -1,35 +1,19 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { getProducts, getShippingMethods } from "@/database/repositories";
-import { getAddresses } from "@/database/repositories/addresses";
-import { getPaymentMethods } from "@/database/repositories/payments";
-import { createClient } from "@/lib/supabase/server";
 import { CheckoutContent } from "./CheckoutContent";
 
 export const metadata = {
-  title: "Checkout | Buxxep",
+  title: "Checkout | JW PARFUM",
   description: "Finaliza tu pedido. Introduce tus datos de envío y confirma.",
 };
 
 export const dynamic = "force-dynamic";
 
-const CHECKOUT_PATH = "/carrito/checkout";
-
 export default async function CheckoutPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
-    redirect(`/login?redirect=${encodeURIComponent(CHECKOUT_PATH)}`);
-  }
-  const [products, savedAddresses, shippingMethods, paymentMethods] =
-    await Promise.all([
-      getProducts(),
-      getAddresses(),
-      getShippingMethods(),
-      getPaymentMethods(),
-    ]);
+  const [products, shippingMethods] = await Promise.all([
+    getProducts(),
+    getShippingMethods(),
+  ]);
   return (
     <article className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-2 sm:pt-4 pb-16 sm:pb-20">
       <nav className="mb-4 sm:mb-5" aria-label="Navegación">
@@ -58,19 +42,15 @@ export default async function CheckoutPage() {
           id="checkout-title"
           className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl lg:text-4xl"
         >
-          Finalizar compra
+          Finalizar pedido
         </h1>
         <p className="mt-2 text-sm text-muted-foreground max-w-lg">
-          Introduce tus datos de envío y confirma el pedido.
+          Introduce tus datos de entrega. No se realiza ningún cobro en línea:
+          confirmamos el pedido contigo por WhatsApp o correo.
         </p>
       </header>
 
-      <CheckoutContent
-        products={products}
-        savedAddresses={savedAddresses}
-        shippingMethods={shippingMethods}
-        paymentMethods={paymentMethods}
-      />
+      <CheckoutContent products={products} shippingMethods={shippingMethods} />
     </article>
   );
 }

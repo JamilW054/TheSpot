@@ -2,16 +2,16 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Términos y Condiciones — Buxxep",
+  title: "Términos y Condiciones — JW PARFUM",
   description:
-    "Lee los términos y condiciones de uso de la plataforma de comercio electrónico BUXXEP.",
-  alternates: { canonical: "https://buxxep.com/terminos" },
+    "Lee los términos y condiciones de uso de la tienda en línea JW PARFUM.",
+  alternates: { canonical: "https://jwparfum.com/terminos" },
 };
 
-const LAST_UPDATED = "15 de julio de 2026";
+const LAST_UPDATED = "16 de agosto de 2026";
 const VERSION = "v1.0";
-const SUPPORT_EMAIL = "soportebuxxep@gmail.com";
-const SUPPORT_PHONE = "809-828-9979";
+const SUPPORT_EMAIL = "jamilwilliams054@gmail.com";
+const SUPPORT_PHONE = "809-761-2875";
 
 export default function TerminosPage() {
   return (
@@ -31,73 +31,53 @@ export default function TerminosPage() {
       <div className="space-y-8 text-sm leading-relaxed text-muted-foreground">
         <Section title="1. Aceptación de los términos">
           <p>
-            Al acceder y utilizar BUXXEP (en adelante, "el Servicio") —su sitio
-            web y su aplicación móvil para iOS y Android— aceptas quedar
-            vinculado por estos Términos y Condiciones. Si no estás de acuerdo
-            con alguna parte, no podrás utilizar el Servicio.
+            Al acceder y utilizar JW PARFUM (en adelante, "el Servicio") —nuestro
+            sitio web de venta de perfumes— aceptas quedar vinculado por estos
+            Términos y Condiciones. Si no estás de acuerdo con alguna parte, no
+            podrás utilizar el Servicio.
           </p>
         </Section>
 
         <Section title="2. Descripción del servicio">
           <p>
-            BUXXEP es una plataforma de comercio electrónico operada desde la
-            República Dominicana y disponible en Latinoamérica. A través del
-            Servicio puedes:
+            JW PARFUM es una perfumería en línea operada desde la República
+            Dominicana. A través del Servicio puedes:
           </p>
           <ul className="mt-3 list-inside list-disc space-y-1 pl-2">
-            <li>Explorar el catálogo de productos y sus variantes.</li>
-            <li>Realizar compras y gestionar tus pedidos.</li>
-            <li>Aplicar cupones y descuentos.</li>
-            <li>Hacer seguimiento de tus envíos.</li>
-            <li>Guardar productos en tu lista de deseos.</li>
-            <li>Administrar múltiples direcciones de entrega.</li>
+            <li>Explorar el catálogo de perfumes por marca, categoría y tamaño.</li>
+            <li>Hacer un pedido como invitado, sin necesidad de registrarte.</li>
+            <li>Aplicar cupones de descuento cuando estén disponibles.</li>
+            <li>Consultar el estado de tu pedido con el número que te damos al confirmarlo.</li>
           </ul>
         </Section>
 
         <Section title="3. Requisitos de edad">
           <p>
-            Debes tener al menos 18 años para crear una cuenta y utilizar el
-            Servicio. BUXXEP no está dirigido a menores de edad.
+            Debes tener al menos 18 años para realizar compras en JW PARFUM.
           </p>
         </Section>
 
-        <Section title="4. Registro y responsabilidad de la cuenta">
+        <Section title="4. Pedido de invitado, sin cuenta">
           <p>
-            Para comprar debes crear una cuenta con un correo electrónico válido
-            y una contraseña. Eres responsable de mantener la confidencialidad
-            de tus credenciales y de toda actividad realizada bajo tu cuenta.
-            Debes notificarnos de inmediato ante cualquier uso no autorizado.
-          </p>
-          <p className="mt-3">
-            Puedes eliminar tu cuenta en cualquier momento; revisa el
-            procedimiento y el período de recuperación en{" "}
-            <Link
-              href="/eliminar-cuenta"
-              className="text-primary hover:underline underline-offset-2"
-            >
-              Eliminar Cuenta
+            No creamos cuentas de cliente ni pedimos contraseña: el Servicio
+            funciona exclusivamente con pedido de invitado. Al hacer un pedido
+            nos proporcionas los datos de contacto y entrega necesarios para
+            procesarlo, y puedes consultar su estado con el número de pedido en{" "}
+            <Link href="/estado-pedido" className="text-primary hover:underline">
+              Estado del pedido
             </Link>
-            . BUXXEP puede suspender o cancelar cuentas que infrinjan estos
-            términos o se usen de forma fraudulenta.
+            . JW PARFUM puede negarse a procesar pedidos que se usen de forma
+            fraudulenta.
           </p>
         </Section>
 
-        <Section title="5. Proceso de compra y pagos">
+        <Section title="5. Proceso de compra — sin pagos en línea">
           <p>
-            Al realizar un pedido aceptas pagar el precio indicado más los
-            costos de envío aplicables. Un pedido constituye una oferta
-            vinculante de compra y se considera confirmado únicamente cuando el
-            pago es aprobado.
-          </p>
-          <p className="mt-3">
-            Los pagos se procesan a través de{" "}
-            <strong className="text-foreground">
-              AZUL (Servicios Digitales Popular)
-            </strong>
-            , pasarela que cumple el estándar PCI-DSS.{" "}
-            <strong className="text-foreground">
-              BUXXEP no almacena datos de tarjetas (número ni CVV).
-            </strong>
+            JW PARFUM <strong className="text-foreground">no procesa pagos en el sitio</strong>.
+            Al confirmar un pedido, este queda registrado como pendiente y te
+            contactamos directamente por WhatsApp para coordinar el método de
+            pago y la entrega. Un pedido se considera confirmado únicamente
+            cuando ambas partes acuerdan los detalles por ese medio.
           </p>
           <p className="mt-3">
             Los precios y la disponibilidad de los productos están sujetos a
@@ -105,46 +85,41 @@ export default function TerminosPage() {
           </p>
         </Section>
 
-        <Section title="6. Envíos y entregas">
+        <Section title="6. Entregas">
           <p>
             Los plazos de entrega que mostramos son estimados y pueden variar
-            por causas ajenas a BUXXEP. Cuando esté disponible, te
-            proporcionaremos un código de seguimiento para conocer el estado de
-            tu envío.
+            por causas ajenas a JW PARFUM. Coordinamos la entrega directamente
+            contigo al confirmar el pedido por WhatsApp.
           </p>
         </Section>
 
-        <Section title="7. Devoluciones, cancelaciones y reembolsos">
+        <Section title="7. Devoluciones y cambios">
           <p>
-            Las solicitudes de devolución, cancelación o reembolso se rigen por
-            nuestra{" "}
+            Las solicitudes de devolución o cambio se rigen por nuestra{" "}
             <Link
               href="/devoluciones"
               className="text-primary hover:underline underline-offset-2"
             >
               Política de Devoluciones
             </Link>
-            . Los reembolsos aprobados se procesan por el mismo método de pago
-            utilizado en la compra.
+            .
           </p>
         </Section>
 
         <Section title="8. Propiedad intelectual">
           <p>
-            Al subir o crear contenido en la plataforma, declaras que posees los
-            derechos necesarios o cuentas con permiso para usarlo. La marca
-            BUXXEP, su logotipo, su software y los contenidos propios están
-            protegidos por las leyes de propiedad intelectual de la República
-            Dominicana y no pueden usarse sin autorización.
+            La marca JW PARFUM, su logotipo y los contenidos propios del sitio
+            están protegidos por las leyes de propiedad intelectual de la
+            República Dominicana y no pueden usarse sin autorización.
           </p>
         </Section>
 
         <Section title="9. Conducta del usuario">
           <p>Queda prohibido utilizar el Servicio para:</p>
           <ul className="mt-3 list-inside list-disc space-y-1 pl-2">
-            <li>Publicar contenido ofensivo, difamatorio, obsceno o ilegal.</li>
+            <li>Publicar o transmitir contenido ofensivo, difamatorio, obsceno o ilegal.</li>
             <li>Infringir derechos de terceros.</li>
-            <li>Acceder sin autorización a sistemas o cuentas ajenas.</li>
+            <li>Acceder sin autorización a sistemas ajenos.</li>
             <li>
               Realizar actividades que dañen, deshabiliten o sobrecarguen el
               Servicio.
@@ -154,8 +129,8 @@ export default function TerminosPage() {
 
         <Section title="10. Limitación de responsabilidad">
           <p>
-            En la medida máxima permitida por la ley dominicana, BUXXEP no será
-            responsable por daños indirectos, incidentales, especiales o
+            En la medida máxima permitida por la ley dominicana, JW PARFUM no
+            será responsable por daños indirectos, incidentales, especiales o
             consecuentes derivados del uso o la imposibilidad de uso del
             Servicio.
           </p>
@@ -164,10 +139,9 @@ export default function TerminosPage() {
         <Section title="11. Modificaciones y ley aplicable">
           <p>
             Podemos modificar estos términos en cualquier momento; los cambios
-            entran en vigor al publicarse en esta página y el uso continuado del
-            Servicio implica su aceptación. Estos términos se rigen por las
-            leyes de la República Dominicana, cuyos tribunales serán competentes
-            para resolver cualquier disputa.
+            entran en vigor al publicarse en esta página. Estos términos se
+            rigen por las leyes de la República Dominicana, cuyos tribunales
+            serán competentes para resolver cualquier disputa.
           </p>
         </Section>
 
@@ -180,7 +154,7 @@ export default function TerminosPage() {
             >
               {SUPPORT_EMAIL}
             </a>{" "}
-            · Teléfono:{" "}
+            · WhatsApp:{" "}
             <a
               href={`tel:+1${SUPPORT_PHONE.replace(/-/g, "")}`}
               className="text-primary hover:underline underline-offset-2"
@@ -190,21 +164,13 @@ export default function TerminosPage() {
           </p>
         </Section>
 
-        <Section title="13. Privacidad y eliminación de cuenta">
+        <Section title="13. Privacidad">
           <p>
             El tratamiento de datos personales se rige por nuestra{" "}
             <Link href="/privacidad" className="text-primary hover:underline">
               Política de Privacidad
             </Link>
-            . Puedes solicitar la eliminación desde la aplicación, desde la web
-            o por correo siguiendo el procedimiento de{" "}
-            <Link
-              href="/eliminar-cuenta"
-              className="text-primary hover:underline"
-            >
-              Eliminación de Cuenta
-            </Link>
-            , sin necesidad de reinstalar la aplicación.
+            .
           </p>
         </Section>
       </div>
@@ -238,7 +204,6 @@ function LegalNav({ current }: { current: string }) {
     { href: "/devoluciones", label: "Devoluciones" },
     { href: "/entrega", label: "Entrega" },
     { href: "/seguridad", label: "Seguridad" },
-    { href: "/eliminar-cuenta", label: "Eliminar cuenta" },
   ];
   return (
     <div className="mt-12 border-t border-border pt-8">

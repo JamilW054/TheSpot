@@ -97,13 +97,14 @@ export async function adminCreateCategory(
 
     const size_preset_id =
       formData.get("size_preset_id")?.toString().trim() || null;
+    const parent_id = formData.get("parent_id")?.toString().trim() || null;
 
     const { error } = await supabase.from("categories").insert({
       slug,
       name,
       sort_order,
       image_url,
-      parent_id: null,
+      parent_id,
       size_preset_id,
     });
     if (error) throw new Error(error.message);
@@ -138,6 +139,10 @@ export async function adminUpdateCategory(
 
     const size_preset_id =
       formData.get("size_preset_id")?.toString().trim() || null;
+    const parent_id = formData.get("parent_id")?.toString().trim() || null;
+    if (parent_id === id) {
+      throw new Error("Una categoría no puede ser su propia categoría padre.");
+    }
 
     const { error } = await supabase
       .from("categories")
@@ -146,6 +151,7 @@ export async function adminUpdateCategory(
         name,
         sort_order,
         image_url,
+        parent_id,
         size_preset_id,
       })
       .eq("id", id);

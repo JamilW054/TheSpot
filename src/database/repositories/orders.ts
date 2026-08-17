@@ -1,6 +1,6 @@
 import { formatDOPFromCents } from "@/lib/format-currency";
 import { formatDateTime } from "@/lib/format-date";
-import { isSuccessfulPaymentStatus } from "@/lib/payments/status";
+import { isSuccessfulPaymentStatus } from "@/lib/orders/payment-status";
 import type {
   OrderPaymentStatus,
   Pedido,
@@ -95,37 +95,19 @@ export interface OrderItemSnapshot {
   color?: string | null;
 }
 
-/** Fila de order_items con el diseño asociado (para construir las líneas del pedido). */
+/** Fila de order_items (para construir las líneas del pedido). */
 export interface OrderItemRow {
   order_id?: string;
   quantity: number;
-  design_id: string | null;
   product_snapshot?: OrderItemSnapshot | null;
-  designs?:
-    | {
-        name: string | null;
-        thumbnail_url: string | null;
-        preview_url: string | null;
-      }
-    | {
-        name: string | null;
-        thumbnail_url: string | null;
-        preview_url: string | null;
-      }[]
-    | null;
 }
 
 /** order_items row → línea de producto para las cards del admin. */
 export function rowToLineItem(row: OrderItemRow): PedidoLineItem {
   const snap = row.product_snapshot ?? {};
-  const design = Array.isArray(row.designs) ? row.designs[0] : row.designs;
   return {
     productName: snap.name ?? "Producto",
     coverImageUrl: snap.cover_image_url ?? "",
-    designName: row.design_id ? (design?.name ?? "Diseño personalizado") : null,
-    designCoverImageUrl: row.design_id
-      ? (design?.thumbnail_url ?? design?.preview_url ?? null)
-      : null,
     quantity: row.quantity,
     size: snap.size ?? null,
     color: snap.color ?? null,

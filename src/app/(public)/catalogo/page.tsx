@@ -22,7 +22,7 @@ export const dynamic = "force-dynamic";
 const PRODUCTS_PER_PAGE = 24;
 
 export const metadata = {
-  title: "Catálogo | Buxxep",
+  title: "Catálogo | JW PARFUM",
   description: "Ropa a la venta. Añade al carrito o consulta cada producto.",
 };
 

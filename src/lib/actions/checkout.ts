@@ -1,27 +1,21 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import {
-  type CheckoutInput,
+  type CheckoutGuestInput,
   type CheckoutResult,
-  checkoutFromCart,
+  checkoutGuest,
 } from "@/database/repositories/checkout";
 
 export type CheckoutActionState =
   | { ok: true; result: CheckoutResult }
   | { ok?: false; error: string };
 
-/**
- * Crea el pedido a partir del carrito persistente del usuario. Devuelve el id
- * del pedido y el desglose de totales para continuar al pago.
- */
+/** Crea el pedido de invitado a partir del carrito enviado desde el cliente. */
 export async function checkoutAction(
-  input: CheckoutInput,
+  input: CheckoutGuestInput,
 ): Promise<CheckoutActionState> {
   try {
-    const result = await checkoutFromCart(input);
-    revalidatePath("/carrito");
-    revalidatePath("/cuenta/pedidos");
+    const result = await checkoutGuest(input);
     return { ok: true, result };
   } catch (e) {
     return { error: e instanceof Error ? e.message : "Error inesperado." };

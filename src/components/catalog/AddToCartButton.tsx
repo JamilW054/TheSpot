@@ -1,16 +1,13 @@
 "use client";
 
-import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { useCart } from "@/contexts/cart-context";
-import { useAuth } from "@/lib/auth-context";
 import { variantKey } from "@/lib/variants";
 import type { ProductColor } from "@/types";
 import { Check, Minus, Plus } from "lucide-react";
 
 interface AddToCartButtonProps {
   productId: string;
-  designId?: string | null;
   /** Tallas disponibles. Si hay, se muestra el selector y es obligatorio. */
   sizes?: string[];
   /** Colores disponibles. Si hay, se muestra el selector y es obligatorio. */
@@ -26,7 +23,6 @@ interface AddToCartButtonProps {
 
 export function AddToCartButton({
   productId,
-  designId,
   sizes = [],
   colors = [],
   stockByKey,
@@ -36,9 +32,6 @@ export function AddToCartButton({
   children,
 }: AddToCartButtonProps) {
   const { addItem, getQuantity } = useCart();
-  const { user, isLoading } = useAuth();
-  const router = useRouter();
-  const pathname = usePathname();
   const [justAdded, setJustAdded] = useState(false);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
@@ -77,7 +70,7 @@ export function AddToCartButton({
   const stockIsLow =
     selectedStock !== null && selectedStock > 0 && selectedStock <= 5;
 
-  const quantity = getQuantity(productId, designId, selectedSize, selectedColor);
+  const quantity = getQuantity(productId, selectedSize, selectedColor);
 
   const handleSizeSelect = (s: string) => {
     if (s === selectedSize) return;
@@ -93,16 +86,12 @@ export function AddToCartButton({
   };
 
   const handleClick = () => {
-    if (!isLoading && !user) {
-      router.push(`/login?next=${encodeURIComponent(pathname)}`);
-      return;
-    }
     if (!allSelected) {
       setTouched(true);
       return;
     }
     if (isOutOfStock) return;
-    addItem(productId, qty, designId, selectedSize, selectedColor);
+    addItem(productId, qty, selectedSize, selectedColor);
     setJustAdded(true);
     setQty(1);
     setTimeout(() => setJustAdded(false), 1500);

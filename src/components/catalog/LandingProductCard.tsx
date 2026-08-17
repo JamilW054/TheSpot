@@ -4,9 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { ShoppingBag, Heart } from "lucide-react";
 import { useCart } from "@/contexts/cart-context";
-import { useAuth } from "@/lib/auth-context";
 import { useWishlist } from "@/contexts/wishlist-context";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { CatalogProduct } from "@/types";
 
@@ -62,9 +61,7 @@ interface CardProps {
 
 export function LandingProductCard({ product, variant = "default" }: CardProps) {
   const { addItem } = useCart();
-  const { user, isLoading } = useAuth();
   const router = useRouter();
-  const pathname = usePathname();
   const [justAdded, setJustAdded] = useState(false);
 
   const hasDiscount = product.originalPriceCents != null && product.originalPriceCents > product.priceCents;
@@ -78,7 +75,6 @@ export function LandingProductCard({ product, variant = "default" }: CardProps) 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!isLoading && !user) { router.push(`/login?next=${encodeURIComponent(pathname)}`); return; }
     if (hasSizes) { router.push(href); return; }
     addItem(product.id, 1, null, null);
     setJustAdded(true);

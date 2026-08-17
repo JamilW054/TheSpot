@@ -38,19 +38,10 @@ const nextConfig: NextConfig = {
   images: {
     /**
      * Next.js 16: local `next/image` src must match a pattern (pathname; omit `search` to allow ?query).
-     * - /api/texture — proxied remote textures
-     * - /people/** — public/people (landing models)
-     * - /project/** — public/project (landing grid cards)
+     * - /landing/** — banners y assets de la landing
      * - /resources/** — logos y assets estáticos
      */
-    localPatterns: [
-      { pathname: "/api/texture" },
-      { pathname: "/people/**" },
-      { pathname: "/project/**" },
-      { pathname: "/cloths/**" },
-      { pathname: "/landing/**" },
-      { pathname: "/resources/**" },
-    ],
+    localPatterns: [{ pathname: "/landing/**" }, { pathname: "/resources/**" }],
     remotePatterns: [
       {
         protocol: "https",

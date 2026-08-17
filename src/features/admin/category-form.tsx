@@ -50,6 +50,8 @@ interface CategoryFormProps {
   mode: "create" | "edit";
   initial?: CategoryRow;
   sizePresets?: SizePresetRow[];
+  /** Categorías existentes, para elegir una categoría padre (opcional). */
+  categories?: CategoryRow[];
   onSuccess?: () => void;
   onCancel?: () => void;
 }
@@ -58,6 +60,7 @@ export function CategoryForm({
   mode,
   initial,
   sizePresets = [],
+  categories = [],
   onSuccess,
   onCancel,
 }: CategoryFormProps) {
@@ -168,6 +171,25 @@ export function CategoryForm({
                   <span className="text-primary">slug</span>
                 </span>
                 . Si el slug ya existe, se añade un sufijo.
+              </p>
+            </div>
+            <div className="sm:col-span-2 relative">
+              <SelectMenu
+                id="category-parent_id"
+                name="parent_id"
+                label="Categoría padre (opcional)"
+                defaultValue={initial?.parent_id ?? ""}
+                placeholder="Ninguna (categoría raíz)"
+                options={[
+                  { value: "", label: "Ninguna (categoría raíz)" },
+                  ...categories
+                    .filter((c) => c.id !== initial?.id)
+                    .map((c) => ({ value: c.id, label: c.name })),
+                ]}
+              />
+              <p className="mt-1.5 text-xs text-muted-foreground">
+                Úsala para crear subcategorías (ej. "Nicho" dentro de "Para
+                Él").
               </p>
             </div>
             <div className="sm:col-span-2 relative">

@@ -2,11 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Política de Devoluciones — Buxxep",
-  description: "Conoce nuestra política de devoluciones, cambios y reembolsos en Buxxep.",
+  title: "Política de Devoluciones — JW PARFUM",
+  description: "Conoce nuestra política de devoluciones, cambios y reembolsos en JW PARFUM.",
 };
 
-const LAST_UPDATED = "13 de mayo de 2026";
+const LAST_UPDATED = "16 de agosto de 2026";
+const SUPPORT_EMAIL = "jamilwilliams054@gmail.com";
+const SUPPORT_PHONE = "809-761-2875";
 
 export default function DevolucionesPage() {
   return (
@@ -24,8 +26,8 @@ export default function DevolucionesPage() {
         <p className="text-sm text-foreground">
           <strong>Resumen:</strong> Aceptamos devoluciones y cambios dentro de los{" "}
           <strong>7 días calendario</strong> posteriores a la recepción del pedido, siempre que el
-          producto presente defectos de fabricación o diferencias con lo ordenado. Los productos
-          personalizados <strong>no tienen devolución</strong> salvo error nuestro.
+          frasco llegue sellado y sin abrir, o presente un defecto de fabricación o una diferencia
+          con lo ordenado.
         </p>
       </div>
 
@@ -34,23 +36,21 @@ export default function DevolucionesPage() {
         <Section title="1. Productos elegibles para devolución">
           <p>Aceptamos devoluciones únicamente cuando:</p>
           <ul className="mt-3 list-inside list-disc space-y-1 pl-2">
+            <li>El frasco llega sellado, sin abrir y en su empaque original.</li>
             <li>El producto llegó con defectos de fabricación visibles.</li>
-            <li>El producto recibido no corresponde al diseño, talla o modelo ordenado.</li>
+            <li>El producto recibido no corresponde a la fragancia o el tamaño ordenado.</li>
             <li>El pedido llegó incompleto o se entregó el producto equivocado.</li>
           </ul>
         </Section>
 
         <Section title="2. Productos NO elegibles para devolución">
           <p>
-            Dado que nuestros productos son fabricados bajo pedido y personalizados según el diseño
-            del cliente, <strong className="text-foreground">no aceptamos devoluciones</strong> por:
+            Por razones de higiene, <strong className="text-foreground">no aceptamos
+            devoluciones</strong> de:
           </p>
           <ul className="mt-3 list-inside list-disc space-y-1 pl-2">
-            <li>Arrepentimiento de compra o cambio de opinión.</li>
-            <li>Errores en el diseño cometidos por el cliente al momento de ordenar.</li>
-            <li>Diferencias de color debido a la calibración del monitor del cliente.</li>
-            <li>Uso, lavado o manipulación indebida del producto.</li>
-            <li>Tallas incorrectas cuando la guía de tallas estaba disponible al comprar.</li>
+            <li>Frascos abiertos, usados o con el sello de seguridad roto (salvo defecto de fábrica).</li>
+            <li>Arrepentimiento de compra o cambio de opinión una vez abierto el producto.</li>
           </ul>
         </Section>
 
@@ -66,67 +66,57 @@ export default function DevolucionesPage() {
           <p>Para iniciar una solicitud:</p>
           <ol className="mt-3 list-inside list-decimal space-y-2 pl-2">
             <li>
-              Contáctanos vía Instagram{" "}
-              <a href="https://instagram.com/buxxep" className="text-primary hover:underline">
-                @buxxep
+              Escríbenos por WhatsApp al{" "}
+              <a href={`tel:+1${SUPPORT_PHONE.replace(/-/g, "")}`} className="text-primary hover:underline">
+                {SUPPORT_PHONE}
+              </a>{" "}
+              o por correo a{" "}
+              <a href={`mailto:${SUPPORT_EMAIL}`} className="text-primary hover:underline">
+                {SUPPORT_EMAIL}
               </a>{" "}
               dentro del plazo de 7 días.
             </li>
-            <li>
-              Indica tu número de pedido y describe el problema detalladamente.
-            </li>
-            <li>
-              Adjunta fotografías claras del producto defectuoso o incorrecto.
-            </li>
-            <li>
-              Nuestro equipo evaluará tu solicitud en un plazo máximo de 48 horas hábiles.
-            </li>
+            <li>Indica tu número de pedido y describe el problema detalladamente.</li>
+            <li>Adjunta fotografías claras del producto y el empaque.</li>
+            <li>Te responderemos en un plazo máximo de 48 horas hábiles.</li>
           </ol>
         </Section>
 
         <Section title="5. Proceso de cambio">
           <p>
-            Si tu solicitud es aprobada, te enviaremos un producto de reemplazo sin costo adicional.
-            El producto defectuoso deberá ser devuelto en su empaque original (si aplica). Los
-            costos de envío del producto defectuoso de vuelta a nuestras instalaciones serán
-            asumidos por Buxxep si el error fue nuestro.
+            Si tu solicitud es aprobada, coordinamos contigo el cambio por el
+            mismo producto o uno equivalente, sin costo adicional si el error
+            fue nuestro.
           </p>
         </Section>
 
         <Section title="6. Reembolsos">
           <p>
-            Los reembolsos monetarios solo aplican cuando no es posible realizar un cambio por el
-            mismo producto. En ese caso:
+            Los reembolsos solo aplican cuando no es posible realizar un cambio.
+            Como no procesamos pagos en línea, el reembolso se coordina
+            directamente contigo por el mismo medio en que se acordó el pago
+            original.
           </p>
-          <ul className="mt-3 list-inside list-disc space-y-1 pl-2">
-            <li>
-              El reembolso se procesará al mismo método de pago utilizado en la compra.
-            </li>
-            <li>
-              El tiempo de acreditación depende de tu banco (generalmente 5 a 10 días hábiles).
-            </li>
-            <li>
-              No reembolsamos costos de envío originales salvo que el error sea 100% atribuible a
-              Buxxep.
-            </li>
-          </ul>
         </Section>
 
         <Section title="7. Envíos dañados">
           <p>
             Si tu pedido llegó dañado durante el transporte, contáctanos dentro de las{" "}
             <strong className="text-foreground">48 horas</strong> siguientes a la recepción con
-            fotografías del empaque y del producto. Gestionaremos el caso con el servicio de
-            mensajería y te enviaremos un reemplazo lo antes posible.
+            fotografías del empaque y del producto. Te enviaremos un reemplazo lo antes posible.
           </p>
         </Section>
 
         <Section title="8. Contacto">
           <p>
-            Para cualquier consulta sobre esta política o para iniciar una solicitud, escríbenos en
-            Instagram{" "}
-            <a href="https://instagram.com/buxxep" className="text-primary hover:underline">
-              @buxxep
+            Para cualquier consulta sobre esta política o para iniciar una
+            solicitud, escríbenos por WhatsApp al{" "}
+            <a href={`tel:+1${SUPPORT_PHONE.replace(/-/g, "")}`} className="text-primary hover:underline">
+              {SUPPORT_PHONE}
+            </a>{" "}
+            o por correo a{" "}
+            <a href={`mailto:${SUPPORT_EMAIL}`} className="text-primary hover:underline">
+              {SUPPORT_EMAIL}
             </a>
             . Respondemos en días hábiles.
           </p>

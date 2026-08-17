@@ -20,7 +20,7 @@ import {
 } from "@/database/repositories/products";
 import type { SizePresetRow } from "@/database/repositories/size-presets";
 import { formatDOPFromCents } from "@/lib/format-currency";
-import { type CommissionRates, computeProductProfit } from "@/lib/pricing";
+import { computeProductProfit } from "@/lib/pricing";
 import { CatalogDeleteButton } from "./catalog-delete-button";
 import { ProductForm } from "./product-form";
 
@@ -29,9 +29,7 @@ interface Props {
   categories: CategoryRow[];
   sizePresets: SizePresetRow[];
   brands: { id: string; name: string }[];
-  lineas: { id: string; name: string }[];
   warehouses: { id: string; name: string }[];
-  commissionRates: CommissionRates;
   initialOpenCreate?: boolean;
 }
 
@@ -72,9 +70,7 @@ export function CatalogoManager({
   categories,
   sizePresets,
   brands,
-  lineas,
   warehouses,
-  commissionRates,
   initialOpenCreate = false,
 }: Props) {
   const router = useRouter();
@@ -101,10 +97,6 @@ export function CatalogoManager({
   const categoryById = useMemo(
     () => new Map(categories.map((c) => [c.id, c.name])),
     [categories],
-  );
-  const lineaById = useMemo(
-    () => new Map(lineas.map((l) => [l.id, l.name])),
-    [lineas],
   );
 
   const filtered = useMemo(() => {
@@ -232,7 +224,6 @@ export function CatalogoManager({
           const profit = computeProductProfit(
             effectivePriceCents(p),
             toCents(p.cost_cents),
-            commissionRates,
           );
           return profit.marginPct ?? -1000;
         },
@@ -241,17 +232,13 @@ export function CatalogoManager({
           if (cost <= 0) {
             return <span className="text-xs text-muted-foreground">—</span>;
           }
-          const profit = computeProductProfit(
-            effectivePriceCents(p),
-            cost,
-            commissionRates,
-          );
+          const profit = computeProductProfit(effectivePriceCents(p), cost);
           const pct = profit.marginPct;
           return (
             <span className="inline-flex flex-col items-end">
               <span
                 className={`tabular-nums font-medium ${
-                  profit.netProfitCents < 0
+                  profit.grossProfitCents < 0
                     ? "text-(--admin-danger)"
                     : "text-foreground"
                 }`}
@@ -259,7 +246,7 @@ export function CatalogoManager({
                 {pct != null ? `${pct.toFixed(1)}%` : "—"}
               </span>
               <span className="text-xs tabular-nums text-muted-foreground">
-                {formatDOPFromCents(profit.netProfitCents)}
+                {formatDOPFromCents(profit.grossProfitCents)}
               </span>
             </span>
           );
@@ -348,7 +335,7 @@ export function CatalogoManager({
         ),
       },
     ],
-    [commissionRates, brandById, categoryById, openEdit],
+    [brandById, categoryById, openEdit],
   );
 
   const hasFilters =
@@ -559,27 +546,6 @@ export function CatalogoManager({
                         </p>
                       </div>
                     )}
-                  {previewProduct.linea_id &&
-                    lineaById.get(previewProduct.linea_id) && (
-                      <div>
-                        <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                          Línea
-                        </p>
-                        <p className="text-sm text-foreground">
-                          {lineaById.get(previewProduct.linea_id)}
-                        </p>
-                      </div>
-                    )}
-                  {previewProduct.is_customizable && (
-                    <div>
-                      <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                        Extra
-                      </p>
-                      <p className="text-sm text-(--admin-brand-strong)">
-                        Personalizable
-                      </p>
-                    </div>
-                  )}
                 </div>
 
                 {(() => {
@@ -698,9 +664,7 @@ export function CatalogoManager({
           categories={categories}
           sizePresets={sizePresets}
           brands={brands}
-          lineas={lineas}
           warehouses={warehouses}
-          commissionRates={commissionRates}
           onSuccess={handleCreateSuccess}
           onCancel={closeCreate}
         />
@@ -721,9 +685,7 @@ export function CatalogoManager({
             categories={categories}
             sizePresets={sizePresets}
             brands={brands}
-            lineas={lineas}
             warehouses={warehouses}
-            commissionRates={commissionRates}
             onSuccess={handleEditSuccess}
             onCancel={closeEdit}
           />

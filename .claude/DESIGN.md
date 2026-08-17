@@ -1,16 +1,16 @@
-# Design System — Buxxep × shadcn/ui
+# Design System — JW PARFUM × shadcn/ui
 
-> Estructura y densidad del segundo (shadcn/ui) · Paleta del primero (Buxxep dark mode)
+> Estructura y densidad del segundo (shadcn/ui) · Paleta del primero (JW PARFUM dark mode)
 
 ---
 
 ## Principio general
 
-La **estructura, densidad, radios, tipografía y patrones de componentes** vienen del segundo doc (shadcn/ui). La **paleta de colores completa** viene del primero (Buxxep). El resultado es un sistema de componentes compacto, de bordes hairline, con canvas negro en lugar de blanco y cian eléctrico en lugar de negro sólido como único acento.
+La **estructura, densidad, radios, tipografía y patrones de componentes** vienen del segundo doc (shadcn/ui). La **paleta de colores completa** viene del primero (JW PARFUM). El resultado es un sistema de componentes compacto, de bordes hairline, con canvas negro en lugar de blanco y cian eléctrico en lugar de negro sólido como único acento.
 
 ---
 
-## Colores (de Buxxep)
+## Colores (de JW PARFUM)
 
 | Nombre | Hex | Rol |
 |--------|-----|-----|
@@ -20,7 +20,7 @@ La **estructura, densidad, radios, tipografía y patrones de componentes** viene
 | Border Dark | `#27272a` | Todos los bordes hairline (reemplaza `#e5e5e5`) |
 | Foreground | `#f4f4f5` | Texto primario (reemplaza `#000000`) |
 | Muted Text | `#a1a1aa` | Texto secundario/muted (reemplaza `#737373`) |
-| Buxxep Cyan | `#3cc8f7` | Único acento — CTAs, precios, activos (reemplaza el negro del botón filled) |
+| JW PARFUM Cyan | `#3cc8f7` | Único acento — CTAs, precios, activos (reemplaza el negro del botón filled) |
 | Cyan Soft | `#5dd4f9` | Hover del cyan |
 | Mist Dark | `#18181b` | Surface muted (reemplaza `#f2f2f2`) |
 | Inverted Surface | `#27272a` | Surface invertida oscura (reemplaza `#171717`) |
@@ -448,7 +448,7 @@ padding: 16px;
 
 Título: `#f4f4f5` — Subtexto: `#a1a1aa`
 
-> Equivale al `#171717` inverted card del segundo, pero usando zinc de Buxxep.
+> Equivale al `#171717` inverted card del segundo, pero usando zinc de JW PARFUM.
 
 ---
 

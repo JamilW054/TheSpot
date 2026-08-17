@@ -42,7 +42,6 @@ export interface ProductRow {
   is_active?: boolean | null;
   category_id?: string | null;
   brand_id?: string | null;
-  linea_id?: string | null;
   in_stock?: boolean | null;
   rating_avg?: number | string | null;
   review_count?: number | null;
@@ -55,7 +54,7 @@ export interface ProductRow {
 
 /** Columnas (select PostgREST) para leer un producto de catálogo con sus joins. */
 export const PRODUCT_CATALOG_SELECT =
-  "id, slug, name, description, base_price_cents, original_price_cents, is_active, in_stock, rating_avg, review_count, category_id, brand_id, linea_id, " +
+  "id, slug, name, description, base_price_cents, original_price_cents, is_active, in_stock, rating_avg, review_count, category_id, brand_id, " +
   "product_media(url, media_type, is_cover, sort_order), " +
   "product_variants(id, price_cents, attributes, is_active, sort_order), " +
   "product_tags(tags(slug, name)), " +
@@ -81,7 +80,6 @@ export interface AdminProductMediaRow extends ProductMediaRow {
 
 /** Fila de producto para el admin: incluye variantes, inventario, media y etiquetas. */
 export interface AdminProductRow extends ProductRow {
-  is_customizable?: boolean | null;
   /** Coste unitario en céntimos (para beneficio neto y margen). */
   cost_cents?: number | string | null;
   meta_title?: string | null;
@@ -92,7 +90,7 @@ export interface AdminProductRow extends ProductRow {
 
 /** Select PostgREST con todo lo necesario para editar un producto en el admin. */
 export const PRODUCT_ADMIN_SELECT =
-  "id, slug, name, description, base_price_cents, original_price_cents, cost_cents, is_active, is_customizable, in_stock, category_id, brand_id, linea_id, meta_title, meta_description, created_at, " +
+  "id, slug, name, description, base_price_cents, original_price_cents, cost_cents, is_active, in_stock, category_id, brand_id, meta_title, meta_description, created_at, " +
   "product_media(id, url, media_type, is_cover, sort_order), " +
   "product_variants(id, sku, price_cents, attributes, is_active, sort_order, inventory(warehouse_id, quantity, reserved)), " +
   "product_tags(tags(slug, name)), " +
@@ -104,7 +102,7 @@ export const PRODUCT_ADMIN_SELECT =
  * falla con "columna no existe" (42703).
  */
 export const PRODUCT_ADMIN_SELECT_LEGACY =
-  "id, slug, name, description, base_price_cents, original_price_cents, is_active, is_customizable, in_stock, category_id, brand_id, linea_id, meta_title, meta_description, created_at, " +
+  "id, slug, name, description, base_price_cents, original_price_cents, is_active, in_stock, category_id, brand_id, meta_title, meta_description, created_at, " +
   "product_media(id, url, media_type, is_cover, sort_order), " +
   "product_variants(id, sku, price_cents, attributes, is_active, sort_order, inventory(warehouse_id, quantity, reserved)), " +
   "product_tags(tags(slug, name)), " +
@@ -231,10 +229,8 @@ export function rowToCatalogProduct(row: ProductRow): CatalogProduct {
     originalPrice: originalCents > 0 ? formatDOPFromCents(originalCents) : null,
     originalPriceCents: originalCents > 0 ? originalCents : null,
     brandName: row.brands?.name ?? null,
-    modelPath: null,
     coverImage: coverFromMedia(row.product_media),
     gallery: galleryFromMedia(row.product_media),
-    baseTextureUrl: null,
     categorySlug: categorySlugFromRow(row.categories),
     sizes: sizesFromVariants(row.product_variants),
     colors: colorsFromVariants(row.product_variants),

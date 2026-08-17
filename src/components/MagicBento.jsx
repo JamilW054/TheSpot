@@ -7,7 +7,7 @@ import "./MagicBento.css";
 
 const DEFAULT_PARTICLE_COUNT = 12;
 const DEFAULT_SPOTLIGHT_RADIUS = 300;
-const DEFAULT_GLOW_COLOR = "60, 200, 247"; // Buxxep primary #3CC8F7
+const DEFAULT_GLOW_COLOR = "60, 200, 247"; // Brand primary #3CC8F7
 const MOBILE_BREAKPOINT = 768;
 
 const cardData = [

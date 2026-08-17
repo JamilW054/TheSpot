@@ -1,7 +1,7 @@
 import { sendCompraEmail } from "@/lib/resend";
 import type { OrderItem } from "@/lib/resend/templates/compra";
 import { formatDateTime } from "@/lib/format-date";
-import { isSuccessfulPaymentStatus } from "@/lib/payments/status";
+import { isSuccessfulPaymentStatus } from "@/lib/orders/payment-status";
 import { createServiceClient } from "@/lib/supabase/server";
 import { customerNameFromOrder, type ShippingAddress } from "./orders";
 

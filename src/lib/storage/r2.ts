@@ -3,7 +3,7 @@
  *
  * Variables de entorno:
  * - R2_ACCOUNT_ID — ID de cuenta (ej. desde el dashboard R2).
- * - R2_BUCKET — nombre del bucket (ej. buxxep).
+ * - R2_BUCKET — nombre del bucket (ej. jw-parfum).
  * - R2_ACCESS_KEY_ID / R2_SECRET_ACCESS_KEY — token API R2 (permisos de escritura en el bucket).
  * - R2_ENDPOINT — opcional; por defecto `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`
  *   (sin `/bucket` al final; el bucket va aparte en cada operación).
@@ -35,7 +35,7 @@ export const R2_MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 export function getR2Config(): R2Config | null {
   const accessKeyId = process.env.R2_ACCESS_KEY_ID?.trim() ?? "";
   const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY?.trim() ?? "";
-  const bucket = process.env.R2_BUCKET?.trim() || "buxxep";
+  const bucket = process.env.R2_BUCKET?.trim() || "jw-parfum";
   let endpoint = process.env.R2_ENDPOINT?.trim().replace(/\/$/, "") ?? "";
   if (!endpoint) {
     const accountId = process.env.R2_ACCOUNT_ID?.trim() ?? "";

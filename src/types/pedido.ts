@@ -21,10 +21,6 @@ export interface PedidoLineItem {
   productName: string;
   /** Imagen de portada del producto (snapshot del pedido). */
   coverImageUrl: string;
-  /** Nombre del diseño personalizado, si aplica. */
-  designName: string | null;
-  /** Imagen del diseño personalizado, si aplica. */
-  designCoverImageUrl: string | null;
   quantity: number;
   size: string | null;
   color: string | null;
@@ -49,10 +45,6 @@ export interface OrderStatusDetailItem {
   productName: string;
   productSlug: string;
   coverImageUrl: string;
-  /** Nombre del diseño o "Diseño personalizado" si hay design_id pero sin nombre. */
-  designName: string | null;
-  /** Imagen del diseño personalizado (cuando aplica). */
-  designCoverImageUrl: string | null;
   quantity: number;
   unitPriceCents: number;
   /** Talla elegida (snapshot del pedido), si aplica. */
@@ -71,11 +63,8 @@ export interface OrderStatusDetail {
   createdAt: string;
   shippingName: string | null;
   items: OrderStatusDetailItem[];
-  /** Estado del cobro en pasarela (AZUL). */
+  /** Estado del cobro: 'pending' hasta que el admin lo marca como pagado. */
   paymentStatus: OrderPaymentStatus;
-  paymentProvider: string | null;
+  /** Fecha de confirmación de pago (orders.paid_at), si ya se cobró. */
   paidAt: string | null;
-  azulTransactionId: string | null;
-  azulAuthorizationCode: string | null;
-  azulResponseCode: string | null;
 }

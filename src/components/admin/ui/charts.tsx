@@ -24,7 +24,7 @@ import { EmptyState } from "./empty-state";
  * Es un string y no una función a propósito: los charts son Client Components,
  * y un Server Component no puede pasarles una función (React no sabe
  * serializarla al cruzar la frontera). Las páginas de servidor —p. ej.
- * /admin/reportes— eligen el formato por nombre y la resolución a función ocurre
+ * /admin— eligen el formato por nombre y la resolución a función ocurre
  * aquí, ya en el cliente.
  */
 export type ChartValueFormat = "number" | "dop-compact";
@@ -50,7 +50,7 @@ function resolveFormatter(
   return valueFormatter ?? CHART_FORMATTERS[format];
 }
 
-/* ── Paleta de series: azul Buxxep primero, apoyos desaturados ── */
+/* ── Paleta de series: azul de marca primero, apoyos desaturados ── */
 export const CHART_COLORS = [
   "#3cc8f7",
   "#8b5cf6",

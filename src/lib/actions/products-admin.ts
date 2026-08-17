@@ -367,7 +367,6 @@ function readProductFields(formData: FormData) {
     description: formData.get("description")?.toString().trim() || null,
     category_id: parseCategoryId(formData),
     brand_id: formData.get("brand_id")?.toString().trim() || null,
-    linea_id: formData.get("linea_id")?.toString().trim() || null,
     tags: parseTagsFromForm(formData),
     base_price_cents: parsePriceDopToCents(
       formData.get("price_dop")?.toString() ?? "",
@@ -378,7 +377,6 @@ function readProductFields(formData: FormData) {
     cost_cents:
       parseOptionalPriceCents(formData.get("cost_dop")?.toString()) ?? 0,
     is_active: formData.get("published") === "on",
-    is_customizable: formData.get("is_customizable") === "on",
     warehouse_id: formData.get("warehouse_id")?.toString().trim() || null,
     media: parseMediaUrls(formData),
     variants: parseVariants(formData),
@@ -401,12 +399,10 @@ export async function adminCreateProduct(
       description: f.description,
       category_id: f.category_id,
       brand_id: f.brand_id,
-      linea_id: f.linea_id,
       base_price_cents: f.base_price_cents,
       original_price_cents: f.original_price_cents,
       cost_cents: f.cost_cents,
       is_active: f.is_active,
-      is_customizable: f.is_customizable,
     };
     let { data: inserted, error: insErr } = await supabase
       .from("products")
@@ -476,12 +472,10 @@ export async function adminUpdateProduct(
       description: f.description,
       category_id: f.category_id,
       brand_id: f.brand_id,
-      linea_id: f.linea_id,
       base_price_cents: f.base_price_cents,
       original_price_cents: f.original_price_cents,
       cost_cents: f.cost_cents,
       is_active: f.is_active,
-      is_customizable: f.is_customizable,
     };
     let { error: updErr } = await supabase
       .from("products")

@@ -3,22 +3,16 @@
 import {
   AlertTriangle,
   ArrowRight,
-  Bell,
   CircleDollarSign,
   Clock,
-  CreditCard,
-  HandCoins,
-  Info,
   PackageX,
-  Percent,
   Plus,
+  Settings,
   ShoppingCart,
   Tag,
   TrendingUp,
   Trophy,
   Users,
-  Wallet,
-  Zap,
 } from "lucide-react";
 import Link from "next/link";
 import {
@@ -37,12 +31,7 @@ import {
   RevenueAreaChart,
   StatCard,
 } from "@/components/admin/ui";
-import type {
-  AdminDashboardMetrics,
-  MonthlyCommissionSummary,
-} from "@/database/repositories/admin-metrics";
-import type { PartnerMonthlyStatement } from "@/database/repositories/partners";
-import { PartnerDashboardCard } from "@/features/admin/partner-dashboard-card";
+import type { AdminDashboardMetrics } from "@/database/repositories/admin-metrics";
 import { formatDOPFromCents } from "@/lib/format-currency";
 import { formatDate } from "@/lib/format-date";
 import {
@@ -74,12 +63,10 @@ const PAGO_BADGE: Record<
 };
 
 const QUICK_ACTIONS = [
-  { label: "Nuevo artículo", href: "/admin/catalogo?create=1", icon: Plus },
+  { label: "Nuevo perfume", href: "/admin/catalogo?create=1", icon: Plus },
   { label: "Pedidos", href: "/admin/pedidos", icon: ShoppingCart },
-  { label: "Flash sale", href: "/admin/flash-sales/nuevo", icon: Zap },
-  { label: "Notificación", href: "/admin/notificaciones/nuevo", icon: Bell },
   { label: "Cupón", href: "/admin/cupones/nuevo", icon: Tag },
-  { label: "Inventario", href: "/admin/almacenes", icon: PackageX },
+  { label: "Configuración", href: "/admin/config", icon: Settings },
 ] as const;
 
 const PEDIDO_COLUMNS: DataTableColumn<Pedido>[] = [
@@ -151,17 +138,12 @@ export interface AdminDashboardClientProps {
   recentPedidos: Pedido[];
   /** Total de pedidos sin cobrar; enlazan a /admin/pedidos con ese filtro. */
   unpaidOrdersCount: number;
-  commissions: MonthlyCommissionSummary;
-  /** Liquidación del mes en curso de cada socio activo (módulo de socios). */
-  partners: PartnerMonthlyStatement[];
 }
 
 export function AdminDashboardClient({
   metrics,
   recentPedidos,
   unpaidOrdersCount,
-  commissions,
-  partners,
 }: AdminDashboardClientProps) {
   const today = formatDate(new Date().toISOString(), {
     weekday: "long",
@@ -170,9 +152,6 @@ export function AdminDashboardClient({
     year: "numeric",
   });
   const todayCapitalized = today.charAt(0).toUpperCase() + today.slice(1);
-  const commissionMonthLabel =
-    commissions.monthLabel.charAt(0).toUpperCase() +
-    commissions.monthLabel.slice(1);
 
   const paymentSlices = [
     {
@@ -275,117 +254,6 @@ export function AdminDashboardClient({
           sub="requieren atención"
           icon={<Clock className="size-4" />}
         />
-        <StatCard
-          label="Pagos AZUL aprobados"
-          value={metrics.azulApprovedPayments}
-          sub="últimos 180 días"
-          icon={<CreditCard className="size-4" />}
-        />
-      </section>
-
-      {/* ── Comisiones adeudadas este mes (AZUL + G3DEON) ── */}
-      <section aria-label="Comisiones del mes" className="space-y-3">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="text-sm font-semibold tracking-tight text-foreground">
-            Comisiones · {commissionMonthLabel}
-          </h2>
-          <Link
-            href="/admin/config"
-            className="flex items-center gap-1 text-xs font-medium text-(--admin-brand-strong) hover:opacity-80"
-          >
-            Ajustar porcentajes <ArrowRight className="size-3" aria-hidden />
-          </Link>
-        </div>
-
-        {commissions.itemsRevenueCents > 0 &&
-        commissions.costCoveragePct < 100 ? (
-          <div className="flex items-start gap-2.5 rounded-3xl border border-border bg-(--admin-warning-soft) px-5 py-3.5 text-sm text-foreground">
-            <Info
-              className="mt-0.5 size-4 shrink-0 text-(--admin-warning)"
-              aria-hidden
-            />
-            <p>
-              Solo el{" "}
-              <span className="font-semibold">
-                {commissions.costCoveragePct.toFixed(0)}%
-              </span>{" "}
-              del ingreso de este mes corresponde a productos con coste
-              registrado — la ganancia y la comisión G3DEON reales podrían ser
-              menores que lo mostrado.{" "}
-              <Link
-                href="/admin/catalogo"
-                className="font-medium text-(--admin-brand-strong) hover:underline"
-              >
-                Completar costes
-              </Link>
-            </p>
-          </div>
-        ) : null}
-
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <StatCard
-            label="Procesado por AZUL"
-            value={formatDOPFromCents(commissions.azulRevenueCents)}
-            sub={`${commissions.azulOrdersCount} pedido${commissions.azulOrdersCount !== 1 ? "s" : ""} pagados`}
-            icon={<CreditCard className="size-4" />}
-          />
-          <StatCard
-            label="A pagar a AZUL"
-            value={formatDOPFromCents(commissions.azulCommissionCents)}
-            sub={`${commissions.azulPct}% de lo procesado`}
-            icon={<Percent className="size-4" />}
-          />
-          <StatCard
-            label="Ganancia neta del mes"
-            value={formatDOPFromCents(commissions.netProfitCents)}
-            sub="lo que le queda a Buxxep tras comisiones"
-            icon={<Wallet className="size-4" />}
-            valueTone={commissions.netProfitCents < 0 ? "danger" : "default"}
-            accent={commissions.netProfitCents >= 0}
-          />
-        </div>
-      </section>
-
-      {/* ── Socios y terceros: liquidación del mes en curso ── */}
-      {/* Antes había aquí una tarjeta fija de G3DEON. Ahora se pinta una por
-          socio activo, con datos de `partner_monthly_statements` — se recalcula
-          en cada carga, así que refleja al instante un pago nuevo, un cambio de
-          ganancia o una reconfiguración del socio. */}
-      <section aria-label="Socios y terceros" className="space-y-3">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="text-sm font-semibold tracking-tight text-foreground">
-            Socios · {commissionMonthLabel}
-          </h2>
-          <Link
-            href="/admin/socios"
-            className="flex items-center gap-1 text-xs font-medium text-(--admin-brand-strong) hover:opacity-80"
-          >
-            Gestionar socios <ArrowRight className="size-3" aria-hidden />
-          </Link>
-        </div>
-
-        {partners.length === 0 ? (
-          <EmptyState
-            icon={<HandCoins className="size-5" />}
-            title="No hay socios activos."
-            description="Registra un socio para ver aquí cuánto se le debe cada mes."
-            action={
-              <Link
-                href="/admin/socios"
-                className="inline-flex items-center gap-2 rounded-[18px] bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
-              >
-                <Plus className="size-4" aria-hidden />
-                Nuevo socio
-              </Link>
-            }
-          />
-        ) : (
-          <div className="grid gap-4 lg:grid-cols-2">
-            {partners.map((p) => (
-              <PartnerDashboardCard key={p.partnerId} statement={p} />
-            ))}
-          </div>
-        )}
       </section>
 
       {/* ── KPIs: catálogo y clientes ── */}

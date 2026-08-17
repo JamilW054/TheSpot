@@ -3,6 +3,7 @@ import { PageLayout } from "@/components/layout";
 import { CategoryDeleteButton } from "@/features/admin/category-delete-button";
 import { CategoryForm } from "@/features/admin/category-form";
 import { getCategoryAdminById } from "@/database/repositories";
+import { getCategoriesForAdmin } from "@/database/repositories/categories";
 import { getSizePresetsForAdmin } from "@/database/repositories/size-presets";
 
 const UUID_RE =
@@ -16,9 +17,10 @@ export default async function AdminCategoriaEditarPage({ params }: PageProps) {
   const { id } = await params;
   if (!UUID_RE.test(id)) notFound();
 
-  const [category, sizePresets] = await Promise.all([
+  const [category, sizePresets, categories] = await Promise.all([
     getCategoryAdminById(id),
     getSizePresetsForAdmin(),
+    getCategoriesForAdmin(),
   ]);
   if (!category) notFound();
 
@@ -33,7 +35,12 @@ export default async function AdminCategoriaEditarPage({ params }: PageProps) {
           redirectTo="/admin/categorias"
         />
       </div>
-      <CategoryForm mode="edit" initial={category} sizePresets={sizePresets} />
+      <CategoryForm
+        mode="edit"
+        initial={category}
+        sizePresets={sizePresets}
+        categories={categories}
+      />
     </PageLayout>
   );
 }

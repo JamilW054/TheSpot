@@ -1,24 +1,17 @@
 "use client";
 
-import { Check, Plus, Star } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { FreeShippingProgress } from "@/components/cart/FreeShippingProgress";
-import { PaymentMethodSelector } from "@/components/payment/PaymentMethodSelector";
-import { SecurityBadges } from "@/components/ui/security-badges";
 import {
   qualifiesForFreeShipping,
   resolveShippingCents,
 } from "@/config/shipping";
 import { useCart } from "@/contexts/cart-context";
 import type { ShippingMethod } from "@/database/repositories";
-import type { Address } from "@/database/repositories/addresses";
-import type { PaymentMethodOption } from "@/database/repositories/payments";
 import { checkoutAction } from "@/lib/actions/checkout";
 import { validateCouponAction } from "@/lib/actions/coupons";
-import { requestPaymentLinkForOrder } from "@/lib/actions/payments";
 import { formatDOPFromCents } from "@/lib/format-currency";
 import type { CatalogProduct } from "@/types";
 
@@ -36,122 +29,76 @@ const inputClass =
 
 const labelClass = "block text-sm font-medium text-foreground";
 
-interface ShippingData {
-  name: string;
-  email: string;
-  address: string;
-  phone?: string;
-  city?: string;
-  postalCode?: string;
-  country?: string;
+interface OrderConfirmation {
+  orderNumber: string;
+  totalCents: number;
+  whatsappUrl: string | null;
 }
 
-function shippingFromAddress(a: Address, email: string): ShippingData {
-  return {
-    name: a.fullName ?? "",
-    email,
-    address: [a.addressLine1, a.addressLine2].filter(Boolean).join(", "),
-    phone: a.phone ?? undefined,
-    city: a.city,
-    postalCode: a.postalCode,
-    country: a.countryCode,
-  };
-}
-
-function AddressRadioCard({
-  address,
-  selected,
-  onSelect,
-}: {
-  address: Address;
-  selected: boolean;
-  onSelect: () => void;
-}) {
+function ConfirmationScreen({ order }: { order: OrderConfirmation }) {
   return (
-    <button
-      type="button"
-      onClick={onSelect}
-      className={`group w-full rounded-[14px] border p-4 text-left transition-all duration-150 ${
-        selected
-          ? "border-primary/60 bg-primary/5"
-          : "border-border bg-card hover:border-border/70 hover:bg-muted/20"
-      }`}
-    >
-      <div className="flex items-start gap-3">
-        <div
-          className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border transition-colors ${
-            selected
-              ? "border-primary bg-primary"
-              : "border-muted-foreground/40 group-hover:border-primary/50"
-          }`}
+    <div className="mx-auto max-w-lg rounded-[14px] border border-border bg-card p-8 sm:p-10 text-center">
+      <div className="mx-auto flex size-14 items-center justify-center rounded-full bg-primary/10 text-primary">
+        <svg
+          className="size-7"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden
         >
-          {selected && <Check className="size-2.5 text-primary-foreground" />}
-        </div>
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2 mb-1">
-            {address.label && (
-              <span className="rounded-full border border-border bg-muted/60 px-2 py-0.5 text-xs font-medium text-foreground">
-                {address.label}
-              </span>
-            )}
-            {address.isDefault && (
-              <span className="flex items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5 text-xs font-semibold text-primary">
-                <Star className="size-3 fill-primary" aria-hidden />
-                Predeterminada
-              </span>
-            )}
-          </div>
-          <p className="text-sm font-semibold text-foreground">
-            {address.fullName}
-          </p>
-          <p className="text-xs text-muted-foreground">
-            {address.addressLine1}
-            {address.addressLine2 && `, ${address.addressLine2}`}
-          </p>
-          <p className="text-xs text-muted-foreground">
-            {address.city}, {address.postalCode}
-          </p>
-          {address.phone && (
-            <p className="text-xs text-muted-foreground">{address.phone}</p>
-          )}
-        </div>
+          <path d="M20 6 9 17l-5-5" />
+        </svg>
       </div>
-    </button>
+      <h2 className="mt-5 text-xl font-semibold text-foreground">
+        ¡Pedido recibido!
+      </h2>
+      <p className="mt-2 text-sm text-muted-foreground">
+        Tu número de pedido es{" "}
+        <span className="font-mono font-semibold text-foreground">
+          #{order.orderNumber}
+        </span>
+        . Total: {formatDOPFromCents(order.totalCents)}.
+      </p>
+      <p className="mt-1 text-sm text-muted-foreground">
+        No se realizó ningún cobro en línea. Confirma tu pedido por WhatsApp
+        para coordinar el pago y la entrega.
+      </p>
+      {order.whatsappUrl && (
+        <a
+          href={order.whatsappUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-6 inline-flex items-center justify-center gap-2 rounded-[10px] bg-[#25D366] px-8 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+        >
+          Confirmar por WhatsApp
+        </a>
+      )}
+      <div className="mt-4">
+        <Link
+          href="/estado-pedido"
+          className="text-sm font-medium text-primary hover:underline"
+        >
+          Consultar estado del pedido más tarde
+        </Link>
+      </div>
+    </div>
   );
 }
 
 export function CheckoutContent({
   products,
-  savedAddresses,
   shippingMethods,
-  paymentMethods,
 }: {
   products: CatalogProduct[];
-  savedAddresses: Address[];
   shippingMethods: ShippingMethod[];
-  paymentMethods: PaymentMethodOption[];
 }) {
-  const router = useRouter();
   const { items, clearCart } = useCart();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  // Método de pago: por defecto el primero activo y no deshabilitado.
-  const activeMethod =
-    paymentMethods.find((m) => !m.isDisabled && m.isActive) ?? null;
-  const [selectedMethodCode, setSelectedMethodCode] = useState<string>(
-    activeMethod?.code ?? "payment_link",
-  );
-  const isAzul = selectedMethodCode === "azul";
-
-  const defaultAddress =
-    savedAddresses.find((a) => a.isDefault) ?? savedAddresses[0] ?? null;
-  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(
-    defaultAddress?.id ?? null,
-  );
-  const [useNewAddress, setUseNewAddress] = useState(
-    savedAddresses.length === 0,
-  );
+  const [order, setOrder] = useState<OrderConfirmation | null>(null);
 
   const [selectedShippingId, setSelectedShippingId] = useState<string | null>(
     shippingMethods[0]?.id ?? null,
@@ -197,118 +144,57 @@ export function CheckoutContent({
     }
   };
 
-  const selectedAddress =
-    !useNewAddress && selectedAddressId
-      ? (savedAddresses.find((a) => a.id === selectedAddressId) ?? null)
-      : null;
-
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
 
-    let shipping: ShippingData;
-
-    if (selectedAddress) {
-      const emailInput =
-        (
-          e.currentTarget.querySelector(
-            "#checkout-email",
-          ) as HTMLInputElement | null
-        )?.value.trim() ?? "";
-      shipping = shippingFromAddress(selectedAddress, emailInput);
-    } else {
-      const checkoutForm = e.currentTarget;
-      shipping = {
-        name: (
-          (
-            checkoutForm.querySelector(
-              "#checkout-name",
-            ) as HTMLInputElement | null
-          )?.value ?? ""
-        ).trim(),
-        email: (
-          (
-            checkoutForm.querySelector(
-              "#checkout-email",
-            ) as HTMLInputElement | null
-          )?.value ?? ""
-        ).trim(),
-        address: (
-          (
-            checkoutForm.querySelector(
-              "#checkout-address",
-            ) as HTMLTextAreaElement | null
-          )?.value ?? ""
-        ).trim(),
-        phone:
-          (
-            checkoutForm.querySelector("#checkout-phone") as HTMLInputElement
-          )?.value?.trim() || undefined,
-        city:
-          (
-            checkoutForm.querySelector("#checkout-city") as HTMLInputElement
-          )?.value?.trim() || undefined,
-        postalCode:
-          (
-            checkoutForm.querySelector("#checkout-postal") as HTMLInputElement
-          )?.value?.trim() || undefined,
-        country:
-          (
-            checkoutForm.querySelector("#checkout-country") as HTMLInputElement
-          )?.value?.trim() || undefined,
-      };
-    }
+    const form = e.currentTarget;
+    const value = (id: string) =>
+      (
+        (form.querySelector(`#${id}`) as
+          | HTMLInputElement
+          | HTMLTextAreaElement
+          | null)?.value ?? ""
+      ).trim();
 
     const result = await checkoutAction({
+      items: items.map((item) => ({
+        productId: item.productId,
+        quantity: item.quantity,
+        size: item.size ?? null,
+        color: item.color ?? null,
+      })),
       shipping: {
-        name: shipping.name,
-        email: shipping.email,
-        address: shipping.address,
-        phone: shipping.phone ?? null,
-        city: shipping.city ?? null,
-        postalCode: shipping.postalCode ?? null,
-        country: shipping.country ?? null,
+        name: value("checkout-name"),
+        email: value("checkout-email"),
+        phone: value("checkout-phone"),
+        address: value("checkout-address"),
+        city: value("checkout-city") || null,
+        postalCode: value("checkout-postal") || null,
+        country: value("checkout-country") || null,
       },
       shippingMethodId: selectedShippingId,
       couponCode: appliedCoupon,
     });
+
+    setLoading(false);
     if (!result.ok) {
-      setLoading(false);
       setError(result.error);
       return;
     }
 
-    const orderId = result.result.orderId;
-
-    // ── Azul: auto-envía un form POST a la pasarela hospedada ──
-    if (isAzul) {
-      const redirectForm = document.createElement("form");
-      redirectForm.method = "POST";
-      redirectForm.action = "/api/pagos/azul/enviar";
-      const input = document.createElement("input");
-      input.type = "hidden";
-      input.name = "orderId";
-      input.value = orderId;
-      redirectForm.appendChild(input);
-      document.body.appendChild(redirectForm);
-      redirectForm.submit();
-      return;
-    }
-
-    // ── Payment Link: crear solicitud de pago y llevar al Centro de pagos ──
-    const linkResult = await requestPaymentLinkForOrder(orderId);
-    setLoading(false);
-    if (!linkResult.ok) {
-      setError(linkResult.error);
-      return;
-    }
     clearCart();
-    router.push("/cuenta/pagos");
-    // Fuerza datos frescos en el Centro de pagos (evita la caché del router,
-    // que mostraría la página sin la nueva solicitud / sin la vista previa).
-    router.refresh();
+    setOrder({
+      orderNumber: result.result.orderNumber,
+      totalCents: result.result.totalCents,
+      whatsappUrl: result.result.whatsappUrl,
+    });
   };
+
+  if (order) {
+    return <ConfirmationScreen order={order} />;
+  }
 
   if (items.length === 0) {
     return (
@@ -351,165 +237,99 @@ export function CheckoutContent({
       onSubmit={handleSubmit}
       className="lg:grid lg:grid-cols-[1fr_380px] lg:gap-10 xl:gap-12"
     >
-      {/* Datos de envío */}
+      {/* Datos de entrega */}
       <div className="lg:min-w-0">
         <p className="mb-4 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-          Datos de envío
+          Datos de entrega
         </p>
 
         <div className="rounded-[14px] border border-border bg-card p-4 sm:p-5 space-y-5">
-          {/* Saved addresses */}
-          {savedAddresses.length > 0 && (
-            <div className="space-y-3">
-              <p className="text-sm font-semibold text-foreground">
-                Direcciones guardadas
-              </p>
-
-              {!useNewAddress && (
-                <div className="space-y-2">
-                  {savedAddresses.map((address) => (
-                    <AddressRadioCard
-                      key={address.id}
-                      address={address}
-                      selected={selectedAddressId === address.id}
-                      onSelect={() => {
-                        setSelectedAddressId(address.id);
-                        setUseNewAddress(false);
-                      }}
-                    />
-                  ))}
-                </div>
-              )}
-
-              <button
-                type="button"
-                onClick={() => {
-                  setUseNewAddress(!useNewAddress);
-                  if (!useNewAddress) setSelectedAddressId(null);
-                  else setSelectedAddressId(defaultAddress?.id ?? null);
-                }}
-                className="flex items-center gap-2 text-sm font-medium text-primary hover:underline"
-              >
-                {useNewAddress ? (
-                  <>
-                    <Check className="size-4" />
-                    Usar dirección guardada
-                  </>
-                ) : (
-                  <>
-                    <Plus className="size-4" />
-                    Usar otra dirección
-                  </>
-                )}
-              </button>
-
-              {/* Email always shown for payment confirmation */}
-              <div className="pt-1">
-                <label htmlFor="checkout-email" className={labelClass}>
-                  Email de confirmación
-                </label>
-                <input
-                  id="checkout-email"
-                  type="email"
-                  required
-                  className={inputClass}
-                  placeholder="tu@email.com"
-                />
-              </div>
+          <div>
+            <label htmlFor="checkout-name" className={labelClass}>
+              Nombre completo
+            </label>
+            <input
+              id="checkout-name"
+              type="text"
+              required
+              className={inputClass}
+              placeholder="Tu nombre"
+            />
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label htmlFor="checkout-email" className={labelClass}>
+                Correo
+              </label>
+              <input
+                id="checkout-email"
+                type="email"
+                required
+                className={inputClass}
+                placeholder="tu@email.com"
+              />
             </div>
-          )}
-
-          {/* Manual form */}
-          {(savedAddresses.length === 0 || useNewAddress) && (
-            <div className="space-y-5">
-              <div>
-                <label htmlFor="checkout-name" className={labelClass}>
-                  Nombre completo
-                </label>
-                <input
-                  id="checkout-name"
-                  type="text"
-                  required
-                  className={inputClass}
-                  placeholder="Tu nombre"
-                />
-              </div>
-              {savedAddresses.length === 0 && (
-                <div>
-                  <label htmlFor="checkout-email" className={labelClass}>
-                    Email
-                  </label>
-                  <input
-                    id="checkout-email"
-                    type="email"
-                    required
-                    className={inputClass}
-                    placeholder="tu@email.com"
-                  />
-                </div>
-              )}
-              <div>
-                <label htmlFor="checkout-address" className={labelClass}>
-                  Dirección
-                </label>
-                <textarea
-                  id="checkout-address"
-                  required
-                  rows={3}
-                  className="w-full rounded-[10px] border border-border bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors resize-none"
-                  placeholder="Calle, número, piso..."
-                />
-              </div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <label htmlFor="checkout-postal" className={labelClass}>
-                    Código postal
-                  </label>
-                  <input
-                    id="checkout-postal"
-                    type="text"
-                    className={inputClass}
-                    placeholder="10100"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="checkout-city" className={labelClass}>
-                    Ciudad
-                  </label>
-                  <input
-                    id="checkout-city"
-                    type="text"
-                    className={inputClass}
-                    placeholder="Santo Domingo"
-                  />
-                </div>
-              </div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <label htmlFor="checkout-country" className={labelClass}>
-                    País
-                  </label>
-                  <input
-                    id="checkout-country"
-                    type="text"
-                    className={inputClass}
-                    placeholder="República Dominicana"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="checkout-phone" className={labelClass}>
-                    Teléfono
-                  </label>
-                  <input
-                    id="checkout-phone"
-                    type="tel"
-                    className={inputClass}
-                    placeholder="+1 (809) 000-0000"
-                  />
-                </div>
-              </div>
+            <div>
+              <label htmlFor="checkout-phone" className={labelClass}>
+                Teléfono (WhatsApp)
+              </label>
+              <input
+                id="checkout-phone"
+                type="tel"
+                required
+                className={inputClass}
+                placeholder="+1 (809) 000-0000"
+              />
             </div>
-          )}
+          </div>
+          <div>
+            <label htmlFor="checkout-address" className={labelClass}>
+              Dirección de entrega
+            </label>
+            <textarea
+              id="checkout-address"
+              required
+              rows={3}
+              className="w-full rounded-[10px] border border-border bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors resize-none"
+              placeholder="Calle, número, referencia..."
+            />
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label htmlFor="checkout-city" className={labelClass}>
+                Ciudad
+              </label>
+              <input
+                id="checkout-city"
+                type="text"
+                className={inputClass}
+                placeholder="Santo Domingo"
+              />
+            </div>
+            <div>
+              <label htmlFor="checkout-postal" className={labelClass}>
+                Código postal
+              </label>
+              <input
+                id="checkout-postal"
+                type="text"
+                className={inputClass}
+                placeholder="10100"
+              />
+            </div>
+          </div>
+          <div>
+            <label htmlFor="checkout-country" className={labelClass}>
+              País
+            </label>
+            <input
+              id="checkout-country"
+              type="text"
+              className={inputClass}
+              placeholder="República Dominicana"
+              defaultValue="República Dominicana"
+            />
+          </div>
         </div>
       </div>
 
@@ -526,7 +346,7 @@ export function CheckoutContent({
               const lineTotal = product.priceCents * item.quantity;
               return (
                 <li
-                  key={`${item.productId}:${item.designId ?? ""}`}
+                  key={`${item.productId}:${item.size ?? ""}:${item.color ?? ""}`}
                   className="flex gap-4 p-4 sm:p-5"
                 >
                   <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-[10px] bg-muted ring-1 ring-border/50">
@@ -543,6 +363,11 @@ export function CheckoutContent({
                     <p className="text-sm font-semibold text-foreground">
                       {product.name}
                     </p>
+                    {item.size && (
+                      <p className="text-xs text-muted-foreground">
+                        {item.size}
+                      </p>
+                    )}
                     <p className="font-mono text-xs text-muted-foreground tabular-nums">
                       {product.price} × {item.quantity}
                     </p>
@@ -638,20 +463,6 @@ export function CheckoutContent({
             )}
           </div>
 
-          {/* Método de pago */}
-          {paymentMethods.length > 0 && (
-            <div className="border-t border-border p-5 sm:p-6 space-y-3">
-              <p className="text-sm font-semibold text-foreground">
-                Método de pago
-              </p>
-              <PaymentMethodSelector
-                methods={paymentMethods}
-                value={selectedMethodCode}
-                onChange={setSelectedMethodCode}
-              />
-            </div>
-          )}
-
           <div className="border-t border-border p-5 sm:p-6">
             <dl className="mb-4 space-y-1.5 text-sm">
               <div className="flex justify-between gap-4">
@@ -693,18 +504,12 @@ export function CheckoutContent({
               disabled={loading}
               className="w-full rounded-[10px] bg-primary py-3 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-60 disabled:pointer-events-none"
             >
-              {loading
-                ? "Procesando…"
-                : isAzul
-                  ? "Pagar con AZUL"
-                  : "Solicitar enlace de pago"}
+              {loading ? "Enviando…" : "Confirmar pedido"}
             </button>
             <p className="mt-3 text-center text-xs text-muted-foreground">
-              {isAzul
-                ? "Serás redirigido al pago seguro de Banco Popular (AZUL). Al confirmar aceptas el pedido."
-                : "Confirmaremos tu pedido y te enviaremos un enlace de pago seguro. Podrás verlo en tu Centro de pagos."}
+              No se realiza ningún cobro en línea. Te contactaremos por
+              WhatsApp o correo para coordinar el pago y la entrega.
             </p>
-            {isAzul && <SecurityBadges className="mt-3 justify-center" />}
           </div>
         </div>
       </aside>

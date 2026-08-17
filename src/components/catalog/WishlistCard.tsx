@@ -4,9 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { ShoppingBag, Trash2 } from "lucide-react";
 import { useCart } from "@/contexts/cart-context";
-import { useAuth } from "@/lib/auth-context";
 import { useWishlist } from "@/contexts/wishlist-context";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { CatalogProduct } from "@/types";
 import { formatDateShort } from "@/lib/format-date";
@@ -42,10 +41,8 @@ export function WishlistCard({
   savedAt?: string;
 }) {
   const { addItem } = useCart();
-  const { user, isLoading } = useAuth();
   const { toggleWishlist } = useWishlist();
   const router = useRouter();
-  const pathname = usePathname();
   const [justAdded, setJustAdded] = useState(false);
 
   const hasDiscount =
@@ -67,10 +64,6 @@ export function WishlistCard({
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!isLoading && !user) {
-      router.push(`/login?next=${encodeURIComponent(pathname)}`);
-      return;
-    }
     if (hasSizes) {
       router.push(href);
       return;

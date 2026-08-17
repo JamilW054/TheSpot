@@ -67,13 +67,11 @@ interface CartItemCardProps {
   onUpdate: (
     productId: string,
     qty: number,
-    designId?: string | null,
     size?: string | null,
     color?: string | null,
   ) => void;
   onRemove: (
     productId: string,
-    designId?: string | null,
     size?: string | null,
     color?: string | null,
   ) => void;
@@ -126,11 +124,6 @@ function CartItemCard({ item, product, onUpdate, onRemove }: CartItemCardProps) 
             ) : null}
           </span>
         ) : null}
-        {item.designId ? (
-          <span className="text-[11px] font-medium text-muted-foreground">
-            Diseño personalizado
-          </span>
-        ) : null}
         <span className="font-mono text-sm font-bold text-primary">
           {product.price}
         </span>
@@ -141,9 +134,7 @@ function CartItemCard({ item, product, onUpdate, onRemove }: CartItemCardProps) 
         {/* Eliminar */}
         <button
           type="button"
-          onClick={() =>
-            onRemove(item.productId, item.designId, item.size, item.color)
-          }
+          onClick={() => onRemove(item.productId, item.size, item.color)}
           className="rounded-md p-1 text-muted-foreground/50 transition-colors hover:text-destructive"
           aria-label="Quitar del carrito"
         >
@@ -155,13 +146,7 @@ function CartItemCard({ item, product, onUpdate, onRemove }: CartItemCardProps) 
           <button
             type="button"
             onClick={() =>
-              onUpdate(
-                item.productId,
-                item.quantity - 1,
-                item.designId,
-                item.size,
-                item.color,
-              )
+              onUpdate(item.productId, item.quantity - 1, item.size, item.color)
             }
             className="flex h-8 w-8 items-center justify-center text-lg leading-none text-muted-foreground transition-colors hover:text-foreground"
             aria-label="Reducir cantidad"
@@ -174,13 +159,7 @@ function CartItemCard({ item, product, onUpdate, onRemove }: CartItemCardProps) 
           <button
             type="button"
             onClick={() =>
-              onUpdate(
-                item.productId,
-                item.quantity + 1,
-                item.designId,
-                item.size,
-                item.color,
-              )
+              onUpdate(item.productId, item.quantity + 1, item.size, item.color)
             }
             className="flex h-8 w-8 items-center justify-center text-lg leading-none text-muted-foreground transition-colors hover:text-foreground"
             aria-label="Aumentar cantidad"
@@ -297,7 +276,7 @@ function PromoInput({ code, onChange, onApply, error, applied }: PromoInputProps
           type="text"
           value={code}
           onChange={(e) => onChange(e.target.value.toUpperCase())}
-          placeholder="BUXXEP10"
+          placeholder="JWPARFUM10"
           className="flex-1 rounded-[10px] border border-border bg-background px-3 py-2 font-mono text-sm text-foreground placeholder:text-muted-foreground/50 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15"
         />
         <button
@@ -368,10 +347,10 @@ function OrderSummary({
             href={`/carrito/checkout?shipping=${shippingId}`}
             className="mt-4 flex w-full items-center justify-center rounded-[10px] bg-primary py-3 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
           >
-            Confirmar y pagar
+            Finalizar pedido
           </Link>
           <p className="mt-2 text-center text-xs text-muted-foreground">
-            Pago seguro en el siguiente paso
+            Sin pago en línea: coordinamos el cobro por WhatsApp
           </p>
         </>
       )}
@@ -401,7 +380,7 @@ export function CartContent({
   useEffect(() => {
     for (const item of items) {
       if (!productMap.has(item.productId)) {
-        removeItem(item.productId, item.designId, item.size, item.color);
+        removeItem(item.productId, item.size, item.color);
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -444,7 +423,7 @@ export function CartContent({
               if (!product) return null;
               return (
                 <CartItemCard
-                  key={`${item.productId}:${item.designId ?? ""}:${item.size ?? ""}:${item.color ?? ""}`}
+                  key={`${item.productId}:${item.size ?? ""}:${item.color ?? ""}`}
                   item={item}
                   product={product}
                   onUpdate={updateQuantity}
@@ -508,7 +487,7 @@ export function CartContent({
             href={`/carrito/checkout?shipping=${shippingId}`}
             className="flex-1 rounded-[10px] bg-primary py-3 text-center text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
           >
-            Confirmar y pagar
+            Finalizar pedido
           </Link>
         </div>
       </div>

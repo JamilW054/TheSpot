@@ -2,7 +2,6 @@
 
 import { getOrderStatusAction } from "@/app/(public)/estado-pedido/actions";
 import { OrderDetailView } from "@/components/order/OrderDetailView";
-import Link from "next/link";
 import { useState } from "react";
 import type { OrderStatusDetail } from "@/types";
 
@@ -65,16 +64,6 @@ export function OrderStatusContent() {
             {error}
           </p>
         )}
-        <p className="mt-4 text-sm text-muted-foreground">
-          ¿Tienes cuenta?{" "}
-          <Link
-            href="/login"
-            className="font-medium text-foreground hover:text-primary transition-colors"
-          >
-            Inicia sesión
-          </Link>{" "}
-          para ver tus pedidos en un solo lugar.
-        </p>
       </div>
 
       {result && (

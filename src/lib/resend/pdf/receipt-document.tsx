@@ -224,10 +224,10 @@ export function ReceiptDocument(data: CompraEmailData) {
   const itemCount = data.items.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
-    <Document title={`Recibo ${data.orderNumber} — Buxxep`}>
+    <Document title={`Recibo ${data.orderNumber} — JW PARFUM`}>
       <Page size="A4" style={styles.page}>
         <View style={styles.headerBar} />
-        <Text style={styles.brand}>BUXXEP</Text>
+        <Text style={styles.brand}>JW PARFUM</Text>
         <Text style={styles.brandSub}>RECIBO DE COMPRA</Text>
 
         <Text style={styles.title}>Pedido #{data.orderNumber}</Text>
@@ -274,7 +274,7 @@ export function ReceiptDocument(data: CompraEmailData) {
         <View style={styles.table}>
           {data.items.map((item, i) => {
             const metaParts = [
-              item.size ? `Talla ${item.size}` : null,
+              item.size ? `Tamaño ${item.size}` : null,
               item.color ? `Color ${item.color}` : null,
             ].filter((v): v is string => Boolean(v));
             return (
@@ -328,7 +328,7 @@ export function ReceiptDocument(data: CompraEmailData) {
         <Text style={styles.thanks}>Gracias por tu compra</Text>
 
         <Text style={styles.footer}>
-          {`BUXXEP · República Dominicana · ID ${data.orderId}\nEste recibo es un comprobante de compra sin validez fiscal.`}
+          {`JW PARFUM · República Dominicana · ID ${data.orderId}\nEste recibo es un comprobante de compra sin validez fiscal.`}
         </Text>
       </Page>
     </Document>

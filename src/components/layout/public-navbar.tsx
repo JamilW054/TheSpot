@@ -16,9 +16,8 @@ import {
   CATALOG_CHROME_HIDE_OFFSET,
   useHideOnScroll,
 } from "@/hooks/use-hide-on-scroll";
-import { useAuth } from "@/lib/auth-context";
 
-const LOGO_SRC = "/resources/buxxep-transparent.png";
+const LOGO_SRC = "/resources/jwparfum-logo.svg";
 const PRIMARY = "#3CC8F7";
 
 const BASE_ITEMS = [
@@ -31,23 +30,7 @@ const BASE_ITEMS = [
   },
 ];
 
-const GUEST_ITEMS = [
-  { label: "Entrar", ariaLabel: "Iniciar sesión", link: "/login" },
-  { label: "Registrarse", ariaLabel: "Crear cuenta", link: "/registro" },
-];
-
-const USER_ITEMS = [
-  { label: "Mi Cuenta", ariaLabel: "Ver mi cuenta", link: "/cuenta" },
-  {
-    label: "Mis Pedidos",
-    ariaLabel: "Ver mis pedidos",
-    link: "/cuenta/pedidos",
-  },
-];
-
-const SOCIAL_ITEMS = [
-  { label: "Instagram", link: "https://www.instagram.com/buxxep/" },
-];
+const SOCIAL_ITEMS: { label: string; link: string }[] = [];
 
 const DARK_COLORS = ["#0c0c0e", "#1a1a1f", "#2aa8d4", PRIMARY];
 const LIGHT_COLORS = ["#ffffff", "#f4f4f5", "#2aa8d4", PRIMARY];
@@ -57,7 +40,6 @@ interface Props {
 }
 
 export function PublicNavbar({ categories }: Props) {
-  const { user } = useAuth();
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const pathname = usePathname();
@@ -76,13 +58,11 @@ export function PublicNavbar({ categories }: Props) {
   );
   const hidden = isCatalog && !scrollVisible && !menuOpen;
 
-  const menuItems = [...BASE_ITEMS, ...(user ? USER_ITEMS : GUEST_ITEMS)];
-
   return (
     <StaggeredMenu
       className={`transition-transform duration-300 ease-in-out ${hidden ? "-translate-y-30" : "translate-y-0"}`}
       position="right"
-      items={menuItems}
+      items={BASE_ITEMS}
       socialItems={SOCIAL_ITEMS}
       displaySocials
       displayItemNumbering
@@ -91,7 +71,7 @@ export function PublicNavbar({ categories }: Props) {
       changeMenuColorOnOpen
       colors={isDark ? DARK_COLORS : LIGHT_COLORS}
       logoUrl={LOGO_SRC}
-      logoAlt="Buxxep - Ir a inicio"
+      logoAlt="JW PARFUM - Ir a inicio"
       accentColor={PRIMARY}
       isFixed
       closeOnClickAway

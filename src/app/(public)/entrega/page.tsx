@@ -2,12 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Política de Entrega — Buxxep",
+  title: "Política de Entrega — JW PARFUM",
   description:
-    "Conoce los plazos, costos y condiciones de envío de tus pedidos en Buxxep.",
+    "Conoce los plazos, zonas y condiciones de entrega de tus pedidos en JW PARFUM.",
 };
 
-const LAST_UPDATED = "16 de mayo de 2026";
+const LAST_UPDATED = "16 de agosto de 2026";
+const SUPPORT_EMAIL = "jamilwilliams054@gmail.com";
+const SUPPORT_PHONE = "809-761-2875";
 
 export default function EntregaPage() {
   return (
@@ -23,11 +25,9 @@ export default function EntregaPage() {
       {/* Highlight box */}
       <div className="mb-8 rounded-lg border border-primary/30 bg-primary/5 p-4">
         <p className="text-sm text-foreground">
-          <strong>Resumen:</strong> Los pedidos se procesan y fabrican en un plazo de{" "}
-          <strong>3 a 5 días hábiles</strong>. El envío dentro de la República Dominicana toma
-          entre <strong>2 y 5 días hábiles</strong> adicionales según tu ubicación. El tiempo
-          total estimado desde la compra hasta la entrega es de{" "}
-          <strong>5 a 10 días hábiles</strong>.
+          <strong>Resumen:</strong> Nuestros perfumes están en inventario, listos para enviar. Tras
+          confirmar tu pedido por WhatsApp, coordinamos la entrega — normalmente{" "}
+          <strong>1 a 3 días hábiles</strong> según tu ubicación dentro de la República Dominicana.
         </p>
       </div>
 
@@ -39,38 +39,17 @@ export default function EntregaPage() {
             <strong className="text-foreground">República Dominicana</strong>. No realizamos envíos
             internacionales por el momento.
           </p>
-          <p className="mt-2">
-            Las zonas de entrega disponibles se mostrarán durante el proceso de compra al ingresar
-            tu dirección. Si tu ubicación no está cubierta, te lo notificaremos antes de completar
-            el pago.
+        </Section>
+
+        <Section title="2. Cómo se coordina la entrega">
+          <p>
+            No hay pago en línea: al confirmar tu pedido en el sitio, te
+            contactamos por WhatsApp para coordinar contigo el método de pago,
+            la dirección exacta y el horario de entrega.
           </p>
         </Section>
 
-        <Section title="2. Tiempo de procesamiento y fabricación">
-          <p>
-            Nuestros productos son fabricados bajo pedido con el diseño personalizado que
-            seleccionaste. Una vez confirmado el pago, el tiempo de producción es de:
-          </p>
-          <ul className="mt-3 list-inside list-disc space-y-1 pl-2">
-            <li>
-              <strong className="text-foreground">3 a 5 días hábiles</strong> para la mayoría de
-              productos (camisetas, polos, hoodies).
-            </li>
-            <li>
-              Pedidos con múltiples unidades o diseños complejos pueden requerir hasta{" "}
-              <strong className="text-foreground">7 días hábiles</strong>.
-            </li>
-          </ul>
-          <p className="mt-2">
-            Los días hábiles no incluyen sábados, domingos ni feriados nacionales dominicanos.
-          </p>
-        </Section>
-
-        <Section title="3. Tiempo de envío">
-          <p>
-            Una vez que tu pedido esté listo y entregado a la empresa de mensajería, el tiempo de
-            entrega estimado es:
-          </p>
+        <Section title="3. Tiempo de entrega estimado">
           <ul className="mt-3 list-inside list-disc space-y-2 pl-2">
             <li>
               <strong className="text-foreground">Gran Santo Domingo:</strong> 1 a 2 días hábiles.
@@ -84,38 +63,28 @@ export default function EntregaPage() {
               3 a 5 días hábiles.
             </li>
           </ul>
+          <p className="mt-2">
+            Los días hábiles no incluyen sábados, domingos ni feriados nacionales.
+          </p>
         </Section>
 
         <Section title="4. Costos de envío">
           <p>
-            El costo de envío se calcula según tu dirección de entrega y se muestra claramente
-            durante el proceso de pago antes de confirmar tu orden.
+            El costo de envío depende del método elegido durante el checkout y
+            se muestra claramente en el carrito antes de confirmar tu pedido.
           </p>
-          <ul className="mt-3 list-inside list-disc space-y-1 pl-2">
-            <li>Los costos de envío están sujetos a cambios según el servicio de mensajería.</li>
-            <li>
-              En caso de promociones de envío gratis, se indicará claramente en la tienda y en el
-              carrito de compras.
-            </li>
-          </ul>
         </Section>
 
         <Section title="5. Confirmación y seguimiento del pedido">
-          <p>
-            Una vez que tu pago sea procesado exitosamente:
-          </p>
           <ol className="mt-3 list-inside list-decimal space-y-2 pl-2">
             <li>
-              Recibirás un <strong className="text-foreground">correo de confirmación</strong> con
-              el resumen de tu pedido y número de orden.
+              Al confirmar tu pedido recibirás un{" "}
+              <strong className="text-foreground">correo con el resumen</strong> y tu número de
+              pedido.
             </li>
+            <li>Te escribiremos por WhatsApp para coordinar el pago y la entrega.</li>
             <li>
-              Cuando tu pedido sea enviado, recibirás un correo con el{" "}
-              <strong className="text-foreground">número de rastreo</strong> de la empresa de
-              mensajería.
-            </li>
-            <li>
-              Puedes consultar el estado de tu pedido en cualquier momento en la sección{" "}
+              Puedes consultar el estado de tu pedido en cualquier momento en{" "}
               <Link href="/estado-pedido" className="text-primary hover:underline">
                 Estado del pedido
               </Link>
@@ -125,55 +94,39 @@ export default function EntregaPage() {
         </Section>
 
         <Section title="6. Condiciones de entrega">
-          <p>Para garantizar una entrega exitosa:</p>
           <ul className="mt-3 list-inside list-disc space-y-2 pl-2">
             <li>
-              Asegúrate de que la dirección ingresada sea completa y correcta (calle, número,
+              Asegúrate de que la dirección proporcionada sea completa y correcta (calle, número,
               sector, ciudad y referencia si aplica).
             </li>
             <li>
-              Debe haber una persona disponible para recibir el paquete. Si no hay nadie en el
-              domicilio, la empresa de mensajería dejará un aviso e intentará una segunda entrega.
+              Debe haber una persona disponible para recibir el paquete en el horario coordinado.
             </li>
             <li>
-              Buxxep no se hace responsable por demoras causadas por información de dirección
-              incorrecta o incompleta proporcionada por el cliente.
+              JW PARFUM no se hace responsable por demoras causadas por información de dirección
+              incorrecta o incompleta.
             </li>
           </ul>
         </Section>
 
-        <Section title="7. Pedido perdido o no entregado">
+        <Section title="7. Pedido no entregado">
           <p>
-            Si tu pedido no llega dentro del plazo máximo estimado o el rastreo muestra un estado
-            inusual, contáctanos de inmediato:
+            Si tu pedido no llega dentro del plazo coordinado, contáctanos de inmediato:
           </p>
           <ul className="mt-3 list-inside list-disc space-y-1 pl-2">
             <li>
               Correo:{" "}
-              <a href="mailto:soporte@buxxep.com" className="text-primary hover:underline">
-                soporte@buxxep.com
+              <a href={`mailto:${SUPPORT_EMAIL}`} className="text-primary hover:underline">
+                {SUPPORT_EMAIL}
               </a>
             </li>
             <li>
-              Teléfono: <a href="tel:+18095550000" className="text-primary hover:underline">+1 (809) 555-0000</a>
-            </li>
-            <li>
-              Instagram:{" "}
-              <a
-                href="https://instagram.com/buxxep"
-                className="text-primary hover:underline"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                @buxxep
+              WhatsApp:{" "}
+              <a href={`tel:+1${SUPPORT_PHONE.replace(/-/g, "")}`} className="text-primary hover:underline">
+                {SUPPORT_PHONE}
               </a>
             </li>
           </ul>
-          <p className="mt-2">
-            Investigaremos el caso con la empresa de mensajería y te mantendremos informado.
-            Si el paquete se confirma como perdido por causa atribuible al transportista,
-            procederemos a reenviar el pedido sin costo adicional.
-          </p>
         </Section>
 
         <Section title="8. Daños durante el transporte">
@@ -182,7 +135,7 @@ export default function EntregaPage() {
             <Link href="/devoluciones" className="text-primary hover:underline">
               Política de Devoluciones
             </Link>{" "}
-            para conocer los pasos a seguir. Deberás reportarlo dentro de las{" "}
+            para conocer los pasos a seguir. Repórtalo dentro de las{" "}
             <strong className="text-foreground">48 horas</strong> siguientes a la recepción.
           </p>
         </Section>

@@ -1,54 +1,24 @@
 "use client";
 
 import {
-  BarChart2,
-  Bell,
-  CreditCard,
-  FileText,
-  FolderTree,
-  Handshake,
-  HelpCircle,
-  Image as ImageIcon,
-  Layers,
   LayoutDashboard,
+  Layers,
   LogOut,
-  Package,
   PanelLeftClose,
-  PlusCircle,
   Ruler,
   Settings,
-  Shirt,
   ShoppingCart,
   Store,
   Tag,
   Ticket,
   Truck,
-  Wallet,
-  Warehouse,
-  Zap,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Fragment } from "react";
 import type { NavItem } from "@/config/navigation";
-import { ADMIN_NAV, APP_NAV } from "@/config/navigation";
-import { ROLE } from "@/lib/auth/roles";
+import { ADMIN_NAV } from "@/config/navigation";
 import { useAuth } from "@/lib/auth-context";
-
-export type SidebarVariant = "app" | "admin";
-
-const NAV_BY_VARIANT: Record<SidebarVariant, NavItem[]> = {
-  app: APP_NAV,
-  admin: ADMIN_NAV,
-};
-
-const APP_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
-  LayoutDashboard,
-  Layers,
-  Package,
-  HelpCircle,
-  Store,
-};
 
 const ADMIN_ICONS: Record<
   string,
@@ -56,26 +26,13 @@ const ADMIN_ICONS: Record<
 > = {
   LayoutDashboard,
   ShoppingCart,
-  FileText,
   Store,
   Layers,
-  PlusCircle,
   Ruler,
-  Shirt,
-  BarChart2,
   Settings,
-  FolderTree,
   Tag,
-  Image: ImageIcon,
   Ticket,
-  Zap,
-  Bell,
   Truck,
-  Wallet,
-  Warehouse,
-  HelpCircle,
-  CreditCard,
-  Handshake,
 };
 
 function navItemActive(
@@ -96,27 +53,22 @@ function navItemActive(
 }
 
 export interface AppSidebarProps {
-  variant?: SidebarVariant;
   open?: boolean;
   onClose?: () => void;
   collapsed?: boolean;
   onCollapsedChange?: (collapsed: boolean) => void;
 }
 
+/** Sidebar del panel admin — único login del sitio, no hay cuentas de cliente. */
 export function AppSidebar({
-  variant = "app",
   open = false,
   onClose,
   collapsed = false,
   onCollapsedChange,
 }: AppSidebarProps) {
   const pathname = usePathname();
-  const { user, logout } = useAuth();
-  const rawItems = NAV_BY_VARIANT[variant];
-  const items =
-    variant === "app"
-      ? rawItems.filter((item) => !item.adminOnly || user?.role === ROLE.ADMIN)
-      : rawItems;
+  const { logout } = useAuth();
+  const items = ADMIN_NAV;
   const hiddenOnDesktop = collapsed;
 
   return (
@@ -130,16 +82,12 @@ export function AppSidebar({
         }`}
       />
       <aside
-        aria-label={
-          variant === "admin"
-            ? "Navegación de administración"
-            : "Navegación de la aplicación"
-        }
+        aria-label="Navegación de administración"
         className={`
           fixed md:sticky top-0 left-0 z-50 w-64 shrink-0
           min-h-screen h-screen
           flex flex-col border-r border-border
-          ${variant === "admin" ? "bg-(--admin-sidebar)" : "bg-card"}
+          bg-(--admin-sidebar)
           shadow-sm
           transition-transform duration-200 ease-out
           ${open ? "translate-x-0" : "-translate-x-full"}
@@ -150,20 +98,12 @@ export function AppSidebar({
         <div className="scrollbar-hide flex flex-1 flex-col overflow-y-auto py-4 px-3">
           <div className="flex items-center justify-between gap-2 px-2 mb-5">
             <div className="flex flex-col">
-              <span
-                className={`text-[15px] font-semibold tracking-tight ${
-                  variant === "admin"
-                    ? "text-(--admin-brand-strong)"
-                    : "text-primary"
-                }`}
-              >
-                Buxxep
+              <span className="text-[15px] font-semibold tracking-tight text-(--admin-brand-strong)">
+                JW PARFUM
               </span>
-              {variant === "admin" && (
-                <span className="text-[11px] text-muted-foreground">
-                  Panel admin
-                </span>
-              )}
+              <span className="text-[11px] text-muted-foreground">
+                Panel admin
+              </span>
             </div>
             {onCollapsedChange && (
               <button
@@ -181,19 +121,9 @@ export function AppSidebar({
             {items.map((item, index) => {
               const prev = items[index - 1];
               const showSectionHeading =
-                variant === "admin" &&
-                item.adminSection &&
-                item.adminSection !== prev?.adminSection;
-              const isActive =
-                variant === "admin"
-                  ? navItemActive(pathname, item.href, rawItems)
-                  : pathname === item.href ||
-                    (item.href !== "/" &&
-                      item.href !== "/admin" &&
-                      (pathname.startsWith(`${item.href}/`) ||
-                        pathname === item.href));
-              const iconMap = variant === "admin" ? ADMIN_ICONS : APP_ICONS;
-              const Icon = item.icon ? iconMap[item.icon] : null;
+                item.adminSection && item.adminSection !== prev?.adminSection;
+              const isActive = navItemActive(pathname, item.href, items);
+              const Icon = item.icon ? ADMIN_ICONS[item.icon] : null;
               return (
                 <Fragment key={`${item.href}-${item.label}`}>
                   {showSectionHeading ? (
@@ -212,9 +142,7 @@ export function AppSidebar({
                     focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-card
                     ${
                       isActive
-                        ? variant === "admin"
-                          ? "bg-(--admin-brand-soft) text-(--admin-brand-strong)"
-                          : "bg-primary/10 text-primary"
+                        ? "bg-(--admin-brand-soft) text-(--admin-brand-strong)"
                         : "text-muted-foreground hover:bg-muted/80 hover:text-foreground"
                     }
                   `}
@@ -232,21 +160,19 @@ export function AppSidebar({
           </nav>
         </div>
 
-        {variant === "admin" && (
-          <div className="border-t border-border p-3">
-            <button
-              type="button"
-              onClick={() => {
-                logout();
-                onClose?.();
-              }}
-              className="flex w-full items-center gap-2.5 rounded-[10px] px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-            >
-              <LogOut className="size-4 shrink-0" aria-hidden />
-              Cerrar sesión
-            </button>
-          </div>
-        )}
+        <div className="border-t border-border p-3">
+          <button
+            type="button"
+            onClick={() => {
+              logout();
+              onClose?.();
+            }}
+            className="flex w-full items-center gap-2.5 rounded-[10px] px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+          >
+            <LogOut className="size-4 shrink-0" aria-hidden />
+            Cerrar sesión
+          </button>
+        </div>
       </aside>
     </>
   );

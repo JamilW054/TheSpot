@@ -9,8 +9,6 @@ import {
   useMemo,
   useState,
 } from "react";
-import { checkAccountStatusOnLogin } from "@/lib/actions/account";
-import { syncProfileEmail } from "@/lib/actions/profile";
 import {
   ROLE_DB,
   resolveUserRole,
@@ -28,20 +26,9 @@ export interface User {
   role: UserRole;
 }
 
-export type RegisterResult =
-  | { needsEmailConfirmation: true }
-  | { needsEmailConfirmation?: false };
-
 export interface AuthContextValue {
   user: User | null;
   login: (email: string, password: string) => Promise<void>;
-  register: (
-    email: string,
-    password: string,
-    name: string,
-    username?: string,
-    phone?: string,
-  ) => Promise<RegisterResult>;
   logout: () => void;
   isLoading: boolean;
 }
@@ -72,11 +59,11 @@ function userFromSession(
 }
 
 /**
- * Crea la fila en `profiles` si aún no existe (1:1 con auth.users).
- * Sustituye al trigger de base de datos: el perfil se materializa en código la
- * primera vez que el usuario tiene sesión (registro con auto-confirm o primer
- * login tras confirmar el correo). `username` es NOT NULL, así que cae al local
- * del email si el metadata no trae uno; el `id` único evita duplicados.
+ * Crea la fila en `profiles` si aún no existe (1:1 con auth.users). Red de
+ * seguridad defensiva: normalmente `pnpm bootstrap-admin` ya crea el perfil
+ * del admin, pero si faltara, se materializa aquí en el primer login.
+ * `username` es NOT NULL, así que cae al local del email si el metadata no
+ * trae uno; el `id` único evita duplicados.
  */
 async function ensureProfile(
   supabase: ReturnType<typeof createClient>,
@@ -169,15 +156,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_OUT" && typeof window !== "undefined") {
-        const PROTECTED = [
-          "/admin",
-          "/cuenta",
-          "/editor",
-          "/guia",
-          "/lineas",
-          "/recursos",
-          "/soporte",
-        ];
+        // Único login del sitio: el admin en /admin. Sin cuentas de cliente,
+        // no hay más zonas protegidas que forzar a /login al cerrar sesión.
+        const PROTECTED = ["/admin"];
         const onProtected = PROTECTED.some(
           (p) =>
             window.location.pathname === p ||
@@ -256,63 +237,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
         }
         throw new Error(msg);
       }
-      // Iniciar sesión dentro de los 30 días restaura la cuenta; si venció el
-      // período de gracia, el servidor cierra la sesión y la bloqueamos aquí.
-      const account = await checkAccountStatusOnLogin();
-      if (account.status === "expired") {
-        await supabase.auth.signOut();
-        setUser(null);
-        setIsLoading(false);
-        throw new Error(account.message ?? "Esta cuenta fue eliminada.");
-      }
       const u = await enrichUserFromProfile(supabase, data.session);
       setUser(u);
       setIsLoading(false);
-    },
-    [supabase],
-  );
-
-  const register = useCallback(
-    async (
-      email: string,
-      password: string,
-      name: string,
-      username?: string,
-      phone?: string,
-    ): Promise<RegisterResult> => {
-      setIsLoading(true);
-      const origin =
-        typeof window !== "undefined" ? window.location.origin : "";
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: name.trim() || undefined,
-            username: username?.trim() || undefined,
-            phone: phone?.trim() || undefined,
-          },
-          emailRedirectTo: `${origin}/auth/callback`,
-        },
-      });
-      if (error) {
-        setIsLoading(false);
-        throw new Error(error.message ?? "No se pudo crear la cuenta.");
-      }
-      // Guarda el correo en profiles (el perfil ya lo creó el trigger). El
-      // user.id existe aunque falte confirmar el correo. Best-effort.
-      if (data.user?.id) {
-        void syncProfileEmail(data.user.id, email);
-      }
-      if (data.session) {
-        const u = await enrichUserFromProfile(supabase, data.session);
-        setUser(u);
-        setIsLoading(false);
-        return { needsEmailConfirmation: false };
-      }
-      setIsLoading(false);
-      setUser(null);
-      return { needsEmailConfirmation: true };
     },
     [supabase],
   );
@@ -323,8 +250,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, [supabase]);
 
   const value = useMemo<AuthContextValue>(
-    () => ({ user, login, register, logout, isLoading }),
-    [user, login, register, logout, isLoading],
+    () => ({ user, login, logout, isLoading }),
+    [user, login, logout, isLoading],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

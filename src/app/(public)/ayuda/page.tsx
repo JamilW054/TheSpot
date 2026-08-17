@@ -3,16 +3,14 @@ import Link from "next/link";
 import { ORDER_STATUS_PAGE } from "@/config/navigation";
 
 export const metadata: Metadata = {
-  title: "Centro de Ayuda — Buxxep",
+  title: "Centro de Ayuda — JW PARFUM",
   description:
-    "Respuestas a las preguntas más frecuentes sobre pedidos, pagos, envíos, devoluciones y cuentas en Buxxep, más los canales de contacto directo con soporte.",
+    "Respuestas a las preguntas más frecuentes sobre pedidos, entrega y devoluciones en JW PARFUM, más los canales de contacto directo.",
 };
 
-const LAST_UPDATED = "25 de julio de 2026";
-const SUPPORT_EMAIL = "soportebuxxep@gmail.com";
-const SUPPORT_PHONE = "809-828-9979";
-const INSTAGRAM_HANDLE = "@buxxep";
-const INSTAGRAM_URL = "https://instagram.com/buxxep";
+const LAST_UPDATED = "16 de agosto de 2026";
+const SUPPORT_EMAIL = "jamilwilliams054@gmail.com";
+const SUPPORT_PHONE = "809-761-2875";
 
 export default function AyudaPage() {
   return (
@@ -38,22 +36,13 @@ export default function AyudaPage() {
             className="text-primary hover:underline underline-offset-2"
           >
             {SUPPORT_EMAIL}
-          </a>
-          , llámanos al{" "}
+          </a>{" "}
+          o por WhatsApp al{" "}
           <a
             href={`tel:+1${SUPPORT_PHONE.replace(/-/g, "")}`}
             className="text-primary hover:underline underline-offset-2"
           >
             {SUPPORT_PHONE}
-          </a>{" "}
-          o escríbenos por Instagram{" "}
-          <a
-            href={INSTAGRAM_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-primary hover:underline underline-offset-2"
-          >
-            {INSTAGRAM_HANDLE}
           </a>
           . Respondemos en días hábiles.
         </p>
@@ -69,34 +58,24 @@ export default function AyudaPage() {
             >
               catálogo
             </Link>
-            , elige el producto, la variante y la talla que quieras, agrégalo
-            al carrito y completa el pago. Un pedido queda confirmado
-            únicamente cuando el pago es aprobado.
+            , elige el perfume y el tamaño que quieras, agrégalo al carrito y
+            completa el checkout con tus datos de contacto. No necesitas crear
+            una cuenta.
           </p>
         </Section>
 
-        <Section title="¿Qué métodos de pago aceptan?">
+        <Section title="¿Cómo pago mi pedido?">
           <p>
-            Aceptamos tarjetas Visa, Mastercard, Maestro, American Express,
-            Discover, Diners Club y JCB, además de Apple Pay y Google Pay. Los
-            pagos se procesan a través de AZUL con cifrado TLS y autenticación
-            3D Secure; Buxxep no almacena datos de tu tarjeta. Más detalles en{" "}
-            <Link
-              href="/seguridad"
-              className="text-primary hover:underline underline-offset-2"
-            >
-              Seguridad de Datos
-            </Link>
-            .
+            No cobramos en línea: al completar el pedido queda pendiente y te
+            contactamos por WhatsApp para coordinar el pago y la entrega.
           </p>
         </Section>
 
         <Section title="¿Cuánto tarda mi pedido en llegar?">
           <p>
-            Los pedidos se fabrican en un plazo de 3 a 5 días hábiles y el
-            envío dentro de la República Dominicana toma entre 2 y 5 días
-            hábiles adicionales, según tu ubicación. El tiempo total estimado
-            es de 5 a 10 días hábiles. Consulta{" "}
+            Nuestros perfumes están en inventario y listos para enviar. El
+            tiempo de entrega dentro de la República Dominicana es de 1 a 5
+            días hábiles según tu ubicación. Consulta{" "}
             <Link
               href="/entrega"
               className="text-primary hover:underline underline-offset-2"
@@ -115,25 +94,16 @@ export default function AyudaPage() {
               className="text-primary hover:underline underline-offset-2"
             >
               {ORDER_STATUS_PAGE.label}
-            </Link>{" "}
-            o, si iniciaste sesión, desde{" "}
-            <Link
-              href="/cuenta/pedidos"
-              className="text-primary hover:underline underline-offset-2"
-            >
-              Mis pedidos
             </Link>
-            .
+            {" "}con el número de pedido que te dimos al confirmarlo.
           </p>
         </Section>
 
-        <Section title="¿Puedo cambiar o devolver un producto?">
+        <Section title="¿Puedo cambiar o devolver un perfume?">
           <p>
             Sí, dentro de los 7 días calendario posteriores a la recepción,
-            siempre que el producto tenga defectos de fabricación o no
-            corresponda a lo ordenado. Los productos personalizados no tienen
-            devolución salvo error nuestro. Revisa el procedimiento completo
-            en{" "}
+            siempre que el frasco esté sellado y sin abrir, o tenga un defecto
+            de fabricación. Revisa el procedimiento completo en{" "}
             <Link
               href="/devoluciones"
               className="text-primary hover:underline underline-offset-2"
@@ -144,40 +114,10 @@ export default function AyudaPage() {
           </p>
         </Section>
 
-        <Section title="Olvidé mi contraseña, ¿qué hago?">
+        <Section title="¿Mis datos personales están seguros?">
           <p>
-            En la pantalla de{" "}
-            <Link
-              href="/login"
-              className="text-primary hover:underline underline-offset-2"
-            >
-              inicio de sesión
-            </Link>{" "}
-            selecciona "Olvidé mi contraseña" para recibir un enlace de
-            recuperación por correo electrónico.
-          </p>
-        </Section>
-
-        <Section title="¿Cómo elimino mi cuenta?">
-          <p>
-            Desde la app, en Perfil &gt; Configuración &gt; Eliminar Cuenta.
-            Tu cuenta entra en un período de recuperación de 30 días antes de
-            eliminarse de forma definitiva. Detalles completos en{" "}
-            <Link
-              href="/eliminar-cuenta"
-              className="text-primary hover:underline underline-offset-2"
-            >
-              Eliminar Cuenta
-            </Link>
-            .
-          </p>
-        </Section>
-
-        <Section title="¿Mis datos personales y de pago están seguros?">
-          <p>
-            Toda la comunicación viaja cifrada por HTTPS/TLS, las contraseñas
-            se almacenan con hash y los pagos se procesan directamente en los
-            servidores de AZUL, certificados PCI-DSS. Más información en{" "}
+            Toda la comunicación viaja cifrada por HTTPS/TLS y no procesamos
+            pagos en el sitio. Más información en{" "}
             <Link
               href="/seguridad"
               className="text-primary hover:underline underline-offset-2"
@@ -208,23 +148,12 @@ export default function AyudaPage() {
               </a>
             </li>
             <li>
-              Teléfono:{" "}
+              WhatsApp:{" "}
               <a
                 href={`tel:+1${SUPPORT_PHONE.replace(/-/g, "")}`}
                 className="text-primary hover:underline underline-offset-2"
               >
                 {SUPPORT_PHONE}
-              </a>
-            </li>
-            <li>
-              Instagram:{" "}
-              <a
-                href={INSTAGRAM_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary hover:underline underline-offset-2"
-              >
-                {INSTAGRAM_HANDLE}
               </a>
             </li>
           </ul>
@@ -260,7 +189,6 @@ function LegalNav({ current }: { current: string }) {
     { href: "/devoluciones", label: "Devoluciones" },
     { href: "/entrega", label: "Entrega" },
     { href: "/seguridad", label: "Seguridad" },
-    { href: "/eliminar-cuenta", label: "Eliminar cuenta" },
   ];
   return (
     <div className="mt-12 border-t border-border pt-8">

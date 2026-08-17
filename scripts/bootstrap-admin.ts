@@ -11,7 +11,7 @@ import { createClient } from "@supabase/supabase-js";
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
-const email = process.env.ADMIN_EMAIL?.trim() || "biandy@buxxep.local";
+const email = process.env.ADMIN_EMAIL?.trim() || "admin@jwparfum.local";
 const password = process.env.ADMIN_BOOTSTRAP_PASSWORD?.trim();
 const displayName =
   process.env.ADMIN_DISPLAY_NAME?.trim() || email.split("@")[0] || "Admin";

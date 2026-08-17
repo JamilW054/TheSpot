@@ -15,7 +15,7 @@ export default function AdminLayout({
       <AdminViewportScrollbar />
       <div className="admin-scope min-h-full">
         <AdminFeedbackProvider>
-          <AppShell variant="admin">{children}</AppShell>
+          <AppShell>{children}</AppShell>
         </AdminFeedbackProvider>
       </div>
     </RequireAuth>

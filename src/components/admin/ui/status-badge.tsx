@@ -7,7 +7,7 @@ const toneStyles = {
   solid: "bg-primary text-primary-foreground",
   /** Solo contorno hairline (Badge — Outline). */
   outline: "border border-border bg-transparent text-foreground",
-  /** Acento de marca Buxxep. */
+  /** Acento de marca. */
   brand: "bg-(--admin-brand-soft) text-(--admin-brand-strong)",
   success: "bg-(--admin-success-soft) text-(--admin-success)",
   warning: "bg-(--admin-warning-soft) text-(--admin-warning)",

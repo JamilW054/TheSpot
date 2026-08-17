@@ -45,51 +45,6 @@ export interface ShippingMethodRow {
   country_code: string | null;
 }
 
-export interface BannerRow {
-  id: string;
-  title: string;
-  subtitle: string | null;
-  eyebrow: string | null;
-  image_url: string | null;
-  image_url_mobile: string | null;
-  accent_color: string | null;
-  link_path: string | null;
-  is_active: boolean;
-  sort_order: number;
-  starts_at: string | null;
-  expires_at: string | null;
-}
-
-export interface SubcategoryRow {
-  id: string;
-  slug: string;
-  name: string;
-  category_id: string;
-  sort_order: number;
-  image_url: string | null;
-  size_preset_id: string | null;
-  is_active: boolean;
-}
-
-export interface FlashSaleRow {
-  id: string;
-  name: string;
-  discount_percent: number;
-  is_active: boolean;
-  starts_at: string;
-  ends_at: string;
-  flash_sale_items?: { id: string }[] | null;
-}
-
-export interface FlashSaleItemRow {
-  id: string;
-  flash_sale_id: string;
-  product_id: string;
-  discount_percent_override: number | null;
-  stock_limit: number | null;
-  sort_order: number;
-}
-
 export interface WarehouseRow {
   id: string;
   name: string;
@@ -97,45 +52,6 @@ export interface WarehouseRow {
   city: string | null;
   country_code: string;
   is_active: boolean;
-}
-
-export interface NotificationRow {
-  id: string;
-  type: string;
-  target: string;
-  title: string;
-  body: string;
-  link_path: string | null;
-  created_at: string;
-}
-
-export interface PaymentMethodRow {
-  id: string;
-  code: string;
-  name: string;
-  description: string | null;
-  is_active: boolean;
-  is_disabled: boolean;
-  badge_label: string | null;
-  sort_order: number;
-}
-
-export interface PaymentRequestRow {
-  id: string;
-  user_id: string;
-  reference_number: string;
-  amount_cents: number;
-  currency: string;
-  description: string | null;
-  payment_method_id: string;
-  payment_url: string | null;
-  status: string;
-  expires_at: string | null;
-  sent_at: string | null;
-  paid_at: string | null;
-  created_by: string | null;
-  created_at: string;
-  updated_at: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -147,20 +63,7 @@ const COUPON_COLS =
   "id, code, description, discount_type, discount_value, min_order_cents, max_uses, uses_count, max_uses_per_user, is_active, starts_at, expires_at";
 const SHIPPING_COLS =
   "id, name, description, price_cents, min_days, max_days, is_active, country_code";
-const BANNER_COLS =
-  "id, title, subtitle, eyebrow, image_url, accent_color, link_path, is_active, sort_order, starts_at, expires_at";
-const SUBCAT_COLS =
-  "id, slug, name, category_id, sort_order, image_url, size_preset_id, is_active";
-const FLASH_COLS =
-  "id, name, discount_percent, is_active, starts_at, ends_at, flash_sale_items(id)";
-const FLASH_ITEM_COLS =
-  "id, flash_sale_id, product_id, discount_percent_override, stock_limit, sort_order";
 const WAREHOUSE_COLS = "id, name, address, city, country_code, is_active";
-const NOTIF_COLS = "id, type, target, title, body, link_path, created_at";
-const PAYMENT_METHOD_COLS =
-  "id, code, name, description, is_active, is_disabled, badge_label, sort_order";
-const PAYMENT_REQUEST_COLS =
-  "id, user_id, reference_number, amount_cents, currency, description, payment_method_id, payment_url, status, expires_at, sent_at, paid_at, created_by, created_at, updated_at";
 
 // ---------------------------------------------------------------------------
 // Repositorios
@@ -187,54 +90,11 @@ export const shippingMethodsRepo = new Repository<ShippingMethodRow>({
   defaultOrderBy: { column: "price_cents" },
 });
 
-export const bannersRepo = new Repository<BannerRow>({
-  table: "banners",
-  columns: BANNER_COLS,
-  defaultOrderBy: { column: "sort_order" },
-});
-
-export const subcategoriesRepo = new Repository<SubcategoryRow>({
-  table: "subcategories",
-  columns: SUBCAT_COLS,
-  hasSoftDelete: true,
-  defaultOrderBy: { column: "sort_order" },
-});
-
-export const flashSalesRepo = new Repository<FlashSaleRow>({
-  table: "flash_sales",
-  columns: FLASH_COLS,
-  defaultOrderBy: { column: "starts_at", ascending: false },
-});
-
-export const flashSaleItemsRepo = new Repository<FlashSaleItemRow>({
-  table: "flash_sale_items",
-  columns: FLASH_ITEM_COLS,
-  defaultOrderBy: { column: "sort_order" },
-});
-
 export const warehousesRepo = new Repository<WarehouseRow>({
   table: "warehouses",
   columns: WAREHOUSE_COLS,
   hasSoftDelete: true,
   defaultOrderBy: { column: "name" },
-});
-
-export const notificationsRepo = new Repository<NotificationRow>({
-  table: "notifications",
-  columns: NOTIF_COLS,
-  defaultOrderBy: { column: "created_at", ascending: false },
-});
-
-export const paymentMethodsRepo = new Repository<PaymentMethodRow>({
-  table: "payment_methods",
-  columns: PAYMENT_METHOD_COLS,
-  defaultOrderBy: { column: "sort_order" },
-});
-
-export const paymentRequestsRepo = new Repository<PaymentRequestRow>({
-  table: "payment_requests",
-  columns: PAYMENT_REQUEST_COLS,
-  defaultOrderBy: { column: "created_at", ascending: false },
 });
 
 // ---------------------------------------------------------------------------
@@ -267,39 +127,9 @@ export const sizePresetOptionsRepo = new Repository<OptionRow>({
   defaultOrderBy: { column: "name" },
 });
 
-export const lineaOptionsRepo = new Repository<OptionRow>({
-  table: "lineas",
-  columns: "id, name",
-  hasSoftDelete: true,
-  defaultOrderBy: { column: "name" },
-});
-
 export const brandOptionsRepo = new Repository<OptionRow>({
   table: "brands",
   columns: "id, name",
   hasSoftDelete: true,
   defaultOrderBy: { column: "name" },
-});
-
-// ---------------------------------------------------------------------------
-// Líneas de ropa (admin)
-// ---------------------------------------------------------------------------
-
-export interface LineasAdminRow {
-  id: string;
-  slug: string;
-  name: string;
-  description: string | null;
-  cover_image_url: string | null;
-  published: boolean;
-  sort_order: number;
-}
-
-const LINEA_ADMIN_COLS =
-  "id, slug, name, description, cover_image_url, published, sort_order";
-
-export const lineasAdminRepo = new Repository<LineasAdminRow>({
-  table: "lineas",
-  columns: LINEA_ADMIN_COLS,
-  defaultOrderBy: { column: "sort_order" },
 });

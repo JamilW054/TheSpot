@@ -3,7 +3,7 @@ import { OrderStatusContent } from "./OrderStatusContent";
 import Link from "next/link";
 
 export const metadata = {
-  title: `${ORDER_STATUS_PAGE.label} | Buxxep`,
+  title: `${ORDER_STATUS_PAGE.label} | JW PARFUM`,
   description: "Consulta el estado de tu pedido con el número de pedido.",
 };
 

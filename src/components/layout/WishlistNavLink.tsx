@@ -9,7 +9,7 @@ export function WishlistNavLink({ className = "" }: { className?: string }) {
 
   return (
     <Link
-      href="/cuenta/wishlist"
+      href="/wishlist"
       className={`relative flex items-center justify-center rounded-md p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${className}`}
       aria-label={
         wishlistCount > 0

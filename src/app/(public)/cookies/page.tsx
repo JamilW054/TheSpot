@@ -2,11 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Política de Cookies — Buxxep",
-  description: "Información sobre el uso de cookies y tecnologías similares en Buxxep.",
+  title: "Política de Cookies — JW PARFUM",
+  description: "Información sobre el uso de cookies y almacenamiento local en JW PARFUM.",
 };
 
-const LAST_UPDATED = "13 de mayo de 2026";
+const LAST_UPDATED = "16 de agosto de 2026";
 
 export default function CookiesPage() {
   return (
@@ -24,12 +24,13 @@ export default function CookiesPage() {
         <Section title="1. ¿Qué son las cookies?">
           <p>
             Las cookies son pequeños archivos de texto que se almacenan en tu dispositivo cuando
-            visitas un sitio web. Sirven para recordar tus preferencias, mantener tu sesión iniciada
-            y entender cómo usas la plataforma.
+            visitas un sitio web. JW PARFUM no requiere que crees una cuenta, así que usamos muy
+            pocas: la mayoría de tus datos (carrito, favoritos) se guardan en el almacenamiento
+            local de tu navegador, no en cookies.
           </p>
         </Section>
 
-        <Section title="2. Cookies que utilizamos">
+        <Section title="2. Cookies y almacenamiento que utilizamos">
           <div className="mt-3 overflow-x-auto">
             <table className="w-full border-collapse text-xs">
               <thead>
@@ -44,26 +45,26 @@ export default function CookiesPage() {
                 <CookieRow
                   name="sb-*"
                   type="Esencial"
-                  purpose="Sesión de autenticación de Supabase (mantiene tu login activo)."
+                  purpose="Sesión de autenticación de Supabase (solo aplica al panel de administración)."
                   duration="Sesión / 1 año"
                 />
                 <CookieRow
-                  name="buxxep-cart"
+                  name="jwparfum-cart (localStorage)"
                   type="Funcional"
-                  purpose="Guarda los artículos en tu carrito de compras."
-                  duration="7 días"
+                  purpose="Guarda los artículos en tu carrito de compras en tu propio navegador."
+                  duration="Hasta que lo borres"
                 />
                 <CookieRow
-                  name="buxxep-theme"
+                  name="jwparfum_wishlist (localStorage)"
+                  type="Funcional"
+                  purpose="Guarda tus productos favoritos en tu propio navegador."
+                  duration="Hasta que lo borres"
+                />
+                <CookieRow
+                  name="theme (localStorage)"
                   type="Funcional"
                   purpose="Recuerda tu preferencia de tema (claro/oscuro)."
-                  duration="1 año"
-                />
-                <CookieRow
-                  name="_vercel_*"
-                  type="Técnica"
-                  purpose="Cookies de infraestructura de Vercel para enrutamiento."
-                  duration="Sesión"
+                  duration="Hasta que lo borres"
                 />
               </tbody>
             </table>
@@ -72,49 +73,30 @@ export default function CookiesPage() {
 
         <Section title="3. Cookies esenciales">
           <p>
-            Las cookies esenciales son necesarias para el funcionamiento básico del Servicio: sin
-            ellas no podrías iniciar sesión, mantener artículos en el carrito ni completar una
-            compra. No requieren tu consentimiento previo para instalarse.
+            La única cookie esencial (`sb-*`) mantiene la sesión iniciada del panel de
+            administración — no aplica a los visitantes del catálogo público, que no necesitan
+            iniciar sesión para comprar. No requiere tu consentimiento previo para instalarse.
           </p>
         </Section>
 
-        <Section title="4. Cookies funcionales y de analítica">
+        <Section title="4. Cookies de analítica">
           <p>
-            Estas cookies nos ayudan a mejorar la experiencia en la plataforma. Actualmente no
-            utilizamos servicios de analítica de terceros (como Google Analytics). Si esto cambia,
-            actualizaremos esta política y solicitaremos tu consentimiento cuando sea necesario.
+            Actualmente no utilizamos servicios de analítica de terceros (como Google Analytics).
+            Si esto cambia, actualizaremos esta política y solicitaremos tu consentimiento cuando
+            sea necesario.
           </p>
         </Section>
 
-        <Section title="5. Cookies de terceros">
+        <Section title="5. Cómo gestionar las cookies y el almacenamiento local">
           <p>
-            Algunos servicios externos que utilizamos pueden instalar sus propias cookies:
-          </p>
-          <ul className="mt-3 list-inside list-disc space-y-1 pl-2">
-            <li>
-              <strong className="text-foreground">Supabase:</strong> cookies de sesión para la
-              autenticación.
-            </li>
-            <li>
-              <strong className="text-foreground">Vercel:</strong> cookies de infraestructura para
-              la entrega del contenido.
-            </li>
-          </ul>
-          <p className="mt-3">
-            Estas cookies están sujetas a las políticas de privacidad de sus respectivos
-            proveedores.
-          </p>
-        </Section>
-
-        <Section title="6. Cómo gestionar las cookies">
-          <p>
-            Puedes controlar y eliminar las cookies desde la configuración de tu navegador. A
-            continuación encontrarás instrucciones para los navegadores más comunes:
+            Puedes controlar y eliminar las cookies y el almacenamiento local desde la
+            configuración de tu navegador. Ten en cuenta que borrar el almacenamiento local
+            vaciará tu carrito y tu lista de favoritos.
           </p>
           <ul className="mt-3 list-inside list-disc space-y-1 pl-2">
             <li>
               <strong className="text-foreground">Chrome:</strong> Configuración → Privacidad y
-              seguridad → Cookies.
+              seguridad → Cookies y otros datos de sitios.
             </li>
             <li>
               <strong className="text-foreground">Firefox:</strong> Preferencias → Privacidad y
@@ -128,16 +110,12 @@ export default function CookiesPage() {
               del sitio.
             </li>
           </ul>
-          <p className="mt-3">
-            Ten en cuenta que deshabilitar cookies esenciales puede impedir el correcto
-            funcionamiento de la plataforma.
-          </p>
         </Section>
 
-        <Section title="7. Cambios en esta política">
+        <Section title="6. Cambios en esta política">
           <p>
             Podemos actualizar esta Política de Cookies en cualquier momento. Te notificaremos de
-            cambios significativos mediante un aviso en la plataforma.
+            cambios significativos mediante un aviso en el sitio.
           </p>
         </Section>
 

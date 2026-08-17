@@ -2,16 +2,16 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Política de Privacidad — Buxxep",
+  title: "Política de Privacidad — JW PARFUM",
   description:
-    "Conoce cómo Buxxep recopila, usa, comparte y protege tu información personal, y los derechos que tienes sobre tus datos.",
-  alternates: { canonical: "https://buxxep.com/privacidad" },
+    "Conoce cómo JW PARFUM recopila, usa y protege tu información personal al hacer un pedido.",
+  alternates: { canonical: "https://jwparfum.com/privacidad" },
 };
 
-const LAST_UPDATED = "15 de julio de 2026";
+const LAST_UPDATED = "16 de agosto de 2026";
 const VERSION = "v1.0";
-const SUPPORT_EMAIL = "soportebuxxep@gmail.com";
-const SUPPORT_PHONE = "809-828-9979";
+const SUPPORT_EMAIL = "jamilwilliams054@gmail.com";
+const SUPPORT_PHONE = "809-761-2875";
 
 export default function PrivacidadPage() {
   return (
@@ -31,18 +31,18 @@ export default function PrivacidadPage() {
       <div className="space-y-8 text-sm leading-relaxed text-muted-foreground">
         <section>
           <p>
-            BUXXEP es una plataforma de comercio electrónico operada desde la
-            República Dominicana y disponible en Latinoamérica, con aplicación
-            móvil (iOS y Android) y sitio web. Esta política explica qué datos
-            personales tratamos y con qué fines. Para cualquier consulta,
-            escríbenos a{" "}
+            JW PARFUM es una perfumería en línea operada desde la República
+            Dominicana. No pedimos que crees una cuenta para comprar: solo
+            tratamos los datos necesarios para procesar tu pedido de invitado.
+            Esta política explica qué datos recopilamos y con qué fines. Para
+            cualquier consulta, escríbenos a{" "}
             <a
               href={`mailto:${SUPPORT_EMAIL}`}
               className="text-primary hover:underline underline-offset-2"
             >
               {SUPPORT_EMAIL}
             </a>{" "}
-            o llámanos al{" "}
+            o escríbenos por WhatsApp al{" "}
             <a
               href={`tel:+1${SUPPORT_PHONE.replace(/-/g, "")}`}
               className="text-primary hover:underline underline-offset-2"
@@ -55,74 +55,42 @@ export default function PrivacidadPage() {
 
         <Section title="1. Datos que recopilamos">
           <p>
-            <strong className="text-foreground">
-              Datos que nos facilitas:
-            </strong>
+            <strong className="text-foreground">Al hacer un pedido:</strong>
           </p>
           <ul className="mt-3 list-inside list-disc space-y-2 pl-2">
             <li>
-              <strong className="text-foreground">Cuenta y perfil:</strong>{" "}
-              nombre de usuario, nombre completo, foto de avatar (almacenada en
-              Cloudflare R2), teléfono y rol. El correo electrónico y la
-              contraseña (con hashing) los gestiona Supabase Auth.
+              <strong className="text-foreground">Datos de contacto y entrega:</strong>{" "}
+              nombre, correo electrónico, teléfono/WhatsApp y dirección de
+              entrega.
             </li>
             <li>
-              <strong className="text-foreground">Direcciones:</strong> nombre,
-              apellido, dirección (línea 1 y 2), ciudad, estado o provincia,
-              código postal, país y teléfono.
-            </li>
-            <li>
-              <strong className="text-foreground">Pedidos:</strong> productos,
-              cantidades, variantes y tallas, precios, dirección de envío
-              (copia), correo de contacto, notas, código de seguimiento y fecha
-              estimada de entrega.
-            </li>
-            <li>
-              <strong className="text-foreground">Pagos:</strong> referencias de
-              cada transacción (identificador, código de autorización, monto,
-              moneda y estado). Los pagos se procesan con la pasarela AZUL
-              (Servicios Digitales Popular), que cumple PCI-DSS.{" "}
-              <strong className="text-foreground">
-                BUXXEP no almacena el número de tarjeta ni el CVV.
-              </strong>
-            </li>
-            <li>
-              <strong className="text-foreground">Verificación (OTP):</strong>{" "}
-              correo, código de un solo uso y dirección IP del solicitante.
-            </li>
-            <li>
-              <strong className="text-foreground">
-                Actividad en la plataforma:
-              </strong>{" "}
-              reseñas, lista de deseos, carrito, notificaciones y tokens de
-              dispositivo para notificaciones push, y los diseños que creas.
-            </li>
-            <li>
-              <strong className="text-foreground">Imágenes:</strong> avatares y
-              archivos que eliges desde la cámara, galería o almacenamiento del
-              dispositivo para crear diseños. Solo accedemos a los archivos que
-              seleccionas.
+              <strong className="text-foreground">Detalles del pedido:</strong>{" "}
+              perfumes elegidos, tamaños, precios, cupón aplicado (si usaste
+              uno) y notas que agregues.
             </li>
           </ul>
           <p className="mt-4">
             <strong className="text-foreground">
               Datos que recopilamos automáticamente:
             </strong>{" "}
-            dirección IP, información técnica necesaria para la seguridad y
-            tokens de sesión. No utilizamos analítica de pantallas, búsquedas o
-            productos vistos mientras no esté implementada.
+            dirección IP e información técnica básica necesaria para la
+            seguridad del sitio. No utilizamos analítica de terceros.
+          </p>
+          <p className="mt-3">
+            Tu lista de favoritos y tu carrito de compra se guardan únicamente
+            en tu propio navegador (localStorage) — no se envían a nuestros
+            servidores hasta que confirmas un pedido.
           </p>
         </Section>
 
         <Section title="2. Finalidad del tratamiento">
           <p>Utilizamos tus datos para:</p>
           <ul className="mt-3 list-inside list-disc space-y-1 pl-2">
-            <li>Crear y gestionar tu cuenta y autenticar tu identidad.</li>
-            <li>Procesar, cobrar y entregar tus pedidos.</li>
-            <li>Enviarte notificaciones sobre el estado de tus pedidos.</li>
-            <li>Gestionar cupones y descuentos.</li>
+            <li>Procesar y entregar tu pedido.</li>
+            <li>Contactarte por correo y WhatsApp para coordinar el pago y la entrega.</li>
+            <li>Aplicar cupones de descuento cuando corresponda.</li>
             <li>Brindarte soporte y atención al cliente.</li>
-            <li>Garantizar la seguridad y prevenir el fraude.</li>
+            <li>Prevenir el fraude y garantizar la seguridad del sitio.</li>
             <li>Cumplir obligaciones legales, fiscales y contables.</li>
           </ul>
         </Section>
@@ -138,29 +106,15 @@ export default function PrivacidadPage() {
           <ul className="mt-3 list-inside list-disc space-y-2 pl-2">
             <li>
               <strong className="text-foreground">Supabase, Inc.</strong> — base
-              de datos PostgreSQL y autenticación (servidores en EE. UU.).
+              de datos donde se registra tu pedido (servidores en EE. UU.).
             </li>
             <li>
-              <strong className="text-foreground">Cloudflare R2</strong> —
-              almacenamiento de imágenes y avatares.
+              <strong className="text-foreground">Resend</strong> — envío del
+              correo de confirmación de tu pedido.
             </li>
             <li>
-              <strong className="text-foreground">
-                AZUL (Servicios Digitales Popular)
-              </strong>{" "}
-              — procesamiento de pagos (cumple PCI-DSS).
-            </li>
-            <li>
-              <strong className="text-foreground">
-                Proveedores de logística y mensajería
-              </strong>{" "}
-              — para entregar tus pedidos.
-            </li>
-            <li>
-              <strong className="text-foreground">
-                Proveedores de correo y notificaciones
-              </strong>{" "}
-              — para enviarte avisos transaccionales y push.
+              <strong className="text-foreground">Cloudflare</strong> —
+              almacenamiento de las imágenes del catálogo.
             </li>
             <li>Autoridades competentes cuando la ley lo exija.</li>
           </ul>
@@ -188,46 +142,22 @@ export default function PrivacidadPage() {
               corregir datos inexactos.
             </li>
             <li>
-              <strong className="text-foreground">Supresión:</strong> eliminar
-              tu cuenta y datos personales.
-            </li>
-            <li>
-              <strong className="text-foreground">Portabilidad:</strong> recibir
-              tus datos en un formato estructurado.
+              <strong className="text-foreground">Supresión:</strong> pedir que
+              eliminemos tus datos de contacto una vez completado el pedido.
             </li>
             <li>
               <strong className="text-foreground">Oposición:</strong> oponerte a
               ciertos tratamientos.
             </li>
-            <li>
-              <strong className="text-foreground">Limitación:</strong>{" "}
-              restringir el tratamiento en determinadas circunstancias.
-            </li>
           </ul>
         </Section>
 
-        <Section title="5. Retención y eliminación de datos">
+        <Section title="5. Retención de datos">
           <p>
-            Conservamos tus datos mientras tu cuenta esté activa. Cuando
-            solicitas eliminar tu cuenta, esta se marca como eliminada y se
-            inicia un período de recuperación de 30 días: si inicias sesión
-            nuevamente con el mismo correo dentro de ese plazo, tu cuenta se
-            restaura. Pasados los 30 días, tu cuenta y tus datos personales se
-            eliminan de forma permanente.
-          </p>
-          <p className="mt-3">
-            Conservamos los comprobantes de compras y pagos (pedidos y
-            transacciones) durante un mínimo de 5 años después de la compra
-            cuando lo exijan obligaciones fiscales, contables o de prevención de
-            fraude. Su acceso queda restringido y no se utilizarán para otros
-            fines. Consulta el procedimiento completo en{" "}
-            <Link
-              href="/eliminar-cuenta"
-              className="text-primary hover:underline underline-offset-2"
-            >
-              Eliminar Cuenta
-            </Link>
-            .
+            Conservamos los datos de contacto y entrega de un pedido mientras
+            sea necesario para procesarlo y darte soporte al respecto, y los
+            registros del pedido en sí durante el tiempo que exijan
+            obligaciones fiscales o contables.
           </p>
         </Section>
 
@@ -242,27 +172,26 @@ export default function PrivacidadPage() {
 
         <Section title="7. Seguridad">
           <p>
-            Aplicamos medidas técnicas y organizativas para proteger tus datos:
-            cifrado en tránsito (HTTPS/TLS), almacenamiento de contraseñas con
-            hashing, aislamiento de la información por usuario, control de
-            acceso por roles y la no conservación de números de tarjeta ni CVV.
+            Aplicamos medidas técnicas para proteger tus datos: cifrado en
+            tránsito (HTTPS/TLS) y control de acceso a la base de datos. No
+            procesamos pagos en el sitio, por lo que nunca solicitamos ni
+            almacenamos datos de tarjeta.
           </p>
         </Section>
 
         <Section title="8. Privacidad de menores">
           <p>
-            BUXXEP no está dirigido a menores de 18 años y no recopilamos
-            conscientemente datos de menores. Si detectamos que hemos recopilado
-            datos de un menor, los eliminaremos.
+            JW PARFUM no está dirigido a menores de 18 años y no recopilamos
+            conscientemente datos de menores. Si detectamos que hemos
+            recopilado datos de un menor, los eliminaremos.
           </p>
         </Section>
 
         <Section title="9. Cambios a esta política">
           <p>
             Podemos actualizar esta Política de Privacidad. Publicaremos la
-            versión vigente en esta página y, ante cambios significativos, te lo
-            notificaremos por los medios disponibles. Esta política se rige por
-            las leyes de la República Dominicana.
+            versión vigente en esta página. Esta política se rige por las
+            leyes de la República Dominicana.
           </p>
         </Section>
 
@@ -275,7 +204,7 @@ export default function PrivacidadPage() {
             >
               {SUPPORT_EMAIL}
             </a>{" "}
-            · Teléfono:{" "}
+            · WhatsApp:{" "}
             <a
               href={`tel:+1${SUPPORT_PHONE.replace(/-/g, "")}`}
               className="text-primary hover:underline underline-offset-2"
@@ -315,7 +244,6 @@ function LegalNav({ current }: { current: string }) {
     { href: "/devoluciones", label: "Devoluciones" },
     { href: "/entrega", label: "Entrega" },
     { href: "/seguridad", label: "Seguridad" },
-    { href: "/eliminar-cuenta", label: "Eliminar cuenta" },
   ];
   return (
     <div className="mt-12 border-t border-border pt-8">

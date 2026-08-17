@@ -34,7 +34,6 @@ export function CatalogSupabaseDebugLog({
         name: p.name,
         slug: p.slug,
         coverImage: p.coverImage,
-        baseTextureUrl: p.baseTextureUrl ?? "(no definido)",
       })),
     );
     console.groupEnd();
