@@ -3,9 +3,9 @@ import Link from "next/link";
 import { ORDER_STATUS_PAGE } from "@/config/navigation";
 
 export const metadata: Metadata = {
-  title: "Centro de Ayuda — JW PARFUM",
+  title: "Centro de Ayuda — The Spot",
   description:
-    "Respuestas a las preguntas más frecuentes sobre pedidos, entrega y devoluciones en JW PARFUM, más los canales de contacto directo.",
+    "Respuestas a las preguntas más frecuentes sobre pedidos, entrega y devoluciones en The Spot, más los canales de contacto directo.",
 };
 
 const LAST_UPDATED = "16 de agosto de 2026";
@@ -37,7 +37,7 @@ export default function AyudaPage() {
           >
             {SUPPORT_EMAIL}
           </a>{" "}
-          o por WhatsApp al{" "}
+          o al{" "}
           <a
             href={`tel:+1${SUPPORT_PHONE.replace(/-/g, "")}`}
             className="text-primary hover:underline underline-offset-2"
@@ -58,7 +58,7 @@ export default function AyudaPage() {
             >
               catálogo
             </Link>
-            , elige el perfume y el tamaño que quieras, agrégalo al carrito y
+            , elige el producto, la talla o el tamaño, agrégalo al carrito y
             completa el checkout con tus datos de contacto. No necesitas crear
             una cuenta.
           </p>
@@ -66,16 +66,17 @@ export default function AyudaPage() {
 
         <Section title="¿Cómo pago mi pedido?">
           <p>
-            No cobramos en línea: al completar el pedido queda pendiente y te
-            contactamos por WhatsApp para coordinar el pago y la entrega.
+            Al completar el pedido queda pendiente y te contactamos por correo o
+            teléfono para coordinar el pago (Apple Pay o Google Pay) y la
+            entrega.
           </p>
         </Section>
 
         <Section title="¿Cuánto tarda mi pedido en llegar?">
           <p>
-            Nuestros perfumes están en inventario y listos para enviar. El
-            tiempo de entrega dentro de la República Dominicana es de 1 a 5
-            días hábiles según tu ubicación. Consulta{" "}
+            Los productos están en inventario y listos para enviar. El tiempo de
+            entrega dentro de la República Dominicana es de 1 a 5 días hábiles
+            según tu ubicación. Consulta{" "}
             <Link
               href="/entrega"
               className="text-primary hover:underline underline-offset-2"
@@ -94,16 +95,17 @@ export default function AyudaPage() {
               className="text-primary hover:underline underline-offset-2"
             >
               {ORDER_STATUS_PAGE.label}
-            </Link>
-            {" "}con el número de pedido que te dimos al confirmarlo.
+            </Link>{" "}
+            con el número de pedido que te dimos al confirmarlo.
           </p>
         </Section>
 
-        <Section title="¿Puedo cambiar o devolver un perfume?">
+        <Section title="¿Puedo cambiar o devolver un producto?">
           <p>
             Sí, dentro de los 7 días calendario posteriores a la recepción,
-            siempre que el frasco esté sellado y sin abrir, o tenga un defecto
-            de fabricación. Revisa el procedimiento completo en{" "}
+            siempre que el artículo esté sin usar, con etiquetas y empaque
+            original (los sellados de belleza y perfume no deben abrirse), o
+            tenga un defecto de fabricación. Revisa el procedimiento completo en{" "}
             <Link
               href="/devoluciones"
               className="text-primary hover:underline underline-offset-2"
@@ -148,7 +150,7 @@ export default function AyudaPage() {
               </a>
             </li>
             <li>
-              WhatsApp:{" "}
+              Teléfono:{" "}
               <a
                 href={`tel:+1${SUPPORT_PHONE.replace(/-/g, "")}`}
                 className="text-primary hover:underline underline-offset-2"

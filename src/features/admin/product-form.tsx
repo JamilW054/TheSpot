@@ -711,7 +711,7 @@ export function ProductForm({
               className={axisToggleCls(sizeEnabled)}
               aria-pressed={sizeEnabled}
             >
-              Varía por talla
+              Varía por talla o tamaño
             </button>
             <button
               type="button"
@@ -738,7 +738,7 @@ export function ProductForm({
           {sizeEnabled && (
             <div className="rounded-3xl border border-border bg-muted/10 p-4 space-y-3">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="text-sm font-semibold text-foreground">Tallas</p>
+                <p className="text-sm font-semibold text-foreground">Tallas / tamaños</p>
                 <div className="w-56">
                   <SelectMenu
                     placeholder="Cargar desde tipo…"
@@ -772,7 +772,7 @@ export function ProductForm({
                 </div>
               ) : (
                 <p className="text-xs text-muted-foreground">
-                  Elige un tipo de talla o crea uno con “Nuevo tipo”.
+                  Elige un tipo o crea uno con “Nuevo tipo”.
                 </p>
               )}
             </div>
@@ -985,7 +985,7 @@ function StockEditor({
     return (
       <div className="overflow-x-auto rounded-3xl border border-border bg-card p-4">
         <p className="mb-3 text-sm font-semibold text-foreground">
-          Stock por talla y color
+          Stock por talla/tamaño y color
         </p>
         <table className="w-full border-collapse text-sm">
           <thead>

@@ -45,8 +45,7 @@ export function WhatsAppNumberForm({
             placeholder="18091234567"
           />
           <p className="text-xs text-muted-foreground">
-            Los clientes usan este número para confirmar sus pedidos por
-            WhatsApp al terminar el checkout.
+            El equipo usa este número para escribirle al cliente desde Pedidos.
           </p>
           <button
             type="submit"

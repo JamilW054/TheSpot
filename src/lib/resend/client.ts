@@ -11,4 +11,4 @@ export function getResend(): Resend {
 }
 
 export const RESEND_FROM =
-  process.env.RESEND_FROM ?? "JW PARFUM <onboarding@resend.dev>";
+  process.env.RESEND_FROM ?? "The Spot <onboarding@resend.dev>";

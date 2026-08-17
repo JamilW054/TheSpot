@@ -41,7 +41,11 @@ const nextConfig: NextConfig = {
      * - /landing/** — banners y assets de la landing
      * - /resources/** — logos y assets estáticos
      */
-    localPatterns: [{ pathname: "/landing/**" }, { pathname: "/resources/**" }],
+    localPatterns: [
+      { pathname: "/landing/**" },
+      { pathname: "/resources/**" },
+      { pathname: "/perfumes/**" },
+    ],
     remotePatterns: [
       {
         protocol: "https",

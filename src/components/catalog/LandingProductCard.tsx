@@ -40,8 +40,8 @@ function WishlistBtn({ productId, light = false }: { productId: string; light?: 
       aria-label={saved ? "Quitar de favoritos" : "Guardar en favoritos"}
       className={`z-20 flex size-8 items-center justify-center rounded-full transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
         light
-          ? "bg-black/50 text-white backdrop-blur-sm hover:bg-black/70 hover:text-primary"
-          : "bg-background/80 text-muted-foreground backdrop-blur-sm hover:bg-background hover:text-primary"
+          ? "bg-white/90 text-primary shadow-sm backdrop-blur-sm hover:bg-white hover:text-primary"
+          : "bg-white text-muted-foreground shadow-sm hover:text-primary"
       }`}
     >
       <Heart
@@ -85,7 +85,7 @@ export function LandingProductCard({ product, variant = "default" }: CardProps) 
   if (variant === "default") {
     return (
       <article
-        className="group/card relative flex flex-col overflow-hidden rounded-2xl bg-card transition-all duration-300 hover:shadow-[0_0_0_1.5px_rgba(60,200,247,0.2),0_12px_40px_-12px_rgba(0,0,0,0.6)]"
+        className="group/card relative flex flex-col overflow-hidden rounded-2xl bg-card transition-all duration-300 hover:shadow-[0_0_0_1.5px_rgba(220,38,38,0.2),0_12px_40px_-12px_rgba(0,0,0,0.6)]"
         style={{ boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)" }}
       >
         {/* Image */}
@@ -100,7 +100,7 @@ export function LandingProductCard({ product, variant = "default" }: CardProps) 
               unoptimized={imageNeedsUnoptimized(product.coverImage)}
             />
           ) : (
-            <div className="absolute inset-0 bg-[#111116]" />
+            <div className="absolute inset-0 bg-rose-50" />
           )}
 
           {/* Badges */}
@@ -162,7 +162,7 @@ export function LandingProductCard({ product, variant = "default" }: CardProps) 
   if (variant === "fill") {
     return (
       <article
-        className="group/card relative flex flex-col overflow-hidden rounded-2xl bg-card transition-all duration-300 hover:shadow-[0_0_0_1.5px_rgba(60,200,247,0.2),0_12px_40px_-12px_rgba(0,0,0,0.6)]"
+        className="group/card relative flex flex-col overflow-hidden rounded-2xl bg-card transition-all duration-300 hover:shadow-[0_0_0_1.5px_rgba(220,38,38,0.2),0_12px_40px_-12px_rgba(0,0,0,0.6)]"
         style={{ height: "100%", boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)" }}
       >
         {/* Image grows to fill available height */}
@@ -177,7 +177,7 @@ export function LandingProductCard({ product, variant = "default" }: CardProps) 
               unoptimized={imageNeedsUnoptimized(product.coverImage)}
             />
           ) : (
-            <div className="absolute inset-0 bg-[#111116]" />
+            <div className="absolute inset-0 bg-rose-50" />
           )}
 
           {hasDiscount && (
@@ -228,7 +228,7 @@ export function LandingProductCard({ product, variant = "default" }: CardProps) 
   if (variant === "wide") {
     return (
       <article
-        className="group/card relative flex overflow-hidden rounded-2xl bg-card transition-all duration-300 hover:shadow-[0_0_0_1.5px_rgba(60,200,247,0.2),0_12px_40px_-12px_rgba(0,0,0,0.5)]"
+        className="group/card relative flex overflow-hidden rounded-2xl bg-card transition-all duration-300 hover:shadow-[0_0_0_1.5px_rgba(220,38,38,0.2),0_12px_40px_-12px_rgba(0,0,0,0.5)]"
         style={{ boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.05)" }}
       >
         {/* Image — left 40% */}
@@ -243,7 +243,7 @@ export function LandingProductCard({ product, variant = "default" }: CardProps) 
               unoptimized={imageNeedsUnoptimized(product.coverImage)}
             />
           ) : (
-            <div className="size-full bg-[#111116]" />
+            <div className="size-full bg-rose-50" />
           )}
           <div className="absolute inset-0 bg-linear-to-r from-transparent to-card/40" />
           {hasDiscount && (
@@ -317,7 +317,7 @@ export function LandingProductCard({ product, variant = "default" }: CardProps) 
   /* ─── HERO variant: tall full-bleed editorial card ──────────────────────── */
   return (
     <article
-      className="group/card relative overflow-hidden rounded-2xl bg-[#0c0c0e] transition-all duration-300 hover:shadow-[0_0_0_1.5px_rgba(60,200,247,0.22),0_24px_64px_-20px_rgba(60,200,247,0.1)]"
+      className="group/card relative overflow-hidden rounded-2xl bg-card transition-all duration-300 hover:shadow-[0_0_0_1.5px_rgba(220,38,38,0.22),0_24px_64px_-20px_rgba(220,38,38,0.1)]"
       style={{ height: "100%" }}
     >
       {/* Image */}
@@ -332,12 +332,12 @@ export function LandingProductCard({ product, variant = "default" }: CardProps) 
           priority
         />
       ) : (
-        <div className="absolute inset-0 bg-[#111116]" />
+        <div className="absolute inset-0 bg-rose-50" />
       )}
 
       {/* Gradient scrims */}
-      <div className="absolute inset-0 bg-linear-to-t from-black/95 via-black/35 to-transparent" />
-      <div className="absolute inset-x-0 top-0 h-28 bg-linear-to-b from-black/50 to-transparent" />
+      <div className="absolute inset-0 bg-linear-to-t from-white via-white/40 to-transparent" />
+      <div className="absolute inset-x-0 top-0 h-28 bg-linear-to-b from-white/80 to-transparent" />
       <div className="absolute inset-0 bg-linear-to-b from-primary/[0.04] to-transparent opacity-0 transition-opacity duration-300 group-hover/card:opacity-100" />
 
       {/* Bottom content */}

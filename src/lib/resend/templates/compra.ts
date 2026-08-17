@@ -40,7 +40,7 @@ export function formatPrice(cents: number, currency = "DOP"): string {
 function detailRow(label: string, value: string, accent = false): string {
   return `<tr>
     <td style="padding:11px 0;border-bottom:1px solid #edf1f7;font-size:13px;color:#7a8899;">${label}</td>
-    <td style="padding:11px 0;border-bottom:1px solid #edf1f7;text-align:right;font-size:13px;font-weight:600;color:${accent ? "#1e90ff" : "#0d1b2e"};">${value}</td>
+    <td style="padding:11px 0;border-bottom:1px solid #edf1f7;text-align:right;font-size:13px;font-weight:600;color:${accent ? "#DC2626" : "#0d1b2e"};">${value}</td>
   </tr>`;
 }
 
@@ -74,8 +74,8 @@ export function compraEmailHtml(data: CompraEmailData): string {
           </td>
           <td style="padding:16px 0 16px 14px;border-bottom:1px solid #edf1f7;vertical-align:top;">
             <div style="font-size:13px;font-weight:700;color:#0d1b2e;">${item.name}</div>
-            ${item.size ? `<div style="margin-top:3px;font-size:11px;font-weight:600;color:#1e90ff;letter-spacing:0.5px;text-transform:uppercase;">Tamaño ${item.size}</div>` : ""}
-            ${item.color ? `<div style="margin-top:3px;font-size:11px;font-weight:600;color:#1e90ff;letter-spacing:0.5px;text-transform:uppercase;">Color ${item.color}</div>` : ""}
+            ${item.size ? `<div style="margin-top:3px;font-size:11px;font-weight:600;color:#DC2626;letter-spacing:0.5px;text-transform:uppercase;">Tamaño ${item.size}</div>` : ""}
+            ${item.color ? `<div style="margin-top:3px;font-size:11px;font-weight:600;color:#DC2626;letter-spacing:0.5px;text-transform:uppercase;">Color ${item.color}</div>` : ""}
           </td>
           <td style="padding:16px 0;border-bottom:1px solid #edf1f7;text-align:center;vertical-align:top;white-space:nowrap;">
             <span style="display:inline-block;background:#f7f9fc;border:1px solid #e4eaf2;border-radius:6px;padding:3px 10px;font-size:12px;font-weight:700;color:#7a8899;">×${item.quantity}</span>
@@ -95,7 +95,7 @@ export function compraEmailHtml(data: CompraEmailData): string {
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta name="color-scheme" content="light only" />
   <meta name="supported-color-schemes" content="light only" />
-  <title>Pedido confirmado — JW PARFUM</title>
+  <title>Pedido confirmado — The Spot</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap');
 
@@ -122,7 +122,7 @@ export function compraEmailHtml(data: CompraEmailData): string {
     }
 
     .email-header {
-      background: linear-gradient(145deg, #1565c0 0%, #1e90ff 60%, #42a8ff 100%);
+      background: linear-gradient(145deg, #991B1B 0%, #DC2626 60%, #EF4444 100%);
       padding: 40px 32px 36px;
       text-align: center;
     }
@@ -166,7 +166,7 @@ export function compraEmailHtml(data: CompraEmailData): string {
 
     .message-box .greeting { color: #0d1b2e; font-size: 15px; font-weight: 600; margin-bottom: 10px; }
     .message-box .message-text { color: #5a6a7d; font-size: 14px; line-height: 1.75; }
-    .message-box .message-text strong { color: #1e90ff; font-weight: 600; }
+    .message-box .message-text strong { color: #DC2626; font-weight: 600; }
 
     .details-table { width: 100%; border-collapse: collapse; margin-bottom: 28px; }
 
@@ -176,7 +176,7 @@ export function compraEmailHtml(data: CompraEmailData): string {
       font-weight: 700;
       letter-spacing: 0.14em;
       text-transform: uppercase;
-      color: #1e90ff;
+      color: #DC2626;
       margin-bottom: 12px;
     }
 
@@ -192,7 +192,7 @@ export function compraEmailHtml(data: CompraEmailData): string {
 
     .cta-button {
       display: inline-block;
-      background-color: #1e90ff;
+      background-color: #DC2626;
       color: #ffffff !important;
       text-decoration: none;
       padding: 15px 44px;
@@ -244,7 +244,7 @@ export function compraEmailHtml(data: CompraEmailData): string {
 
       <!-- HEADER -->
       <div class="email-header">
-        <span class="logo">JW PARFUM</span>
+        <span class="logo">The Spot</span>
       </div>
 
       <!-- CUERPO -->
@@ -269,7 +269,7 @@ export function compraEmailHtml(data: CompraEmailData): string {
           <p class="greeting">Hola, ${name}</p>
           <p class="message-text">
             Recibimos tu pago y tu pedido <strong>#${orderNumber}</strong> ya está
-            confirmado en <strong>JW PARFUM</strong>. Lo estamos preparando para
+            confirmado en <strong>The Spot</strong>. Lo estamos preparando para
             envío y te avisaremos con cada actualización de estado.
           </p>
         </div>
@@ -318,7 +318,7 @@ export function compraEmailHtml(data: CompraEmailData): string {
                 <tr>
                   <td style="font-size:12px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#7a8899;">Total</td>
                   <td style="text-align:right;">
-                    <span style="font-size:24px;font-weight:700;color:#1e90ff;">${fmt(total)}</span>
+                    <span style="font-size:24px;font-weight:700;color:#DC2626;">${fmt(total)}</span>
                   </td>
                 </tr>
               </table>
@@ -332,7 +332,7 @@ export function compraEmailHtml(data: CompraEmailData): string {
 
         <p class="expire-note">
           ¿Preguntas sobre tu pedido? Escríbenos a
-          <a href="mailto:jamilwilliams054@gmail.com" style="color:#1e90ff;text-decoration:none;font-weight:600;">jamilwilliams054@gmail.com</a>.
+          <a href="mailto:jamilwilliams054@gmail.com" style="color:#DC2626;text-decoration:none;font-weight:600;">jamilwilliams054@gmail.com</a>.
         </p>
 
       </div>
@@ -341,15 +341,15 @@ export function compraEmailHtml(data: CompraEmailData): string {
       <div class="email-footer">
 
         <div class="social-links">
-          <a href="${SITE}" class="social-icon" title="jwparfum.com" target="_blank">
+          <a href="${SITE}" class="social-icon" title="The Spot" target="_blank">
             <img src="https://img.icons8.com/ios/18/555e6d/globe--v1.png"
-              alt="jwparfum.com" width="18" height="18" style="display:block;margin:10px auto 0;" />
+              alt="The Spot" width="18" height="18" style="display:block;margin:10px auto 0;" />
           </a>
         </div>
 
         <p class="footer-copy">
           ID: ${orderId}<br />
-          © ${new Date().getFullYear()} JW PARFUM · República Dominicana
+          © ${new Date().getFullYear()} The Spot · República Dominicana
         </p>
         <p class="footer-copy">
           <a href="${SITE}/privacidad">Privacidad</a> ·
@@ -395,5 +395,5 @@ export function compraEmailText(data: CompraEmailData): string {
   ]
     .filter(Boolean)
     .join("\n");
-  return `JW PARFUM — Pedido confirmado #${orderNumber}\n\nHola ${name},\n\n${metaLines}\n\n${lines}\n\nSubtotal: ${fmt(subtotal)}\nEnvío: ${shipping === 0 ? "GRATIS" : fmt(shipping)}${tax > 0 ? `\nImpuestos: ${fmt(tax)}` : ""}\nTOTAL: ${fmt(total)}\n\n${SITE}/estado-pedido\n\n— JW PARFUM`;
+  return `The Spot — Pedido confirmado #${orderNumber}\n\nHola ${name},\n\n${metaLines}\n\n${lines}\n\nSubtotal: ${fmt(subtotal)}\nEnvío: ${shipping === 0 ? "GRATIS" : fmt(shipping)}${tax > 0 ? `\nImpuestos: ${fmt(tax)}` : ""}\nTOTAL: ${fmt(total)}\n\n${SITE}/estado-pedido\n\n— The Spot`;
 }

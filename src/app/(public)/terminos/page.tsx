@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { SITE_URL } from "@/config/brand";
 
 export const metadata: Metadata = {
-  title: "Términos y Condiciones — JW PARFUM",
+  title: "Términos y Condiciones — The Spot",
   description:
-    "Lee los términos y condiciones de uso de la tienda en línea JW PARFUM.",
-  alternates: { canonical: "https://jwparfum.com/terminos" },
+    "Lee los términos y condiciones de uso de la tienda en línea The Spot.",
+  alternates: { canonical: `${SITE_URL}/terminos` },
 };
 
 const LAST_UPDATED = "16 de agosto de 2026";
@@ -31,30 +32,33 @@ export default function TerminosPage() {
       <div className="space-y-8 text-sm leading-relaxed text-muted-foreground">
         <Section title="1. Aceptación de los términos">
           <p>
-            Al acceder y utilizar JW PARFUM (en adelante, "el Servicio") —nuestro
-            sitio web de venta de perfumes— aceptas quedar vinculado por estos
-            Términos y Condiciones. Si no estás de acuerdo con alguna parte, no
-            podrás utilizar el Servicio.
+            Al acceder y utilizar The Spot (en adelante, "el Servicio") —nuestra
+            tienda en línea de belleza, relojes, perfumes, gorras y tenis—
+            aceptas quedar vinculado por estos Términos y Condiciones. Si no
+            estás de acuerdo con alguna parte, no podrás utilizar el Servicio.
           </p>
         </Section>
 
         <Section title="2. Descripción del servicio">
           <p>
-            JW PARFUM es una perfumería en línea operada desde la República
+            The Spot es una tienda en línea operada desde la República
             Dominicana. A través del Servicio puedes:
           </p>
           <ul className="mt-3 list-inside list-disc space-y-1 pl-2">
-            <li>Explorar el catálogo de perfumes por marca, categoría y tamaño.</li>
-            <li>Hacer un pedido como invitado, sin necesidad de registrarte.</li>
+            <li>Explorar el catálogo por marca, categoría, talla o tamaño.</li>
+            <li>
+              Hacer un pedido como invitado, sin necesidad de registrarte.
+            </li>
             <li>Aplicar cupones de descuento cuando estén disponibles.</li>
-            <li>Consultar el estado de tu pedido con el número que te damos al confirmarlo.</li>
+            <li>
+              Consultar el estado de tu pedido con el número que te damos al
+              confirmarlo.
+            </li>
           </ul>
         </Section>
 
         <Section title="3. Requisitos de edad">
-          <p>
-            Debes tener al menos 18 años para realizar compras en JW PARFUM.
-          </p>
+          <p>Debes tener al menos 18 años para realizar compras en The Spot.</p>
         </Section>
 
         <Section title="4. Pedido de invitado, sin cuenta">
@@ -63,21 +67,27 @@ export default function TerminosPage() {
             funciona exclusivamente con pedido de invitado. Al hacer un pedido
             nos proporcionas los datos de contacto y entrega necesarios para
             procesarlo, y puedes consultar su estado con el número de pedido en{" "}
-            <Link href="/estado-pedido" className="text-primary hover:underline">
+            <Link
+              href="/estado-pedido"
+              className="text-primary hover:underline"
+            >
               Estado del pedido
             </Link>
-            . JW PARFUM puede negarse a procesar pedidos que se usen de forma
+            . The Spot puede negarse a procesar pedidos que se usen de forma
             fraudulenta.
           </p>
         </Section>
 
         <Section title="5. Proceso de compra — sin pagos en línea">
           <p>
-            JW PARFUM <strong className="text-foreground">no procesa pagos en el sitio</strong>.
-            Al confirmar un pedido, este queda registrado como pendiente y te
-            contactamos directamente por WhatsApp para coordinar el método de
-            pago y la entrega. Un pedido se considera confirmado únicamente
-            cuando ambas partes acuerdan los detalles por ese medio.
+            The Spot{" "}
+            <strong className="text-foreground">
+              no procesa pagos en el sitio
+            </strong>
+            . Al confirmar un pedido, este queda registrado como pendiente y te
+            contactamos por correo o teléfono para coordinar el método de pago
+            (Apple Pay o Google Pay) y la entrega. Un pedido se considera
+            confirmado cuando ambas partes acuerdan los detalles.
           </p>
           <p className="mt-3">
             Los precios y la disponibilidad de los productos están sujetos a
@@ -88,8 +98,8 @@ export default function TerminosPage() {
         <Section title="6. Entregas">
           <p>
             Los plazos de entrega que mostramos son estimados y pueden variar
-            por causas ajenas a JW PARFUM. Coordinamos la entrega directamente
-            contigo al confirmar el pedido por WhatsApp.
+            por causas ajenas a The Spot. Coordinamos la entrega directamente
+            contigo al confirmar el pedido.
           </p>
         </Section>
 
@@ -108,7 +118,7 @@ export default function TerminosPage() {
 
         <Section title="8. Propiedad intelectual">
           <p>
-            La marca JW PARFUM, su logotipo y los contenidos propios del sitio
+            La marca The Spot, su logotipo y los contenidos propios del sitio
             están protegidos por las leyes de propiedad intelectual de la
             República Dominicana y no pueden usarse sin autorización.
           </p>
@@ -117,7 +127,10 @@ export default function TerminosPage() {
         <Section title="9. Conducta del usuario">
           <p>Queda prohibido utilizar el Servicio para:</p>
           <ul className="mt-3 list-inside list-disc space-y-1 pl-2">
-            <li>Publicar o transmitir contenido ofensivo, difamatorio, obsceno o ilegal.</li>
+            <li>
+              Publicar o transmitir contenido ofensivo, difamatorio, obsceno o
+              ilegal.
+            </li>
             <li>Infringir derechos de terceros.</li>
             <li>Acceder sin autorización a sistemas ajenos.</li>
             <li>
@@ -129,7 +142,7 @@ export default function TerminosPage() {
 
         <Section title="10. Limitación de responsabilidad">
           <p>
-            En la medida máxima permitida por la ley dominicana, JW PARFUM no
+            En la medida máxima permitida por la ley dominicana, The Spot no
             será responsable por daños indirectos, incidentales, especiales o
             consecuentes derivados del uso o la imposibilidad de uso del
             Servicio.
@@ -154,7 +167,7 @@ export default function TerminosPage() {
             >
               {SUPPORT_EMAIL}
             </a>{" "}
-            · WhatsApp:{" "}
+            · Teléfono:{" "}
             <a
               href={`tel:+1${SUPPORT_PHONE.replace(/-/g, "")}`}
               className="text-primary hover:underline underline-offset-2"

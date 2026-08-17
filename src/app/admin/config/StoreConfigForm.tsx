@@ -35,7 +35,7 @@ export function StoreConfigForm({ initial }: { initial: StoreConfig }) {
             label="Nombre de la tienda"
             name="nombre"
             defaultValue={initial.nombre}
-            placeholder="Ej. JW PARFUM"
+            placeholder="Ej. The Spot"
           />
           <Input
             label="Dirección"

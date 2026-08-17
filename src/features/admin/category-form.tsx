@@ -196,11 +196,11 @@ export function CategoryForm({
               <SelectMenu
                 id="category-size_preset_id"
                 name="size_preset_id"
-                label="Tipo de talla"
+                label="Tipo de talla o tamaño"
                 defaultValue={initial?.size_preset_id ?? ""}
-                placeholder="Sin tallas definidas"
+                placeholder="Sin variantes definidas"
                 options={[
-                  { value: "", label: "Sin tallas definidas" },
+                  { value: "", label: "Sin variantes definidas" },
                   ...sizePresets
                     .filter((p) => p.kind === "size")
                     .map((p) => ({
@@ -210,7 +210,7 @@ export function CategoryForm({
                 ]}
               />
               <p className="mt-1.5 text-xs text-muted-foreground">
-                Las tallas disponibles al crear productos de esta categoría.
+                Las tallas o tamaños que se precargan al crear productos de esta categoría.
               </p>
             </div>
 

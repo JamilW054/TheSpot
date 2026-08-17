@@ -1,5 +1,5 @@
 /**
- * Estado de cobro de un pedido. JW PARFUM no cobra en línea: el pedido queda
+ * Estado de cobro de un pedido. The Spot no cobra en línea: el pedido queda
  * `pending` hasta que el admin lo marca manualmente como `paid` tras coordinar
  * el pago por WhatsApp. Coincide con el constraint de `orders.payment_status`
  * (migración 00001): solo admite 'pending' | 'paid'.

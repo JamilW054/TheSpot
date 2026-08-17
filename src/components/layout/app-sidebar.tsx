@@ -99,7 +99,7 @@ export function AppSidebar({
           <div className="flex items-center justify-between gap-2 px-2 mb-5">
             <div className="flex flex-col">
               <span className="text-[15px] font-semibold tracking-tight text-(--admin-brand-strong)">
-                JW PARFUM
+                The Spot
               </span>
               <span className="text-[11px] text-muted-foreground">
                 Panel admin

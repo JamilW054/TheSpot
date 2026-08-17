@@ -50,6 +50,10 @@ function LoginForm() {
     <div className="flex flex-1 flex-col items-center justify-center px-4 py-12">
       <div className="w-full max-w-md animate-slide-up">
         <div className="mb-8 text-center">
+          <p className="mb-3 text-2xl font-black tracking-tight">
+            the<span className="text-primary"> spot</span>
+            <span className="text-primary">.</span>
+          </p>
           <h1 className="text-2xl font-black tracking-tight text-foreground">
             Iniciar sesión
           </h1>

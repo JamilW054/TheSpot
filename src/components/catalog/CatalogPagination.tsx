@@ -46,7 +46,7 @@ export function CatalogPagination({
 }: CatalogPaginationProps) {
   if (totalPages <= 1) return null;
   const linkClass =
-    "inline-flex size-10 items-center justify-center rounded-lg border border-border text-sm font-semibold transition-colors hover:border-primary hover:text-primary";
+    "inline-flex size-10 items-center justify-center rounded-full border border-rose-200 text-sm font-semibold transition-colors hover:border-primary hover:text-primary";
 
   return (
     <nav

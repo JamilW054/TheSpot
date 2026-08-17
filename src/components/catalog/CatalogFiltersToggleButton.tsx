@@ -21,7 +21,7 @@ export function CatalogFiltersToggleButton() {
       aria-pressed={visible}
       aria-label={visible ? "Ocultar filtros" : "Mostrar filtros"}
       title={visible ? "Ocultar filtros" : "Mostrar filtros"}
-      className={`fixed top-1/2 z-40 hidden -translate-y-1/2 items-center justify-center rounded-r-xl border border-l-0 border-border/80 bg-card py-5 px-1.5 text-muted-foreground shadow-[0_8px_24px_-12px_rgba(0,0,0,0.5)] transition-[left,background-color,color] duration-300 ease-in-out hover:bg-muted/60 hover:text-primary lg:flex ${
+      className={`fixed top-1/2 z-40 hidden -translate-y-1/2 items-center justify-center rounded-r-xl border border-l-0 border-rose-200 bg-white py-5 px-1.5 text-muted-foreground shadow-[0_8px_24px_-12px_rgba(225,29,72,0.35)] transition-[left,background-color,color] duration-300 ease-in-out hover:bg-rose-50 hover:text-primary lg:flex ${
         visible ? "left-73" : "left-8"
       }`}
     >

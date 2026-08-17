@@ -15,3 +15,18 @@ export function variantKey(
   const c = (color ?? "").trim().toLowerCase();
   return `${s}|${c}`;
 }
+
+/**
+ * Etiqueta del eje de tamaño según los valores: "ml" → tamaño (perfumes,
+ * belleza); el resto → talla (tenis, gorras, relojes).
+ */
+export function sizeAxisLabel(sizes: string[]): {
+  noun: string;
+  prompt: string;
+} {
+  const looksVolume = sizes.some((s) => /\d+\s*ml/i.test(s));
+  if (looksVolume) {
+    return { noun: "Tamaño", prompt: "selecciona un tamaño" };
+  }
+  return { noun: "Talla", prompt: "selecciona una talla" };
+}

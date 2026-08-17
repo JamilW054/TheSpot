@@ -3,7 +3,7 @@ import { getProducts, getShippingMethods } from "@/database/repositories";
 import { CheckoutContent } from "./CheckoutContent";
 
 export const metadata = {
-  title: "Checkout | JW PARFUM",
+  title: "Checkout | The Spot",
   description: "Finaliza tu pedido. Introduce tus datos de envío y confirma.",
 };
 
@@ -45,8 +45,8 @@ export default async function CheckoutPage() {
           Finalizar pedido
         </h1>
         <p className="mt-2 text-sm text-muted-foreground max-w-lg">
-          Introduce tus datos de entrega. No se realiza ningún cobro en línea:
-          confirmamos el pedido contigo por WhatsApp o correo.
+          Introduce tus datos de entrega. Te contactamos para coordinar el pago
+          — aceptamos Apple Pay y Google Pay.
         </p>
       </header>
 

@@ -16,11 +16,11 @@ const styles = StyleSheet.create({
     fontFamily: "Helvetica",
     color: "#0d1b2e",
   },
-  headerBar: { height: 4, backgroundColor: "#1e90ff", marginBottom: 24 },
+  headerBar: { height: 4, backgroundColor: "#DC2626", marginBottom: 24 },
   brand: {
     fontSize: 20,
     fontFamily: "Helvetica-Bold",
-    color: "#1e90ff",
+    color: "#DC2626",
     marginBottom: 2,
   },
   brandSub: {
@@ -59,7 +59,7 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontSize: 9,
     fontFamily: "Helvetica-Bold",
-    color: "#1e90ff",
+    color: "#DC2626",
     textTransform: "uppercase",
     letterSpacing: 1,
   },
@@ -125,7 +125,7 @@ const styles = StyleSheet.create({
   colQty: { width: 46, alignItems: "center" },
   colPrice: { width: 80 },
   itemName: { fontSize: 10, fontFamily: "Helvetica-Bold" },
-  itemMeta: { fontSize: 8, color: "#1e90ff", marginTop: 2 },
+  itemMeta: { fontSize: 8, color: "#DC2626", marginTop: 2 },
   itemUnitPrice: { fontSize: 8, color: "#9aaabb", marginTop: 2 },
   qtyBadge: {
     backgroundColor: "#f7f9fc",
@@ -172,7 +172,7 @@ const styles = StyleSheet.create({
   grandTotalValue: {
     fontSize: 16,
     fontFamily: "Helvetica-Bold",
-    color: "#1e90ff",
+    color: "#DC2626",
   },
   thanks: {
     marginTop: 24,
@@ -224,10 +224,10 @@ export function ReceiptDocument(data: CompraEmailData) {
   const itemCount = data.items.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
-    <Document title={`Recibo ${data.orderNumber} — JW PARFUM`}>
+    <Document title={`Recibo ${data.orderNumber} — The Spot`}>
       <Page size="A4" style={styles.page}>
         <View style={styles.headerBar} />
-        <Text style={styles.brand}>JW PARFUM</Text>
+        <Text style={styles.brand}>The Spot</Text>
         <Text style={styles.brandSub}>RECIBO DE COMPRA</Text>
 
         <Text style={styles.title}>Pedido #{data.orderNumber}</Text>
@@ -328,7 +328,7 @@ export function ReceiptDocument(data: CompraEmailData) {
         <Text style={styles.thanks}>Gracias por tu compra</Text>
 
         <Text style={styles.footer}>
-          {`JW PARFUM · República Dominicana · ID ${data.orderId}\nEste recibo es un comprobante de compra sin validez fiscal.`}
+          {`The Spot · República Dominicana · ID ${data.orderId}\nEste recibo es un comprobante de compra sin validez fiscal.`}
         </Text>
       </Page>
     </Document>

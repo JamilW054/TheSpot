@@ -16,7 +16,7 @@ export async function sendCompraEmail(to: string, data: CompraEmailData) {
   return getResend().emails.send({
     from: FROM,
     to,
-    subject: `Pedido confirmado #${data.orderNumber} — JW PARFUM`,
+    subject: `Pedido confirmado #${data.orderNumber} — The Spot`,
     html: compraEmailHtml(data),
     text: compraEmailText(data),
     attachments: [
@@ -39,7 +39,7 @@ export async function sendNewOrderAdminEmail(
   return getResend().emails.send({
     from: FROM,
     to,
-    subject: `🛒 Nuevo pedido #${data.orderNumber} — JW PARFUM`,
+    subject: `🛒 Nuevo pedido #${data.orderNumber} — The Spot`,
     html: nuevoPedidoAdminEmailHtml(data),
     text: nuevoPedidoAdminEmailText(data),
   });

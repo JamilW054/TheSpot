@@ -1,9 +1,9 @@
 ---
 name: jw-parfum-setup
-description: Conectar el proyecto JW PARFUM a un proyecto Supabase real, aplicar las migraciones, cargar variables de entorno y generar/actualizar las credenciales del usuario administrador. Usar cuando el usuario pida "conectar Supabase", "crear las credenciales de admin", "aplicar migraciones" o "dejar listo el entorno".
+description: Conectar el proyecto JW a un proyecto Supabase real, aplicar las migraciones, cargar variables de entorno y generar/actualizar las credenciales del usuario administrador. Usar cuando el usuario pida "conectar Supabase", "crear las credenciales de admin", "aplicar migraciones" o "dejar listo el entorno".
 ---
 
-# Setup de JW PARFUM (Supabase + credenciales de admin)
+# Setup de JW (Supabase + credenciales de admin)
 
 Guía para dejar el proyecto corriendo contra un Supabase real, de cero. Este proyecto **no trae un Supabase ya vinculado** — cada vez que se ejecuta esta skill hay que confirmar si ya existe un proyecto o hay que crearlo.
 

@@ -60,10 +60,10 @@ export function CatalogFilterChips({
   if (chips.length === 0) return null;
 
   const chipClass =
-    "inline-flex items-center gap-1.5 rounded-full border border-border/90 bg-muted/45 px-3 py-1.5 text-xs font-medium text-foreground shadow-sm transition-colors hover:border-primary/45 hover:bg-primary/10";
+    "inline-flex items-center gap-1.5 rounded-full border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:border-primary/45 hover:bg-white";
 
   return (
-    <div
+    <nav
       className="mb-6 flex flex-wrap items-center gap-2"
       aria-label="Filtros activos"
     >
@@ -77,6 +77,6 @@ export function CatalogFilterChips({
           <span className="sr-only">Quitar filtro</span>
         </Link>
       ))}
-    </div>
+    </nav>
   );
 }

@@ -1,15 +1,16 @@
 "use client";
 
+import { ChevronLeft, Tag, Trash2, Truck } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Trash2, Tag, ChevronLeft, Truck } from "lucide-react";
+import { AcceptedPayments } from "@/components/brand/AcceptedPayments";
 import { FreeShippingProgress } from "@/components/cart/FreeShippingProgress";
 import { qualifiesForFreeShipping } from "@/config/shipping";
 import { useCart } from "@/contexts/cart-context";
+import type { ShippingMethod } from "@/database/repositories";
 import { formatDOPFromCents } from "@/lib/format-currency";
 import type { CartItem, CatalogProduct } from "@/types";
-import type { ShippingMethod } from "@/database/repositories";
 
 function formatShippingDesc(method: ShippingMethod): string {
   if (method.description) return method.description;
@@ -77,7 +78,12 @@ interface CartItemCardProps {
   ) => void;
 }
 
-function CartItemCard({ item, product, onUpdate, onRemove }: CartItemCardProps) {
+function CartItemCard({
+  item,
+  product,
+  onUpdate,
+  onRemove,
+}: CartItemCardProps) {
   return (
     <li className="group flex gap-3 rounded-[14px] border border-border bg-card p-4 transition-[border-color] duration-200 hover:border-primary/20">
       {/* Imagen */}
@@ -262,7 +268,13 @@ interface PromoInputProps {
   applied: boolean;
 }
 
-function PromoInput({ code, onChange, onApply, error, applied }: PromoInputProps) {
+function PromoInput({
+  code,
+  onChange,
+  onApply,
+  error,
+  applied,
+}: PromoInputProps) {
   return (
     <div className="rounded-[14px] border border-border bg-card p-4">
       <div className="mb-3 flex items-center gap-2">
@@ -276,7 +288,7 @@ function PromoInput({ code, onChange, onApply, error, applied }: PromoInputProps
           type="text"
           value={code}
           onChange={(e) => onChange(e.target.value.toUpperCase())}
-          placeholder="JWPARFUM10"
+          placeholder="SPOT10"
           className="flex-1 rounded-[10px] border border-border bg-background px-3 py-2 font-mono text-sm text-foreground placeholder:text-muted-foreground/50 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15"
         />
         <button
@@ -287,9 +299,7 @@ function PromoInput({ code, onChange, onApply, error, applied }: PromoInputProps
           Aplicar
         </button>
       </div>
-      {error && (
-        <p className="mt-2 text-xs text-destructive">{error}</p>
-      )}
+      {error && <p className="mt-2 text-xs text-destructive">{error}</p>}
       {applied && (
         <p className="mt-2 text-xs text-primary font-medium">
           ¡Código aplicado correctamente!
@@ -318,7 +328,9 @@ function OrderSummary({
   showCheckoutBtn = true,
 }: OrderSummaryProps) {
   return (
-    <div className={`rounded-[14px] border border-border bg-card p-4 ${className}`}>
+    <div
+      className={`rounded-[14px] border border-border bg-card p-4 ${className}`}
+    >
       <h3 className="mb-3 text-sm font-semibold text-foreground">Resumen</h3>
       <div className="space-y-2">
         <div className="flex items-center justify-between gap-4">
@@ -350,8 +362,9 @@ function OrderSummary({
             Finalizar pedido
           </Link>
           <p className="mt-2 text-center text-xs text-muted-foreground">
-            Sin pago en línea: coordinamos el cobro por WhatsApp
+            Aceptamos Apple Pay y Google Pay
           </p>
+          <AcceptedPayments className="mt-3" align="center" label={null} />
         </>
       )}
     </div>

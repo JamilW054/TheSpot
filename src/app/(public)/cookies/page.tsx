@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Política de Cookies — JW PARFUM",
-  description: "Información sobre el uso de cookies y almacenamiento local en JW PARFUM.",
+  title: "Política de Cookies — The Spot",
+  description: "Información sobre el uso de cookies y almacenamiento local en The Spot.",
 };
 
 const LAST_UPDATED = "16 de agosto de 2026";
@@ -24,7 +24,7 @@ export default function CookiesPage() {
         <Section title="1. ¿Qué son las cookies?">
           <p>
             Las cookies son pequeños archivos de texto que se almacenan en tu dispositivo cuando
-            visitas un sitio web. JW PARFUM no requiere que crees una cuenta, así que usamos muy
+            visitas un sitio web. The Spot no requiere que crees una cuenta, así que usamos muy
             pocas: la mayoría de tus datos (carrito, favoritos) se guardan en el almacenamiento
             local de tu navegador, no en cookies.
           </p>

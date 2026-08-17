@@ -24,7 +24,7 @@ export function CatalogMobileFilters(props: CatalogFiltersPanelProps) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="fixed bottom-5 right-4 z-30 flex items-center gap-2 rounded-full border border-primary/45 bg-card/95 px-4 py-3 text-sm font-semibold text-foreground shadow-[0_12px_40px_-18px_rgba(0,0,0,0.65)] backdrop-blur-md transition-colors hover:border-primary/70 hover:bg-muted/40 lg:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        className="fixed right-4 bottom-5 z-30 flex items-center gap-2 rounded-full border border-primary/40 bg-white/95 px-4 py-3 text-sm font-semibold text-foreground shadow-[0_12px_32px_-14px_rgba(225,29,72,0.55)] backdrop-blur-md transition-colors hover:border-primary hover:bg-rose-50 lg:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         aria-expanded={open}
         aria-controls="catalog-filters-sheet"
         aria-label="Abrir filtros del catálogo"
@@ -49,9 +49,9 @@ export function CatalogMobileFilters(props: CatalogFiltersPanelProps) {
             role="dialog"
             aria-modal="true"
             aria-label="Filtros del catálogo"
-            className="fixed inset-x-0 bottom-0 z-50 flex max-h-[90vh] flex-col overflow-hidden rounded-t-2xl border border-border/90 bg-card shadow-[0_-20px_60px_-20px_rgba(0,0,0,0.45)] lg:hidden"
+            className="fixed inset-x-0 bottom-0 z-50 flex max-h-[90vh] flex-col overflow-hidden rounded-t-[1.75rem] border border-rose-100 bg-white shadow-[0_-20px_60px_-20px_rgba(225,29,72,0.25)] lg:hidden"
           >
-            <div className="flex shrink-0 items-center justify-between gap-3 border-b border-border/80 px-4 py-3">
+            <div className="flex shrink-0 items-center justify-between gap-3 border-b border-rose-100 px-4 py-3">
               <p className="text-sm font-semibold text-foreground">
                 Filtrar catálogo
               </p>

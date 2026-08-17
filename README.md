@@ -1,8 +1,6 @@
-# JW PARFUM
+# JW
 
-Tienda en línea de perfumes (una sola tienda física). Catálogo administrable, checkout de invitado (sin cuentas de cliente) y sin pagos en línea: cada pedido nuevo llega por correo al Gmail del negocio y el cliente confirma por WhatsApp.
-
-Este repositorio es un refactor del proyecto original "Buxxep" (una tienda de ropa por encargo con editor de diseño y pasarela de pago AZUL). Ver [docs/00-refactor-status.md](docs/00-refactor-status.md) para el detalle de esa migración y las decisiones de alcance.
+Tienda en línea de belleza, relojes, perfumes, gorras y tenis (una sola tienda física). Catálogo administrable, checkout de invitado (sin cuentas de cliente) y sin pagos en línea: cada pedido nuevo llega por correo al Gmail del negocio y el cliente confirma por WhatsApp.
 
 ## Stack
 
@@ -91,7 +89,7 @@ Sin pagos en línea: el cliente arma el carrito (guardado en `localStorage`), co
 Este repo incluye skills para tareas operativas recurrentes (ver `.claude/skills/`):
 
 - **jw-parfum-setup** — conectar Supabase, aplicar migraciones, generar credenciales de admin.
-- **jw-parfum-catalogo** — dar de alta un perfume (marca, categoría, precio, tamaños en ml, stock, imágenes).
+- **jw-parfum-catalogo** — dar de alta un producto (marca, categoría, precio, talla/tamaño, stock, imágenes).
 - **jw-parfum-pedidos** — flujo pedido → correo → WhatsApp, y cómo probarlo.
 
 ## Desarrollo

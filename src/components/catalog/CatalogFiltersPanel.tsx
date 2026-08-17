@@ -3,9 +3,9 @@ import {
   ArrowUpWideNarrow,
   ChevronDown,
   Layers,
+  LayoutGrid,
   Palette,
   Search,
-  Shirt,
   Sparkles,
   Tags,
   Wallet,
@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { isComingSoonCategory } from "@/config/brand";
 import type { CategoryRow } from "@/database/repositories";
 import type { CatalogPrecio, CatalogQueryParts } from "@/lib/catalog-query";
 import {
@@ -63,14 +64,14 @@ export function CatalogFiltersPanel({
   );
 
   const rowBase =
-    "flex items-center gap-3 rounded-md px-2 py-2 text-sm transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background";
-  const rowInactive = "text-foreground hover:bg-muted/50";
-  const rowActive = "bg-muted font-semibold text-foreground";
+    "flex items-center gap-3 rounded-xl px-2 py-2 text-sm transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background";
+  const rowInactive = "text-foreground hover:bg-rose-50";
+  const rowActive = "bg-rose-50 font-semibold text-primary";
 
   const pillBase =
-    "inline-flex items-center justify-center gap-1 rounded-md border px-2.5 py-2 text-center text-[11px] font-semibold leading-tight transition-colors sm:text-xs";
+    "inline-flex items-center justify-center gap-1 rounded-full border px-2.5 py-2 text-center text-[11px] font-semibold leading-tight transition-colors sm:text-xs";
   const pillOff =
-    "border-border/75 bg-transparent text-muted-foreground hover:border-foreground/40 hover:text-foreground";
+    "border-rose-200 bg-white text-muted-foreground hover:border-primary/40 hover:text-foreground";
   const pillOn = "border-primary bg-primary text-primary-foreground";
 
   const sectionSummary =
@@ -122,7 +123,7 @@ export function CatalogFiltersPanel({
           name="q"
           defaultValue={filters.busqueda ?? ""}
           placeholder="Buscar"
-          className="w-full rounded-md border border-border/80 bg-transparent py-2.5 pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground transition-colors focus:border-primary/60 focus:outline-none focus:ring-2 focus:ring-ring/35"
+          className="w-full rounded-full border border-rose-200 bg-white py-2.5 pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground transition-colors focus:border-primary/60 focus:outline-none focus:ring-2 focus:ring-ring/35"
           autoComplete="off"
         />
       </form>
@@ -241,7 +242,7 @@ export function CatalogFiltersPanel({
                     <span
                       className={`flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 transition-all ${
                         on
-                          ? "border-primary shadow-[0_0_0_2px_rgba(60,200,247,0.25)]"
+                          ? "border-primary shadow-[0_0_0_2px_rgba(220,38,38,0.25)]"
                           : "border-border/70 hover:border-primary/45"
                       }`}
                       style={c.hex ? { backgroundColor: c.hex } : undefined}
@@ -283,7 +284,7 @@ export function CatalogFiltersPanel({
                     className={`rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors ${
                       on
                         ? "border-primary bg-primary text-primary-foreground"
-                        : "border-border/75 bg-transparent text-muted-foreground hover:border-foreground/40 hover:text-foreground"
+                        : "border-rose-200 bg-white text-muted-foreground hover:border-primary hover:text-foreground"
                     }`}
                   >
                     {fmtTag(tag)}
@@ -308,14 +309,15 @@ export function CatalogFiltersPanel({
               scroll={false}
               className={`${rowBase} ${!activeSlug ? rowActive : rowInactive}`}
             >
-              <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-muted/80 text-muted-foreground">
-                <Shirt className="size-4.5 opacity-55" aria-hidden />
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-rose-50 text-primary">
+                <LayoutGrid className="size-4.5 opacity-55" aria-hidden />
               </span>
               <span className="leading-snug">Todo el catálogo</span>
             </Link>
 
             {categories.map((cat) => {
               const selected = activeSlug === cat.slug;
+              const soon = isComingSoonCategory(cat.slug);
               const href = selected
                 ? catalogQueryHref(catalogQueryOmit(filters, "categoria"))
                 : catalogQueryHref({ ...filters, categoria: cat.slug });
@@ -328,25 +330,33 @@ export function CatalogFiltersPanel({
                   scroll={false}
                   className={`${rowBase} ${selected ? rowActive : rowInactive}`}
                 >
-                  <span className="relative size-9 shrink-0 overflow-hidden rounded-md bg-muted">
+                  <span className="relative size-9 shrink-0 overflow-hidden rounded-full bg-rose-50">
                     {cover ? (
                       <Image
                         src={cover}
                         alt=""
                         fill
                         sizes="36px"
-                        className="object-cover"
+                        className={`object-cover ${soon ? "opacity-60" : ""}`}
                         unoptimized={thumbNeedsUnoptimized(cover)}
                       />
                     ) : (
                       <span className="flex size-full items-center justify-center text-muted-foreground">
-                        <Shirt className="size-4.5 opacity-45" aria-hidden />
+                        <LayoutGrid
+                          className="size-4.5 opacity-45"
+                          aria-hidden
+                        />
                       </span>
                     )}
                   </span>
                   <span className="min-w-0 flex-1 leading-snug line-clamp-2">
                     {cat.name}
                   </span>
+                  {soon ? (
+                    <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-primary">
+                      Soon
+                    </span>
+                  ) : null}
                 </Link>
               );
             })}

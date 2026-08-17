@@ -60,8 +60,8 @@ export function nuevoPedidoAdminEmailHtml(
             <tr>
               <td style="padding:14px 0;border-bottom:1px solid #edf1f7;vertical-align:top;">
                 <div style="font-size:14px;font-weight:600;color:#0d1b2e;">${item.name}</div>
-                ${item.size ? `<div style="margin-top:3px;font-size:12px;font-weight:600;color:#1e90ff;">Tamaño ${item.size}</div>` : ""}
-                ${item.color ? `<div style="margin-top:3px;font-size:12px;font-weight:600;color:#1e90ff;">Color ${item.color}</div>` : ""}
+                ${item.size ? `<div style="margin-top:3px;font-size:12px;font-weight:600;color:#DC2626;">Tamaño ${item.size}</div>` : ""}
+                ${item.color ? `<div style="margin-top:3px;font-size:12px;font-weight:600;color:#DC2626;">Color ${item.color}</div>` : ""}
               </td>
               <td style="padding:14px 8px;border-bottom:1px solid #edf1f7;text-align:center;vertical-align:top;">
                 <span style="display:inline-block;background:#f7f9fc;border:1px solid #e4eaf2;border-radius:6px;padding:3px 10px;font-size:12px;font-weight:600;color:#5a6a7d;">×${item.quantity}</span>
@@ -87,7 +87,7 @@ export function nuevoPedidoAdminEmailHtml(
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <title>Nuevo pedido — JW PARFUM</title>
+  <title>Nuevo pedido — The Spot</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap');
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -105,8 +105,8 @@ export function nuevoPedidoAdminEmailHtml(
     <div style="max-width:580px;margin:0 auto;background-color:#ffffff;border-radius:20px;overflow:hidden;box-shadow:0 8px 40px rgba(0,100,220,0.10);">
 
       <!-- HEADER -->
-      <div style="background:linear-gradient(145deg,#1565c0 0%,#1e90ff 60%,#42a8ff 100%);padding:40px 32px 36px;text-align:center;">
-        <span style="display:inline-block;font-family:Georgia,'Times New Roman',serif;font-size:26px;font-weight:700;letter-spacing:1.5px;color:#ffffff;text-shadow:0 3px 14px rgba(0,0,0,0.30);">JW PARFUM</span>
+      <div style="background:linear-gradient(145deg,#991B1B 0%,#DC2626 60%,#EF4444 100%);padding:40px 32px 36px;text-align:center;">
+        <span style="display:inline-block;font-family:Georgia,'Times New Roman',serif;font-size:26px;font-weight:700;letter-spacing:1.5px;color:#ffffff;text-shadow:0 3px 14px rgba(0,0,0,0.30);">The Spot</span>
       </div>
 
       <!-- CUERPO -->
@@ -132,7 +132,7 @@ export function nuevoPedidoAdminEmailHtml(
                 <tr>
                   <td style="text-align:left;">
                     <div style="font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#9aaabb;margin-bottom:4px;">Pedido</div>
-                    <div style="font-size:18px;font-weight:700;color:#1e90ff;font-family:'Courier New',Courier,monospace;">#${orderNumber}</div>
+                    <div style="font-size:18px;font-weight:700;color:#DC2626;font-family:'Courier New',Courier,monospace;">#${orderNumber}</div>
                   </td>
                   <td style="text-align:right;">
                     <div style="font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#9aaabb;margin-bottom:4px;">Cliente</div>
@@ -159,7 +159,7 @@ export function nuevoPedidoAdminEmailHtml(
         </table>
 
         <!-- Productos -->
-        <div style="font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#1e90ff;margin-bottom:4px;text-align:left;">Productos</div>
+        <div style="font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#DC2626;margin-bottom:4px;text-align:left;">Productos</div>
         <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:18px;">
           ${itemRows}
         </table>
@@ -186,7 +186,7 @@ export function nuevoPedidoAdminEmailHtml(
               <table width="100%" cellpadding="0" cellspacing="0">
                 <tr>
                   <td style="font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#7a8899;text-align:left;">Total</td>
-                  <td style="text-align:right;"><span style="font-size:22px;font-weight:700;color:#1e90ff;">${fmt(total)}</span></td>
+                  <td style="text-align:right;"><span style="font-size:22px;font-weight:700;color:#DC2626;">${fmt(total)}</span></td>
                 </tr>
               </table>
             </td>
@@ -194,7 +194,7 @@ export function nuevoPedidoAdminEmailHtml(
         </table>
 
         <!-- CTA -->
-        <a href="${orderUrl}" class="cta-button" style="display:inline-block;background-color:#1e90ff;color:#ffffff;text-decoration:none;padding:15px 44px;border-radius:10px;font-size:15px;font-weight:600;letter-spacing:0.01em;font-family:'Outfit','Segoe UI',Arial,sans-serif;">
+        <a href="${orderUrl}" class="cta-button" style="display:inline-block;background-color:#DC2626;color:#ffffff;text-decoration:none;padding:15px 44px;border-radius:10px;font-size:15px;font-weight:600;letter-spacing:0.01em;font-family:'Outfit','Segoe UI',Arial,sans-serif;">
           Ver pedido en el panel &rarr;
         </a>
 
@@ -205,11 +205,11 @@ export function nuevoPedidoAdminEmailHtml(
       <!-- FOOTER -->
       <div style="border-top:1px solid #edf1f7;padding:24px 32px;text-align:center;background-color:#fafbfd;">
         <div style="margin-bottom:14px;text-align:center;">
-          <a href="${SITE}/" title="jwparfum.com" target="_blank" style="display:inline-block;width:38px;height:38px;border-radius:10px;background-color:#ffffff;border:1px solid #e4eaf2;text-align:center;text-decoration:none;vertical-align:middle;margin:0 5px;">
-            <img src="https://img.icons8.com/ios/18/555e6d/globe--v1.png" alt="jwparfum.com" width="18" height="18" style="display:block;margin:10px auto 0;" />
+          <a href="${SITE}/" title="The Spot" target="_blank" style="display:inline-block;width:38px;height:38px;border-radius:10px;background-color:#ffffff;border:1px solid #e4eaf2;text-align:center;text-decoration:none;vertical-align:middle;margin:0 5px;">
+            <img src="https://img.icons8.com/ios/18/555e6d/globe--v1.png" alt="The Spot" width="18" height="18" style="display:block;margin:10px auto 0;" />
           </a>
         </div>
-        <p style="color:#b0bbc8;font-size:11px;margin-top:6px;">© ${year} JW PARFUM</p>
+        <p style="color:#b0bbc8;font-size:11px;margin-top:6px;">© ${year} The Spot</p>
       </div>
 
     </div>
@@ -243,7 +243,7 @@ export function nuevoPedidoAdminEmailText(
     )
     .join("\n");
   const discountLine = discount > 0 ? `\nDescuento: -${fmt(discount)}` : "";
-  return `JW PARFUM — Nuevo pedido #${orderNumber}
+  return `The Spot — Nuevo pedido #${orderNumber}
 
 Cliente: ${customerName}
 Correo: ${customerEmail}${customerPhone ? `\nTeléfono: ${customerPhone}` : ""}${shippingAddress ? `\nDirección: ${shippingAddress}` : ""}
@@ -258,5 +258,5 @@ TOTAL: ${fmt(total)}
 Ver en el panel: ${SITE}/admin/pedidos
 ID: ${orderId}
 
-— JW PARFUM`;
+— The Spot`;
 }

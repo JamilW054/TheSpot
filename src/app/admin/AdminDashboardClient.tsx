@@ -63,7 +63,7 @@ const PAGO_BADGE: Record<
 };
 
 const QUICK_ACTIONS = [
-  { label: "Nuevo perfume", href: "/admin/catalogo?create=1", icon: Plus },
+  { label: "Nuevo producto", href: "/admin/catalogo?create=1", icon: Plus },
   { label: "Pedidos", href: "/admin/pedidos", icon: ShoppingCart },
   { label: "Cupón", href: "/admin/cupones/nuevo", icon: Tag },
   { label: "Configuración", href: "/admin/config", icon: Settings },

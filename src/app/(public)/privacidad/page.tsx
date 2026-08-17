@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { SITE_URL } from "@/config/brand";
 
 export const metadata: Metadata = {
-  title: "Política de Privacidad — JW PARFUM",
+  title: "Política de Privacidad — The Spot",
   description:
-    "Conoce cómo JW PARFUM recopila, usa y protege tu información personal al hacer un pedido.",
-  alternates: { canonical: "https://jwparfum.com/privacidad" },
+    "Conoce cómo The Spot recopila, usa y protege tu información personal al hacer un pedido.",
+  alternates: { canonical: `${SITE_URL}/privacidad` },
 };
 
 const LAST_UPDATED = "16 de agosto de 2026";
@@ -31,7 +32,7 @@ export default function PrivacidadPage() {
       <div className="space-y-8 text-sm leading-relaxed text-muted-foreground">
         <section>
           <p>
-            JW PARFUM es una perfumería en línea operada desde la República
+            The Spot es una tienda en línea operada desde la República
             Dominicana. No pedimos que crees una cuenta para comprar: solo
             tratamos los datos necesarios para procesar tu pedido de invitado.
             Esta política explica qué datos recopilamos y con qué fines. Para
@@ -42,7 +43,7 @@ export default function PrivacidadPage() {
             >
               {SUPPORT_EMAIL}
             </a>{" "}
-            o escríbenos por WhatsApp al{" "}
+            o escríbenos al{" "}
             <a
               href={`tel:+1${SUPPORT_PHONE.replace(/-/g, "")}`}
               className="text-primary hover:underline underline-offset-2"
@@ -59,14 +60,15 @@ export default function PrivacidadPage() {
           </p>
           <ul className="mt-3 list-inside list-disc space-y-2 pl-2">
             <li>
-              <strong className="text-foreground">Datos de contacto y entrega:</strong>{" "}
-              nombre, correo electrónico, teléfono/WhatsApp y dirección de
-              entrega.
+              <strong className="text-foreground">
+                Datos de contacto y entrega:
+              </strong>{" "}
+              nombre, correo electrónico, teléfono y dirección de entrega.
             </li>
             <li>
               <strong className="text-foreground">Detalles del pedido:</strong>{" "}
-              perfumes elegidos, tamaños, precios, cupón aplicado (si usaste
-              uno) y notas que agregues.
+              productos elegidos, talla o tamaño, precios, cupón aplicado (si
+              usaste uno) y notas que agregues.
             </li>
           </ul>
           <p className="mt-4">
@@ -87,7 +89,10 @@ export default function PrivacidadPage() {
           <p>Utilizamos tus datos para:</p>
           <ul className="mt-3 list-inside list-disc space-y-1 pl-2">
             <li>Procesar y entregar tu pedido.</li>
-            <li>Contactarte por correo y WhatsApp para coordinar el pago y la entrega.</li>
+            <li>
+              Contactarte por correo o teléfono para coordinar el pago y la
+              entrega.
+            </li>
             <li>Aplicar cupones de descuento cuando corresponda.</li>
             <li>Brindarte soporte y atención al cliente.</li>
             <li>Prevenir el fraude y garantizar la seguridad del sitio.</li>
@@ -156,8 +161,8 @@ export default function PrivacidadPage() {
           <p>
             Conservamos los datos de contacto y entrega de un pedido mientras
             sea necesario para procesarlo y darte soporte al respecto, y los
-            registros del pedido en sí durante el tiempo que exijan
-            obligaciones fiscales o contables.
+            registros del pedido en sí durante el tiempo que exijan obligaciones
+            fiscales o contables.
           </p>
         </Section>
 
@@ -181,17 +186,17 @@ export default function PrivacidadPage() {
 
         <Section title="8. Privacidad de menores">
           <p>
-            JW PARFUM no está dirigido a menores de 18 años y no recopilamos
-            conscientemente datos de menores. Si detectamos que hemos
-            recopilado datos de un menor, los eliminaremos.
+            The Spot no está dirigido a menores de 18 años y no recopilamos
+            conscientemente datos de menores. Si detectamos que hemos recopilado
+            datos de un menor, los eliminaremos.
           </p>
         </Section>
 
         <Section title="9. Cambios a esta política">
           <p>
             Podemos actualizar esta Política de Privacidad. Publicaremos la
-            versión vigente en esta página. Esta política se rige por las
-            leyes de la República Dominicana.
+            versión vigente en esta página. Esta política se rige por las leyes
+            de la República Dominicana.
           </p>
         </Section>
 
@@ -204,7 +209,7 @@ export default function PrivacidadPage() {
             >
               {SUPPORT_EMAIL}
             </a>{" "}
-            · WhatsApp:{" "}
+            · Teléfono:{" "}
             <a
               href={`tel:+1${SUPPORT_PHONE.replace(/-/g, "")}`}
               className="text-primary hover:underline underline-offset-2"

@@ -7,7 +7,9 @@ import { CatalogMobileFilters } from "@/components/catalog/CatalogMobileFilters"
 import { CatalogPagination } from "@/components/catalog/CatalogPagination";
 import { CatalogSidebar } from "@/components/catalog/CatalogSidebar";
 import { CatalogSupabaseDebugLog } from "@/components/catalog/CatalogSupabaseDebugLog";
+import { ComingSoonPanel } from "@/components/catalog/ComingSoonPanel";
 import { ProductCard } from "@/components/catalog/ProductCard";
+import { isComingSoonCategory } from "@/config/brand";
 import { CatalogFiltersVisibilityProvider } from "@/contexts/catalog-filters-visibility-context";
 import {
   getCategoriesPublic,
@@ -22,8 +24,9 @@ export const dynamic = "force-dynamic";
 const PRODUCTS_PER_PAGE = 24;
 
 export const metadata = {
-  title: "Catálogo | JW PARFUM",
-  description: "Ropa a la venta. Añade al carrito o consulta cada producto.",
+  title: "Catálogo | The Spot",
+  description:
+    "Perfumes y tenis ahora. Belleza, relojes y gorras: coming soon.",
 };
 
 interface PageProps {
@@ -60,10 +63,14 @@ export default async function CatalogPage({ searchParams }: PageProps) {
   const activeCategory = filters.categoria
     ? categories.find((c) => c.slug === filters.categoria)
     : undefined;
-  const totalProducts = products.length;
+  const comingSoon = isComingSoonCategory(filters.categoria);
+  const visibleProducts = comingSoon
+    ? []
+    : products.filter((p) => !isComingSoonCategory(p.categorySlug));
+  const totalProducts = visibleProducts.length;
   const totalPages = Math.max(1, Math.ceil(totalProducts / PRODUCTS_PER_PAGE));
   const currentPage = Math.min(requestedPage, totalPages);
-  const pageProducts = products.slice(
+  const pageProducts = visibleProducts.slice(
     (currentPage - 1) * PRODUCTS_PER_PAGE,
     currentPage * PRODUCTS_PER_PAGE,
   );
@@ -104,16 +111,20 @@ export default async function CatalogPage({ searchParams }: PageProps) {
           <CatalogFiltersToggleButton />
 
           <div className="min-w-0 flex-1">
-            {/* Header + filter chips */}
-            <div className="pb-3 pt-4">
-              <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
-                <h1 className="min-w-0 truncate text-base font-bold tracking-tight text-foreground sm:text-lg">
+            <div className="pb-4 pt-5">
+              <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-primary">
+                Catálogo
+              </p>
+              <div className="mt-1 mb-3 flex flex-wrap items-end justify-between gap-2">
+                <h1 className="min-w-0 text-2xl font-black tracking-tight text-foreground sm:text-3xl">
                   {filters.busqueda
-                    ? `"${filters.busqueda}"`
-                    : (activeCategory?.name ?? "Todo el catálogo")}
+                    ? `“${filters.busqueda}”`
+                    : (activeCategory?.name ?? "Todo el mix")}
                 </h1>
-                <p className="tabular-nums text-xs font-medium text-muted-foreground">
-                  {totalProducts} {totalProducts === 1 ? "pieza" : "piezas"}
+                <p className="rounded-full bg-rose-50 px-3 py-1 text-xs font-semibold tabular-nums text-primary">
+                  {comingSoon
+                    ? "Coming soon"
+                    : `${totalProducts} ${totalProducts === 1 ? "pieza" : "piezas"}`}
                 </p>
               </div>
               <CatalogFilterChips
@@ -122,24 +133,28 @@ export default async function CatalogPage({ searchParams }: PageProps) {
               />
             </div>
 
-            {/* Product grid — auto-fill en lg+: se acomoda solo al ancho
-                disponible (colapsar el sidebar o una pantalla más ancha
-                agrandan las tarjetas sin recalcular nada por JS). */}
             <section
               id="lista-productos"
               aria-label="Productos"
-              className="grid grid-cols-2 gap-2.5 min-[480px]:grid-cols-3 sm:gap-3 md:grid-cols-4 lg:grid-cols-[repeat(auto-fill,minmax(260px,1fr))] lg:gap-5 pb-16"
+              className="grid grid-cols-2 gap-3 min-[480px]:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-[repeat(auto-fill,minmax(240px,1fr))] lg:gap-5 pb-16"
             >
-              {totalProducts === 0 ? (
-                <p className="col-span-full rounded-xl border border-dashed border-border/90 bg-muted/20 px-4 py-14 text-center text-sm text-muted-foreground">
-                  No hay productos que coincidan.{" "}
+              {comingSoon ? (
+                <ComingSoonPanel name={activeCategory?.name} />
+              ) : totalProducts === 0 ? (
+                <div className="col-span-full rounded-[1.5rem] border border-dashed border-rose-200 bg-[#fff8f9] px-4 py-16 text-center">
+                  <p className="text-base font-bold text-foreground">
+                    Nada por aquí todavía
+                  </p>
+                  <p className="mx-auto mt-2 max-w-sm text-sm text-muted-foreground">
+                    Prueba otra categoría o limpia los filtros.
+                  </p>
                   <Link
                     href="/catalogo"
-                    className="font-medium text-primary underline underline-offset-2"
+                    className="mt-5 inline-flex rounded-full bg-primary px-5 py-2.5 text-sm font-bold text-white"
                   >
                     Ver todo
                   </Link>
-                </p>
+                </div>
               ) : null}
               {pageProducts.map((product) => (
                 <ProductCard key={product.id} product={product} />

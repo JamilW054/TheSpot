@@ -45,7 +45,7 @@ export function AppShell({ children, user, onLogout }: AppShellProps) {
       <div className="flex flex-1 flex-col min-w-0">
         <Navbar
           homeHref="/admin"
-          homeLabel="JW PARFUM Admin"
+          homeLabel="The Spot Admin"
           homeLabelShort="Admin"
           hideCart
           user={user}

@@ -1,4 +1,4 @@
--- JW PARFUM — Row Level Security.
+-- JW — Row Level Security.
 --
 -- Patrón de la app: casi todo el acceso pasa por Server Actions/rutas usando el
 -- cliente de service role (bypassa RLS), protegido en el código por

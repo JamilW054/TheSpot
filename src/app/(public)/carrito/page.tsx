@@ -4,7 +4,7 @@ import { getProducts, getShippingMethods } from "@/database/repositories";
 import { CartContent } from "./CartContent";
 
 export const metadata = {
-  title: "Carrito | JW PARFUM",
+  title: "Carrito | The Spot",
   description:
     "Tu carrito de compra. Revisa los productos y finaliza tu pedido.",
 };
@@ -79,7 +79,7 @@ export default async function CartPage() {
               <Link
                 key={product.id}
                 href={`/catalogo/${product.slug}`}
-                className="group flex flex-col overflow-hidden rounded-xl border border-border/80 bg-card transition-[border-color,box-shadow] duration-200 hover:border-primary/40 hover:shadow-[0_8px_32px_-12px_rgba(60,200,247,0.22)]"
+                className="group flex flex-col overflow-hidden rounded-xl border border-border/80 bg-card transition-[border-color,box-shadow] duration-200 hover:border-primary/40 hover:shadow-[0_8px_32px_-12px_rgba(220,38,38,0.22)]"
               >
                 <div className="relative aspect-3/4 overflow-hidden bg-muted">
                   <Image

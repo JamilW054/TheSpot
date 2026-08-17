@@ -1,30 +1,21 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Outfit } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
+import { BRAND_DESCRIPTION, BRAND_NAME, SITE_URL } from "@/config/brand";
 import { CartProvider } from "@/contexts/cart-context";
 import { AuthProvider } from "@/lib/auth-context";
 import "./globals.css";
 
-const geistSans = Geist({
+const outfit = Outfit({
   variable: "--font-geist-sans",
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-const SITE_URL = "https://jwparfum.com";
-// Use /banner/og.jpg (1200×630, <600 KB) for WhatsApp & social. Generate with: pnpm run og:image
 const OG_IMAGE_PATH = "/banner/og.jpg";
-const FAVICON_PATH = "/favicon.jpg";
+const FAVICON_PATH = "/favicon.svg";
 
-// Keep under 60 chars for best display on social (e.g. WhatsApp)
-const DEFAULT_TITLE = "JW PARFUM — Perfumería en línea";
-const DEFAULT_DESCRIPTION =
-  "Perfumes originales para él y para ella. Catálogo en línea, pedido sin cuenta y confirmación por WhatsApp. Envíos en República Dominicana.";
-const OG_IMAGE_ALT = "JW PARFUM — Perfumería en línea";
+const DEFAULT_TITLE = `${BRAND_NAME} — Las marcas que quieres, en RD`;
+const OG_IMAGE_ALT = `${BRAND_NAME} — Belleza, relojes, perfumes, gorras y tenis`;
 
 const ogImage = {
   url: OG_IMAGE_PATH,
@@ -38,37 +29,37 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
     default: DEFAULT_TITLE,
-    template: "%s | JW PARFUM",
+    template: `%s | ${BRAND_NAME}`,
   },
-  description: DEFAULT_DESCRIPTION,
-  applicationName: "JW PARFUM",
+  description: BRAND_DESCRIPTION,
+  applicationName: BRAND_NAME,
   keywords: [
-    "JW Parfum",
+    BRAND_NAME,
+    "belleza",
+    "relojes",
     "perfumes",
-    "perfumería",
-    "fragancias",
-    "perfumes originales",
-    "perfumes para hombre",
-    "perfumes para mujer",
+    "gorras",
+    "tenis",
+    "sneakers",
     "República Dominicana",
   ],
-  authors: [{ name: "JW PARFUM", url: SITE_URL }],
-  creator: "JW PARFUM",
-  publisher: "JW PARFUM",
+  authors: [{ name: BRAND_NAME, url: SITE_URL }],
+  creator: BRAND_NAME,
+  publisher: BRAND_NAME,
   formatDetection: { email: false, address: false, telephone: false },
   openGraph: {
     type: "website",
     locale: "es_DO",
     url: SITE_URL,
-    siteName: "JW PARFUM",
+    siteName: BRAND_NAME,
     title: DEFAULT_TITLE,
-    description: DEFAULT_DESCRIPTION,
+    description: BRAND_DESCRIPTION,
     images: [ogImage],
   },
   twitter: {
     card: "summary_large_image",
     title: DEFAULT_TITLE,
-    description: DEFAULT_DESCRIPTION,
+    description: BRAND_DESCRIPTION,
     images: [ogImage],
   },
   robots: {
@@ -87,12 +78,9 @@ export const metadata: Metadata = {
   },
   category: "shopping",
   icons: {
-    icon: [{ url: FAVICON_PATH, type: "image/jpeg" }],
+    icon: [{ url: FAVICON_PATH, type: "image/svg+xml" }],
     shortcut: FAVICON_PATH,
     apple: FAVICON_PATH,
-  },
-  verification: {
-    // Añade cuando tengas: google: "tu-codigo-google-search-console",
   },
 };
 
@@ -100,10 +88,10 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#0a0a0e",
+  themeColor: "#ffffff",
 };
 
-const themeScript = `try{var t=localStorage.getItem('theme');if(t==='light'){document.documentElement.classList.remove('dark')}else{document.documentElement.classList.add('dark')}}catch(e){document.documentElement.classList.add('dark')}`;
+const themeScript = `try{localStorage.setItem('theme','light');document.documentElement.classList.remove('dark')}catch(e){}`;
 
 export default function RootLayout({
   children,
@@ -113,7 +101,7 @@ export default function RootLayout({
   return (
     <html lang="es" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${outfit.variable} antialiased`}
         suppressHydrationWarning
       >
         <script

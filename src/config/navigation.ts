@@ -55,7 +55,7 @@ export const ADMIN_NAV: NavItem[] = [
     adminSection: "Catálogo",
   },
   {
-    label: "Tamaños",
+    label: "Tallas y tamaños",
     href: "/admin/tamanos",
     icon: "Ruler",
     adminSection: "Catálogo",

@@ -1,16 +1,24 @@
-# Design System — JW PARFUM × shadcn/ui
+# Design System — JW
 
-> Estructura y densidad del segundo (shadcn/ui) · Paleta del primero (JW PARFUM dark mode)
+Paleta blanco / rojo. Superficies claras, acento `#DC2626`.
+
+| Nombre | Hex | Rol |
+|--------|-----|-----|
+| White | `#ffffff` | Fondo |
+| Ink | `#111111` | Texto |
+| JW Red | `#DC2626` | CTAs, acentos, marca |
+| Red deep | `#B91C1C` | Hover / acento fuerte |
+| Border | `#ececec` | Bordes |
 
 ---
 
 ## Principio general
 
-La **estructura, densidad, radios, tipografía y patrones de componentes** vienen del segundo doc (shadcn/ui). La **paleta de colores completa** viene del primero (JW PARFUM). El resultado es un sistema de componentes compacto, de bordes hairline, con canvas negro en lugar de blanco y cian eléctrico en lugar de negro sólido como único acento.
+La **estructura, densidad, radios, tipografía y patrones de componentes** vienen del segundo doc (shadcn/ui). La **paleta de colores completa** viene del primero (JW). El resultado es un sistema de componentes compacto, de bordes hairline, con canvas negro en lugar de blanco y rojo en lugar de negro sólido como único acento.
 
 ---
 
-## Colores (de JW PARFUM)
+## Colores (de JW)
 
 | Nombre | Hex | Rol |
 |--------|-----|-----|
@@ -20,8 +28,8 @@ La **estructura, densidad, radios, tipografía y patrones de componentes** viene
 | Border Dark | `#27272a` | Todos los bordes hairline (reemplaza `#e5e5e5`) |
 | Foreground | `#f4f4f5` | Texto primario (reemplaza `#000000`) |
 | Muted Text | `#a1a1aa` | Texto secundario/muted (reemplaza `#737373`) |
-| JW PARFUM Cyan | `#3cc8f7` | Único acento — CTAs, precios, activos (reemplaza el negro del botón filled) |
-| Cyan Soft | `#5dd4f9` | Hover del cyan |
+| JW Red | `#dc2626` | Único acento — CTAs, precios, activos (reemplaza el negro del botón filled) |
+| Red Soft | `#5dd4f9` | Hover del cyan |
 | Mist Dark | `#18181b` | Surface muted (reemplaza `#f2f2f2`) |
 | Inverted Surface | `#27272a` | Surface invertida oscura (reemplaza `#171717`) |
 | Destructive | `#ef4444` | Errores, acciones destructivas |
@@ -44,14 +52,14 @@ La **estructura, densidad, radios, tipografía y patrones de componentes** viene
   --muted-foreground: #a1a1aa;
 
   /* Brand accent */
-  --primary: #3cc8f7;
+  --primary: #dc2626;
   --primary-foreground: #0a0a0a;
   --accent: #5dd4f9;
 
   /* System */
   --border: #27272a;
   --input: #27272a;
-  --ring: #3cc8f7;
+  --ring: #dc2626;
   --destructive: #ef4444;
   --destructive-foreground: #ffffff;
 
@@ -73,11 +81,11 @@ La **estructura, densidad, radios, tipografía y patrones de componentes** viene
   --color-muted: #18181b;
   --color-foreground: #f4f4f5;
   --color-muted-foreground: #a1a1aa;
-  --color-primary: #3cc8f7;
+  --color-primary: #dc2626;
   --color-primary-foreground: #0a0a0a;
   --color-accent: #5dd4f9;
   --color-border: #27272a;
-  --color-ring: #3cc8f7;
+  --color-ring: #dc2626;
   --color-destructive: #ef4444;
 }
 ```
@@ -139,11 +147,11 @@ height: 64px
 gap entre items: 10px
 ```
 
-- Logo: 14px / weight 600 / color `#3cc8f7`
+- Logo: 14px / weight 600 / color `#dc2626`
 - Nav links: 14px / weight 500 / color `#f4f4f5` (activo) o `#a1a1aa` (secundario)
-- Search input: bg `#0c0c0e`, border `1px solid #27272a`, radius 10px, placeholder `#a1a1aa`, focus border `#3cc8f7`
+- Search input: bg `#0c0c0e`, border `1px solid #27272a`, radius 10px, placeholder `#a1a1aa`, focus border `#dc2626`
 - Badge ⌘K: bg `#18181b`, border `#27272a`, radius 26px, texto `#a1a1aa`
-- Botón "New": bg `#3cc8f7`, texto `#0a0a0a`, radius 10px
+- Botón "New": bg `#dc2626`, texto `#0a0a0a`, radius 10px
 
 ---
 
@@ -161,7 +169,7 @@ color: #f4f4f5;
 
 ```css
 /* Focus */
-border-color: #3cc8f7;
+border-color: #dc2626;
 box-shadow: 0 0 0 2px rgba(60, 200, 247, 0.15);
 ```
 
@@ -184,14 +192,14 @@ font-weight: 500;
 color: #f4f4f5;
 ```
 
-Punto decorativo si aplica: `width: 6px; height: 6px; border-radius: 50%; background: #3cc8f7`
+Punto decorativo si aplica: `width: 6px; height: 6px; border-radius: 50%; background: #dc2626`
 
 ---
 
 ### Primary Filled Button
 
 ```css
-background: #3cc8f7;
+background: #dc2626;
 color: #0a0a0a;
 border: none;
 border-radius: 10px;
@@ -269,7 +277,7 @@ outline: none;
 
 ```css
 /* Focus */
-border-color: #3cc8f7;
+border-color: #dc2626;
 box-shadow: 0 0 0 2px rgba(60, 200, 247, 0.12);
 ```
 
@@ -304,7 +312,7 @@ border: none;
 transition: background 0.2s;
 
 /* ON */
-background: #3cc8f7;
+background: #dc2626;
 
 /* OFF */
 background: #27272a;
@@ -335,8 +343,8 @@ cursor: pointer;
 
 ```css
 /* Checked */
-background: #3cc8f7;
-border-color: #3cc8f7;
+background: #dc2626;
+border-color: #dc2626;
 /* checkmark blanco adentro */
 ```
 
@@ -360,7 +368,7 @@ background: #0c0c0e;
 width: 8px;
 height: 8px;
 border-radius: 50%;
-background: #3cc8f7;
+background: #dc2626;
 ```
 
 Label: 14px / `#f4f4f5`
@@ -372,11 +380,11 @@ Label: 14px / `#f4f4f5`
 ```css
 height: 4px;
 border-radius: 4px;
-accent-color: #3cc8f7;
+accent-color: #dc2626;
 cursor: pointer;
 ```
 
-Track vacío: `#27272a` — Track lleno: `#3cc8f7` — Thumb: círculo blanco
+Track vacío: `#27272a` — Track lleno: `#dc2626` — Thumb: círculo blanco
 
 ---
 
@@ -410,8 +418,8 @@ cursor: pointer;
 
 ```css
 /* Tab activo */
-color: #3cc8f7;
-border-bottom-color: #3cc8f7;
+color: #dc2626;
+border-bottom-color: #dc2626;
 ```
 
 Contenedor tabs: `border-bottom: 1px solid #27272a`
@@ -425,7 +433,7 @@ width: 32px;   /* o 44px en versión grande */
 height: 32px;
 border-radius: 50%;
 background: rgba(60, 200, 247, 0.15);  /* para el usuario principal */
-color: #3cc8f7;
+color: #dc2626;
 font-size: 12px;
 font-weight: 600;
 display: flex;
@@ -448,7 +456,7 @@ padding: 16px;
 
 Título: `#f4f4f5` — Subtexto: `#a1a1aa`
 
-> Equivale al `#171717` inverted card del segundo, pero usando zinc de JW PARFUM.
+> Equivale al `#171717` inverted card del segundo, pero usando zinc de JW.
 
 ---
 
@@ -478,7 +486,7 @@ Grid de cards: `repeat(auto-fit, minmax(180px, 1fr))`
 
 ## Do's
 
-- Usar `#3cc8f7` exclusivamente como acento — es el único color filled de alto contraste
+- Usar `#dc2626` exclusivamente como acento — es el único color filled de alto contraste
 - Usar `#27272a` para todos los bordes (el hairline del sistema)
 - Mantener radios exactos: 10px inputs/buttons/nav, 14px cards, 26px badges, 9999px pills
 - Geist 14px/400/1.43 para body · Geist 48px/600/-2.4px para display

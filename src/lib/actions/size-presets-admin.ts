@@ -54,7 +54,7 @@ function parsePresetInput(formData: FormData): {
 }
 
 function revalidate() {
-  revalidatePath("/admin/tallas");
+  revalidatePath("/admin/tamanos");
   revalidatePath("/admin/categorias");
 }
 
@@ -87,7 +87,7 @@ export async function adminCreateSizePreset(
     const { kind, items } = parsePresetInput(formData);
     if (items.length === 0)
       throw new Error(
-        kind === "color" ? "Agrega al menos un color." : "Agrega al menos una talla.",
+        kind === "color" ? "Agrega al menos un color." : "Agrega al menos una talla o tamaño.",
       );
 
     const supabase = createServiceClient();
@@ -119,7 +119,7 @@ export async function adminUpdateSizePreset(
     const { kind, items } = parsePresetInput(formData);
     if (items.length === 0)
       throw new Error(
-        kind === "color" ? "Agrega al menos un color." : "Agrega al menos una talla.",
+        kind === "color" ? "Agrega al menos un color." : "Agrega al menos una talla o tamaño.",
       );
 
     const supabase = createServiceClient();

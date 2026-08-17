@@ -49,7 +49,7 @@ function itemLines(items: WhatsAppOrderItem[]): string {
 export function buildCustomerOrderMessage(data: OrderWhatsAppData): string {
   return [
     `Hola, soy ${data.customerName}.`,
-    `Quiero confirmar mi pedido #${data.orderNumber} en JW PARFUM:`,
+    `Quiero confirmar mi pedido #${data.orderNumber} en The Spot:`,
     itemLines(data.items),
     `Total: ${formatCents(data.totalCents, data.currency)}`,
   ].join("\n");
@@ -58,7 +58,7 @@ export function buildCustomerOrderMessage(data: OrderWhatsAppData): string {
 /** Mensaje que el ADMIN envía al cliente para dar seguimiento a un pedido. */
 export function buildAdminOrderMessage(data: OrderWhatsAppData): string {
   return [
-    `Hola ${data.customerName}, te escribimos de JW PARFUM sobre tu pedido #${data.orderNumber}:`,
+    `Hola ${data.customerName}, te escribimos de The Spot sobre tu pedido #${data.orderNumber}:`,
     itemLines(data.items),
     `Total: ${formatCents(data.totalCents, data.currency)}`,
   ].join("\n");

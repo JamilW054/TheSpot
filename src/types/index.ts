@@ -1,5 +1,5 @@
 /**
- * JW PARFUM — tipos núcleo, fuente única de verdad para las entidades de la app.
+ * The Spot — tipos núcleo, fuente única de verdad para las entidades de la app.
  */
 
 export type {
@@ -18,7 +18,7 @@ export interface ProductColor {
   hex: string | null;
 }
 
-/** Producto del catálogo público: un perfume a la venta. */
+/** Producto del catálogo público: un artículo a la venta. */
 export interface CatalogProduct {
   id: string;
   slug: string;

@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { isComingSoonCategory } from "@/config/brand";
 import type { CategoryRow } from "@/database/repositories";
 import {
   CATALOG_CHROME_HIDE_DELTA,
@@ -35,47 +36,51 @@ export function CatalogCategoryNav({
 
   return (
     <div
-      className={`sticky top-20 z-30 border-b border-border/60 bg-background/95 backdrop-blur-sm transition-transform duration-300 ease-out sm:top-26 ${
-        // -100% only clears the bar's own height — it still overlaps the
-        // fixed global navbar above it (which sits in the `top-20`/`top-26`
-        // gap this bar is offset by). Clear that gap too so it fully leaves
-        // the viewport instead of sliding in behind the navbar.
-        // Plain pixel value (not calc()) — comfortably clears the bar's own
-        // height (~134px) plus its sticky top offset (80-104px) so it fully
-        // leaves the viewport instead of stopping level with the navbar.
+      className={`sticky top-20 z-30 border-b border-rose-100 bg-white/95 backdrop-blur-sm transition-transform duration-300 ease-out sm:top-26 ${
         visible ? "translate-y-0" : "-translate-y-[260px]"
       }`}
     >
-      <div
-        className="w-full flex gap-3 overflow-x-auto py-4 px-3 sm:px-6 lg:px-8"
-        style={{ scrollbarWidth: "none" }}
-      >
+      <div className="scrollbar-hide flex w-full gap-4 overflow-x-auto px-3 py-4 sm:px-6 lg:px-8">
         <Link
           href="/catalogo"
-          className="shrink-0 flex flex-col items-center gap-1 group"
+          className="group flex shrink-0 flex-col items-center gap-1.5"
         >
           <div
-            className={`size-16 sm:size-18 rounded-full border-2 bg-muted flex items-center justify-center transition-colors ${!activeCategoryId ? "border-primary" : "border-border group-hover:border-primary"}`}
+            className={`relative grid size-16 place-items-center rounded-full border-2 bg-rose-50 transition sm:size-18 ${
+              !activeCategoryId
+                ? "border-primary shadow-[0_0_0_3px_rgba(225,29,72,0.15)]"
+                : "border-rose-200 group-hover:border-primary"
+            }`}
           >
-            <span className="text-[10px] font-bold text-muted-foreground uppercase">
-              Todo
+            <span className="relative inline-flex size-7 items-center justify-center">
+              <span className="absolute inset-0 rounded-full bg-primary" />
+              <span className="absolute inset-[28%] rounded-full bg-white" />
             </span>
           </div>
-          <span className="text-[10px] font-medium text-center leading-tight w-16">
+          <span
+            className={`w-16 text-center text-[10px] font-semibold leading-tight ${
+              !activeCategoryId ? "text-primary" : "text-foreground"
+            }`}
+          >
             Todo
           </span>
         </Link>
         {categories.map((cat) => {
           const thumb = cat.image_url ?? coverByCategoryId[cat.id];
           const isActive = activeCategoryId === cat.id;
+          const soon = isComingSoonCategory(cat.slug);
           return (
             <Link
               key={cat.id}
               href={`/catalogo?categoria=${cat.slug}`}
-              className="shrink-0 flex flex-col items-center gap-1 group"
+              className="group relative flex shrink-0 flex-col items-center gap-1.5"
             >
               <div
-                className={`size-16 sm:size-18 rounded-full overflow-hidden border-2 bg-muted transition-colors ${isActive ? "border-primary" : "border-border group-hover:border-primary"}`}
+                className={`size-16 overflow-hidden rounded-full border-2 bg-rose-50 transition sm:size-18 ${
+                  isActive
+                    ? "border-primary shadow-[0_0_0_3px_rgba(225,29,72,0.15)]"
+                    : "border-rose-200 group-hover:border-primary"
+                }`}
               >
                 {thumb ? (
                   <Image
@@ -83,17 +88,24 @@ export function CatalogCategoryNav({
                     alt={cat.name}
                     width={72}
                     height={72}
-                    className="w-full h-full object-cover"
+                    className={`size-full object-cover ${soon ? "opacity-60" : ""}`}
                     unoptimized={thumb.startsWith("http")}
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-[10px] font-bold text-muted-foreground uppercase">
+                  <div className="flex size-full items-center justify-center text-[10px] font-black uppercase text-primary">
                     {cat.name.slice(0, 2)}
                   </div>
                 )}
               </div>
+              {soon ? (
+                <span className="absolute top-0 right-0 rounded-full bg-primary px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide text-white">
+                  Soon
+                </span>
+              ) : null}
               <span
-                className={`text-[10px] font-medium text-center leading-tight w-16 line-clamp-2 ${isActive ? "text-primary font-semibold" : "text-foreground"}`}
+                className={`w-16 line-clamp-2 text-center text-[10px] font-semibold leading-tight ${
+                  isActive ? "text-primary" : "text-foreground"
+                }`}
               >
                 {cat.name}
               </span>

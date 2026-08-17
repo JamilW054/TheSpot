@@ -6,8 +6,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import type { CategoryRow } from "@/database/repositories/categories";
 import { useTheme } from "@/components/theme-provider";
+import { isComingSoonCategory } from "@/config/brand";
+import type { CategoryRow } from "@/database/repositories/categories";
 
 interface Props {
   categories?: CategoryRow[];
@@ -77,7 +78,9 @@ export function NavbarSearch({ categories = [] }: Props) {
     } else {
       document.body.style.overflow = "";
     }
-    return () => { document.body.style.overflow = ""; };
+    return () => {
+      document.body.style.overflow = "";
+    };
   }, [mobileOpen]);
 
   function handleSubmit(e: React.FormEvent) {
@@ -121,6 +124,11 @@ export function NavbarSearch({ categories = [] }: Props) {
                 />
               )}
               {cat.name}
+              {isComingSoonCategory(cat.slug) ? (
+                <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide text-primary">
+                  Soon
+                </span>
+              ) : null}
             </Link>
           ))}
         </div>
@@ -271,7 +279,7 @@ export function NavbarSearch({ categories = [] }: Props) {
         className={`sm:hidden flex h-9 w-9 items-center justify-center rounded-full transition-colors ${
           isDark
             ? "text-white/70 hover:bg-white/15 hover:text-white"
-            : "text-foreground/60 hover:bg-black/8 hover:text-foreground"
+            : "text-foreground/60 hover:bg-rose-50 hover:text-primary"
         }`}
         aria-label="Abrir búsqueda"
       >
@@ -296,10 +304,10 @@ export function NavbarSearch({ categories = [] }: Props) {
               onFocus={openDrop}
               placeholder="Buscar en el catálogo…"
               aria-label="Buscar en el catálogo"
-              className={`w-full rounded-full pl-9 pr-4 py-2 text-sm focus:outline-none focus:border-primary/70 focus:shadow-[0_0_24px_-4px_rgba(60,200,247,0.45)] transition-all duration-200 ${
+              className={`w-full rounded-full pl-9 pr-4 py-2 text-sm focus:outline-none focus:border-primary/70 focus:shadow-[0_0_24px_-4px_rgba(220,38,38,0.45)] transition-all duration-200 ${
                 isDark
                   ? "border border-white/25 bg-white/12 text-white placeholder:text-white/50 focus:bg-white/20"
-                  : "border border-black/12 bg-black/6 text-foreground placeholder:text-foreground/40 focus:bg-black/8"
+                  : "border border-rose-200 bg-rose-50/70 text-foreground placeholder:text-foreground/40 focus:bg-white"
               }`}
             />
           </div>

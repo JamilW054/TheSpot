@@ -83,7 +83,7 @@ export function WishlistCard({
     >
       {/* ── Image — full left panel, 38% width ── */}
       <div
-        className="relative shrink-0 overflow-hidden bg-[#111116]"
+        className="relative shrink-0 overflow-hidden bg-rose-50"
         style={{ width: "38%" }}
       >
         {hasDiscount && (

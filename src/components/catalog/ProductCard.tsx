@@ -34,7 +34,6 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
     : 0;
 
   const hasSizes = product.sizes.length > 0;
-
   const href = `/catalogo/${product.slug}`;
 
   const handleAddToCart = (e: React.MouseEvent) => {
@@ -50,19 +49,16 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
   };
 
   return (
-    <article className="group/card relative flex flex-col overflow-hidden rounded-xl border border-border bg-card transition duration-200 hover:border-foreground/20 hover:shadow-[0_10px_28px_-16px_rgba(0,0,0,0.4)]">
-
-      {/* ── Image area (más cuadrada) ── */}
+    <article className="group/card relative flex flex-col overflow-hidden rounded-[1.5rem] border border-rose-100 bg-white transition duration-200 hover:-translate-y-0.5 hover:border-primary/35 hover:shadow-[0_16px_32px_-18px_rgba(225,29,72,0.4)]">
       <Link
         href={href}
-        className="relative block overflow-hidden bg-[#f4f4f5] dark:bg-[#111116]"
+        className="relative block overflow-hidden bg-rose-50"
         style={{ aspectRatio: "4/5" }}
         tabIndex={-1}
         aria-hidden
       >
-        {/* Discount badge — grande y muy visible */}
         {hasDiscount && (
-          <span className="absolute left-2 top-2 z-10 rounded-md bg-destructive px-2 py-1 text-[13px] font-bold leading-none text-white tabular-nums shadow-sm">
+          <span className="absolute left-2.5 top-2.5 z-10 rounded-full bg-primary px-2.5 py-1 text-[11px] font-black leading-none text-white tabular-nums shadow-sm">
             -{discountPct}%
           </span>
         )}
@@ -83,7 +79,6 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
         )}
       </Link>
 
-      {/* Wishlist button — absolute over image */}
       <button
         type="button"
         onClick={(e) => {
@@ -92,7 +87,11 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
           toggleWishlist(product.id);
         }}
         aria-label={saved ? "Quitar de favoritos" : "Guardar en favoritos"}
-        className="absolute right-2 top-2 z-10 flex size-8 items-center justify-center rounded-full bg-card/80 text-muted-foreground backdrop-blur-sm transition-all hover:bg-card hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+        className={`absolute right-2.5 top-2.5 z-10 flex size-8 items-center justify-center rounded-full backdrop-blur-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
+          saved
+            ? "bg-white text-primary"
+            : "bg-white/85 text-muted-foreground hover:bg-white hover:text-primary"
+        }`}
       >
         <Heart
           className="size-3.5"
@@ -102,19 +101,21 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
         />
       </button>
 
-      {/* ── Info panel — solo nombre + precio ── */}
       <Link
         href={href}
-        className="flex flex-col gap-1.5 p-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/50"
+        className="flex flex-col gap-1.5 p-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/50"
         aria-label={product.name}
       >
-        {/* Name */}
-        <h2 className="text-[13px] font-medium leading-snug text-foreground line-clamp-1">
+        {product.brandName ? (
+          <p className="truncate text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
+            {product.brandName}
+          </p>
+        ) : null}
+        <h2 className="line-clamp-2 min-h-9 text-[13px] font-semibold leading-snug text-foreground">
           {product.name}
         </h2>
 
-        {/* Price + cart — precio anterior arriba del precio base */}
-        <div className="flex items-end justify-between gap-2">
+        <div className="mt-0.5 flex items-end justify-between gap-2">
           <div className="flex min-w-0 flex-col leading-none">
             {hasDiscount && (
               <span className="font-mono text-[11px] text-muted-foreground line-through tabular-nums">
@@ -130,7 +131,11 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
             type="button"
             onClick={handleAddToCart}
             aria-label={justAdded ? "Añadido al carrito" : "Añadir al carrito"}
-            className="flex size-8 shrink-0 items-center justify-center rounded-full border border-border bg-background text-foreground transition-all hover:border-primary hover:bg-primary hover:text-primary-foreground active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+            className={`flex size-8 shrink-0 items-center justify-center rounded-full border transition-all active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
+              justAdded
+                ? "border-primary bg-primary text-white"
+                : "border-rose-200 bg-white text-foreground hover:border-primary hover:bg-primary hover:text-white"
+            }`}
           >
             {justAdded ? (
               <Check className="size-4" aria-hidden />

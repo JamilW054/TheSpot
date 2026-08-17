@@ -11,7 +11,7 @@ export default async function AdminCategoriasNuevoPage() {
   return (
     <PageLayout
       title="Nueva categoría"
-      description="Nombre, slug opcional, orden, URL de miniatura, categoría padre y tipo de tallas."
+      description="Nombre, slug opcional, orden, miniatura, categoría padre y tipo de talla o tamaño."
     >
       <CategoryForm
         mode="create"

@@ -80,7 +80,7 @@ export function SizePresetForm({
         if (onSuccess) {
           onSuccess();
         } else {
-          router.replace("/admin/tallas");
+          router.replace("/admin/tamanos");
           router.refresh();
         }
       });
@@ -137,7 +137,7 @@ export function SizePresetForm({
           required
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder={kind === "color" ? "Ej. Colores muebles" : "Ej. Ropa"}
+          placeholder={kind === "color" ? "Ej. Colores The Spot" : "Ej. Tenis (EU)"}
         />
 
         {kind === "size" ? (
@@ -253,7 +253,7 @@ export function SizePresetForm({
         </button>
         <button
           type="button"
-          onClick={() => (onCancel ? onCancel() : router.push("/admin/tallas"))}
+          onClick={() => (onCancel ? onCancel() : router.push("/admin/tamanos"))}
           className="inline-flex items-center gap-2 rounded-xl border border-border bg-muted px-5 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/70"
         >
           <ArrowLeft className="size-4" aria-hidden />

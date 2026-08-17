@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
+import { AcceptedPayments } from "@/components/brand/AcceptedPayments";
 import { FreeShippingProgress } from "@/components/cart/FreeShippingProgress";
 import {
   qualifiesForFreeShipping,
@@ -32,7 +33,6 @@ const labelClass = "block text-sm font-medium text-foreground";
 interface OrderConfirmation {
   orderNumber: string;
   totalCents: number;
-  whatsappUrl: string | null;
 }
 
 function ConfirmationScreen({ order }: { order: OrderConfirmation }) {
@@ -63,19 +63,10 @@ function ConfirmationScreen({ order }: { order: OrderConfirmation }) {
         . Total: {formatDOPFromCents(order.totalCents)}.
       </p>
       <p className="mt-1 text-sm text-muted-foreground">
-        No se realizó ningún cobro en línea. Confirma tu pedido por WhatsApp
-        para coordinar el pago y la entrega.
+        Te contactaremos por correo o teléfono para coordinar el pago y la
+        entrega. Aceptamos Apple Pay y Google Pay.
       </p>
-      {order.whatsappUrl && (
-        <a
-          href={order.whatsappUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-6 inline-flex items-center justify-center gap-2 rounded-[10px] bg-[#25D366] px-8 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90"
-        >
-          Confirmar por WhatsApp
-        </a>
-      )}
+      <AcceptedPayments className="mt-5" align="center" label={null} />
       <div className="mt-4">
         <Link
           href="/estado-pedido"
@@ -152,10 +143,12 @@ export function CheckoutContent({
     const form = e.currentTarget;
     const value = (id: string) =>
       (
-        (form.querySelector(`#${id}`) as
-          | HTMLInputElement
-          | HTMLTextAreaElement
-          | null)?.value ?? ""
+        (
+          form.querySelector(`#${id}`) as
+            | HTMLInputElement
+            | HTMLTextAreaElement
+            | null
+        )?.value ?? ""
       ).trim();
 
     const result = await checkoutAction({
@@ -188,7 +181,6 @@ export function CheckoutContent({
     setOrder({
       orderNumber: result.result.orderNumber,
       totalCents: result.result.totalCents,
-      whatsappUrl: result.result.whatsappUrl,
     });
   };
 
@@ -271,7 +263,7 @@ export function CheckoutContent({
             </div>
             <div>
               <label htmlFor="checkout-phone" className={labelClass}>
-                Teléfono (WhatsApp)
+                Teléfono
               </label>
               <input
                 id="checkout-phone"
@@ -507,9 +499,10 @@ export function CheckoutContent({
               {loading ? "Enviando…" : "Confirmar pedido"}
             </button>
             <p className="mt-3 text-center text-xs text-muted-foreground">
-              No se realiza ningún cobro en línea. Te contactaremos por
-              WhatsApp o correo para coordinar el pago y la entrega.
+              Te contactaremos por correo o teléfono para coordinar el pago y la
+              entrega. Aceptamos Apple Pay y Google Pay.
             </p>
+            <AcceptedPayments className="mt-3" align="center" label={null} />
           </div>
         </div>
       </aside>

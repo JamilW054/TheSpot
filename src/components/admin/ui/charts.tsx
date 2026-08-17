@@ -52,7 +52,7 @@ function resolveFormatter(
 
 /* ── Paleta de series: azul de marca primero, apoyos desaturados ── */
 export const CHART_COLORS = [
-  "#3cc8f7",
+  "#dc2626",
   "#8b5cf6",
   "#34d399",
   "#fbbf24",

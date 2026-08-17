@@ -6,8 +6,8 @@ export default async function AdminTallasPage() {
   const presets = await getSizePresetsForAdmin();
   return (
     <PageLayout
-      title="Tipos de talla"
-      description="Define los grupos de tallas por tipo de producto. Cada categoría puede tener un tipo asignado."
+      title="Tallas y tamaños"
+      description="Define grupos reutilizables: ml para perfumes, EU para tenis, unitalla para gorras, etc. Cada categoría puede tener un tipo asignado."
     >
       <TallasManager initialRows={presets} />
     </PageLayout>

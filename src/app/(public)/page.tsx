@@ -1,27 +1,71 @@
+import {
+  Footprints,
+  Gem,
+  ShoppingBag,
+  Sparkles,
+  SprayCan,
+  Truck,
+  Wallet,
+  Watch,
+} from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { LandingProductCard } from "@/components/catalog/LandingProductCard";
+import { AcceptedPayments } from "@/components/brand/AcceptedPayments";
+import { SpotWordmark } from "@/components/brand/SpotWordmark";
 import { ProductCard } from "@/components/catalog/ProductCard";
 import { ScrollReveal } from "@/components/landing/ScrollReveal";
-import MagicBento from "@/components/MagicBento";
+import { SpotTicker } from "@/components/landing/SpotTicker";
+import {
+  BRAND_NAME,
+  BRAND_TAGLINE,
+  isComingSoonCategory,
+} from "@/config/brand";
 import {
   getCategoriesPublic,
   getCategoryCoverByCategoryId,
   getProducts,
 } from "@/database/repositories";
 
-const TICKER_ITEMS = [
-  { id: "t1", text: "PERFUMES ORIGINALES" },
-  { id: "t2", text: "ENVÍO A TODO EL PAÍS" },
-  { id: "t3", text: "PEDIDO SIN CUENTA" },
-  { id: "t4", text: "CONFIRMACIÓN POR WHATSAPP" },
-  { id: "t5", text: "PARA ÉL Y PARA ELLA" },
-  { id: "t6", text: "FRAGANCIAS DE NICHO" },
-  { id: "t7", text: "EXPLORA · ELIGE · CONFIRMA" },
+const C = "max-w-6xl mx-auto px-4 sm:px-6";
+
+const CAT_ICONS: Record<string, typeof Sparkles> = {
+  belleza: Sparkles,
+  relojes: Watch,
+  perfumes: SprayCan,
+  gorras: Gem,
+  tenis: Footprints,
+};
+
+const CAT_ROTATE = [
+  "-rotate-3",
+  "rotate-2",
+  "-rotate-1",
+  "rotate-3",
+  "rotate-0",
 ];
 
-const C = "max-w-7xl mx-auto px-4 sm:px-6";
-const S = "py-16 sm:py-20";
+const PERKS = [
+  {
+    icon: Gem,
+    title: "Marcas que quieres",
+    text: "Lo que ves es lo que llega. Originales, en un solo catálogo.",
+  },
+  {
+    icon: Truck,
+    title: "Envío a todo el país",
+    text: "Santo Domingo y el interior. Coordinamos la entrega contigo.",
+  },
+  {
+    icon: Wallet,
+    title: "Apple Pay y Google Pay",
+    text: "Aceptamos Apple Pay y Google Pay al coordinar el cobro.",
+  },
+  {
+    icon: ShoppingBag,
+    title: "Pedido sin cuenta",
+    text: "Entras, armas el mix y listo. Consultas el pedido por número.",
+  },
+];
 
 export default async function PublicPage() {
   const [products, categories, covers] = await Promise.all([
@@ -29,239 +73,175 @@ export default async function PublicPage() {
     getCategoriesPublic(),
     getCategoryCoverByCategoryId(),
   ]);
-  const featured = products.slice(0, 6);
-
-  // Bento — un producto representativo por categoría (usando la foto del
-  // producto). Rellena con otros productos hasta llegar a 6 cajas.
-  const bentoCards: {
-    image: string | null;
-    label: string;
-    title: string;
-    description: string;
-    href: string;
-  }[] = [];
-  const usedProductIds = new Set<string>();
-  for (const cat of categories) {
-    if (bentoCards.length >= 6) break;
-    const product = products.find(
-      (p) => p.categorySlug === cat.slug && p.coverImage,
-    );
-    if (!product) continue;
-    usedProductIds.add(product.id);
-    bentoCards.push({
-      image: product.coverImage,
-      label: cat.name,
-      title: product.name,
-      description: product.price,
-      href: `/catalogo/${product.slug}`,
-    });
-  }
-  // Completar hasta 6 con productos aún no usados.
-  for (const product of products) {
-    if (bentoCards.length >= 6) break;
-    if (usedProductIds.has(product.id) || !product.coverImage) continue;
-    usedProductIds.add(product.id);
-    bentoCards.push({
-      image: product.coverImage,
-      label: "Destacado",
-      title: product.name,
-      description: product.price,
-      href: `/catalogo/${product.slug}`,
-    });
-  }
+  const featured = products
+    .filter((p) => !isComingSoonCategory(p.categorySlug))
+    .slice(0, 8);
 
   return (
-    <article className="flex flex-col bg-background text-foreground overflow-x-hidden">
-      {/* ─── 0. CATÁLOGO ─────────────────────────────────────────────── */}
-      <section className="w-full border-b border-border" aria-label="Catálogo">
-        {/* Category tiles — square */}
-        {categories.length > 0 && (
-          <div className="w-full border-b border-border">
-            <div
-              className="max-w-7xl mx-auto w-full flex gap-3 sm:gap-4 overflow-x-auto px-3 sm:px-6 py-4"
-              style={{ scrollbarWidth: "none" }}
-            >
-              {categories.map((cat) => {
-                const thumb = cat.image_url ?? covers[cat.id];
-                return (
-                  <Link
-                    key={cat.id}
-                    href={`/catalogo?categoria=${cat.slug}`}
-                    className="group shrink-0 flex flex-col items-center gap-2"
-                  >
-                    <div className="relative size-19 sm:size-22 overflow-hidden rounded-[14px] border border-border bg-muted transition duration-200 group-hover:border-foreground/30 group-active:scale-95">
-                      {thumb ? (
-                        <Image
-                          src={thumb}
-                          alt={cat.name}
-                          width={88}
-                          height={88}
-                          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                          unoptimized={thumb.startsWith("http")}
-                        />
-                      ) : (
-                        <div className="grid h-full w-full place-items-center text-sm font-semibold uppercase text-muted-foreground">
-                          {cat.name.slice(0, 2)}
-                        </div>
-                      )}
-                    </div>
-                    <span className="w-19 sm:w-22 text-center text-[11px] font-medium leading-tight text-foreground line-clamp-2">
-                      {cat.name}
-                    </span>
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* Sort tabs */}
+    <article className="flex flex-col overflow-x-hidden bg-white text-foreground">
+      <section className="relative isolate overflow-hidden">
         <div
-          className="max-w-7xl mx-auto px-3 sm:px-6 pt-4 pb-2 flex gap-2 overflow-x-auto"
-          style={{ scrollbarWidth: "none" }}
+          aria-hidden
+          className="pointer-events-none absolute -top-32 right-[-6rem] size-[34rem] rounded-full bg-primary/12 blur-3xl"
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute top-48 -left-40 size-[24rem] rounded-full bg-rose-200/60 blur-3xl"
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute bottom-0 right-1/4 size-40 rounded-full bg-primary/10 blur-2xl"
+        />
+
+        <div
+          className={`${C} relative grid items-center gap-10 py-10 sm:py-16 lg:grid-cols-[1.15fr_0.85fr] lg:py-20`}
         >
-          {(
-            [
-              { label: "Para Ti", href: "/catalogo" },
-              { label: "Novedades", href: "/catalogo?orden=recientes" },
-              { label: "Precio ↑", href: "/catalogo?orden=precio-menor" },
-              { label: "Precio ↓", href: "/catalogo?orden=precio-mayor" },
-              { label: "Ofertas", href: "/catalogo?precio=economico" },
-              { label: "A-Z", href: "/catalogo?orden=az" },
-            ] as const
-          ).map((tab, i) => (
-            <Link
-              key={tab.label}
-              href={tab.href}
-              className={`shrink-0 px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap border transition-colors ${
-                i === 0
-                  ? "bg-foreground text-background border-foreground"
-                  : "border-border bg-transparent text-muted-foreground hover:border-foreground/40 hover:text-foreground"
-              }`}
-            >
-              {tab.label}
-            </Link>
-          ))}
-        </div>
+          <div>
+            <div className="inline-flex items-center gap-2 rounded-full border border-primary/25 bg-white px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-primary shadow-sm">
+              <span className="relative flex size-2">
+                <span className="absolute inline-flex size-full animate-ping rounded-full bg-primary opacity-40" />
+                <span className="relative inline-flex size-2 rounded-full bg-primary" />
+              </span>
+              Santo Domingo · RD
+            </div>
 
-        {/* Header row */}
-        <div className="max-w-7xl mx-auto w-full px-3 sm:px-6 pb-3 flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2.5">
-            <span aria-hidden className="h-5 w-1 rounded-full bg-primary" />
-            <h2 className="text-base font-black uppercase tracking-tight text-foreground sm:text-lg">
-              Todo el catálogo
-            </h2>
+            <div className="mt-5">
+              <SpotWordmark />
+            </div>
+
+            <p className="mt-6 max-w-lg text-base leading-relaxed text-muted-foreground sm:text-lg">
+              {BRAND_TAGLINE} Perfumes y tenis ya están en el spot. Belleza,
+              relojes y gorras: coming soon.
+            </p>
+
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Link
+                href="/catalogo"
+                className="inline-flex items-center justify-center rounded-full bg-primary px-7 py-3.5 text-sm font-bold text-white shadow-[0_12px_30px_-12px_rgba(225,29,72,0.7)] transition hover:brightness-110"
+              >
+                Explorar catálogo
+              </Link>
+              <Link
+                href="/ayuda"
+                className="inline-flex items-center justify-center rounded-full border border-rose-200 bg-white px-7 py-3.5 text-sm font-bold text-foreground transition hover:border-primary hover:text-primary"
+              >
+                Cómo comprar
+              </Link>
+            </div>
+
+            <AcceptedPayments className="mt-7" />
           </div>
-          <span className="rounded-full border border-border bg-muted/40 px-2.5 py-0.5 tabular-nums text-xs font-semibold text-muted-foreground">
-            {products.length} {products.length === 1 ? "producto" : "productos"}
-          </span>
-        </div>
 
-        {/* Product grid */}
-        <div className="max-w-7xl mx-auto w-full grid grid-cols-2 gap-2.5 min-[480px]:grid-cols-3 sm:gap-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 px-3 sm:px-4 pb-10">
-          {products.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
+          {categories.length > 0 && (
+            <div className="relative hidden min-h-[22rem] lg:block">
+              <div
+                aria-hidden
+                className="absolute left-1/2 top-1/2 size-56 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-dashed border-primary/20"
+              />
+              <div className="grid grid-cols-2 gap-4 pt-6">
+                {categories.slice(0, 4).map((cat, i) => {
+                  const Icon = CAT_ICONS[cat.slug] ?? Sparkles;
+                  const thumb = cat.image_url ?? covers[cat.id];
+                  const soon = isComingSoonCategory(cat.slug);
+                  return (
+                    <Link
+                      key={cat.id}
+                      href={`/catalogo?categoria=${cat.slug}`}
+                      className={`group relative overflow-hidden rounded-[1.6rem] border border-rose-100 bg-white p-2 shadow-[0_16px_40px_-24px_rgba(225,29,72,0.45)] transition hover:-translate-y-1 hover:border-primary/40 ${CAT_ROTATE[i % CAT_ROTATE.length]}`}
+                    >
+                      <div className="relative aspect-4/5 overflow-hidden rounded-[1.2rem] bg-rose-50">
+                        {thumb ? (
+                          <Image
+                            src={thumb}
+                            alt=""
+                            fill
+                            className={`object-cover transition duration-500 group-hover:scale-105 ${soon ? "opacity-70" : ""}`}
+                            sizes="180px"
+                            unoptimized={thumb.startsWith("http")}
+                          />
+                        ) : (
+                          <div className="grid size-full place-items-center">
+                            <Icon className="size-8 text-primary" aria-hidden />
+                          </div>
+                        )}
+                        {soon ? (
+                          <span className="absolute inset-x-2 bottom-2 rounded-full bg-white/95 px-2 py-1 text-center text-[10px] font-black uppercase tracking-wide text-primary">
+                            Coming soon
+                          </span>
+                        ) : null}
+                      </div>
+                      <p className="px-2 py-2 text-center text-xs font-black uppercase tracking-wide">
+                        {cat.name}
+                      </p>
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
       </section>
 
-      {/* ─── 1. TICKER ───────────────────────────────────────────────── */}
-      <div
-        className="w-full border-y border-border bg-background py-3 overflow-hidden"
-        aria-hidden
-      >
-        <div className="flex animate-marquee gap-0 whitespace-nowrap">
-          {[
-            ...TICKER_ITEMS.map((t) => ({ key: t.id, text: t.text })),
-            ...TICKER_ITEMS.map((t) => ({ key: `${t.id}-b`, text: t.text })),
-          ].map((item) => (
-            <span
-              key={item.key}
-              className="inline-flex items-center gap-4 px-6 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground"
-            >
-              {item.text}
-              <span className="size-1.5 rounded-full bg-primary shrink-0" />
-            </span>
-          ))}
-        </div>
-      </div>
+      <SpotTicker />
 
-      {/* ─── 2. CATEGORÍAS ───────────────────────────────────────────── */}
       {categories.length > 0 && (
-        <section
-          className={`${S} border-t border-border`}
-          aria-labelledby="sec-cats"
-        >
-          <div className={C}>
-            <ScrollReveal>
-              <div className="flex items-end justify-between gap-4 mb-6">
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-primary">
-                    JW Parfum · Tienda
-                  </p>
-                  <h2
-                    id="sec-cats"
-                    className="mt-1 text-xl sm:text-2xl font-black uppercase tracking-tight text-foreground"
-                  >
-                    Explorar por{" "}
-                    <span className="landing-wavy-underline">categoría</span>
-                  </h2>
-                </div>
-                <Link
-                  href="/catalogo"
-                  className="shrink-0 text-xs font-semibold text-primary hover:underline underline-offset-2"
+        <section className="bg-white" aria-labelledby="sec-cats">
+          <div className={`${C} py-12 sm:py-16`}>
+            <div className="mb-8 flex items-end justify-between gap-3">
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-primary">
+                  El mix
+                </p>
+                <h2
+                  id="sec-cats"
+                  className="mt-1 text-3xl font-black tracking-tight sm:text-4xl"
                 >
-                  Ver todo →
-                </Link>
+                  Cinco mundos. Un solo spot.
+                </h2>
               </div>
-            </ScrollReveal>
-            <div
-              className="flex gap-3 overflow-x-auto pb-1 sm:grid sm:grid-cols-4 lg:grid-cols-6 sm:overflow-visible"
-              style={{ scrollbarWidth: "none" }}
-            >
-              <ScrollReveal>
-                <Link
-                  href="/catalogo"
-                  className="group relative shrink-0 flex w-[30vw] sm:w-auto overflow-hidden rounded-2xl bg-muted/60 border border-border/60 hover:border-primary/40 transition-all duration-300 hover:shadow-[0_8px_32px_-10px_rgba(60,200,247,0.3)]"
-                  style={{ aspectRatio: "2/3" }}
-                >
-                  <div className="absolute inset-0 bg-linear-to-t from-black/75 via-black/20 to-transparent" />
-                  <div className="absolute inset-x-0 bottom-0 p-3">
-                    <span className="block text-white text-[11px] font-bold uppercase tracking-widest leading-tight">
-                      Todo
-                    </span>
-                    <span className="block text-white/50 text-[10px] mt-0.5">
-                      Ver catálogo
-                    </span>
-                  </div>
-                </Link>
-              </ScrollReveal>
+              <Link
+                href="/catalogo"
+                className="hidden text-sm font-semibold text-primary hover:underline sm:inline"
+              >
+                Ver todo
+              </Link>
+            </div>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
               {categories.map((cat, i) => {
+                const Icon = CAT_ICONS[cat.slug] ?? Sparkles;
                 const thumb = cat.image_url ?? covers[cat.id];
+                const soon = isComingSoonCategory(cat.slug);
                 return (
-                  <ScrollReveal key={cat.id} delay={i * 50}>
+                  <ScrollReveal key={cat.id} delay={i * 40}>
                     <Link
                       href={`/catalogo?categoria=${cat.slug}`}
-                      className="group relative shrink-0 flex w-[30vw] sm:w-auto overflow-hidden rounded-2xl bg-muted border border-border/60 hover:border-primary/40 transition-all duration-300 hover:shadow-[0_8px_32px_-10px_rgba(60,200,247,0.3)]"
-                      style={{ aspectRatio: "2/3" }}
+                      className="group relative flex flex-col overflow-hidden rounded-[1.75rem] border border-rose-100 bg-[#fff8f9] transition hover:-translate-y-0.5 hover:border-primary/40 hover:bg-white hover:shadow-[0_14px_32px_-18px_rgba(225,29,72,0.4)]"
                     >
-                      {thumb && (
-                        <Image
-                          src={thumb}
-                          alt={cat.name}
-                          fill
-                          className="object-cover transition-transform duration-500 group-hover:scale-[1.06]"
-                          sizes="(max-width:640px) 30vw, 200px"
-                          unoptimized={thumb.startsWith("http")}
-                        />
-                      )}
-                      <div className="absolute inset-0 bg-linear-to-t from-black/75 via-black/15 to-transparent" />
-                      <div className="absolute inset-x-0 bottom-0 p-3">
-                        <span className="block text-white text-[11px] font-bold leading-tight line-clamp-2">
+                      {soon ? (
+                        <span className="absolute top-3 right-3 z-10 rounded-full bg-primary px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-white">
+                          Soon
+                        </span>
+                      ) : null}
+                      <div className="relative mx-auto mt-5 grid size-16 place-items-center overflow-hidden rounded-full border-2 border-white bg-white shadow-sm sm:size-20">
+                        {thumb ? (
+                          <Image
+                            src={thumb}
+                            alt=""
+                            fill
+                            className={`object-cover ${soon ? "opacity-60" : ""}`}
+                            sizes="80px"
+                            unoptimized={thumb.startsWith("http")}
+                          />
+                        ) : (
+                          <Icon className="size-7 text-primary" aria-hidden />
+                        )}
+                      </div>
+                      <div className="px-3 py-4 text-center">
+                        <span className="text-sm font-black uppercase tracking-wide">
                           {cat.name}
                         </span>
-                        <span className="block text-white/50 text-[10px] mt-0.5">
-                          Ver →
+                        <span className="mt-1 block text-[11px] font-semibold text-primary">
+                          {soon ? "Coming soon" : "Ver drop"}
                         </span>
                       </div>
                     </Link>
@@ -273,264 +253,130 @@ export default async function PublicPage() {
         </section>
       )}
 
-      {/* ─── 3. PRODUCTOS DESTACADOS ─────────────────────────────────── */}
-      {featured.length > 0 && (
-        <section
-          className="py-14 sm:py-20 border-t border-border"
-          aria-labelledby="sec-featured"
-        >
-          <div className={C}>
-            {/* ── Section header ── */}
-            <ScrollReveal>
-              <div className="mb-7 sm:mb-10">
-                {/* Top row: badge + Ver-todo button (desktop) */}
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <span className="inline-flex items-center gap-1.5 rounded-[26px] border border-border bg-card px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-primary">
-                      <span className="size-1.5 rounded-full bg-primary" />
-                      Temporada 2025
-                    </span>
-                    <h2
-                      id="sec-featured"
-                      className="mt-2.5 text-[2rem] sm:text-[clamp(2rem,4.5vw,3rem)] font-black uppercase tracking-[-0.03em] text-foreground leading-[0.9]"
-                    >
-                      Productos
-                      <br />
-                      <span className="text-primary">Destacados</span>
-                    </h2>
-                  </div>
-                  <Link
-                    href="/catalogo"
-                    className="hidden sm:inline-flex shrink-0 group items-center gap-2 rounded-[10px] border border-border/80 bg-card px-5 py-2.5 text-sm font-semibold text-foreground transition-all hover:border-primary/40 hover:text-primary mt-1"
-                  >
-                    Ver todo
-                    <svg
-                      className="size-3.5 transition-transform group-hover:translate-x-0.5"
-                      viewBox="0 0 16 16"
-                      fill="none"
-                      aria-hidden
-                    >
-                      <path
-                        d="M3 8h10M9 4l4 4-4 4"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </Link>
-                </div>
-              </div>
-            </ScrollReveal>
-
-            {/* ── Mobile / tablet: responsive grid (< lg) ── */}
-            <div className="grid grid-cols-2 min-[520px]:grid-cols-3 gap-2.5 sm:gap-3 lg:hidden">
-              {featured.map((product, i) => (
-                <ScrollReveal key={product.id} delay={i * 40}>
-                  <LandingProductCard product={product} />
-                </ScrollReveal>
-              ))}
-            </div>
-
-            {/* Ver todo — mobile only (below grid) */}
-            <Link
-              href="/catalogo"
-              className="mt-5 flex items-center justify-center gap-1.5 sm:hidden text-sm font-semibold text-primary hover:underline underline-offset-2"
+      <section
+        className="border-y border-rose-100 bg-[#fff8f9]"
+        aria-label="Por qué The Spot"
+      >
+        <div className={`${C} grid gap-3 py-10 sm:grid-cols-2 lg:grid-cols-4`}>
+          {PERKS.map((perk) => (
+            <div
+              key={perk.title}
+              className="rounded-[1.4rem] border border-rose-100 bg-white px-4 py-5"
             >
-              Ver todo el catálogo →
-            </Link>
+              <span className="inline-flex size-9 items-center justify-center rounded-full bg-primary/10 text-primary">
+                <perk.icon className="size-4" aria-hidden />
+              </span>
+              <p className="mt-3 text-sm font-bold">{perk.title}</p>
+              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                {perk.text}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
 
-            {/* ── Desktop editorial layout (lg+) ── */}
-            <div className="hidden lg:flex flex-col gap-3">
-              {/* Row 1: hero (left 38%) + 2×2 grid (right) */}
-              <div
-                className="flex gap-3"
-                style={{ height: "clamp(420px, 42vw, 600px)" }}
-              >
-                <ScrollReveal className="w-[38%] shrink-0 h-full" delay={0}>
-                  <LandingProductCard product={featured[0]} variant="hero" />
-                </ScrollReveal>
-
-                {/* 2×2 grid — grid-rows-2 distributes height evenly */}
-                <div className="flex-1 grid grid-cols-2 grid-rows-2 gap-3">
-                  {featured.slice(1, 5).map((product, i) => (
-                    <ScrollReveal
-                      key={product.id}
-                      delay={(i + 1) * 60}
-                      className="h-full"
-                    >
-                      <LandingProductCard product={product} variant="fill" />
-                    </ScrollReveal>
-                  ))}
-                </div>
+      {featured.length > 0 && (
+        <section className="bg-white" aria-labelledby="sec-drop">
+          <div className={`${C} py-12 sm:py-16`}>
+            <div className="mb-8 flex items-end justify-between gap-3">
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-primary">
+                  En {BRAND_NAME} ahora
+                </p>
+                <h2
+                  id="sec-drop"
+                  className="mt-1 text-3xl font-black tracking-tight sm:text-4xl"
+                >
+                  Lo más pedido
+                </h2>
               </div>
-
-              {/* Row 2: wide card */}
-              {featured[5] && (
-                <ScrollReveal delay={280}>
-                  <LandingProductCard product={featured[5]} variant="wide" />
-                </ScrollReveal>
-              )}
+              <Link
+                href="/catalogo"
+                className="rounded-full border border-rose-200 bg-white px-4 py-2 text-sm font-semibold text-foreground transition hover:border-primary hover:text-primary"
+              >
+                Catálogo
+              </Link>
+            </div>
+            <div className="grid grid-cols-2 gap-3 min-[520px]:grid-cols-3 lg:grid-cols-4">
+              {featured.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
             </div>
           </div>
         </section>
       )}
 
-      {/* ─── 4. BENTO / CARACTERÍSTICAS ──────────────────────────────── */}
       <section
-        className={`hidden sm:block ${S} border-t border-border ${C}`}
-        aria-labelledby="sec-bento"
-      >
-        <ScrollReveal>
-          <div className="mb-8">
-            <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-primary">
-              JW Parfum · Explora
-            </p>
-            <h2
-              id="sec-bento"
-              className="mt-1 text-xl sm:text-2xl font-black uppercase tracking-tight text-foreground"
-            >
-              Lo mejor de cada{" "}
-              <span className="landing-wavy-underline">categoría</span>
-            </h2>
-            <p className="mt-2 text-muted-foreground text-sm max-w-md">
-              Un producto destacado de cada categoría. Toca cualquiera para ver el
-              producto.
-            </p>
-          </div>
-        </ScrollReveal>
-        <MagicBento
-          cards={bentoCards}
-          textAutoHide
-          enableStars
-          enableSpotlight
-          enableBorderGlow
-          enableTilt={false}
-          enableMagnetism={false}
-          clickEffect
-          spotlightRadius={400}
-          particleCount={12}
-          glowColor="60, 200, 247"
-          disableAnimations={false}
-        />
-      </section>
-
-      {/* ─── 5. CÓMO FUNCIONA ────────────────────────────────────────── */}
-      <section
-        className="w-full border-t border-border bg-background"
+        className="border-t border-rose-100 bg-[#fff8f9]"
         aria-labelledby="sec-how"
       >
-        <div className={`${C} py-20 sm:py-28`}>
-          {/* Header */}
-          <ScrollReveal>
-            <div className="mb-12 flex flex-col gap-6 sm:mb-14 md:flex-row md:items-end md:justify-between">
-              <div>
-                <div className="mb-5 flex items-center gap-3">
-                  <span aria-hidden className="h-0.5 w-9 bg-primary" />
-                  <span className="text-[11px] font-semibold uppercase tracking-[0.25em] text-muted-foreground">
-                    Cómo funciona
-                  </span>
-                </div>
-                <h2
-                  id="sec-how"
-                  className="text-4xl font-semibold tracking-tight text-foreground leading-[1.05] sm:text-5xl lg:text-6xl"
-                >
-                  Compra en
-                  <br />
-                  tres pasos
-                </h2>
-              </div>
-            </div>
-          </ScrollReveal>
-
-          {/* Steps */}
-          <ol className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className={`${C} py-14 sm:py-20`}>
+          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-primary">
+            Súper fácil
+          </p>
+          <h2
+            id="sec-how"
+            className="mt-2 max-w-xl text-3xl font-black tracking-tight sm:text-5xl"
+          >
+            Tres pasos y es tuyo
+          </h2>
+          <ol className="mt-10 grid gap-4 sm:grid-cols-3">
             {[
               {
-                step: "01",
-                title: "Elige tu perfume",
-                text: "Entra al catálogo, explora por marca o categoría y encuentra la fragancia que más te guste.",
+                n: "01",
+                t: "Elige",
+                d: "Elige perfume o tenis ahora. Belleza, relojes y gorras llegan pronto.",
               },
               {
-                step: "02",
-                title: "Confirma tu pedido",
-                text: "Añádelo al carrito y completa tus datos de contacto — sin necesidad de crear una cuenta.",
+                n: "02",
+                t: "Pide",
+                d: "Checkout de invitado. Sin cuenta. Te contactamos para pagar.",
               },
               {
-                step: "03",
-                title: "Coordina por WhatsApp",
-                text: "Te escribimos para confirmar el pago y la entrega. Sin cobros en línea.",
+                n: "03",
+                t: "Paga",
+                d: "Aceptamos Apple Pay y Google Pay. Coordinamos entrega a todo el país.",
               },
-            ].map((item, i) => (
-              <ScrollReveal key={item.step} delay={i * 100} className="h-full">
-                <li className="relative flex h-full min-h-[200px] overflow-hidden rounded-2xl border border-border p-7 transition-colors duration-300 hover:border-foreground/30">
-                  {/* watermark number */}
-                  <span
-                    aria-hidden
-                    className="pointer-events-none absolute -bottom-4 left-3 select-none text-[9rem] font-semibold leading-none tabular-nums text-foreground/[0.06]"
-                  >
-                    {item.step}
-                  </span>
-                  <div className="relative mt-auto ml-auto w-3/5 self-center">
-                    <h3 className="text-lg font-semibold text-foreground">
-                      {item.title}
-                    </h3>
-                    <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                      {item.text}
-                    </p>
-                  </div>
-                </li>
-              </ScrollReveal>
+            ].map((s) => (
+              <li
+                key={s.n}
+                className="rounded-[1.75rem] border border-rose-100 bg-white p-6 shadow-[0_12px_32px_-20px_rgba(225,29,72,0.4)]"
+              >
+                <span className="text-xs font-black tracking-[0.2em] text-primary">
+                  {s.n}
+                </span>
+                <h3 className="mt-3 text-2xl font-black">{s.t}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                  {s.d}
+                </p>
+              </li>
             ))}
           </ol>
-
-          {/* CTA */}
-          <ScrollReveal>
-            <div className="mt-12 flex flex-col gap-6 border-t border-border pt-10 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="text-sm font-bold uppercase tracking-wide text-foreground">
-                  ¿Listo para empezar?
-                </p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Explora el catálogo y encuentra tu próximo perfume.
-                </p>
-              </div>
-              <Link
-                href="/catalogo"
-                className="inline-flex items-center justify-center rounded-full bg-primary px-8 py-3.5 text-sm font-bold text-background transition-opacity hover:opacity-90"
-              >
-                Ver catálogo
-              </Link>
-            </div>
-          </ScrollReveal>
         </div>
       </section>
 
-      {/* ─── 6. CONTACTO DIRECTO ─────────────────────────────────────── */}
-      <section className="w-full border-t border-border bg-muted/20">
+      <SpotTicker variant="rose" />
+
+      <section className="bg-primary">
         <div
-          className={`${C} flex flex-col gap-6 py-10 sm:flex-row sm:items-center sm:justify-between`}
+          className={`${C} flex flex-col items-start justify-between gap-6 py-14 sm:flex-row sm:items-center`}
         >
-          <ScrollReveal>
-            <div>
-              <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.28em] text-primary">
-                Sin pagos en línea
-              </p>
-              <p className="max-w-md text-sm text-muted-foreground">
-                No pedimos tarjeta ni cobramos nada en el sitio: cada pedido
-                se confirma directo contigo por WhatsApp.{" "}
-                <Link
-                  href="/seguridad"
-                  className="text-primary hover:underline"
-                >
-                  Más información →
-                </Link>
-              </p>
-            </div>
-          </ScrollReveal>
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-white/80">
+              The Spot · República Dominicana
+            </p>
+            <p className="mt-2 max-w-md text-3xl font-black tracking-tight text-white sm:text-4xl">
+              El punto donde se juntan las marcas que ya quieres.
+            </p>
+          </div>
+          <Link
+            href="/catalogo"
+            className="inline-flex rounded-full bg-white px-7 py-3.5 text-sm font-bold text-primary transition hover:bg-rose-50"
+          >
+            Ir al catálogo
+          </Link>
         </div>
       </section>
-
     </article>
   );
 }

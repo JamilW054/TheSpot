@@ -1,7 +1,4 @@
--- JW PARFUM — esquema inicial.
--- Reemplaza por completo el historial de migraciones heredado de Buxxep (desactualizado
--- respecto al código real). Esta es la única fuente de verdad del esquema de datos.
--- Ver docs/00-refactor-status.md para el contexto del refactor.
+-- JW — esquema inicial.
 
 create extension if not exists pgcrypto;
 

@@ -1,6 +1,6 @@
 :root {
   --white: hsl(0, 0%, 100%);
-  --glow-color: 60, 200, 247;
+  --glow-color: 220, 38, 38;
   --glow-primary: rgba(var(--glow-color), 1);
   --glow-soft: rgba(var(--glow-color), 0.2);
   --glow-border: rgba(var(--glow-color), 0.8);

@@ -1,8 +1,8 @@
 "use client";
 
+import { ChevronLeft, ChevronRight, Expand } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
-import { ChevronLeft, ChevronRight, Expand } from "lucide-react";
 import { ProductImageViewer } from "./ProductImageViewer";
 
 interface ProductGalleryProps {
@@ -27,7 +27,7 @@ export function ProductGallery({ images, name }: ProductGalleryProps) {
   return (
     <div className="flex flex-col gap-3 min-w-0">
       {/* Main image */}
-      <div className="group relative aspect-3/4 sm:aspect-square overflow-hidden rounded-2xl border border-border bg-muted/20">
+      <div className="group relative aspect-3/4 overflow-hidden rounded-[1.6rem] border border-rose-100 bg-rose-50 sm:aspect-square">
         {hasSrc ? (
           <Image
             key={src}
@@ -53,7 +53,7 @@ export function ProductGallery({ images, name }: ProductGalleryProps) {
             aria-label="Ampliar imagen"
             className="absolute inset-0 cursor-zoom-in"
           >
-            <span className="absolute right-3 top-3 flex size-9 items-center justify-center rounded-full bg-background/70 text-foreground opacity-0 shadow-md backdrop-blur-sm transition-opacity group-hover:opacity-100">
+            <span className="absolute right-3 top-3 flex size-9 items-center justify-center rounded-full bg-white/85 text-foreground opacity-0 shadow-md backdrop-blur-sm transition-opacity group-hover:opacity-100">
               <Expand className="size-4" aria-hidden />
             </span>
           </button>
@@ -66,7 +66,7 @@ export function ProductGallery({ images, name }: ProductGalleryProps) {
               type="button"
               onClick={prev}
               aria-label="Imagen anterior"
-              className="absolute left-3 top-1/2 -translate-y-1/2 flex size-9 items-center justify-center rounded-full border border-border bg-background/80 text-foreground opacity-0 shadow-md backdrop-blur-sm transition-opacity group-hover:opacity-100 focus-visible:opacity-100 hover:bg-background"
+              className="absolute left-3 top-1/2 flex size-9 -translate-y-1/2 items-center justify-center rounded-full border border-rose-100 bg-white/85 text-foreground opacity-0 shadow-md backdrop-blur-sm transition-opacity group-hover:opacity-100 hover:bg-white focus-visible:opacity-100"
             >
               <ChevronLeft className="size-4" aria-hidden />
             </button>
@@ -74,16 +74,16 @@ export function ProductGallery({ images, name }: ProductGalleryProps) {
               type="button"
               onClick={next}
               aria-label="Imagen siguiente"
-              className="absolute right-3 top-1/2 -translate-y-1/2 flex size-9 items-center justify-center rounded-full border border-border bg-background/80 text-foreground opacity-0 shadow-md backdrop-blur-sm transition-opacity group-hover:opacity-100 focus-visible:opacity-100 hover:bg-background"
+              className="absolute right-3 top-1/2 flex size-9 -translate-y-1/2 items-center justify-center rounded-full border border-rose-100 bg-white/85 text-foreground opacity-0 shadow-md backdrop-blur-sm transition-opacity group-hover:opacity-100 hover:bg-white focus-visible:opacity-100"
             >
               <ChevronRight className="size-4" aria-hidden />
             </button>
 
             {/* Dot indicators */}
             <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
-              {images.map((_, i) => (
+              {images.map((img, i) => (
                 <button
-                  key={i}
+                  key={img}
                   type="button"
                   onClick={() => setActiveIdx(i)}
                   aria-label={`Imagen ${i + 1}`}
@@ -111,7 +111,7 @@ export function ProductGallery({ images, name }: ProductGalleryProps) {
               className={`relative size-16 shrink-0 overflow-hidden rounded-xl border-2 transition-all ${
                 i === activeIdx
                   ? "border-primary"
-                  : "border-border opacity-60 hover:opacity-100"
+                  : "border-rose-200 opacity-60 hover:opacity-100"
               }`}
             >
               <Image

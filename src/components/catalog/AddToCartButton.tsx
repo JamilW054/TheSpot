@@ -1,10 +1,10 @@
 "use client";
 
+import { Check, Minus, Plus } from "lucide-react";
 import { useState } from "react";
 import { useCart } from "@/contexts/cart-context";
-import { variantKey } from "@/lib/variants";
+import { sizeAxisLabel, variantKey } from "@/lib/variants";
 import type { ProductColor } from "@/types";
-import { Check, Minus, Plus } from "lucide-react";
 
 interface AddToCartButtonProps {
   productId: string;
@@ -66,10 +66,12 @@ export function AddToCartButton({
   const selectedStock =
     allSelected && stockTracked ? stockOf(selectedSize, selectedColor) : null;
   const isOutOfStock = selectedStock !== null && selectedStock === 0;
-  const maxQty = selectedStock !== null && selectedStock > 0 ? selectedStock : 10;
+  const maxQty =
+    selectedStock !== null && selectedStock > 0 ? selectedStock : 10;
   const stockIsLow =
     selectedStock !== null && selectedStock > 0 && selectedStock <= 5;
 
+  const sizeLabel = sizeAxisLabel(sizes);
   const quantity = getQuantity(productId, selectedSize, selectedColor);
 
   const handleSizeSelect = (s: string) => {
@@ -125,10 +127,10 @@ export function AddToCartButton({
           <p
             className={`text-sm font-medium ${sizeMissing ? "text-destructive" : "text-foreground"}`}
           >
-            Talla
+            {sizeLabel.noun}
             {sizeMissing && (
               <span className="ml-1.5 text-xs font-normal text-destructive">
-                — selecciona una talla
+                — {sizeLabel.prompt}
               </span>
             )}
           </p>
@@ -143,7 +145,7 @@ export function AddToCartButton({
                   onClick={() => !oos && handleSizeSelect(s)}
                   disabled={oos}
                   title={oos ? "Agotado" : undefined}
-                  className={`relative inline-flex items-center justify-center rounded-md px-3 py-1.5 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
+                  className={`relative inline-flex items-center justify-center rounded-full px-3 py-1.5 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
                     oos
                       ? "cursor-not-allowed border border-border/40 bg-transparent text-muted-foreground/40 line-through"
                       : selectedSize === s
@@ -226,7 +228,7 @@ export function AddToCartButton({
       {allSelected && !isOutOfStock && (
         <div className="flex items-center gap-3">
           <span className="text-sm font-medium text-foreground">Cantidad</span>
-          <div className="flex items-center overflow-hidden rounded-lg border border-border">
+          <div className="flex items-center overflow-hidden rounded-full border border-rose-200">
             <button
               type="button"
               onClick={() => setQty((q) => Math.max(1, q - 1))}

@@ -4,11 +4,10 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { CartNavLink } from "@/components/layout/CartNavLink";
 import { NavbarSearch } from "@/components/layout/NavbarSearch";
-import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { UserNavLink } from "@/components/layout/UserNavLink";
 import { WishlistNavLink } from "@/components/layout/WishlistNavLink";
 import StaggeredMenu from "@/components/StaggeredMenu";
-import { useTheme } from "@/components/theme-provider";
+import { BRAND_NAME, BRAND_PRIMARY } from "@/config/brand";
 import { ORDER_STATUS_PAGE } from "@/config/navigation";
 import type { CategoryRow } from "@/database/repositories/categories";
 import {
@@ -17,8 +16,8 @@ import {
   useHideOnScroll,
 } from "@/hooks/use-hide-on-scroll";
 
-const LOGO_SRC = "/resources/jwparfum-logo.svg";
-const PRIMARY = "#3CC8F7";
+const LOGO_SRC = "/resources/the-spot-logo.svg";
+const PRIMARY = BRAND_PRIMARY;
 
 const BASE_ITEMS = [
   { label: "Inicio", ariaLabel: "Ir a inicio", link: "/" },
@@ -32,16 +31,13 @@ const BASE_ITEMS = [
 
 const SOCIAL_ITEMS: { label: string; link: string }[] = [];
 
-const DARK_COLORS = ["#0c0c0e", "#1a1a1f", "#2aa8d4", PRIMARY];
-const LIGHT_COLORS = ["#ffffff", "#f4f4f5", "#2aa8d4", PRIMARY];
+const LIGHT_COLORS = ["#ffffff", "#fff1f2", "#fecdd3", PRIMARY];
 
 interface Props {
   categories?: CategoryRow[];
 }
 
 export function PublicNavbar({ categories }: Props) {
-  const { theme } = useTheme();
-  const isDark = theme === "dark";
   const pathname = usePathname();
   const isCatalog = pathname === "/catalogo";
   const [menuOpen, setMenuOpen] = useState(false);
@@ -66,12 +62,12 @@ export function PublicNavbar({ categories }: Props) {
       socialItems={SOCIAL_ITEMS}
       displaySocials
       displayItemNumbering
-      menuButtonColor={isDark ? "#ffffff" : "#0c0c0e"}
-      openMenuButtonColor={isDark ? "#ffffff" : PRIMARY}
+      menuButtonColor={PRIMARY}
+      openMenuButtonColor={PRIMARY}
       changeMenuColorOnOpen
-      colors={isDark ? DARK_COLORS : LIGHT_COLORS}
+      colors={LIGHT_COLORS}
       logoUrl={LOGO_SRC}
-      logoAlt="JW PARFUM - Ir a inicio"
+      logoAlt={`${BRAND_NAME} — Ir a inicio`}
       accentColor={PRIMARY}
       isFixed
       closeOnClickAway
@@ -84,28 +80,9 @@ export function PublicNavbar({ categories }: Props) {
       headerCenter={<NavbarSearch categories={categories} />}
       headerTrailing={
         <div className="flex items-center gap-0.5">
-          <ThemeToggle
-            className={
-              isDark
-                ? "text-white/90 hover:bg-white/15 hover:text-white"
-                : "text-foreground/70 hover:bg-black/8 hover:text-foreground"
-            }
-          />
           <UserNavLink className="mr-1" />
-          <WishlistNavLink
-            className={
-              isDark
-                ? "text-white/90 hover:bg-white/15 hover:text-white focus-visible:ring-white/40 focus-visible:ring-offset-0"
-                : "text-foreground/70 hover:bg-black/8 hover:text-foreground"
-            }
-          />
-          <CartNavLink
-            className={
-              isDark
-                ? "text-white/90 hover:bg-white/15 hover:text-white focus-visible:ring-white/40 focus-visible:ring-offset-0"
-                : "text-foreground/70 hover:bg-black/8 hover:text-foreground"
-            }
-          />
+          <WishlistNavLink className="text-foreground/70 hover:bg-rose-50 hover:text-primary focus-visible:ring-primary/40" />
+          <CartNavLink className="text-foreground/70 hover:bg-rose-50 hover:text-primary focus-visible:ring-primary/40" />
         </div>
       }
     />

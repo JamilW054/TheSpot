@@ -20,7 +20,7 @@ export default async function AdminTallasEditarPage({ params }: PageProps) {
   return (
     <PageLayout
       title={`Editar: ${preset.name}`}
-      description="Modifica el nombre o las tallas disponibles para este tipo."
+      description="Modifica el nombre o los valores disponibles para este tipo."
     >
       <SizePresetForm mode="edit" initial={preset} />
     </PageLayout>

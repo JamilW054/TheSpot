@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useState } from "react";
 
-const FALLBACK_IMG = "https://placehold.co/400x500/1a1a2e/6366f1?text=JW+PARFUM";
+const FALLBACK_IMG = "https://placehold.co/400x500/fff1f2/e11d48?text=The+Spot";
 
 interface LandingHeroCardProps {
   img: string;

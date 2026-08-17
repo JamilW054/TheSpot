@@ -1,9 +1,9 @@
 ---
 name: jw-parfum-pedidos
-description: Explicar o depurar el flujo de pedidos de JW PARFUM (checkout de invitado, correo de aviso a Gmail, enlace de WhatsApp, cambio de estado en admin). Usar cuando el usuario pregunte "por qué no me llegó el correo del pedido", "cómo mando el WhatsApp del pedido", "cómo pruebo un pedido" o "cómo cambio el estado de un pedido".
+description: Explicar o depurar el flujo de pedidos de JW (checkout de invitado, correo de aviso a Gmail, enlace de WhatsApp, cambio de estado en admin). Usar cuando el usuario pregunte "por qué no me llegó el correo del pedido", "cómo mando el WhatsApp del pedido", "cómo pruebo un pedido" o "cómo cambio el estado de un pedido".
 ---
 
-# Flujo de pedidos de JW PARFUM
+# Flujo de pedidos de JW
 
 No hay pago en línea. El objetivo del checkout es capturar el pedido y avisar al dueño por dos canales (correo + WhatsApp) para que coordine el cobro y la entrega manualmente.
 

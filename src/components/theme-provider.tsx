@@ -29,24 +29,11 @@ function applyTheme(theme: Theme) {
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>("dark");
+  const [theme, setTheme] = useState<Theme>("light");
 
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem("theme") as Theme | null;
-      if (stored === "light" || stored === "dark") {
-        setTheme(stored);
-        applyTheme(stored);
-      } else {
-        const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-        const resolved: Theme = prefersDark ? "dark" : "light";
-        setTheme(resolved);
-        applyTheme(resolved);
-      }
-    } catch {
-      setTheme("dark");
-      applyTheme("dark");
-    }
+    setTheme("light");
+    applyTheme("light");
   }, []);
 
   const toggleTheme = useCallback(() => {

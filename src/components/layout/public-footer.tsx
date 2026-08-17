@@ -1,116 +1,153 @@
-import { ORDER_STATUS_PAGE } from "@/config/navigation";
+import { Mail, Phone } from "lucide-react";
 import Link from "next/link";
+import { AcceptedPayments } from "@/components/brand/AcceptedPayments";
 import { NewsletterForm } from "@/components/landing/NewsletterForm";
+import {
+  BRAND_NAME,
+  BRAND_SUPPORT_EMAIL,
+  BRAND_SUPPORT_PHONE,
+  BRAND_SUPPORT_PHONE_TEL,
+} from "@/config/brand";
+import { ORDER_STATUS_PAGE } from "@/config/navigation";
 
 const CONTAINER = "max-w-6xl mx-auto px-4 sm:px-6";
-const SUPPORT_EMAIL = "jamilwilliams054@gmail.com";
-const SUPPORT_PHONE_TEL = "+18097612875";
-const SUPPORT_PHONE_LABEL = "809-761-2875";
 
 export function PublicFooter() {
   return (
-    <footer className="mt-auto bg-card border-t border-border">
+    <footer className="mt-auto border-t border-rose-100 bg-white">
       <div className={`w-full ${CONTAINER} py-10 sm:py-14`}>
-
-        {/* ── Grid principal: 4 columnas en desktop ── */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
-
-          {/* Col 1 — Marca + Dirección */}
+        <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4">
           <div className="flex flex-col gap-4">
             <Link
               href="/"
-              className="text-xl font-bold text-foreground hover:text-foreground/80 transition-colors w-fit"
+              className="w-fit text-2xl font-black tracking-tight text-foreground transition-colors hover:text-primary"
             >
-              JW PARFUM
+              the
+              <span className="text-primary"> spot</span>
+              <span className="text-primary">.</span>
             </Link>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              Perfumería en línea. Fragancias originales para él y para ella.
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              Las marcas que quieres, en un solo lugar. Perfumes, relojes,
+              belleza, gorras y tenis. Pedido sin cuenta. Aceptamos Apple Pay y
+              Google Pay.
             </p>
-            <address className="not-italic text-xs text-muted-foreground/70 leading-relaxed">
+            <address className="not-italic text-xs leading-relaxed text-muted-foreground/70">
               Santo Domingo, República Dominicana
             </address>
+            <AcceptedPayments className="mt-1" />
           </div>
 
-          {/* Col 2 — Navegación */}
           <div>
-            <p className="text-xs font-semibold text-foreground uppercase tracking-widest mb-4">
+            <p className="mb-4 text-xs font-semibold uppercase tracking-widest text-foreground">
               Navegación
             </p>
-            <nav className="flex flex-col gap-2.5 text-sm text-muted-foreground" aria-label="Navegación del footer">
-              <Link href="/catalogo" className="hover:text-foreground transition-colors">
+            <nav
+              className="flex flex-col gap-2.5 text-sm text-muted-foreground"
+              aria-label="Navegación del footer"
+            >
+              <Link
+                href="/catalogo"
+                className="transition-colors hover:text-primary"
+              >
                 Catálogo
               </Link>
-              <Link href={ORDER_STATUS_PAGE.href} className="hover:text-foreground transition-colors">
+              <Link
+                href={ORDER_STATUS_PAGE.href}
+                className="transition-colors hover:text-primary"
+              >
                 {ORDER_STATUS_PAGE.label}
               </Link>
-              <Link href="/carrito" className="hover:text-foreground transition-colors">
+              <Link
+                href="/carrito"
+                className="transition-colors hover:text-primary"
+              >
                 Carrito
               </Link>
             </nav>
           </div>
 
-          {/* Col 3 — Políticas */}
           <div>
-            <p className="text-xs font-semibold text-foreground uppercase tracking-widest mb-4">
+            <p className="mb-4 text-xs font-semibold uppercase tracking-widest text-foreground">
               Políticas
             </p>
-            <nav className="flex flex-col gap-2.5 text-sm text-muted-foreground" aria-label="Políticas del footer">
-              <Link href="/ayuda" className="hover:text-foreground transition-colors">
+            <nav
+              className="flex flex-col gap-2.5 text-sm text-muted-foreground"
+              aria-label="Políticas del footer"
+            >
+              <Link
+                href="/ayuda"
+                className="transition-colors hover:text-primary"
+              >
                 Centro de ayuda
               </Link>
-              <Link href="/devoluciones" className="hover:text-foreground transition-colors">
+              <Link
+                href="/devoluciones"
+                className="transition-colors hover:text-primary"
+              >
                 Devoluciones y reembolsos
               </Link>
-              <Link href="/entrega" className="hover:text-foreground transition-colors">
+              <Link
+                href="/entrega"
+                className="transition-colors hover:text-primary"
+              >
                 Política de entrega
               </Link>
-              <Link href="/privacidad" className="hover:text-foreground transition-colors">
+              <Link
+                href="/privacidad"
+                className="transition-colors hover:text-primary"
+              >
                 Política de privacidad
               </Link>
-              <Link href="/seguridad" className="hover:text-foreground transition-colors">
+              <Link
+                href="/seguridad"
+                className="transition-colors hover:text-primary"
+              >
                 Seguridad de datos
               </Link>
-              <Link href="/terminos" className="hover:text-foreground transition-colors">
+              <Link
+                href="/terminos"
+                className="transition-colors hover:text-primary"
+              >
                 Términos y condiciones
               </Link>
-              <Link href="/cookies" className="hover:text-foreground transition-colors">
+              <Link
+                href="/cookies"
+                className="transition-colors hover:text-primary"
+              >
                 Cookies
               </Link>
             </nav>
           </div>
 
-          {/* Col 4 — Contacto + Boletín */}
           <div className="flex flex-col gap-5">
             <div>
-              <p className="text-xs font-semibold text-foreground uppercase tracking-widest mb-4">
+              <p className="mb-4 text-xs font-semibold uppercase tracking-widest text-foreground">
                 Servicio al Cliente
               </p>
               <ul className="flex flex-col gap-3 text-sm text-muted-foreground">
                 <li className="flex items-start gap-2">
-                  {/* Email icon */}
-                  <svg className="size-4 mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden>
-                    <rect width="20" height="16" x="2" y="4" rx="2"/>
-                    <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
-                  </svg>
-                  <a href={`mailto:${SUPPORT_EMAIL}`} className="hover:text-foreground transition-colors break-all">
-                    {SUPPORT_EMAIL}
+                  <Mail className="mt-0.5 size-4 shrink-0" aria-hidden />
+                  <a
+                    href={`mailto:${BRAND_SUPPORT_EMAIL}`}
+                    className="break-all transition-colors hover:text-primary"
+                  >
+                    {BRAND_SUPPORT_EMAIL}
                   </a>
                 </li>
                 <li className="flex items-start gap-2">
-                  {/* WhatsApp icon */}
-                  <svg className="size-4 mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden>
-                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.44 2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.91a16 16 0 0 0 6 6l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.73 16.92z"/>
-                  </svg>
-                  <a href={`tel:${SUPPORT_PHONE_TEL}`} className="hover:text-foreground transition-colors">
-                    {SUPPORT_PHONE_LABEL}
+                  <Phone className="mt-0.5 size-4 shrink-0" aria-hidden />
+                  <a
+                    href={`tel:${BRAND_SUPPORT_PHONE_TEL}`}
+                    className="transition-colors hover:text-primary"
+                  >
+                    {BRAND_SUPPORT_PHONE}
                   </a>
                 </li>
               </ul>
             </div>
 
-            {/* Boletín */}
             <div>
-              <p className="text-xs font-semibold text-foreground uppercase tracking-widest mb-3">
+              <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-foreground">
                 Boletín
               </p>
               <NewsletterForm />
@@ -118,42 +155,62 @@ export function PublicFooter() {
           </div>
         </div>
 
-        {/* ── Barra legal ── */}
-        <div className="mt-6 pt-5 border-t border-border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs text-muted-foreground/60">
+        <div className="mt-6 flex flex-col gap-3 border-t border-rose-100 pt-5 text-xs text-muted-foreground/60 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-            <Link href="/ayuda" className="hover:text-muted-foreground transition-colors">
+            <Link
+              href="/ayuda"
+              className="transition-colors hover:text-primary"
+            >
               Ayuda
             </Link>
             <span aria-hidden>·</span>
-            <Link href="/devoluciones" className="hover:text-muted-foreground transition-colors">
+            <Link
+              href="/devoluciones"
+              className="transition-colors hover:text-primary"
+            >
               Devoluciones
             </Link>
             <span aria-hidden>·</span>
-            <Link href="/entrega" className="hover:text-muted-foreground transition-colors">
+            <Link
+              href="/entrega"
+              className="transition-colors hover:text-primary"
+            >
               Entrega
             </Link>
             <span aria-hidden>·</span>
-            <Link href="/privacidad" className="hover:text-muted-foreground transition-colors">
+            <Link
+              href="/privacidad"
+              className="transition-colors hover:text-primary"
+            >
               Privacidad
             </Link>
             <span aria-hidden>·</span>
-            <Link href="/seguridad" className="hover:text-muted-foreground transition-colors">
+            <Link
+              href="/seguridad"
+              className="transition-colors hover:text-primary"
+            >
               Seguridad
             </Link>
             <span aria-hidden>·</span>
-            <Link href="/terminos" className="hover:text-muted-foreground transition-colors">
+            <Link
+              href="/terminos"
+              className="transition-colors hover:text-primary"
+            >
               Términos
             </Link>
             <span aria-hidden>·</span>
-            <Link href="/cookies" className="hover:text-muted-foreground transition-colors">
+            <Link
+              href="/cookies"
+              className="transition-colors hover:text-primary"
+            >
               Cookies
             </Link>
           </div>
           <p className="shrink-0">
-            © {new Date().getFullYear()} JW PARFUM · Santo Domingo, República Dominicana
+            © {new Date().getFullYear()} {BRAND_NAME} · Santo Domingo, República
+            Dominicana
           </p>
         </div>
-
       </div>
     </footer>
   );
