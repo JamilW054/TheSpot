@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { AcceptedPayments } from "@/components/brand/AcceptedPayments";
 import { FreeShippingProgress } from "@/components/cart/FreeShippingProgress";
+import { StripePaymentButton } from "@/components/checkout/StripePaymentButton";
 import {
   qualifiesForFreeShipping,
   resolveShippingCents,
@@ -31,11 +32,14 @@ const inputClass =
 const labelClass = "block text-sm font-medium text-foreground";
 
 interface OrderConfirmation {
+  orderId: string;
   orderNumber: string;
   totalCents: number;
 }
 
 function ConfirmationScreen({ order }: { order: OrderConfirmation }) {
+  const [paid, setPaid] = useState(false);
+
   return (
     <div className="mx-auto max-w-lg rounded-[14px] border border-border bg-card p-8 sm:p-10 text-center">
       <div className="mx-auto flex size-14 items-center justify-center rounded-full bg-primary/10 text-primary">
@@ -62,11 +66,27 @@ function ConfirmationScreen({ order }: { order: OrderConfirmation }) {
         </span>
         . Total: {formatDOPFromCents(order.totalCents)}.
       </p>
-      <p className="mt-1 text-sm text-muted-foreground">
-        Te contactaremos por correo o teléfono para coordinar el pago y la
-        entrega. Aceptamos Apple Pay y Google Pay.
-      </p>
-      <AcceptedPayments className="mt-5" align="center" label={null} />
+
+      {paid ? (
+        <p className="mt-4 rounded-[10px] border border-primary/40 bg-primary/10 px-4 py-3 text-sm font-medium text-primary">
+          Pago recibido. ¡Gracias por tu compra!
+        </p>
+      ) : (
+        <>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Paga ahora en línea con Apple Pay, o coordina el pago y la entrega
+            por correo/teléfono como de costumbre.
+          </p>
+          <StripePaymentButton
+            orderId={order.orderId}
+            orderNumber={order.orderNumber}
+            totalCents={order.totalCents}
+            onPaid={() => setPaid(true)}
+          />
+          <AcceptedPayments className="mt-5" align="center" label={null} />
+        </>
+      )}
+
       <div className="mt-4">
         <Link
           href="/estado-pedido"
@@ -179,6 +199,7 @@ export function CheckoutContent({
 
     clearCart();
     setOrder({
+      orderId: result.result.orderId,
       orderNumber: result.result.orderNumber,
       totalCents: result.result.totalCents,
     });
