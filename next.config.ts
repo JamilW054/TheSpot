@@ -102,3 +102,13 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
+
+// Bindings de Cloudflare (IMAGES, ASSETS…) disponibles también en `next dev`.
+// No afecta el build ni el despliegue; ver wrangler.jsonc y open-next.config.ts.
+if (process.env.NODE_ENV === "development") {
+  import("@opennextjs/cloudflare")
+    .then((m) => m.initOpenNextCloudflareForDev())
+    .catch(() => {
+      // Sin el paquete instalado, `next dev` sigue funcionando normal.
+    });
+}

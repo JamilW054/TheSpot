@@ -87,3 +87,16 @@ Migraciones nuevas: `00006_payments_inventory_sales.sql` (cuentas bancarias, mé
 4. En `/admin/pagos` poner las cuentas reales de Banreservas/Popular y activarlas; revisar WhatsApp y correo en `/admin/config`.
 5. Cargar costo de cada producto (para que la ganancia del reporte sea real) y revisar existencias en Inventario.
 6. Desplegar (Vercel u otro) con `NEXT_PUBLIC_SITE_URL` del dominio final.
+
+## Despliegue en Cloudflare Workers (OpenNext)
+
+El proyecto se despliega como **Cloudflare Worker** con `@opennextjs/cloudflare` (Cloudflare Pages no ejecuta apps Next.js con acciones de servidor/API). Archivos: `wrangler.jsonc`, `open-next.config.ts`, `public/_headers`. Requiere Next ≥ 16.4.5. El gestor es **pnpm** (se quitó `bun.lock`, que hacía que el build intentara usar Bun). `src/middleware.ts` usa runtime edge (Next lo marca como "deprecated" a favor de `proxy`, pero el middleware Node en Cloudflare es experimental).
+
+Configuración en el dashboard (Workers & Pages → Create → Import a repository → JamilW054/TheSpot):
+- Build command: `pnpm run cf:build`
+- Deploy command: `npx wrangler deploy` (o `pnpm exec opennextjs-cloudflare deploy`)
+- Build variables (se incrustan al compilar): `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_SITE_URL`.
+- Variables y secretos del Worker (runtime): las mismas más `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY`, `RESEND_FROM`, y las de R2 si se usan.
+- El nombre del Worker debe ser `thespot` (coincide con `wrangler.jsonc`). El proyecto viejo de Cloudflare **Pages** se puede desconectar para que deje de fallar en cada push.
+
+Probar en el runtime de Workers en local: `pnpm cf:preview` (en Windows falla al crear symlinks salvo con Modo desarrollador o WSL; en Linux/CI funciona).

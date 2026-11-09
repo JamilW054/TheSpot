@@ -1,3 +1,5 @@
+// Runtime edge (formato `middleware.ts`): es el que OpenNext soporta oficialmente
+// en Cloudflare Workers. Solo refresca la sesión de Supabase y protege /admin.
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 
@@ -9,7 +11,7 @@ function isProtectedPath(pathname: string): boolean {
   );
 }
 
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(

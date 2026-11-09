@@ -1,5 +1,7 @@
 packages:
   - "."
 allowBuilds:
-  esbuild: false
+  esbuild: true
   sharp: false
+  workerd: true
+  supabase: true

@@ -2,15 +2,6 @@
   "name": "jw-parfum",
   "version": "0.1.0",
   "private": true,
-  "pnpm": {
-    "ignoredBuiltDependencies": [
-      "sharp",
-      "unrs-resolver"
-    ],
-    "onlyBuiltDependencies": [
-      "supabase"
-    ]
-  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -28,10 +19,16 @@
     "db:push": "supabase db push",
     "db:reset": "supabase db reset",
     "db:types": "supabase gen types typescript --local --schema public > src/database/types/database.types.ts",
-    "db:types:linked": "supabase gen types typescript --linked --schema public > src/database/types/database.types.ts"
+    "db:types:linked": "supabase gen types typescript --linked --schema public > src/database/types/database.types.ts",
+    "cf:build": "opennextjs-cloudflare build",
+    "cf:preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "cf:deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+    "cf:upload": "opennextjs-cloudflare build && opennextjs-cloudflare upload",
+    "cf:typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1041.0",
+    "@opennextjs/cloudflare": "1.20.16",
     "@react-email/render": "^2.0.8",
     "@react-pdf/renderer": "^4.5.1",
     "@supabase/ssr": "^0.8.0",
@@ -39,7 +36,7 @@
     "gsap": "^3.14.2",
     "jszip": "^3.10.1",
     "lucide-react": "^0.563.0",
-    "next": "16.1.6",
+    "next": "16.4.5",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "recharts": "^3.9.1",
@@ -55,7 +52,8 @@
     "supabase": "^2.109.0",
     "tailwindcss": "^4",
     "typescript": "^5",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.4",
+    "wrangler": "4.158.0"
   },
   "workspaces": [
     "."
