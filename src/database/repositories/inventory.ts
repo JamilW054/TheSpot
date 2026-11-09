@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/server";
 import { variantKey } from "@/lib/variants";
 
 export interface ProductStock {
@@ -15,11 +15,15 @@ export interface ProductStock {
  * Disponible = sum(quantity - reserved) en todos los almacenes, por variante activa.
  * La clave usa `variantKey(size, color)` para coincidir con admin, ficha y carrito.
  * `tracked = false` cuando no hay inventario (no se aplica límite de stock).
+ *
+ * Usa el service role: `inventory` no tiene política RLS pública (a
+ * propósito, ver `00002_jw_parfum_rls.sql`) y esta consulta corre también
+ * para visitantes sin sesión en la ficha de producto.
  */
 export async function getStockMatrixForProduct(
   productId: string,
 ): Promise<ProductStock> {
-  const supabase = await createClient();
+  const supabase = createServiceClient();
   const { data } = await supabase
     .from("product_variants")
     .select("attributes, inventory(quantity, reserved)")

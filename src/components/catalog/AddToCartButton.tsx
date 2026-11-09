@@ -59,7 +59,9 @@ export function AddToCartButton({
   const canAdd = !hasColors || !!selectedColor;
 
   const stockOf = (size: string | null, color: string | null): number | null =>
-    stockByKey != null ? (stockByKey[variantKey(size, color)] ?? 0) : null;
+    stockTracked && stockByKey != null
+      ? (stockByKey[variantKey(size, color)] ?? 0)
+      : null;
 
   // Stock disponible sumando el otro eje (para marcar agotada una talla/color).
   const sizeStock = (s: string): number | null => {
