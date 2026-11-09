@@ -11,7 +11,7 @@ import type { ShippingAddress } from "@/database/repositories/orders";
 import { getOrderNotificationEmail } from "@/database/repositories/settings";
 import { buildCustomerOrderWhatsAppLink } from "@/lib/whatsapp-server";
 import { sendNewOrderAdminEmail } from "@/lib/resend";
-import { createServiceClient } from "@/lib/supabase/server";
+import { createServiceClient, hasServiceRoleKey } from "@/lib/supabase/server";
 import { variantKey } from "@/lib/variants";
 
 /**
@@ -236,6 +236,15 @@ export async function checkoutGuest(
   const address = input.shipping.address.trim();
   if (!name || !email || !phone || !address) {
     throw new Error("Completa nombre, correo, teléfono y dirección.");
+  }
+
+  if (!hasServiceRoleKey()) {
+    console.error(
+      "[checkout] Falta SUPABASE_SERVICE_ROLE_KEY en el servidor: no se pueden crear pedidos (RLS).",
+    );
+    throw new Error(
+      "No pudimos registrar tu pedido en este momento. Escríbenos por WhatsApp y lo tomamos por ahí.",
+    );
   }
 
   const supabase = createServiceClient();

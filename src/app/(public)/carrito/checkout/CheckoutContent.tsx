@@ -2,9 +2,10 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { BankAccountCard } from "@/components/checkout/BankAccountCard";
 import { FreeShippingProgress } from "@/components/cart/FreeShippingProgress";
+import { citiesForProvince, DR_PROVINCES } from "@/config/dominican-republic";
 import {
   qualifiesForFreeShipping,
   resolveShippingCents,
@@ -36,6 +37,46 @@ const inputClass =
   "h-11 w-full rounded-[10px] border border-border bg-background px-3 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors";
 
 const labelClass = "block text-sm font-medium text-foreground";
+
+/** Valor del selector de ciudad que muestra el campo para escribirla. */
+const OTHER_CITY = "__other__";
+
+/** Datos de contacto recordados en este navegador para la próxima compra. */
+const CONTACT_STORAGE_KEY = "jw-checkout-contact";
+const REMEMBERED_FIELDS = [
+  ["name", "checkout-name"],
+  ["email", "checkout-email"],
+  ["phone", "checkout-phone"],
+  ["address", "checkout-address"],
+  ["sector", "checkout-sector"],
+] as const;
+
+interface SavedContact {
+  name?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  sector?: string;
+  province?: string;
+  city?: string;
+}
+
+function loadSavedContact(): SavedContact | null {
+  try {
+    const raw = window.localStorage.getItem(CONTACT_STORAGE_KEY);
+    return raw ? (JSON.parse(raw) as SavedContact) : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveContact(contact: SavedContact): void {
+  try {
+    window.localStorage.setItem(CONTACT_STORAGE_KEY, JSON.stringify(contact));
+  } catch {
+    // Navegación privada o almacenamiento bloqueado: no pasa nada.
+  }
+}
 
 interface OrderConfirmation {
   orderNumber: string;
@@ -147,6 +188,37 @@ export function CheckoutContent({
   const [error, setError] = useState<string | null>(null);
   const [order, setOrder] = useState<OrderConfirmation | null>(null);
 
+  const [province, setProvince] = useState("");
+  const [city, setCity] = useState("");
+  const [customCity, setCustomCity] = useState("");
+  const provinceCities = citiesForProvince(province);
+  const resolvedCity = city === OTHER_CITY ? customCity.trim() : city;
+
+  // Rellena el formulario con los datos de la compra anterior (si los hay).
+  // biome-ignore lint/correctness/useExhaustiveDependencies: solo al montar / al aparecer el formulario
+  useEffect(() => {
+    const saved = loadSavedContact();
+    if (!saved) return;
+    for (const [key, id] of REMEMBERED_FIELDS) {
+      const el = document.getElementById(id) as
+        | HTMLInputElement
+        | HTMLTextAreaElement
+        | null;
+      if (el && !el.value && saved[key]) el.value = saved[key];
+    }
+    if (saved.province && DR_PROVINCES.some((p) => p.name === saved.province)) {
+      setProvince(saved.province);
+      if (saved.city) {
+        if (citiesForProvince(saved.province).includes(saved.city)) {
+          setCity(saved.city);
+        } else {
+          setCity(OTHER_CITY);
+          setCustomCity(saved.city);
+        }
+      }
+    }
+  }, [items.length > 0]);
+
   const [selectedShippingId, setSelectedShippingId] = useState<string | null>(
     shippingMethods[0]?.id ?? null,
   );
@@ -200,6 +272,10 @@ export function CheckoutContent({
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
+    if (!province || !resolvedCity) {
+      setError("Elige tu provincia y ciudad.");
+      return;
+    }
     if (paymentMethod === "bank_transfer" && !bankAccountId) {
       setError("Elige el banco al que vas a transferir.");
       return;
@@ -229,9 +305,10 @@ export function CheckoutContent({
         email: value("checkout-email"),
         phone: value("checkout-phone"),
         address: value("checkout-address"),
-        city: value("checkout-city") || null,
-        postalCode: value("checkout-postal") || null,
-        country: value("checkout-country") || null,
+        addressLine2: value("checkout-sector") || null,
+        city: resolvedCity || null,
+        state: province || null,
+        country: "DO",
       },
       shippingMethodId: selectedShippingId,
       couponCode: appliedCoupon,
@@ -246,6 +323,15 @@ export function CheckoutContent({
       return;
     }
 
+    saveContact({
+      name: value("checkout-name"),
+      email: value("checkout-email"),
+      phone: value("checkout-phone"),
+      address: value("checkout-address"),
+      sector: value("checkout-sector"),
+      province,
+      city: resolvedCity,
+    });
     clearCart();
     setOrder({
       orderNumber: result.result.orderNumber,
@@ -321,6 +407,7 @@ export function CheckoutContent({
               id="checkout-name"
               type="text"
               required
+              autoComplete="name"
               className={inputClass}
               placeholder="Tu nombre"
             />
@@ -334,6 +421,8 @@ export function CheckoutContent({
                 id="checkout-email"
                 type="email"
                 required
+                autoComplete="email"
+                inputMode="email"
                 className={inputClass}
                 placeholder="tu@email.com"
               />
@@ -346,6 +435,8 @@ export function CheckoutContent({
                 id="checkout-phone"
                 type="tel"
                 required
+                autoComplete="tel"
+                inputMode="tel"
                 className={inputClass}
                 placeholder="+1 (809) 000-0000"
               />
@@ -359,44 +450,93 @@ export function CheckoutContent({
               id="checkout-address"
               required
               rows={3}
+              autoComplete="street-address"
               className="w-full rounded-[10px] border border-border bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors resize-none"
               placeholder="Calle, número, referencia..."
             />
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label htmlFor="checkout-city" className={labelClass}>
-                Ciudad
+              <label htmlFor="checkout-province" className={labelClass}>
+                Provincia
               </label>
-              <input
-                id="checkout-city"
-                type="text"
+              <select
+                id="checkout-province"
+                required
+                value={province}
+                onChange={(e) => {
+                  setProvince(e.target.value);
+                  const first = citiesForProvince(e.target.value);
+                  setCity(first.length === 1 ? first[0] : "");
+                  setCustomCity("");
+                }}
+                autoComplete="address-level1"
                 className={inputClass}
-                placeholder="Santo Domingo"
-              />
+              >
+                <option value="" disabled>
+                  Elige tu provincia
+                </option>
+                {DR_PROVINCES.map((p) => (
+                  <option key={p.name} value={p.name}>
+                    {p.name}
+                  </option>
+                ))}
+              </select>
             </div>
             <div>
-              <label htmlFor="checkout-postal" className={labelClass}>
-                Código postal
+              <label htmlFor="checkout-city-select" className={labelClass}>
+                Ciudad / municipio
               </label>
-              <input
-                id="checkout-postal"
-                type="text"
-                className={inputClass}
-                placeholder="10100"
-              />
+              <select
+                id="checkout-city-select"
+                required
+                disabled={!province}
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+                className={`${inputClass} disabled:opacity-60`}
+              >
+                <option value="" disabled>
+                  {province ? "Elige tu ciudad" : "Primero la provincia"}
+                </option>
+                {provinceCities.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+                <option value={OTHER_CITY}>Otra (escribirla)</option>
+              </select>
             </div>
           </div>
+          {city === OTHER_CITY && (
+            <div>
+              <label htmlFor="checkout-city-other" className={labelClass}>
+                Escribe tu ciudad o municipio
+              </label>
+              <input
+                id="checkout-city-other"
+                type="text"
+                required
+                value={customCity}
+                onChange={(e) => setCustomCity(e.target.value)}
+                autoComplete="address-level2"
+                className={inputClass}
+                placeholder="Ej. Villa Mella"
+              />
+            </div>
+          )}
           <div>
-            <label htmlFor="checkout-country" className={labelClass}>
-              País
+            <label htmlFor="checkout-sector" className={labelClass}>
+              Sector o barrio{" "}
+              <span className="font-normal text-muted-foreground">
+                (opcional)
+              </span>
             </label>
             <input
-              id="checkout-country"
+              id="checkout-sector"
               type="text"
+              autoComplete="address-level3"
               className={inputClass}
-              placeholder="República Dominicana"
-              defaultValue="República Dominicana"
+              placeholder="Ej. Naco, Los Prados, Gurabo…"
             />
           </div>
           <div>
