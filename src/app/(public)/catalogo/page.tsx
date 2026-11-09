@@ -21,6 +21,8 @@ import {
 import { catalogFiltersFromRecord } from "@/lib/catalog-query";
 
 export const dynamic = "force-dynamic";
+/** Slugs de categoría donde no se ofrece el filtro por color. */
+const CATEGORIES_WITHOUT_COLOR_FILTER = ["perfumes"];
 const PRODUCTS_PER_PAGE = 24;
 
 export const metadata = {
@@ -44,7 +46,7 @@ export default async function CatalogPage({ searchParams }: PageProps) {
     Number.parseInt(requestedPageValue ?? "1", 10) || 1,
   );
 
-  const [products, categories, covers, tagOptions, colorOptions] =
+  const [products, categories, covers, tagOptions, allColorOptions] =
     await Promise.all([
       getProducts({
         categorySlug: filters.categoria,
@@ -65,6 +67,12 @@ export default async function CatalogPage({ searchParams }: PageProps) {
     ? categories.find((c) => c.slug === filters.categoria)
     : undefined;
   const comingSoon = isComingSoonCategory(filters.categoria, soonSlugs);
+  // En categorías como Perfumes el color no aplica: no se muestra ese filtro.
+  const colorOptions = CATEGORIES_WITHOUT_COLOR_FILTER.includes(
+    filters.categoria ?? "",
+  )
+    ? []
+    : allColorOptions;
   const visibleProducts = comingSoon
     ? []
     : products.filter((p) => !isComingSoonCategory(p.categorySlug, soonSlugs));

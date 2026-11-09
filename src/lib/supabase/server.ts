@@ -32,6 +32,15 @@ export async function createClient() {
   });
 }
 
+/**
+ * true si el servidor tiene la clave `service_role`. Sin ella,
+ * `createServiceClient` cae a la clave anónima (sirve para leer el catálogo)
+ * pero las escrituras protegidas por RLS —crear pedidos— fallan.
+ */
+export function hasServiceRoleKey(): boolean {
+  return Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY?.trim());
+}
+
 /** Server-only client with service role (bypasses RLS). Use for admin or background jobs. */
 export function createServiceClient() {
   const url =

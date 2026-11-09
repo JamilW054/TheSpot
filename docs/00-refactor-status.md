@@ -100,3 +100,11 @@ Configuración en el dashboard (Workers & Pages → Create → Import a reposito
 - El nombre del Worker debe ser `thespot` (coincide con `wrangler.jsonc`). El proyecto viejo de Cloudflare **Pages** se puede desconectar para que deje de fallar en cada push.
 
 Probar en el runtime de Workers en local: `pnpm cf:preview` (en Windows falla al crear symlinks salvo con Modo desarrollador o WSL; en Linux/CI funciona).
+
+## Supabase en la nube (2026-11-09)
+
+- Proyecto **The Spot** · ref `znsjbsqweevoibtgawkg` · us-east-1 · plan gratuito · URL `https://znsjbsqweevoibtgawkg.supabase.co`.
+- Migraciones 00001–00008 aplicadas (estructura idéntica a la local, verificada por huella de columnas).
+- Copiados desde local: 55 marcas, 5 categorías, 194 productos, 200 variantes, inventario (sin reservas), etiquetas, presets, método de envío y ajustes (WhatsApp, correo de avisos, envío gratis, métodos de pago). **No** se copiaron pedidos, perfiles ni la cuenta bancaria de prueba: Banreservas y Popular están inactivas esperando datos reales.
+- Admin de producción: usuario `admin` (`admin@jwparfum.local`), contraseña entregada al dueño en el chat; no se guarda en el repo.
+- Pendiente en el dashboard de Supabase: copiar la clave `service_role` (Project Settings → API Keys) como secreto del Worker; recomendado desactivar el registro público (Authentication → Sign In / Providers → "Allow new users to sign up") y activar la protección de contraseñas filtradas.
