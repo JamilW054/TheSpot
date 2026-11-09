@@ -8,16 +8,16 @@ import {
   LayoutGrid,
   LayoutList,
   ListFilter,
-  Mail,
   MapPin,
   MessageCircle,
   PackageSearch,
   Phone,
   PlayCircle,
   Trash2,
-  X,
 } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { EmptyState } from "@/components/admin/ui";
 import { Badge } from "@/components/ui/badge";
@@ -300,189 +300,6 @@ function ProductList({
   );
 }
 
-// ─── Detail Modal ─────────────────────────────────────────────────────────────
-
-function DetailModal({ pedido, onClose }: { pedido: Pedido; onClose: () => void }) {
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    document.addEventListener("keydown", handler);
-    return () => document.removeEventListener("keydown", handler);
-  }, [onClose]);
-
-  const s = pedido.shipping;
-
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center"
-      role="dialog"
-      aria-modal="true"
-      aria-label="Detalle del pedido"
-    >
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-md overflow-hidden rounded-2xl border border-border bg-card shadow-2xl">
-        {/* Header */}
-        <div className="flex items-start justify-between gap-4 border-b border-border px-5 py-4">
-          <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Pedido
-            </p>
-            <p className="mt-0.5 break-all font-mono text-xs text-foreground">
-              {pedido.id}
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="shrink-0 rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-            aria-label="Cerrar"
-          >
-            <X className="size-4" />
-          </button>
-        </div>
-
-        <div className="divide-y divide-border overflow-y-auto max-h-[70vh]">
-          {/* Cliente */}
-          <div className="space-y-2.5 px-5 py-4">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Cliente
-            </p>
-            <p className="font-semibold text-foreground">{pedido.cliente}</p>
-            {s?.email && (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Mail className="size-3.5 shrink-0" />
-                <span className="truncate">{s.email}</span>
-              </div>
-            )}
-            {s?.phone && (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Phone className="size-3.5 shrink-0" />
-                <span>{s.phone}</span>
-              </div>
-            )}
-            {whatsappHrefForPedido(pedido) && (
-              <a
-                href={whatsappHrefForPedido(pedido) ?? undefined}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-1 inline-flex items-center gap-1.5 rounded-lg bg-[#25D366]/10 px-2.5 py-1.5 text-xs font-semibold text-[#25D366] hover:bg-[#25D366]/20 transition-colors"
-              >
-                <MessageCircle className="size-3.5" />
-                Escribir por WhatsApp
-              </a>
-            )}
-          </div>
-
-          {/* Productos */}
-          {pedido.lineItems.length > 0 && (
-            <div className="space-y-3 px-5 py-4">
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Productos pedidos
-              </p>
-              <div className="space-y-3">
-                {pedido.lineItems.map((item, i) => (
-                  <div key={i} className="flex items-center gap-3">
-                    <ProductThumb
-                      src={item.coverImageUrl}
-                      alt={item.productName}
-                      size={48}
-                    />
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium text-foreground">
-                        {item.productName}
-                      </p>
-                      {(item.size || item.color) && (
-                        <div className="mt-1 flex flex-wrap gap-1">
-                          {item.size && (
-                            <span className="rounded border border-border bg-background px-1.5 py-px text-[11px] font-medium text-muted-foreground">
-                              Talla: {item.size}
-                            </span>
-                          )}
-                          {item.color && (
-                            <span className="rounded border border-border bg-background px-1.5 py-px text-[11px] font-medium text-muted-foreground">
-                              Color: {item.color}
-                            </span>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                    <span className="shrink-0 font-mono text-sm font-semibold text-foreground tabular-nums">
-                      ×{item.quantity}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Dirección */}
-          <div className="space-y-2 px-5 py-4">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Dirección de envío
-            </p>
-            {s ? (
-              <div className="flex items-start gap-2 text-sm">
-                <MapPin className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
-                <div className="space-y-0.5">
-                  {s.addressLine1 && <p className="text-foreground">{s.addressLine1}</p>}
-                  {s.addressLine2 && <p className="text-foreground">{s.addressLine2}</p>}
-                  {(s.city || s.postalCode) && (
-                    <p className="text-muted-foreground">
-                      {[s.city, s.postalCode].filter(Boolean).join(", ")}
-                    </p>
-                  )}
-                  {s.countryCode && (
-                    <p className="text-muted-foreground">{countryLabel(s.countryCode)}</p>
-                  )}
-                </div>
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground">Sin dirección registrada</p>
-            )}
-          </div>
-
-          {/* Resumen */}
-          <div className="grid grid-cols-2 gap-4 px-5 py-4">
-            <div>
-              <p className="text-xs text-muted-foreground">Total</p>
-              <p className="mt-0.5 font-mono font-semibold text-foreground">{pedido.total}</p>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Productos</p>
-              <p className="mt-0.5 font-semibold text-foreground">{pedido.items}</p>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Estado pedido</p>
-              <div className="mt-1">
-                <Badge variant={ESTADO_BADGE_VARIANT[pedido.estado]}>
-                  {ESTADO_LABEL[pedido.estado]}
-                </Badge>
-              </div>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Estado pago</p>
-              <div className="mt-1">
-                <span
-                  className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold ${PAYMENT_COLOR[pedido.paymentStatus] ?? PAYMENT_COLOR.pending}`}
-                >
-                  {PAYMENT_LABEL[pedido.paymentStatus] ?? "—"}
-                </span>
-              </div>
-            </div>
-            {pedido.createdAt && (
-              <div className="col-span-2">
-                <p className="text-xs text-muted-foreground">Fecha y hora</p>
-                <p className="mt-0.5 text-sm text-foreground">{pedido.createdAt}</p>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 // ─── Card View ────────────────────────────────────────────────────────────────
 
 function PedidoCard({
@@ -525,9 +342,15 @@ function PedidoCard({
 
         <div className="min-w-0 flex-1">
           {/* Nombre */}
-          <p className="truncate font-semibold text-foreground leading-snug">
+          <Link
+            href={`/admin/pedidos/${pedido.id}`}
+            className="block truncate font-semibold leading-snug text-foreground hover:text-primary"
+          >
             {pedido.cliente}
-          </p>
+            <span className="ml-1.5 font-mono text-xs font-normal text-muted-foreground">
+              #{pedido.id.slice(0, 8).toUpperCase()}
+            </span>
+          </Link>
           {/* Email */}
           {s?.email && (
             <p className="truncate text-xs text-muted-foreground mt-0.5">{s.email}</p>
@@ -719,7 +542,15 @@ function PedidosTableView({
                   />
                 </td>
                 <td className="px-4 py-3">
-                  <p className="font-medium text-foreground">{p.cliente}</p>
+                  <Link
+                    href={`/admin/pedidos/${p.id}`}
+                    className="font-medium text-foreground hover:text-primary"
+                  >
+                    {p.cliente}{" "}
+                    <span className="font-mono text-xs font-normal text-muted-foreground">
+                      #{p.id.slice(0, 8).toUpperCase()}
+                    </span>
+                  </Link>
                   {s?.email && (
                     <p className="truncate text-xs text-muted-foreground max-w-40">{s.email}</p>
                   )}
@@ -834,7 +665,11 @@ export function PedidosTable({
   const [showEstadoPanel, setShowEstadoPanel] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [view, setView] = useState<"cards" | "table">("cards");
-  const [detailPedido, setDetailPedido] = useState<Pedido | null>(null);
+  const router = useRouter();
+  const openDetail = useCallback(
+    (p: Pedido) => router.push(`/admin/pedidos/${p.id}`),
+    [router],
+  );
   const [confirmState, setConfirmState] = useState<ConfirmDialogState | null>(null);
 
   // Persist view preference
@@ -988,9 +823,6 @@ export function PedidosTable({
       {/* Modals */}
       {confirmState && (
         <ConfirmDialog state={confirmState} onCancel={closeConfirm} />
-      )}
-      {detailPedido && (
-        <DetailModal pedido={detailPedido} onClose={() => setDetailPedido(null)} />
       )}
 
       <div className="space-y-4">
@@ -1185,7 +1017,7 @@ export function PedidosTable({
                 pedido={p}
                 selected={selectedIds.has(p.id)}
                 onToggle={() => handleToggleRow(p.id)}
-                onView={() => setDetailPedido(p)}
+                onView={() => openDetail(p)}
                 onMarkEnProceso={
                   onMarkEnProceso ? () => handleCardMarkEnProceso(p) : undefined
                 }
@@ -1202,7 +1034,7 @@ export function PedidosTable({
             selectedIds={selectedIds}
             onToggleRow={handleToggleRow}
             onSelectAll={handleSelectAll}
-            onView={setDetailPedido}
+            onView={openDetail}
             onDelete={onDelete ? handleDeleteSingle : undefined}
           />
         )}

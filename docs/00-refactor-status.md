@@ -28,7 +28,7 @@ Documento vivo. Se actualiza para que cualquier sesión pueda retomar el trabajo
 - [x] **Fase 2 — Quitar pagos**: AZUL, Payment Link, `/admin/facturas`, comisiones AZUL/G3DEON, `payment_methods`/`payment_requests`.
 - [x] **Fase 3 — Quitar cuentas de cliente**: login/registro/OTP/reset/eliminar-cuenta borrados. `proxy.ts` solo protege `/admin`. Carrito y wishlist 100% `localStorage` (`jwparfum-cart`, `jwparfum_wishlist`).
 - [x] **Fase 4 — Checkout invitado + WhatsApp + correo**: `checkoutGuest` en `src/database/repositories/checkout.ts` (precio resuelto server-side contra `product_variants`, nunca confía en el precio del cliente). `src/lib/whatsapp.ts` (puro, cliente+servidor) + `src/lib/whatsapp-server.ts` (lee `app_settings`, solo servidor). Botón WhatsApp en la confirmación del cliente y en `/admin/pedidos` (tarjeta, tabla y modal de detalle). Campo "WhatsApp del negocio" en `/admin/config`.
-  - **Limitación conocida**: el número de pedido mostrado al cliente es corto (8 caracteres del UUID) pero `/estado-pedido` busca por UUID completo — no se resolvió (requeriría una columna de número de pedido legible/secuencial).
+  - **Número de pedido**: columna generada `orders.order_number` (migración `00004_order_number.sql`, 8 primeros caracteres del UUID en mayúsculas). `/estado-pedido` acepta ese número corto (con o sin `#`) o el UUID completo, y `?pedido=XXXX` lo precarga.
 - [x] **Fase 5 — Quitar módulos de ropa**: editor de diseño + `@dnd-kit`, líneas, socios, almacenes (UI), flash-sales, banners, reportes, subcategorías (fusionadas en categorías vía `parent_id`).
 - [x] **Fase 6 — Rebrand**: `package.json` (`name: jw-parfum`), metadata/SEO (`src/app/layout.tsx`), plantillas de correo (`nuevo-pedido-admin.ts`, `compra.ts`), landing (`src/app/(public)/page.tsx`: ticker, "cómo funciona", sección de seguridad — ya no habla de tarjetas/Azul), `/seguridad` reescrita (ya no promete PCI-DSS/3D Secure que no existen), localStorage keys, README.md.
 - [ ] **Fase 7 — Credenciales y despliegue** (pendiente del usuario): crear proyecto Supabase, completar `.env.local`, aplicar migraciones, correr `pnpm bootstrap-admin`, configurar dominio en Resend. Ver `.claude/skills/jw-parfum-setup/`.
@@ -51,3 +51,52 @@ Varios módulos dependían de cuentas de cliente o de módulos retirados y se co
 - Antes de dar por buena cualquier área del código, preferir releer el archivo actual sobre confiar en este resumen — puede quedar desactualizado.
 - No reintroducir pagos en línea, editor de diseño, módulo de socios, cuentas de cliente ni reseñas de producto sin que el usuario lo pida explícitamente — se eliminaron a propósito.
 - Categorías de catálogo: Belleza, Relojes, Perfumes, Gorras, Tenis. Las variantes cubren talla, tamaño (ml) y color.
+
+## Sesión 2026-11-08 — entorno local y arreglos
+
+- Supabase local (Docker) en marcha con `pnpm db:start`; migraciones 00001–00004 aplicadas. Studio: http://127.0.0.1:54323.
+- `pnpm bootstrap-admin` ya existe (`scripts/bootstrap-admin.mts`, corre con Node y lee `.env.local`).
+- **Tamaño/talla opcional** al agregar al carrito: si el cliente no elige, se usa el primero con stock; el checkout del servidor también tolera líneas sin tamaño (toma la primera variante del color). El color sigue siendo obligatorio.
+- La confirmación del checkout ahora muestra el botón "Confirmar pedido por WhatsApp" (el enlace se generaba pero no se mostraba).
+- Cancelar o borrar un pedido libera `inventory.reserved`; reactivar uno cancelado la vuelve a tomar.
+- Títulos de página sin "| The Spot" duplicado; etiqueta "Tamaño" vs "Talla" según el valor.
+- Eliminados restos huérfanos de funciones retiradas: `src/lib/otp.ts`, `src/features/admin/customer-picker.tsx`.
+- Tests mínimos en `src/lib/__tests__/core.test.ts` (`pnpm test`).
+- Componentes visuales sin uso (no borrados, por si se quieren usar): `MagicBento`, `CatalogCatalogSubnav`, `CatalogProductViewer`, `LandingProductCard`, `CatalogSearchBar`, `HeroLightRaysBackground`, `LandingHeroCard`, `ui/select.tsx`.
+- **Login de admin con usuario**: `/login` acepta "Usuario o correo"; un usuario sin `@` se traduce a `<usuario>@jwparfum.local` en Supabase Auth. Admin local: usuario `admin` (ver `ADMIN_*` en `.env.local`).
+- **Arreglo crítico de acceso a /admin**: faltaba `grant select on profiles to authenticated` (migración `00005_profiles_select_grant.sql`); sin él nadie con sesión se reconocía como admin y `/admin` redirigía a la portada.
+- **Dashboard**: fallaba entero (mostraba todo en 0) porque consultaba `profiles.deleted_at`, que no existe. La tarjeta "Clientes registrados" (no hay cuentas de cliente) pasó a "Pedidos · 30 días".
+
+## Sesión 2026-11-08 (2) — tienda completa
+
+Migraciones nuevas: `00006_payments_inventory_sales.sql` (cuentas bancarias, método de pago en pedidos, costo por línea, `categories.coming_soon`, ajustes, bucket `product-images`), `00007_email_logs_columns.sql` (el recibo al cliente nunca se enviaba por columnas faltantes), `00008_service_role_grants.sql` (permisos por defecto para tablas nuevas).
+
+- **Pagos**: contra entrega y transferencia en el checkout; al elegir transferencia el cliente escoge banco y ve número, titular, cédula/RNC y monto (copiar al portapapeles). Se ve también en la confirmación, en /estado-pedido, en el correo al admin y en el WhatsApp. Administrable en `/admin/pagos` (activar métodos, textos, agregar/editar/ocultar/eliminar cuentas). Banreservas y Popular vienen precargadas **inactivas**: hay que poner número y titular y activarlas.
+- **Pedidos**: `/admin/pedidos/[id]` con flujo de 5 pasos clickeable (Pendiente → Confirmado → Preparando → Enviado → Entregado), cancelar/reactivar/devolución, confirmar o revertir pago, notas internas, historial, cliente (tel/mail/mapa), WhatsApp y comprobante PDF. La lista enlaza cada pedido al detalle.
+- **Ventas**: `/admin/ventas` por periodo (hoy, ayer, 7/30 días, mes, mes anterior, año o rango), base "cobradas" o "todas", sumatorias (subtotal, descuentos, envíos, total, costo, ganancia, margen, ticket promedio, por cobrar), por método de pago, por día, detalle por producto y pedidos con sus líneas. Exporta PDF y CSV.
+- **Inventario**: `/admin/inventario` con existencias, reservado y disponible por variante, edición en línea (− / + / número), filtros (bajo, agotado, con reservas, sin inventario), búsqueda, valor a costo y a precio de venta, CSV.
+- **Productos**: subir varias fotos a la vez, arrastrar y soltar, pegar URL, reordenar y elegir portada.
+- **Configurable sin código**: envío gratis (`/admin/config`), métodos y cuentas (`/admin/pagos`), categorías "Próximamente" (casilla en la categoría; también ajusta el texto de portada y la franja).
+- **Arreglos**: el carrito/checkout usaban el precio base aunque el tamaño costara distinto (el servidor cobraba otro monto); `paid_at` nunca se guardaba; marcar pagado forzaba "confirmado" aunque estuviera enviado; dashboard clickeable.
+
+### Pendiente para salir a producción (requiere al usuario)
+
+1. Crear proyecto Supabase en la nube, `pnpm supabase link --project-ref …` y `pnpm db:push` (aplica 00001–00008). Copiar URL/anon/service_role a las variables del hosting.
+2. Correr `pnpm bootstrap-admin` contra ese proyecto con una contraseña **fuerte** (la local `admin1234` es solo para desarrollo).
+3. Resend: API key + dominio verificado para que lleguen los avisos y recibos.
+4. En `/admin/pagos` poner las cuentas reales de Banreservas/Popular y activarlas; revisar WhatsApp y correo en `/admin/config`.
+5. Cargar costo de cada producto (para que la ganancia del reporte sea real) y revisar existencias en Inventario.
+6. Desplegar (Vercel u otro) con `NEXT_PUBLIC_SITE_URL` del dominio final.
+
+## Despliegue en Cloudflare Workers (OpenNext)
+
+El proyecto se despliega como **Cloudflare Worker** con `@opennextjs/cloudflare` (Cloudflare Pages no ejecuta apps Next.js con acciones de servidor/API). Archivos: `wrangler.jsonc`, `open-next.config.ts`, `public/_headers`. Requiere Next ≥ 16.4.5. El gestor es **pnpm** (se quitó `bun.lock`, que hacía que el build intentara usar Bun). `src/middleware.ts` usa runtime edge (Next lo marca como "deprecated" a favor de `proxy`, pero el middleware Node en Cloudflare es experimental).
+
+Configuración en el dashboard (Workers & Pages → Create → Import a repository → JamilW054/TheSpot):
+- Build command: `pnpm run cf:build`
+- Deploy command: `npx wrangler deploy` (o `pnpm exec opennextjs-cloudflare deploy`)
+- Build variables (se incrustan al compilar): `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_SITE_URL`.
+- Variables y secretos del Worker (runtime): las mismas más `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY`, `RESEND_FROM`, y las de R2 si se usan.
+- El nombre del Worker debe ser `thespot` (coincide con `wrangler.jsonc`). El proyecto viejo de Cloudflare **Pages** se puede desconectar para que deje de fallar en cada push.
+
+Probar en el runtime de Workers en local: `pnpm cf:preview` (en Windows falla al crear symlinks salvo con Modo desarrollador o WSL; en Linux/CI funciona).

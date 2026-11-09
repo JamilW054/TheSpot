@@ -24,7 +24,7 @@ export const dynamic = "force-dynamic";
 const PRODUCTS_PER_PAGE = 24;
 
 export const metadata = {
-  title: "Catálogo | The Spot",
+  title: "Catálogo",
   description:
     "Perfumes y tenis ahora. Belleza, relojes y gorras: coming soon.",
 };
@@ -60,13 +60,14 @@ export default async function CatalogPage({ searchParams }: PageProps) {
       getPublishedCatalogColors(),
     ]);
 
+  const soonSlugs = categories.filter((c) => c.coming_soon).map((c) => c.slug);
   const activeCategory = filters.categoria
     ? categories.find((c) => c.slug === filters.categoria)
     : undefined;
-  const comingSoon = isComingSoonCategory(filters.categoria);
+  const comingSoon = isComingSoonCategory(filters.categoria, soonSlugs);
   const visibleProducts = comingSoon
     ? []
-    : products.filter((p) => !isComingSoonCategory(p.categorySlug));
+    : products.filter((p) => !isComingSoonCategory(p.categorySlug, soonSlugs));
   const totalProducts = visibleProducts.length;
   const totalPages = Math.max(1, Math.ceil(totalProducts / PRODUCTS_PER_PAGE));
   const currentPage = Math.min(requestedPage, totalPages);

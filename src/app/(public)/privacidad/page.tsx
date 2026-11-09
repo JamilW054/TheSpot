@@ -3,7 +3,7 @@ import Link from "next/link";
 import { SITE_URL } from "@/config/brand";
 
 export const metadata: Metadata = {
-  title: "Política de Privacidad — The Spot",
+  title: "Política de Privacidad",
   description:
     "Conoce cómo The Spot recopila, usa y protege tu información personal al hacer un pedido.",
   alternates: { canonical: `${SITE_URL}/privacidad` },

@@ -3,18 +3,24 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
-import { AcceptedPayments } from "@/components/brand/AcceptedPayments";
+import { BankAccountCard } from "@/components/checkout/BankAccountCard";
 import { FreeShippingProgress } from "@/components/cart/FreeShippingProgress";
-import { StripePaymentButton } from "@/components/checkout/StripePaymentButton";
 import {
   qualifiesForFreeShipping,
   resolveShippingCents,
 } from "@/config/shipping";
 import { useCart } from "@/contexts/cart-context";
+import { useStoreSettings } from "@/contexts/store-settings-context";
 import type { ShippingMethod } from "@/database/repositories";
+import type {
+  BankAccountSnapshot,
+  CheckoutPaymentOptions,
+  PaymentMethod,
+} from "@/database/repositories/payments";
 import { checkoutAction } from "@/lib/actions/checkout";
 import { validateCouponAction } from "@/lib/actions/coupons";
 import { formatDOPFromCents } from "@/lib/format-currency";
+import { unitPriceForSelection } from "@/lib/variants";
 import type { CatalogProduct } from "@/types";
 
 function isExternalImage(src: string): boolean {
@@ -32,14 +38,16 @@ const inputClass =
 const labelClass = "block text-sm font-medium text-foreground";
 
 interface OrderConfirmation {
-  orderId: string;
   orderNumber: string;
   totalCents: number;
+  whatsappUrl: string | null;
+  paymentMethod: PaymentMethod;
+  paymentMethodLabel: string;
+  bankAccount: BankAccountSnapshot | null;
+  paymentNote: string;
 }
 
 function ConfirmationScreen({ order }: { order: OrderConfirmation }) {
-  const [paid, setPaid] = useState(false);
-
   return (
     <div className="mx-auto max-w-lg rounded-[14px] border border-border bg-card p-8 sm:p-10 text-center">
       <div className="mx-auto flex size-14 items-center justify-center rounded-full bg-primary/10 text-primary">
@@ -66,30 +74,45 @@ function ConfirmationScreen({ order }: { order: OrderConfirmation }) {
         </span>
         . Total: {formatDOPFromCents(order.totalCents)}.
       </p>
-
-      {paid ? (
-        <p className="mt-4 rounded-[10px] border border-primary/40 bg-primary/10 px-4 py-3 text-sm font-medium text-primary">
-          Pago recibido. ¡Gracias por tu compra!
-        </p>
-      ) : (
-        <>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Paga ahora en línea con Apple Pay, o coordina el pago y la entrega
-            por correo/teléfono como de costumbre.
+      <p className="mt-1 text-sm text-muted-foreground">
+        Método de pago:{" "}
+        <span className="font-medium text-foreground">
+          {order.paymentMethodLabel}
+        </span>
+        .
+      </p>
+      {order.paymentMethod === "bank_transfer" && order.bankAccount ? (
+        <div className="mt-5 space-y-2">
+          <p className="text-sm font-semibold text-foreground">
+            Datos para transferir
           </p>
-          <StripePaymentButton
-            orderId={order.orderId}
-            orderNumber={order.orderNumber}
-            totalCents={order.totalCents}
-            onPaid={() => setPaid(true)}
+          <BankAccountCard
+            account={order.bankAccount}
+            amountLabel={formatDOPFromCents(order.totalCents)}
           />
-          <AcceptedPayments className="mt-5" align="center" label={null} />
-        </>
+          <p className="text-xs text-muted-foreground">
+            Usa <span className="font-mono">#{order.orderNumber}</span> como
+            concepto. {order.paymentNote}
+          </p>
+        </div>
+      ) : (
+        <p className="mt-3 text-sm text-muted-foreground">
+          {order.paymentNote} Te contactaremos para coordinar la entrega.
+        </p>
       )}
-
+      {order.whatsappUrl && (
+        <a
+          href={order.whatsappUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-6 inline-flex h-11 items-center justify-center rounded-full bg-[#25D366] px-6 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+        >
+          Confirmar pedido por WhatsApp
+        </a>
+      )}
       <div className="mt-4">
         <Link
-          href="/estado-pedido"
+          href={`/estado-pedido?pedido=${order.orderNumber}`}
           className="text-sm font-medium text-primary hover:underline"
         >
           Consultar estado del pedido más tarde
@@ -102,10 +125,23 @@ function ConfirmationScreen({ order }: { order: OrderConfirmation }) {
 export function CheckoutContent({
   products,
   shippingMethods,
+  paymentOptions,
 }: {
   products: CatalogProduct[];
   shippingMethods: ShippingMethod[];
+  paymentOptions: CheckoutPaymentOptions;
 }) {
+  const { freeShippingMinCents } = useStoreSettings();
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(
+    paymentOptions.methods[0]?.method ?? "cash_on_delivery",
+  );
+  const [bankAccountId, setBankAccountId] = useState<string | null>(
+    paymentOptions.bankAccounts.length === 1
+      ? paymentOptions.bankAccounts[0].id
+      : null,
+  );
+  const selectedBank =
+    paymentOptions.bankAccounts.find((b) => b.id === bankAccountId) ?? null;
   const { items, clearCart } = useCart();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -125,15 +161,21 @@ export function CheckoutContent({
   let subtotalCents = 0;
   items.forEach((item) => {
     const p = productMap.get(item.productId);
-    if (p) subtotalCents += p.priceCents * item.quantity;
+    if (p)
+      subtotalCents +=
+        unitPriceForSelection(p, item.size, item.color) * item.quantity;
   });
 
   const selectedShipping =
     shippingMethods.find((m) => m.id === selectedShippingId) ?? null;
-  const freeShipping = qualifiesForFreeShipping(subtotalCents);
+  const freeShipping = qualifiesForFreeShipping(
+    subtotalCents,
+    freeShippingMinCents,
+  );
   const shippingCents = resolveShippingCents(
     subtotalCents,
     selectedShipping?.priceCents ?? 0,
+    freeShippingMinCents,
   );
   const discountCents = appliedCoupon ? couponDiscount : 0;
   const totalCents = Math.max(0, subtotalCents - discountCents + shippingCents);
@@ -158,6 +200,10 @@ export function CheckoutContent({
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
+    if (paymentMethod === "bank_transfer" && !bankAccountId) {
+      setError("Elige el banco al que vas a transferir.");
+      return;
+    }
     setLoading(true);
 
     const form = e.currentTarget;
@@ -189,6 +235,9 @@ export function CheckoutContent({
       },
       shippingMethodId: selectedShippingId,
       couponCode: appliedCoupon,
+      notes: value("checkout-notes") || null,
+      paymentMethod,
+      bankAccountId: paymentMethod === "bank_transfer" ? bankAccountId : null,
     });
 
     setLoading(false);
@@ -199,9 +248,16 @@ export function CheckoutContent({
 
     clearCart();
     setOrder({
-      orderId: result.result.orderId,
       orderNumber: result.result.orderNumber,
       totalCents: result.result.totalCents,
+      whatsappUrl: result.result.whatsappUrl,
+      paymentMethod: result.result.paymentMethod,
+      paymentMethodLabel: result.result.paymentMethodLabel,
+      bankAccount: result.result.bankAccount,
+      paymentNote:
+        paymentOptions.methods.find(
+          (m) => m.method === result.result.paymentMethod,
+        )?.note ?? "",
     });
   };
 
@@ -343,6 +399,90 @@ export function CheckoutContent({
               defaultValue="República Dominicana"
             />
           </div>
+          <div>
+            <label htmlFor="checkout-notes" className={labelClass}>
+              Notas del pedido{" "}
+              <span className="font-normal text-muted-foreground">
+                (opcional)
+              </span>
+            </label>
+            <textarea
+              id="checkout-notes"
+              rows={2}
+              maxLength={500}
+              className="w-full rounded-[10px] border border-border bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors resize-none"
+              placeholder="Horario de entrega, referencia, es un regalo…"
+            />
+          </div>
+        </div>
+
+        {/* Método de pago */}
+        <p className="mb-4 mt-8 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+          Método de pago
+        </p>
+        <div className="space-y-3 rounded-[14px] border border-border bg-card p-4 sm:p-5">
+          {paymentOptions.methods.map((m) => (
+            <label
+              key={m.method}
+              className={`flex cursor-pointer items-start gap-3 rounded-[10px] border p-3 text-sm transition-colors ${
+                paymentMethod === m.method
+                  ? "border-primary/60 bg-primary/5"
+                  : "border-border hover:border-primary/30"
+              }`}
+            >
+              <input
+                type="radio"
+                name="payment_method"
+                value={m.method}
+                checked={paymentMethod === m.method}
+                onChange={() => setPaymentMethod(m.method)}
+                className="mt-0.5 accent-primary"
+              />
+              <span>
+                <span className="block font-medium text-foreground">
+                  {m.label}
+                </span>
+                <span className="block text-xs text-muted-foreground">
+                  {m.note}
+                </span>
+              </span>
+            </label>
+          ))}
+
+          {paymentMethod === "bank_transfer" && (
+            <div className="space-y-3 pt-1">
+              <p className="text-sm font-medium text-foreground">
+                ¿A qué banco vas a transferir?
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {paymentOptions.bankAccounts.map((b) => (
+                  <button
+                    key={b.id}
+                    type="button"
+                    onClick={() => setBankAccountId(b.id)}
+                    aria-pressed={bankAccountId === b.id}
+                    className={`rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
+                      bankAccountId === b.id
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-border bg-background text-foreground hover:border-primary/60"
+                    }`}
+                  >
+                    {b.bankName}
+                  </button>
+                ))}
+              </div>
+              {selectedBank ? (
+                <BankAccountCard
+                  account={selectedBank}
+                  amountLabel={formatDOPFromCents(totalCents)}
+                />
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  Elige un banco para ver los datos de la cuenta.
+                </p>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -356,7 +496,12 @@ export function CheckoutContent({
             {items.map((item) => {
               const product = productMap.get(item.productId);
               if (!product) return null;
-              const lineTotal = product.priceCents * item.quantity;
+              const unitCents = unitPriceForSelection(
+                product,
+                item.size,
+                item.color,
+              );
+              const lineTotal = unitCents * item.quantity;
               return (
                 <li
                   key={`${item.productId}:${item.size ?? ""}:${item.color ?? ""}`}
@@ -382,7 +527,7 @@ export function CheckoutContent({
                       </p>
                     )}
                     <p className="font-mono text-xs text-muted-foreground tabular-nums">
-                      {product.price} × {item.quantity}
+                      {formatDOPFromCents(unitCents)} × {item.quantity}
                     </p>
                   </div>
                   <p className="font-mono text-sm font-semibold tabular-nums text-foreground shrink-0">
@@ -520,10 +665,9 @@ export function CheckoutContent({
               {loading ? "Enviando…" : "Confirmar pedido"}
             </button>
             <p className="mt-3 text-center text-xs text-muted-foreground">
-              Te contactaremos por correo o teléfono para coordinar el pago y la
-              entrega. Aceptamos Apple Pay y Google Pay.
+              Al confirmar recibirás tu número de pedido. Te contactaremos para
+              coordinar la entrega.
             </p>
-            <AcceptedPayments className="mt-3" align="center" label={null} />
           </div>
         </div>
       </aside>

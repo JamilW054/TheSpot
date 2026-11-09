@@ -7,7 +7,6 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTheme } from "@/components/theme-provider";
-import { isComingSoonCategory } from "@/config/brand";
 import type { CategoryRow } from "@/database/repositories/categories";
 
 interface Props {
@@ -124,7 +123,7 @@ export function NavbarSearch({ categories = [] }: Props) {
                 />
               )}
               {cat.name}
-              {isComingSoonCategory(cat.slug) ? (
+              {Boolean(cat.coming_soon) ? (
                 <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide text-primary">
                   Soon
                 </span>

@@ -5,6 +5,32 @@ import {
   sanitizeUploadFilename,
   uploadImageToR2,
 } from "@/lib/storage/r2";
+import { createServiceClient } from "@/lib/supabase/server";
+
+/** Bucket público de Supabase Storage (migración 00006). */
+export const SUPABASE_IMAGES_BUCKET = "product-images";
+
+/** Sube a Supabase Storage cuando R2 no está configurado. */
+async function uploadToSupabaseStorage(
+  key: string,
+  body: Buffer,
+  contentType: string,
+): Promise<UploadImageResult> {
+  const supabase = createServiceClient();
+  const { error } = await supabase.storage
+    .from(SUPABASE_IMAGES_BUCKET)
+    .upload(key, body, { contentType, upsert: false, cacheControl: "31536000" });
+  if (error) {
+    console.error("[Supabase Storage upload]", error);
+    return {
+      ok: false,
+      status: 502,
+      error: `No se pudo subir la imagen: ${error.message}`,
+    };
+  }
+  const { data } = supabase.storage.from(SUPABASE_IMAGES_BUCKET).getPublicUrl(key);
+  return { ok: true, key, url: data.publicUrl };
+}
 
 export type UploadImageResult =
   | { ok: true; key: string; url: string | null; hint?: string }
@@ -29,14 +55,6 @@ export async function uploadUserImage(params: {
   const { userId, file, scope } = params;
 
   const cfg = getR2Config();
-  if (!cfg) {
-    return {
-      ok: false,
-      status: 503,
-      error:
-        "R2 no configurado. Define R2_ACCOUNT_ID, R2_BUCKET, R2_ACCESS_KEY_ID y R2_SECRET_ACCESS_KEY.",
-    };
-  }
 
   let fallbackExt: string;
   try {
@@ -59,6 +77,11 @@ export async function uploadUserImage(params: {
   const buf = Buffer.from(await file.arrayBuffer());
   const safeName = sanitizeUploadFilename(file.name || "image", fallbackExt);
   const key = `${keyPrefixForScope(scope, userId)}/${Date.now()}-${safeName}`;
+  const contentType =
+    file.type || `image/${fallbackExt === "jpg" ? "jpeg" : fallbackExt}`;
+
+  // Sin R2 → Supabase Storage (mismo proyecto, sin configuración extra).
+  if (!cfg) return uploadToSupabaseStorage(key, buf, contentType);
 
   try {
     const { key: storedKey, url } = await uploadImageToR2({

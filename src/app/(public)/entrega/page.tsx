@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Política de Entrega — The Spot",
+  title: "Política de Entrega",
   description:
     "Conoce los plazos, zonas y condiciones de entrega de tus pedidos en The Spot.",
 };
@@ -48,7 +48,7 @@ export default function EntregaPage() {
         <Section title="2. Cómo se coordina la entrega">
           <p>
             Al confirmar tu pedido en el sitio, te contactamos por correo o
-            teléfono para coordinar el método de pago (Apple Pay o Google Pay),
+            teléfono para coordinar el método de pago (contra entrega o transferencia),
             la dirección exacta y el horario de entrega.
           </p>
         </Section>

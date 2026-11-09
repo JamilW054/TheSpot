@@ -57,8 +57,8 @@ const PERKS = [
   },
   {
     icon: Wallet,
-    title: "Apple Pay y Google Pay",
-    text: "Aceptamos Apple Pay y Google Pay al coordinar el cobro.",
+    title: "Contra entrega o transferencia",
+    text: "Paga contra entrega o por transferencia (Banreservas y Popular).",
   },
   {
     icon: ShoppingBag,
@@ -73,8 +73,32 @@ export default async function PublicPage() {
     getCategoriesPublic(),
     getCategoryCoverByCategoryId(),
   ]);
+  const soonSlugs = categories.filter((c) => c.coming_soon).map((c) => c.slug);
+  // Copy de portada según las categorías configuradas en el admin.
+  const roots = categories.filter((c) => !c.parent_id);
+  const listEs = (names: string[]) =>
+    names.length <= 1
+      ? (names[0] ?? "")
+      : `${names.slice(0, -1).join(", ")} y ${names[names.length - 1]}`;
+  const liveNames = roots.filter((c) => !c.coming_soon).map((c) => c.name);
+  const soonNames = roots.filter((c) => c.coming_soon).map((c) => c.name);
+  const heroAvailability = [
+    liveNames.length
+      ? `${listEs(liveNames)} ${liveNames.length === 1 ? "ya está" : "ya están"} en el spot.`
+      : "",
+    soonNames.length ? `${listEs(soonNames)}: coming soon.` : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+  const tickerItems = [
+    ...liveNames,
+    ...soonNames.map((n) => `${n} · coming soon`),
+    "Envío a todo el país",
+    "Pago contra entrega",
+    "Transferencia bancaria",
+  ];
   const featured = products
-    .filter((p) => !isComingSoonCategory(p.categorySlug))
+    .filter((p) => !isComingSoonCategory(p.categorySlug, soonSlugs))
     .slice(0, 8);
 
   return (
@@ -110,8 +134,7 @@ export default async function PublicPage() {
             </div>
 
             <p className="mt-6 max-w-lg text-base leading-relaxed text-muted-foreground sm:text-lg">
-              {BRAND_TAGLINE} Perfumes y tenis ya están en el spot. Belleza,
-              relojes y gorras: coming soon.
+              {BRAND_TAGLINE} {heroAvailability}
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">
@@ -142,7 +165,7 @@ export default async function PublicPage() {
                 {categories.slice(0, 4).map((cat, i) => {
                   const Icon = CAT_ICONS[cat.slug] ?? Sparkles;
                   const thumb = cat.image_url ?? covers[cat.id];
-                  const soon = isComingSoonCategory(cat.slug);
+                  const soon = isComingSoonCategory(cat.slug, soonSlugs);
                   return (
                     <Link
                       key={cat.id}
@@ -182,7 +205,7 @@ export default async function PublicPage() {
         </div>
       </section>
 
-      <SpotTicker />
+      <SpotTicker items={tickerItems} />
 
       {categories.length > 0 && (
         <section className="bg-white" aria-labelledby="sec-cats">
@@ -210,7 +233,7 @@ export default async function PublicPage() {
               {categories.map((cat, i) => {
                 const Icon = CAT_ICONS[cat.slug] ?? Sparkles;
                 const thumb = cat.image_url ?? covers[cat.id];
-                const soon = isComingSoonCategory(cat.slug);
+                const soon = isComingSoonCategory(cat.slug, soonSlugs);
                 return (
                   <ScrollReveal key={cat.id} delay={i * 40}>
                     <Link
@@ -335,7 +358,7 @@ export default async function PublicPage() {
               {
                 n: "03",
                 t: "Paga",
-                d: "Aceptamos Apple Pay y Google Pay. Coordinamos entrega a todo el país.",
+                d: "Pago contra entrega o transferencia. Coordinamos entrega a todo el país.",
               },
             ].map((s) => (
               <li
@@ -355,7 +378,7 @@ export default async function PublicPage() {
         </div>
       </section>
 
-      <SpotTicker variant="rose" />
+      <SpotTicker variant="rose" items={tickerItems} />
 
       <section className="bg-primary">
         <div

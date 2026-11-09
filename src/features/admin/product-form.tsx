@@ -343,32 +343,69 @@ export function ProductForm({
     }
   }, [state, mode, showSuccess, showError, router, onSuccess]);
 
-  async function onPickFile(file: File) {
+  async function uploadOne(file: File): Promise<string> {
+    const fd = new FormData();
+    fd.append("file", file);
+    fd.append("scope", "catalog");
+    const res = await fetch("/api/storage/r2/upload", {
+      method: "POST",
+      body: fd,
+    });
+    const body = (await res.json()) as {
+      ok?: boolean;
+      url?: string | null;
+      error?: string;
+    };
+    if (!res.ok || !body.ok) throw new Error(body.error ?? `Error ${res.status}`);
+    const u = typeof body.url === "string" ? body.url : "";
+    if (!u) throw new Error("El almacenamiento no devolvió una URL pública.");
+    return u;
+  }
+
+  /** Sube varias imágenes en orden; las que fallan se informan sin frenar al resto. */
+  async function onPickFiles(files: File[]) {
+    const images = files.filter((f) => f.type.startsWith("image/"));
+    if (images.length === 0) return;
     setUploadBusy(true);
+    const errors: string[] = [];
     try {
-      const fd = new FormData();
-      fd.append("file", file);
-      fd.append("scope", "catalog");
-      const res = await fetch("/api/storage/r2/upload", {
-        method: "POST",
-        body: fd,
-      });
-      const body = (await res.json()) as {
-        ok?: boolean;
-        url?: string | null;
-        error?: string;
-      };
-      if (!res.ok || !body.ok)
-        throw new Error(body.error ?? `Error ${res.status}`);
-      const u = typeof body.url === "string" ? body.url : "";
-      if (!u) throw new Error("R2 no devolvió URL pública.");
-      setMedia((prev) => [...prev, u]);
-    } catch (e) {
-      showError(e instanceof Error ? e.message : "Error al subir la imagen.");
+      for (const file of images) {
+        try {
+          const url = await uploadOne(file);
+          setMedia((prev) => (prev.includes(url) ? prev : [...prev, url]));
+        } catch (e) {
+          errors.push(
+            `${file.name}: ${e instanceof Error ? e.message : "error al subir"}`,
+          );
+        }
+      }
+      if (errors.length > 0) showError(errors.join("\n"));
     } finally {
       setUploadBusy(false);
       if (fileRef.current) fileRef.current.value = "";
     }
+  }
+
+  const [dragOver, setDragOver] = useState(false);
+  const [urlDraft, setUrlDraft] = useState("");
+  function addImageUrl() {
+    const u = urlDraft.trim();
+    if (!/^https?:\/\//i.test(u)) {
+      showError("Pega una URL que empiece con http:// o https://");
+      return;
+    }
+    setMedia((prev) => (prev.includes(u) ? prev : [...prev, u]));
+    setUrlDraft("");
+  }
+  function moveImage(url: string, dir: -1 | 1) {
+    setMedia((prev) => {
+      const i = prev.indexOf(url);
+      const j = i + dir;
+      if (i < 0 || j < 0 || j >= prev.length) return prev;
+      const next = [...prev];
+      [next[i], next[j]] = [next[j], next[i]];
+      return next;
+    });
   }
 
   function promoteTocover(url: string) {
@@ -416,10 +453,26 @@ export function ProductForm({
         <input type="hidden" name="warehouse_id" value={selectedWarehouseId} />
 
         {/* ── Imágenes ── */}
-        <section className="rounded-3xl border border-border bg-card p-4">
+        <section
+          className={`rounded-3xl border bg-card p-4 transition-colors ${
+            dragOver ? "border-primary bg-primary/5" : "border-border"
+          }`}
+          onDragOver={(e) => {
+            e.preventDefault();
+            setDragOver(true);
+          }}
+          onDragLeave={() => setDragOver(false)}
+          onDrop={(e) => {
+            e.preventDefault();
+            setDragOver(false);
+            void onPickFiles(Array.from(e.dataTransfer.files));
+          }}
+        >
           <p className={`${labelCls} text-base`}>Imágenes</p>
           <p className="mb-3 text-xs text-muted-foreground">
-            Primera imagen = portada. Haz clic en una para promoverla.
+            Arrastra varias fotos aquí o usa «Añadir» (PNG, JPG o WebP, máx. 5
+            MB c/u). La primera es la portada: pasa el mouse sobre una foto
+            para hacerla portada, moverla o quitarla.
           </p>
           <div className="flex flex-wrap items-start gap-2.5">
             {media.map((url, i) => (
@@ -461,19 +514,40 @@ export function ProductForm({
                 >
                   <Trash2 className="size-3" aria-hidden />
                 </button>
+                <div className="absolute inset-x-1 bottom-1 flex justify-between opacity-0 transition-opacity group-hover:opacity-100">
+                  <button
+                    type="button"
+                    aria-label={`Mover imagen ${i + 1} a la izquierda`}
+                    disabled={i === 0}
+                    onClick={() => moveImage(url, -1)}
+                    className="inline-flex size-5 items-center justify-center rounded-md bg-black/60 text-[11px] text-white disabled:opacity-30"
+                  >
+                    ‹
+                  </button>
+                  <button
+                    type="button"
+                    aria-label={`Mover imagen ${i + 1} a la derecha`}
+                    disabled={i === media.length - 1}
+                    onClick={() => moveImage(url, 1)}
+                    className="inline-flex size-5 items-center justify-center rounded-md bg-black/60 text-[11px] text-white disabled:opacity-30"
+                  >
+                    ›
+                  </button>
+                </div>
               </div>
             ))}
 
             <input
               ref={fileRef}
               type="file"
+              multiple
               accept="image/png,image/jpeg,image/webp"
               className="sr-only"
               aria-hidden
               tabIndex={-1}
               onChange={(e) => {
-                const f = e.target.files?.[0];
-                if (f) void onPickFile(f);
+                const list = e.target.files ? Array.from(e.target.files) : [];
+                if (list.length > 0) void onPickFiles(list);
               }}
             />
             <button
@@ -491,6 +565,29 @@ export function ProductForm({
               <span className="text-[10px] font-medium">Añadir</span>
             </button>
           </div>
+          <div className="mt-3 flex gap-2">
+            <input
+              type="url"
+              value={urlDraft}
+              onChange={(e) => setUrlDraft(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  addImageUrl();
+                }
+              }}
+              placeholder="…o pega la URL de una imagen"
+              className="h-9 min-w-0 flex-1 rounded-[10px] border border-border bg-background px-3 text-sm text-foreground placeholder:text-muted-foreground/60 focus:border-primary focus:outline-none"
+            />
+            <button
+              type="button"
+              onClick={addImageUrl}
+              disabled={!urlDraft.trim()}
+              className="h-9 rounded-[10px] border border-border px-3 text-sm font-medium text-foreground transition-colors hover:border-primary disabled:opacity-50"
+            >
+              Agregar URL
+            </button>
+          </div>
         </section>
 
         {/* ── Info básica ── */}
@@ -502,7 +599,7 @@ export function ProductForm({
             name="name"
             required
             defaultValue={initial?.name ?? ""}
-            placeholder="Ej. Silla de comedor"
+            placeholder="Ej. Noir Intense Eau de Parfum"
           />
 
           {mode === "edit" && initial?.slug ? (
@@ -529,7 +626,7 @@ export function ProductForm({
             rows={2}
             label="Etiquetas (separadas por coma)"
             defaultValue={tagsDefault}
-            placeholder="hogar, muebles, salón"
+            placeholder="amaderado, unisex, regalo"
           />
         </section>
 

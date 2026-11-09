@@ -1,0 +1,29 @@
+{
+  // Despliegue en Cloudflare Workers con OpenNext (@opennextjs/cloudflare).
+  // Build: `pnpm run cf:build` · Deploy: `pnpm run cf:deploy`.
+  // Las variables (Supabase, Resend, etc.) se cargan en el dashboard del
+  // Worker → Settings → Variables and Secrets; las NEXT_PUBLIC_* también
+  // deben estar como "Build variables" porque se incrustan al compilar.
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "thespot",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-10-01",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "services": [
+    {
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "thespot"
+    }
+  ],
+  // Optimización de next/image con Cloudflare Images.
+  "images": {
+    "binding": "IMAGES"
+  },
+  "observability": {
+    "enabled": true
+  }
+}

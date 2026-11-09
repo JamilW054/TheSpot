@@ -1,15 +1,9 @@
 import { NextResponse } from "next/server";
 import { ROLE } from "@/lib/auth/roles";
 import { getSessionUserWithRole } from "@/lib/auth/session-user";
-import { getR2Config } from "@/lib/storage/r2";
 import { uploadUserImage } from "@/lib/storage/upload-image-service";
 
 export const runtime = "nodejs";
-
-function requireAdminUpload(): boolean {
-  const v = process.env.R2_UPLOAD_REQUIRE_ADMIN?.trim().toLowerCase();
-  return v === "true" || v === "1" || v === "yes";
-}
 
 /**
  * POST multipart/form-data con campo `file` (imagen PNG/JPEG/WebP, máx 5 MB).
@@ -17,21 +11,12 @@ function requireAdminUpload(): boolean {
  * Campo opcional `scope`: `catalog` → prefijo catalog/{userId}; `categories` → catalog/categories/{userId}; otro → uploads/{userId}.
  */
 export async function POST(request: Request) {
-  if (!getR2Config()) {
-    return NextResponse.json(
-      {
-        error:
-          "R2 no configurado. Define R2_ACCOUNT_ID, R2_BUCKET, R2_ACCESS_KEY_ID y R2_SECRET_ACCESS_KEY.",
-      },
-      { status: 503 },
-    );
-  }
-
+  // Solo administradores suben imágenes (no hay cuentas de cliente).
   const session = await getSessionUserWithRole();
   if (!session) {
     return NextResponse.json({ error: "No autorizado." }, { status: 401 });
   }
-  if (requireAdminUpload() && session.role !== ROLE.ADMIN) {
+  if (session.role !== ROLE.ADMIN) {
     return NextResponse.json({ error: "No autorizado." }, { status: 403 });
   }
 

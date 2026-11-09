@@ -13,7 +13,6 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { isComingSoonCategory } from "@/config/brand";
 import type { CategoryRow } from "@/database/repositories";
 import type { CatalogPrecio, CatalogQueryParts } from "@/lib/catalog-query";
 import {
@@ -317,7 +316,7 @@ export function CatalogFiltersPanel({
 
             {categories.map((cat) => {
               const selected = activeSlug === cat.slug;
-              const soon = isComingSoonCategory(cat.slug);
+              const soon = Boolean(cat.coming_soon);
               const href = selected
                 ? catalogQueryHref(catalogQueryOmit(filters, "categoria"))
                 : catalogQueryHref({ ...filters, categoria: cat.slug });

@@ -67,4 +67,22 @@ export interface OrderStatusDetail {
   paymentStatus: OrderPaymentStatus;
   /** Fecha de confirmación de pago (orders.paid_at), si ya se cobró. */
   paidAt: string | null;
+  /** Estado detallado de la BD (pending, confirmed, processing, shipped, delivered, cancelled, refunded). */
+  rawStatus?: string;
+  /** Método de pago legible. */
+  paymentMethodLabel?: string;
+  paymentMethod?: string;
+  /** Cuenta elegida para transferir (snapshot del pedido). */
+  bankAccount?: {
+    bankName: string;
+    accountType: string;
+    accountNumber: string;
+    holderName: string;
+    holderDocument?: string | null;
+    currency?: string;
+    instructions?: string | null;
+  } | null;
+  subtotalCents?: number;
+  shippingCents?: number;
+  discountCents?: number;
 }

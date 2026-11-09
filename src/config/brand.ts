@@ -4,7 +4,7 @@ export const BRAND_NAME = "The Spot";
 export const BRAND_TAGLINE = "Las marcas que quieres, en un solo lugar.";
 
 export const BRAND_DESCRIPTION =
-  "The Spot — perfumes, relojes, belleza, gorras y tenis en República Dominicana. Pedido sin cuenta. Aceptamos Apple Pay y Google Pay.";
+  "The Spot — perfumes, relojes, belleza, gorras y tenis en República Dominicana. Pedido sin cuenta. Pago contra entrega o transferencia.";
 
 export const BRAND_CATEGORIES = [
   "Belleza",
@@ -14,16 +14,17 @@ export const BRAND_CATEGORIES = [
   "Tenis",
 ] as const;
 
-/** Categorías visibles pero aún sin drop público. */
-export const COMING_SOON_CATEGORY_SLUGS = [
-  "belleza",
-  "relojes",
-  "gorras",
-] as const;
-
-export function isComingSoonCategory(slug: string | null | undefined): boolean {
+/**
+ * ¿La categoría está marcada como "Próximamente"? La lista se edita en
+ * /admin/categorias (columna `categories.coming_soon`): en servidor se obtiene
+ * con `getComingSoonSlugs()` y en cliente con `useComingSoon()`.
+ */
+export function isComingSoonCategory(
+  slug: string | null | undefined,
+  comingSoonSlugs: readonly string[],
+): boolean {
   if (!slug) return false;
-  return (COMING_SOON_CATEGORY_SLUGS as readonly string[]).includes(slug);
+  return comingSoonSlugs.includes(slug);
 }
 
 /** Franja horizontal (reemplaza el ticker vertical que se recortaba). */
@@ -34,8 +35,8 @@ export const BRAND_TICKER = [
   "Relojes · coming soon",
   "Gorras · coming soon",
   "Envío a todo el país",
-  "Apple Pay",
-  "Google Pay",
+  "Pago contra entrega",
+  "Transferencia bancaria",
 ] as const;
 
 export const SITE_URL =

@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { isComingSoonCategory } from "@/config/brand";
 import type { CategoryRow } from "@/database/repositories";
 import {
   CATALOG_CHROME_HIDE_DELTA,
@@ -68,7 +67,7 @@ export function CatalogCategoryNav({
         {categories.map((cat) => {
           const thumb = cat.image_url ?? coverByCategoryId[cat.id];
           const isActive = activeCategoryId === cat.id;
-          const soon = isComingSoonCategory(cat.slug);
+          const soon = Boolean(cat.coming_soon);
           return (
             <Link
               key={cat.id}

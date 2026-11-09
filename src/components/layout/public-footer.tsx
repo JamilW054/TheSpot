@@ -28,8 +28,7 @@ export function PublicFooter() {
             </Link>
             <p className="text-sm leading-relaxed text-muted-foreground">
               Las marcas que quieres, en un solo lugar. Perfumes, relojes,
-              belleza, gorras y tenis. Pedido sin cuenta. Aceptamos Apple Pay y
-              Google Pay.
+              belleza, gorras y tenis. Pedido sin cuenta. Pago contra entrega o transferencia.
             </p>
             <address className="not-italic text-xs leading-relaxed text-muted-foreground/70">
               Santo Domingo, República Dominicana

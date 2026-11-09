@@ -29,6 +29,10 @@ export interface OrderWhatsAppData {
   items: WhatsAppOrderItem[];
   totalCents: number;
   currency?: string;
+  /** Método de pago legible, si se conoce. */
+  paymentMethod?: string | null;
+  /** Banco elegido para transferir, si aplica. */
+  bankName?: string | null;
 }
 
 function formatCents(cents: number, currency = "DOP"): string {
@@ -45,6 +49,13 @@ function itemLines(items: WhatsAppOrderItem[]): string {
     .join("\n");
 }
 
+function paymentLines(data: OrderWhatsAppData): string[] {
+  if (!data.paymentMethod) return [];
+  return [
+    `Pago: ${data.paymentMethod}${data.bankName ? ` (${data.bankName})` : ""}`,
+  ];
+}
+
 /** Mensaje que el CLIENTE envía a la tienda para confirmar su pedido recién hecho. */
 export function buildCustomerOrderMessage(data: OrderWhatsAppData): string {
   return [
@@ -52,6 +63,7 @@ export function buildCustomerOrderMessage(data: OrderWhatsAppData): string {
     `Quiero confirmar mi pedido #${data.orderNumber} en The Spot:`,
     itemLines(data.items),
     `Total: ${formatCents(data.totalCents, data.currency)}`,
+    ...paymentLines(data),
   ].join("\n");
 }
 

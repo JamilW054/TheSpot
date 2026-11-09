@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ORDER_STATUS_PAGE } from "@/config/navigation";
 
 export const metadata: Metadata = {
-  title: "Centro de Ayuda — The Spot",
+  title: "Centro de Ayuda",
   description:
     "Respuestas a las preguntas más frecuentes sobre pedidos, entrega y devoluciones en The Spot, más los canales de contacto directo.",
 };
@@ -67,7 +67,7 @@ export default function AyudaPage() {
         <Section title="¿Cómo pago mi pedido?">
           <p>
             Al completar el pedido queda pendiente y te contactamos por correo o
-            teléfono para coordinar el pago (Apple Pay o Google Pay) y la
+            teléfono para coordinar el pago (contra entrega o transferencia) y la
             entrega.
           </p>
         </Section>

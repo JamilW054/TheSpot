@@ -1,5 +1,6 @@
 "use client";
 
+import { sizeAxisLabel, unitPriceForSelection } from "@/lib/variants";
 import { ChevronLeft, Tag, Trash2, Truck } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -7,6 +8,7 @@ import { useEffect, useState } from "react";
 import { AcceptedPayments } from "@/components/brand/AcceptedPayments";
 import { FreeShippingProgress } from "@/components/cart/FreeShippingProgress";
 import { qualifiesForFreeShipping } from "@/config/shipping";
+import { useStoreSettings } from "@/contexts/store-settings-context";
 import { useCart } from "@/contexts/cart-context";
 import type { ShippingMethod } from "@/database/repositories";
 import { formatDOPFromCents } from "@/lib/format-currency";
@@ -120,7 +122,7 @@ function CartItemCard({
           <span className="flex flex-wrap gap-1.5">
             {item.size ? (
               <span className="self-start rounded-full border border-border bg-muted/40 px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
-                Talla: {item.size}
+                {sizeAxisLabel([item.size]).noun}: {item.size}
               </span>
             ) : null}
             {item.color ? (
@@ -131,7 +133,7 @@ function CartItemCard({
           </span>
         ) : null}
         <span className="font-mono text-sm font-bold text-primary">
-          {product.price}
+          {formatDOPFromCents(unitPriceForSelection(product, item.size, item.color))}
         </span>
       </div>
 
@@ -362,7 +364,7 @@ function OrderSummary({
             Finalizar pedido
           </Link>
           <p className="mt-2 text-center text-xs text-muted-foreground">
-            Aceptamos Apple Pay y Google Pay
+            Pago contra entrega o transferencia
           </p>
           <AcceptedPayments className="mt-3" align="center" label={null} />
         </>
@@ -406,13 +408,16 @@ export function CartContent({
 
   for (const item of items) {
     const p = productMap.get(item.productId);
-    if (p) subtotalCents += p.priceCents * item.quantity;
+    if (p)
+      subtotalCents +=
+        unitPriceForSelection(p, item.size, item.color) * item.quantity;
     totalItems += item.quantity;
   }
 
   const selectedShipping =
     shippingMethods.find((s) => s.id === shippingId) ?? shippingMethods[0];
-  const freeShipping = qualifiesForFreeShipping(subtotalCents);
+  const { freeShippingMinCents } = useStoreSettings();
+  const freeShipping = qualifiesForFreeShipping(subtotalCents, freeShippingMinCents);
   const shippingCents = freeShipping ? 0 : (selectedShipping?.priceCents ?? 0);
   const grandTotalCents = subtotalCents + shippingCents;
 

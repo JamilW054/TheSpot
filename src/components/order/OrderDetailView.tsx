@@ -1,5 +1,8 @@
 "use client";
 
+import { BankAccountCard } from "@/components/checkout/BankAccountCard";
+import { ORDER_STATUS_LABEL } from "@/lib/orders/labels";
+import { sizeAxisLabel } from "@/lib/variants";
 import Link from "next/link";
 import Image from "next/image";
 import type { OrderStatusDetail } from "@/types";
@@ -73,7 +76,7 @@ export function OrderDetailView({
                 Nº de pedido
               </p>
               <p className="mt-1 font-mono text-sm text-foreground break-all">
-                {order.id}
+                #{order.id.slice(0, 8).toUpperCase()}
               </p>
             </div>
             <div
@@ -83,7 +86,10 @@ export function OrderDetailView({
                 Estado
               </p>
               <p className="mt-0.5 font-semibold">
-                {STATUS_LABELS[order.status]}
+                {order.rawStatus
+                  ? (ORDER_STATUS_LABEL[order.rawStatus] ??
+                    STATUS_LABELS[order.status])
+                  : STATUS_LABELS[order.status]}
               </p>
             </div>
           </div>
@@ -103,8 +109,27 @@ export function OrderDetailView({
             Pago:{" "}
             <span className="text-foreground">
               {order.paymentStatus === "paid" ? "Pagado" : "Pendiente de pago"}
+              {order.paymentMethodLabel ? ` · ${order.paymentMethodLabel}` : ""}
             </span>
           </p>
+          {order.paymentStatus !== "paid" &&
+          order.paymentMethod === "bank_transfer" &&
+          order.bankAccount &&
+          order.rawStatus !== "cancelled" ? (
+            <div className="mt-4 max-w-md space-y-2">
+              <p className="text-sm font-semibold text-foreground">
+                Datos para transferir
+              </p>
+              <BankAccountCard
+                account={order.bankAccount}
+                amountLabel={formatDOPFromCents(order.totalCents)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Usa #{order.id.slice(0, 8).toUpperCase()} como concepto y
+                envíanos el comprobante por WhatsApp.
+              </p>
+            </div>
+          ) : null}
         </div>
 
         <ul className="divide-y divide-border">
@@ -155,7 +180,7 @@ export function OrderDetailView({
                   <p className="mt-1 flex flex-wrap gap-1.5">
                     {item.size && (
                       <span className="rounded-full border border-border bg-muted/40 px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
-                        Talla: {item.size}
+                        {sizeAxisLabel([item.size]).noun}: {item.size}
                       </span>
                     )}
                     {item.color && (

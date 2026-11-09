@@ -72,6 +72,7 @@ function normalizeCategoryImageUrl(raw: unknown): string | null {
 }
 
 function revalidateCatalogPaths() {
+  revalidatePath("/", "layout");
   revalidatePath("/catalogo");
   revalidatePath("/admin/categorias");
   revalidatePath("/admin/catalogo");
@@ -106,6 +107,7 @@ export async function adminCreateCategory(
       image_url,
       parent_id,
       size_preset_id,
+      coming_soon: formData.get("coming_soon") === "on",
     });
     if (error) throw new Error(error.message);
 
@@ -153,6 +155,7 @@ export async function adminUpdateCategory(
         image_url,
         parent_id,
         size_preset_id,
+        coming_soon: formData.get("coming_soon") === "on",
       })
       .eq("id", id);
     if (error) throw new Error(error.message);

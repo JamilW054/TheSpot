@@ -72,6 +72,19 @@ const nextConfig: NextConfig = {
         hostname: "imgur.com",
         pathname: "/**",
       },
+      // Supabase Storage local (supabase start)
+      {
+        protocol: "http",
+        hostname: "127.0.0.1",
+        port: "54321",
+        pathname: "/storage/v1/object/public/**",
+      },
+      {
+        protocol: "http",
+        hostname: "localhost",
+        port: "54321",
+        pathname: "/storage/v1/object/public/**",
+      },
       // Supabase Storage: sustituye TU_PROJECT_REF por el ref de tu proyecto si falla
       {
         protocol: "https",
@@ -89,3 +102,13 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
+
+// Bindings de Cloudflare (IMAGES, ASSETS…) disponibles también en `next dev`.
+// No afecta el build ni el despliegue; ver wrangler.jsonc y open-next.config.ts.
+if (process.env.NODE_ENV === "development") {
+  import("@opennextjs/cloudflare")
+    .then((m) => m.initOpenNextCloudflareForDev())
+    .catch(() => {
+      // Sin el paquete instalado, `next dev` sigue funcionando normal.
+    });
+}

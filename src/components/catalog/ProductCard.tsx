@@ -33,17 +33,18 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
       )
     : 0;
 
-  const hasSizes = product.sizes.length > 0;
+  const needsProductPage = product.colors.length > 0;
   const href = `/catalogo/${product.slug}`;
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (hasSizes) {
+    // El color sigue siendo obligatorio en ficha; el tamaño/talla es opcional.
+    if (needsProductPage) {
       router.push(href);
       return;
     }
-    addItem(product.id, 1, null, null);
+    addItem(product.id, 1, product.sizes[0] ?? null, null);
     setJustAdded(true);
     setTimeout(() => setJustAdded(false), 1500);
   };

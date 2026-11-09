@@ -1,6 +1,9 @@
 "use client";
 
 import {
+  BarChart3,
+  Boxes,
+  Landmark,
   LayoutDashboard,
   Layers,
   LogOut,
@@ -24,6 +27,9 @@ const ADMIN_ICONS: Record<
   string,
   React.ComponentType<{ className?: string }>
 > = {
+  BarChart3,
+  Boxes,
+  Landmark,
   LayoutDashboard,
   ShoppingCart,
   Store,
