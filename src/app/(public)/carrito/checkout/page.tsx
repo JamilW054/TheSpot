@@ -1,18 +1,20 @@
 import Link from "next/link";
 import { getProducts, getShippingMethods } from "@/database/repositories";
+import { getCheckoutPaymentOptions } from "@/database/repositories/payments";
 import { CheckoutContent } from "./CheckoutContent";
 
 export const metadata = {
-  title: "Checkout | The Spot",
+  title: "Checkout",
   description: "Finaliza tu pedido. Introduce tus datos de envío y confirma.",
 };
 
 export const dynamic = "force-dynamic";
 
 export default async function CheckoutPage() {
-  const [products, shippingMethods] = await Promise.all([
+  const [products, shippingMethods, paymentOptions] = await Promise.all([
     getProducts(),
     getShippingMethods(),
+    getCheckoutPaymentOptions(),
   ]);
   return (
     <article className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-2 sm:pt-4 pb-16 sm:pb-20">
@@ -45,12 +47,16 @@ export default async function CheckoutPage() {
           Finalizar pedido
         </h1>
         <p className="mt-2 text-sm text-muted-foreground max-w-lg">
-          Introduce tus datos de entrega. Te contactamos para coordinar el pago
-          — aceptamos Apple Pay y Google Pay.
+          Introduce tus datos de entrega y elige cómo quieres pagar: contra
+          entrega o transferencia bancaria.
         </p>
       </header>
 
-      <CheckoutContent products={products} shippingMethods={shippingMethods} />
+      <CheckoutContent
+        products={products}
+        shippingMethods={shippingMethods}
+        paymentOptions={paymentOptions}
+      />
     </article>
   );
 }

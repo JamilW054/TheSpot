@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Política de Cookies — The Spot",
+  title: "Política de Cookies",
   description: "Información sobre el uso de cookies y almacenamiento local en The Spot.",
 };
 

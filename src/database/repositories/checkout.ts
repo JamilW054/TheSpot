@@ -1,5 +1,12 @@
 import { resolveShippingCents } from "@/config/shipping";
 import { incrementCouponUsage, validateCoupon } from "@/database/repositories/coupons";
+import {
+  type BankAccountSnapshot,
+  getCheckoutPaymentOptions,
+  getFreeShippingMinCents,
+  type PaymentMethod,
+  paymentMethodLabel,
+} from "@/database/repositories/payments";
 import type { ShippingAddress } from "@/database/repositories/orders";
 import { getOrderNotificationEmail } from "@/database/repositories/settings";
 import { buildCustomerOrderWhatsAppLink } from "@/lib/whatsapp-server";
@@ -39,6 +46,10 @@ export interface CheckoutGuestInput {
   shippingMethodId?: string | null;
   couponCode?: string | null;
   notes?: string | null;
+  /** Método de pago elegido (contra entrega por defecto). */
+  paymentMethod?: PaymentMethod | null;
+  /** Cuenta a la que el cliente transferirá (solo `bank_transfer`). */
+  bankAccountId?: string | null;
 }
 
 export interface CheckoutResult {
@@ -51,6 +62,10 @@ export interface CheckoutResult {
   totalCents: number;
   /** Enlace wa.me para que el cliente confirme el pedido con la tienda (best-effort, puede faltar). */
   whatsappUrl: string | null;
+  paymentMethod: PaymentMethod;
+  paymentMethodLabel: string;
+  /** Cuenta elegida para transferir (null si paga contra entrega). */
+  bankAccount: BankAccountSnapshot | null;
 }
 
 interface ProductRow {
@@ -58,6 +73,7 @@ interface ProductRow {
   slug: string;
   name: string;
   base_price_cents: number;
+  cost_cents: number | null;
   is_active: boolean;
 }
 
@@ -79,6 +95,7 @@ interface ResolvedLine {
   size: string | null;
   color: string | null;
   unitPriceCents: number;
+  unitCostCents: number;
   lineTotalCents: number;
 }
 
@@ -92,7 +109,7 @@ async function resolveLines(
 
   const { data: productRows, error: productsError } = await supabase
     .from("products")
-    .select("id, slug, name, base_price_cents, is_active")
+    .select("id, slug, name, base_price_cents, cost_cents, is_active")
     .in("id", productIds)
     .is("deleted_at", null);
   if (productsError) throw new Error(productsError.message);
@@ -130,7 +147,8 @@ async function resolveLines(
   }
 
   const resolved: ResolvedLine[] = [];
-  for (const item of items) {
+  for (const rawItem of items) {
+    let item = rawItem;
     if (item.quantity < 1) continue;
     const product = productsById.get(item.productId);
     if (!product || !product.is_active) {
@@ -140,14 +158,23 @@ async function resolveLines(
     let variantId: string | null = null;
     let unitPriceCents = product.base_price_cents;
     if (candidates.length > 0) {
+      const sizeOf = (v: VariantRow) =>
+        typeof v.attributes?.size === "string" ? v.attributes.size : null;
+      const colorOf = (v: VariantRow) =>
+        typeof v.attributes?.color === "string" ? v.attributes.color : null;
       const key = variantKey(item.size, item.color);
-      const match = candidates.find(
-        (v) =>
-          variantKey(
-            typeof v.attributes?.size === "string" ? v.attributes.size : null,
-            typeof v.attributes?.color === "string" ? v.attributes.color : null,
-          ) === key,
+      let match = candidates.find(
+        (v) => variantKey(sizeOf(v), colorOf(v)) === key,
       );
+      // El tamaño/talla es opcional: si el cliente no eligió, se toma la
+      // primera variante que coincida con el color (o cualquiera si no hay color).
+      if (!match && !item.size?.trim()) {
+        const wantColor = variantKey(null, item.color);
+        match =
+          candidates.find((v) => variantKey(null, colorOf(v)) === wantColor) ??
+          (item.color ? undefined : candidates[0]);
+        if (match) item = { ...item, size: sizeOf(match) };
+      }
       if (!match) {
         throw new Error(`"${product.name}": ese tamaño ya no está disponible.`);
       }
@@ -164,6 +191,7 @@ async function resolveLines(
       size: item.size ?? null,
       color: item.color ?? null,
       unitPriceCents,
+      unitCostCents: product.cost_cents ?? 0,
       lineTotalCents: unitPriceCents * item.quantity,
     });
   }
@@ -211,6 +239,26 @@ export async function checkoutGuest(
   }
 
   const supabase = createServiceClient();
+
+  // Método de pago: solo los habilitados en /admin/pagos.
+  const paymentOptions = await getCheckoutPaymentOptions();
+  const paymentMethod: PaymentMethod =
+    input.paymentMethod ?? paymentOptions.methods[0].method;
+  if (!paymentOptions.methods.some((m) => m.method === paymentMethod)) {
+    throw new Error("Ese método de pago no está disponible.");
+  }
+  let bankAccount: BankAccountSnapshot | null = null;
+  if (paymentMethod === "bank_transfer") {
+    bankAccount =
+      paymentOptions.bankAccounts.find((b) => b.id === input.bankAccountId) ??
+      (paymentOptions.bankAccounts.length === 1
+        ? paymentOptions.bankAccounts[0]
+        : null);
+    if (!bankAccount) {
+      throw new Error("Elige el banco al que vas a transferir.");
+    }
+  }
+
   const lines = await resolveLines(supabase, input.items);
   if (lines.length === 0) throw new Error("El carrito está vacío.");
 
@@ -236,7 +284,11 @@ export async function checkoutGuest(
       .maybeSingle();
     const m = method as { id: string; price_cents: number; is_active: boolean } | null;
     if (!m || !m.is_active) throw new Error("Método de envío no disponible.");
-    shippingCents = resolveShippingCents(subtotalCents, m.price_cents);
+    shippingCents = resolveShippingCents(
+      subtotalCents,
+      m.price_cents,
+      await getFreeShippingMinCents(),
+    );
     shippingMethodId = m.id;
   }
 
@@ -272,6 +324,9 @@ export async function checkoutGuest(
       coupon_id: couponId,
       contact_email: email,
       notes: input.notes?.trim() || null,
+      payment_method: paymentMethod,
+      bank_account_id: bankAccount?.id ?? null,
+      bank_account_snapshot: bankAccount,
     })
     .select("id")
     .single();
@@ -286,6 +341,7 @@ export async function checkoutGuest(
     variant_id: l.variantId,
     quantity: l.quantity,
     unit_price_cents: l.unitPriceCents,
+    unit_cost_cents: l.unitCostCents,
     total_price_cents: l.lineTotalCents,
     size: l.size,
     color: l.color,
@@ -342,6 +398,11 @@ export async function checkoutGuest(
       discount: discountCents,
       total: totalCents,
       currency: "DOP",
+      paymentMethod: paymentMethodLabel(paymentMethod),
+      bankAccount: bankAccount
+        ? `${bankAccount.bankName} · ${bankAccount.accountType} ${bankAccount.accountNumber}`
+        : null,
+      notes: input.notes?.trim() || null,
     });
   } catch {
     // Silencioso: el aviso al admin nunca debe tumbar el checkout del cliente.
@@ -355,6 +416,8 @@ export async function checkoutGuest(
       customerName: name,
       items: lines.map((l) => ({ name: l.productName, quantity: l.quantity, size: l.size })),
       totalCents,
+      paymentMethod: paymentMethodLabel(paymentMethod),
+      bankName: bankAccount?.bankName ?? null,
     });
   } catch {
     whatsappUrl = null;
@@ -369,5 +432,8 @@ export async function checkoutGuest(
     taxCents,
     totalCents,
     whatsappUrl,
+    paymentMethod,
+    paymentMethodLabel: paymentMethodLabel(paymentMethod),
+    bankAccount,
   };
 }

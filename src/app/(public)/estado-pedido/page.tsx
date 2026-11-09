@@ -3,11 +3,17 @@ import { OrderStatusContent } from "./OrderStatusContent";
 import Link from "next/link";
 
 export const metadata = {
-  title: `${ORDER_STATUS_PAGE.label} | The Spot`,
+  title: ORDER_STATUS_PAGE.label,
   description: "Consulta el estado de tu pedido con el número de pedido.",
 };
 
-export default function EstadoPedidoPage() {
+export default async function EstadoPedidoPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ pedido?: string | string[] }>;
+}) {
+  const { pedido } = await searchParams;
+  const initialOrderId = (Array.isArray(pedido) ? pedido[0] : pedido) ?? "";
   return (
     <article className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-2 sm:pt-4 pb-16 sm:pb-20">
       <nav className="mb-4 sm:mb-5" aria-label="Navegación">
@@ -44,7 +50,7 @@ export default function EstadoPedidoPage() {
         </p>
       </header>
 
-      <OrderStatusContent />
+      <OrderStatusContent initialOrderId={initialOrderId.slice(0, 64)} />
     </article>
   );
 }

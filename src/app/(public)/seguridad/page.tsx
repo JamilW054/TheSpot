@@ -3,7 +3,7 @@ import Link from "next/link";
 import { BRAND_SUPPORT_EMAIL, BRAND_SUPPORT_PHONE } from "@/config/brand";
 
 export const metadata: Metadata = {
-  title: "Seguridad de Datos — The Spot",
+  title: "Seguridad de Datos",
   description:
     "Cómo The Spot protege tus datos: sin cuentas de cliente, conexión cifrada y pedido de invitado.",
 };
@@ -31,8 +31,7 @@ export default function SeguridadPage() {
           <strong>Resumen:</strong> The Spot no procesa pagos en línea ni pide
           datos de tarjeta en ningún momento — no hay nada de eso que proteger.
           Tampoco creamos cuentas de cliente: el pedido se hace como invitado y
-          te contactamos por correo o teléfono para coordinar el pago (Apple Pay
-          o Google Pay) y la entrega.
+          te contactamos por correo o teléfono para coordinar el pago (contra entrega o transferencia) y la entrega.
         </p>
       </div>
 
@@ -59,7 +58,7 @@ export default function SeguridadPage() {
               no cobra ni procesa tarjetas en el sitio
             </strong>
             . Al confirmar un pedido, este queda pendiente y te contactamos por
-            correo o teléfono para coordinar el pago (Apple Pay o Google Pay) y
+            correo o teléfono para coordinar el pago (contra entrega o transferencia) y
             la entrega. No pedimos número de tarjeta, CVV ni ningún dato de pago
             a través del sitio.
           </p>

@@ -3,12 +3,17 @@
 import { Check, Minus, Plus } from "lucide-react";
 import { useState } from "react";
 import { useCart } from "@/contexts/cart-context";
-import { sizeAxisLabel, variantKey } from "@/lib/variants";
+import { formatDOPFromCents } from "@/lib/format-currency";
+import {
+  sizeAxisLabel,
+  unitPriceForSelection,
+  variantKey,
+} from "@/lib/variants";
 import type { ProductColor } from "@/types";
 
 interface AddToCartButtonProps {
   productId: string;
-  /** Tallas disponibles. Si hay, se muestra el selector y es obligatorio. */
+  /** Tallas/tamaños disponibles. El selector se muestra, pero elegir no es obligatorio. */
   sizes?: string[];
   /** Colores disponibles. Si hay, se muestra el selector y es obligatorio. */
   colors?: ProductColor[];
@@ -16,6 +21,10 @@ interface AddToCartButtonProps {
   stockByKey?: Record<string, number>;
   /** Si false, el producto no rastrea stock (sin límite ni "agotado"). */
   stockTracked?: boolean;
+  /** Precio por variante (céntimos). Si los tamaños cuestan distinto, se muestra el elegido. */
+  priceByVariant?: Record<string, number>;
+  /** Precio mostrado por defecto (el menor). */
+  basePriceCents?: number;
   variant?: "default" | "primary";
   className?: string;
   children?: React.ReactNode;
@@ -27,6 +36,8 @@ export function AddToCartButton({
   colors = [],
   stockByKey,
   stockTracked = true,
+  priceByVariant,
+  basePriceCents = 0,
   variant = "default",
   className = "",
   children,
@@ -42,11 +53,10 @@ export function AddToCartButton({
   const hasColors = colors.length > 0;
   const hasVariants = hasSizes || hasColors;
 
-  const sizeMissing = hasSizes && touched && !selectedSize;
   const colorMissing = hasColors && touched && !selectedColor;
 
-  const allSelected =
-    (!hasSizes || !!selectedSize) && (!hasColors || !!selectedColor);
+  /** Color sí es obligatorio; el tamaño/talla no. */
+  const canAdd = !hasColors || !!selectedColor;
 
   const stockOf = (size: string | null, color: string | null): number | null =>
     stockByKey != null ? (stockByKey[variantKey(size, color)] ?? 0) : null;
@@ -63,8 +73,19 @@ export function AddToCartButton({
     return sizes.reduce((sum, s) => sum + (stockOf(s, c) ?? 0), 0);
   };
 
+  /** Si no eligió tamaño, usa el primero con stock (o el primero disponible). */
+  const resolvedSize = (() => {
+    if (!hasSizes) return null;
+    if (selectedSize) return selectedSize;
+    const withStock = sizes.find((s) => {
+      const st = sizeStock(s);
+      return st === null || st > 0;
+    });
+    return withStock ?? sizes[0] ?? null;
+  })();
+
   const selectedStock =
-    allSelected && stockTracked ? stockOf(selectedSize, selectedColor) : null;
+    canAdd && stockTracked ? stockOf(resolvedSize, selectedColor) : null;
   const isOutOfStock = selectedStock !== null && selectedStock === 0;
   const maxQty =
     selectedStock !== null && selectedStock > 0 ? selectedStock : 10;
@@ -72,10 +93,17 @@ export function AddToCartButton({
     selectedStock !== null && selectedStock > 0 && selectedStock <= 5;
 
   const sizeLabel = sizeAxisLabel(sizes);
-  const quantity = getQuantity(productId, selectedSize, selectedColor);
+  const hasVariablePrice =
+    priceByVariant != null && new Set(Object.values(priceByVariant)).size > 1;
+  const quantity = getQuantity(productId, resolvedSize, selectedColor);
 
   const handleSizeSelect = (s: string) => {
-    if (s === selectedSize) return;
+    if (s === selectedSize) {
+      // Segundo click: deselecciona (sigue siendo opcional).
+      setSelectedSize(null);
+      setQty(1);
+      return;
+    }
     setSelectedSize(s);
     setQty(1);
     setTouched(true);
@@ -88,12 +116,12 @@ export function AddToCartButton({
   };
 
   const handleClick = () => {
-    if (!allSelected) {
+    if (!canAdd) {
       setTouched(true);
       return;
     }
     if (isOutOfStock) return;
-    addItem(productId, qty, selectedSize, selectedColor);
+    addItem(productId, qty, resolvedSize, selectedColor);
     setJustAdded(true);
     setQty(1);
     setTimeout(() => setJustAdded(false), 1500);
@@ -121,18 +149,14 @@ export function AddToCartButton({
 
   return (
     <div className="w-full space-y-4">
-      {/* Selector de talla */}
+      {/* Selector de talla / tamaño (opcional) */}
       {hasSizes && (
         <div className="space-y-2">
-          <p
-            className={`text-sm font-medium ${sizeMissing ? "text-destructive" : "text-foreground"}`}
-          >
+          <p className="text-sm font-medium text-foreground">
             {sizeLabel.noun}
-            {sizeMissing && (
-              <span className="ml-1.5 text-xs font-normal text-destructive">
-                — {sizeLabel.prompt}
-              </span>
-            )}
+            <span className="ml-1.5 text-xs font-normal text-muted-foreground">
+              (opcional)
+            </span>
           </p>
           <div className="flex flex-wrap gap-2">
             {sizes.map((s) => {
@@ -150,9 +174,7 @@ export function AddToCartButton({
                       ? "cursor-not-allowed border border-border/40 bg-transparent text-muted-foreground/40 line-through"
                       : selectedSize === s
                         ? "border-2 border-primary bg-primary/10 text-primary"
-                        : sizeMissing
-                          ? "border border-destructive/60 bg-destructive/5 text-destructive hover:border-destructive"
-                          : "border border-border bg-transparent text-muted-foreground hover:border-foreground hover:text-foreground"
+                        : "border border-border bg-transparent text-muted-foreground hover:border-foreground hover:text-foreground"
                   }`}
                 >
                   {s}
@@ -224,8 +246,24 @@ export function AddToCartButton({
         </div>
       )}
 
-      {/* Cantidad — solo cuando todo está seleccionado y en stock */}
-      {allSelected && !isOutOfStock && (
+      {/* Precio del tamaño/color elegido cuando las variantes cuestan distinto */}
+      {hasVariablePrice && canAdd && (
+        <p className="text-sm text-muted-foreground">
+          Precio{resolvedSize ? ` (${resolvedSize})` : ""}:{" "}
+          <span className="font-mono text-base font-bold text-primary">
+            {formatDOPFromCents(
+              unitPriceForSelection(
+                { priceCents: basePriceCents, priceByVariant },
+                resolvedSize,
+                selectedColor,
+              ),
+            )}
+          </span>
+        </p>
+      )}
+
+      {/* Cantidad — cuando el color (si aplica) está listo y hay stock */}
+      {canAdd && !isOutOfStock && (
         <div className="flex items-center gap-3">
           <span className="text-sm font-medium text-foreground">Cantidad</span>
           <div className="flex items-center overflow-hidden rounded-full border border-rose-200">
@@ -260,7 +298,7 @@ export function AddToCartButton({
       )}
 
       {/* Aviso de combinación agotada */}
-      {allSelected && isOutOfStock && (
+      {canAdd && isOutOfStock && (
         <p className="text-sm font-medium text-destructive">
           Combinación agotada. Elige otra.
         </p>

@@ -12,7 +12,7 @@ import {
   Tag,
   TrendingUp,
   Trophy,
-  Users,
+  ShoppingBag,
 } from "lucide-react";
 import Link from "next/link";
 import {
@@ -64,8 +64,12 @@ const PAGO_BADGE: Record<
 
 const QUICK_ACTIONS = [
   { label: "Nuevo producto", href: "/admin/catalogo?create=1", icon: Plus },
-  { label: "Pedidos", href: "/admin/pedidos", icon: ShoppingCart },
+  { label: "Pedidos pendientes", href: "/admin/pedidos?estado=pending", icon: ShoppingCart },
+  { label: "Reporte de ventas", href: "/admin/ventas", icon: TrendingUp },
+  { label: "Inventario", href: "/admin/inventario", icon: PackageX },
+  { label: "Cuentas bancarias", href: "/admin/pagos", icon: CircleDollarSign },
   { label: "Cupón", href: "/admin/cupones/nuevo", icon: Tag },
+  { label: "Envíos", href: "/admin/envios", icon: Clock },
   { label: "Configuración", href: "/admin/config", icon: Settings },
 ] as const;
 
@@ -74,9 +78,12 @@ const PEDIDO_COLUMNS: DataTableColumn<Pedido>[] = [
     key: "id",
     header: "Pedido",
     cell: (p) => (
-      <span className="font-mono text-xs text-muted-foreground">
+      <Link
+        href={`/admin/pedidos/${p.id}`}
+        className="font-mono text-xs font-semibold text-primary hover:underline"
+      >
         #{p.id.slice(0, 8).toUpperCase()}
-      </span>
+      </Link>
     ),
   },
   {
@@ -240,6 +247,7 @@ export function AdminDashboardClient({
           deltaPct={metrics.todayRevenueDeltaPct}
           icon={<CircleDollarSign className="size-4" />}
           accent
+          href="/admin/ventas?periodo=hoy&base=todas"
         />
         <StatCard
           label="Ingresos · 30 días"
@@ -247,12 +255,14 @@ export function AdminDashboardClient({
           deltaPct={metrics.revenue30dDeltaPct}
           sub="vs. 30 días previos"
           icon={<TrendingUp className="size-4" />}
+          href="/admin/ventas?periodo=30d"
         />
         <StatCard
           label="Pedidos pendientes"
           value={metrics.pendingOrders}
           sub="requieren atención"
           icon={<Clock className="size-4" />}
+          href="/admin/pedidos?estado=pending"
         />
       </section>
 
@@ -266,18 +276,21 @@ export function AdminDashboardClient({
           value={metrics.outOfStockCount}
           sub={`de ${metrics.catalog.active} productos activos`}
           icon={<PackageX className="size-4" />}
+          href="/admin/inventario?filtro=agotado"
         />
         <StatCard
           label="Inventario bajo"
           value={metrics.lowStockCount}
           sub="5 unidades o menos"
           icon={<AlertTriangle className="size-4" />}
+          href="/admin/inventario?filtro=bajo"
         />
         <StatCard
-          label="Clientes registrados"
-          value={metrics.registeredCustomers.toLocaleString("es-DO")}
-          sub="cuentas activas"
-          icon={<Users className="size-4" />}
+          label="Pedidos · 30 días"
+          value={metrics.totalOrders.toLocaleString("es-DO")}
+          sub="pagados y sin pagar"
+          icon={<ShoppingBag className="size-4" />}
+          href="/admin/ventas?periodo=30d&base=todas"
         />
         <StatCard
           label="Más vendido"
@@ -290,6 +303,7 @@ export function AdminDashboardClient({
           }
           icon={<Trophy className="size-4" />}
           accent
+          href="/admin/ventas?periodo=30d"
         />
       </section>
 
@@ -382,8 +396,9 @@ export function AdminDashboardClient({
           ) : (
             <AdminCardContent className="space-y-1 p-3">
               {metrics.lowStockProducts.map((p) => (
-                <div
+                <Link
                   key={p.id}
+                  href={`/admin/inventario?q=${encodeURIComponent(p.name)}`}
                   className="flex items-center justify-between gap-3 rounded-[10px] px-2.5 py-2 transition-colors hover:bg-muted/60"
                 >
                   <span className="min-w-0 truncate text-sm font-medium text-foreground">
@@ -392,7 +407,7 @@ export function AdminDashboardClient({
                   <AdminBadge tone={p.available <= 2 ? "danger" : "warning"}>
                     {p.available} uds
                   </AdminBadge>
-                </div>
+                </Link>
               ))}
               {metrics.outOfStockCount > 0 && (
                 <p className="px-2.5 pt-2 text-xs text-muted-foreground">

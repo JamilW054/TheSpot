@@ -3,7 +3,7 @@ import Link from "next/link";
 import { SITE_URL } from "@/config/brand";
 
 export const metadata: Metadata = {
-  title: "Términos y Condiciones — The Spot",
+  title: "Términos y Condiciones",
   description:
     "Lee los términos y condiciones de uso de la tienda en línea The Spot.",
   alternates: { canonical: `${SITE_URL}/terminos` },
@@ -86,7 +86,7 @@ export default function TerminosPage() {
             </strong>
             . Al confirmar un pedido, este queda registrado como pendiente y te
             contactamos por correo o teléfono para coordinar el método de pago
-            (Apple Pay o Google Pay) y la entrega. Un pedido se considera
+            (contra entrega o transferencia) y la entrega. Un pedido se considera
             confirmado cuando ambas partes acuerdan los detalles.
           </p>
           <p className="mt-3">

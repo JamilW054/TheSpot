@@ -5,7 +5,6 @@
  * para mantener las consultas simples y el número de round-trips bajo.
  */
 
-import { ROLE_DB } from "@/lib/auth/roles";
 import { createServiceClient } from "@/lib/supabase/server";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -53,7 +52,6 @@ export interface AdminDashboardMetrics {
   lowStockCount: number;
   lowStockProducts: LowStockProduct[];
   /** Clientes registrados (solo rol cliente, sin admins ni perfiles eliminados). */
-  registeredCustomers: number;
   /** Producto más vendido por unidades en la ventana. */
   bestSeller: TopProduct | null;
   topProducts: TopProduct[];
@@ -164,7 +162,6 @@ const EMPTY_METRICS: AdminDashboardMetrics = {
   outOfStockCount: 0,
   lowStockCount: 0,
   lowStockProducts: [],
-  registeredCustomers: 0,
   bestSeller: null,
   topProducts: [],
   revenueSeries: [],
@@ -183,7 +180,7 @@ export async function getAdminDashboardMetrics(): Promise<AdminDashboardMetrics>
     const windowStart = new Date(Date.now() - ORDERS_WINDOW_DAYS * DAY_MS);
     const windowIso = windowStart.toISOString();
 
-    const [ordersRes, itemsRes, productsRes, profilesRes] = await Promise.all([
+    const [ordersRes, itemsRes, productsRes] = await Promise.all([
       supabase
         .from("orders")
         .select("id, status, payment_status, total_cents, created_at")
@@ -197,23 +194,17 @@ export async function getAdminDashboardMetrics(): Promise<AdminDashboardMetrics>
         .from("products")
         .select(
           "id, name, slug, is_active, category_id, categories(name), product_variants(is_active, inventory(quantity, reserved))",
-        ),
-      supabase
-        .from("profiles")
-        .select("id", { count: "exact", head: true })
-        .is("deleted_at", null)
-        .eq("role", ROLE_DB.CLIENT),
+        )
+        .is("deleted_at", null),
     ]);
 
     if (ordersRes.error) throw ordersRes.error;
     if (itemsRes.error) throw itemsRes.error;
     if (productsRes.error) throw productsRes.error;
-    if (profilesRes.error) throw profilesRes.error;
 
     const orders = (ordersRes.data ?? []) as unknown as MetricsOrderRow[];
     const items = (itemsRes.data ?? []) as unknown as MetricsOrderItemRow[];
     const products = (productsRes.data ?? []) as unknown as MetricsProductRow[];
-    const registeredCustomers = profilesRes.count ?? 0;
 
     const now = new Date();
     const todayStart = startOfDay(now).getTime();
@@ -366,7 +357,6 @@ export async function getAdminDashboardMetrics(): Promise<AdminDashboardMetrics>
       outOfStockCount,
       lowStockCount: lowStockProducts.length,
       lowStockProducts: lowStockProducts.slice(0, 6),
-      registeredCustomers,
       bestSeller,
       topProducts,
       revenueSeries,

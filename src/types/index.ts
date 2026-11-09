@@ -43,6 +43,8 @@ export interface CatalogProduct {
   sizes: string[];
   /** Colores disponibles (eje independiente de las tallas). Vacío si no aplica. */
   colors: ProductColor[];
+  /** Precio por variante en céntimos, indexado por `variantKey(size, color)`. */
+  priceByVariant?: Record<string, number>;
   /** Etiquetas del producto. */
   tags: string[];
   /** Promedio de calificación (1-5). Null si sin reseñas. */

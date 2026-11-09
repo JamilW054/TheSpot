@@ -1,3 +1,4 @@
+import { variantKey } from "@/lib/variants";
 import { formatDOPFromCents } from "@/lib/format-currency";
 import type { CatalogProduct } from "@/types";
 
@@ -156,6 +157,20 @@ export function effectivePriceCents(row: ProductRow): number {
   return toCents(row.base_price_cents);
 }
 
+/** Precio de cada variante activa (clave canónica `variantKey`). */
+export function priceByVariantFromRow(row: ProductRow): Record<string, number> {
+  const out: Record<string, number> = {};
+  const base = toCents(row.base_price_cents);
+  for (const v of row.product_variants ?? []) {
+    if (v.is_active === false) continue;
+    const size = typeof v.attributes?.size === "string" ? v.attributes.size : null;
+    const color =
+      typeof v.attributes?.color === "string" ? v.attributes.color : null;
+    out[variantKey(size, color)] = v.price_cents ?? base;
+  }
+  return out;
+}
+
 /** Tallas disponibles: atributo `size` de las variantes activas, en orden. */
 export function sizesFromVariants(
   variants: ProductVariantJoinRow[] | null | undefined,
@@ -234,6 +249,7 @@ export function rowToCatalogProduct(row: ProductRow): CatalogProduct {
     categorySlug: categorySlugFromRow(row.categories),
     sizes: sizesFromVariants(row.product_variants),
     colors: colorsFromVariants(row.product_variants),
+    priceByVariant: priceByVariantFromRow(row),
     tags: tagsFromRow(row.product_tags),
     ratingAvg: row.rating_avg != null ? Number(row.rating_avg) : null,
     reviewCount: row.review_count ?? 0,

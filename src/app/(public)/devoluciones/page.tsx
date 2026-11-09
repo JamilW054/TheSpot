@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Política de Devoluciones — The Spot",
+  title: "Política de Devoluciones",
   description:
     "Conoce nuestra política de devoluciones, cambios y reembolsos en The Spot.",
 };

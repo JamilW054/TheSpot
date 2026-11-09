@@ -86,6 +86,7 @@ import {
   rowToCatalogProduct,
   tagsFromRow,
 } from "./products";
+import { paymentMethodLabel } from "./payments";
 import { sendOrderReceiptEmail } from "./receipts";
 
 export type { CategoryRow };
@@ -569,18 +570,27 @@ export async function markLinkedOrderAsPaid(orderId: string): Promise<boolean> {
 export async function getOrderStatusById(
   orderId: string,
 ): Promise<OrderStatusDetail | null> {
-  if (!orderId?.trim()) return null;
-  const id = orderId.trim().toLowerCase();
+  const raw = orderId?.trim().replace(/^#/, "") ?? "";
+  if (!raw) return null;
+  const isUuid =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(raw);
+  const isShort = /^[0-9a-f]{8}$/i.test(raw);
+  if (!isUuid && !isShort) return null;
   try {
     const supabase = createServiceClient();
-    const { data: orderRow, error: orderError } = await supabase
+    const query = supabase
       .from("orders")
       .select(
-        "id, status, total_cents, created_at, shipping_address, contact_email, payment_status, paid_at",
-      )
-      .eq("id", id)
-      .single();
+        "id, status, total_cents, subtotal_cents, shipping_cents, coupon_discount_cents, created_at, shipping_address, contact_email, payment_status, paid_at, payment_method, bank_account_snapshot",
+      );
+    const { data: orderRows, error: orderError } = isUuid
+      ? await query.eq("id", raw.toLowerCase()).limit(1)
+      : await query
+          .eq("order_number", raw.toUpperCase())
+          .order("created_at", { ascending: false })
+          .limit(1);
 
+    const orderRow = orderRows?.[0];
     if (orderError || !orderRow) return null;
     const o = orderRow as unknown as {
       id: string;
@@ -591,12 +601,17 @@ export async function getOrderStatusById(
       contact_email: string | null;
       payment_status: string | null;
       paid_at: string | null;
+      subtotal_cents: number;
+      shipping_cents: number;
+      coupon_discount_cents: number;
+      payment_method: string | null;
+      bank_account_snapshot: OrderStatusDetail["bankAccount"];
     };
 
     const { data: itemsData } = await supabase
       .from("order_items")
       .select("quantity, unit_price_cents, product_snapshot")
-      .eq("order_id", id);
+      .eq("order_id", o.id);
 
     type Snapshot = {
       name?: string;
@@ -638,6 +653,13 @@ export async function getOrderStatusById(
       items,
       paymentStatus: coercePaymentStatus(o.payment_status ?? undefined),
       paidAt: o.paid_at,
+      rawStatus: o.status,
+      paymentMethod: o.payment_method ?? "cash_on_delivery",
+      paymentMethodLabel: paymentMethodLabel(o.payment_method),
+      bankAccount: o.bank_account_snapshot ?? null,
+      subtotalCents: o.subtotal_cents,
+      shippingCents: o.shipping_cents,
+      discountCents: o.coupon_discount_cents,
     };
   } catch {
     return null;

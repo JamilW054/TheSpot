@@ -4,7 +4,7 @@ import { getProducts, getShippingMethods } from "@/database/repositories";
 import { CartContent } from "./CartContent";
 
 export const metadata = {
-  title: "Carrito | The Spot",
+  title: "Carrito",
   description:
     "Tu carrito de compra. Revisa los productos y finaliza tu pedido.",
 };

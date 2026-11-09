@@ -196,7 +196,7 @@ export function CategoryForm({
               <SelectMenu
                 id="category-size_preset_id"
                 name="size_preset_id"
-                label="Tipo de talla o tamaño"
+                label="Tipo de talla o tamaño (opcional)"
                 defaultValue={initial?.size_preset_id ?? ""}
                 placeholder="Sin variantes definidas"
                 options={[
@@ -210,7 +210,8 @@ export function CategoryForm({
                 ]}
               />
               <p className="mt-1.5 text-xs text-muted-foreground">
-                Las tallas o tamaños que se precargan al crear productos de esta categoría.
+                Opcional. Si lo defines, se precargan al crear productos de esta
+                categoría.
               </p>
             </div>
 
@@ -223,6 +224,25 @@ export function CategoryForm({
                 defaultValue={initial?.sort_order ?? 0}
               />
             </div>
+
+            <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-border p-3 sm:col-span-2">
+              <input
+                type="checkbox"
+                name="coming_soon"
+                defaultChecked={initial?.coming_soon ?? false}
+                className="mt-0.5 size-4 accent-primary"
+              />
+              <span>
+                <span className="block text-sm font-medium text-foreground">
+                  Próximamente
+                </span>
+                <span className="block text-xs text-muted-foreground">
+                  La categoría se ve en la tienda con la etiqueta «Coming soon»
+                  pero sus productos no se pueden comprar. Desmárcalo para
+                  lanzarla.
+                </span>
+              </span>
+            </label>
           </div>
         </div>
       </section>

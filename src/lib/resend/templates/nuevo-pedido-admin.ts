@@ -23,6 +23,12 @@ export interface NuevoPedidoAdminEmailData {
   discount: number;
   total: number;
   currency?: string;
+  /** Método de pago legible (p. ej. "Transferencia bancaria"). */
+  paymentMethod?: string | null;
+  /** Cuenta elegida para transferir, ya formateada. */
+  bankAccount?: string | null;
+  /** Nota del cliente en el checkout. */
+  notes?: string | null;
 }
 
 function formatPrice(cents: number, currency = "DOP"): string {
@@ -49,9 +55,12 @@ export function nuevoPedidoAdminEmailHtml(
     discount,
     total,
     currency = "DOP",
+    paymentMethod,
+    bankAccount,
+    notes,
   } = data;
   const fmt = (c: number) => formatPrice(c, currency);
-  const orderUrl = `${SITE}/admin/pedidos`;
+  const orderUrl = `${SITE}/admin/pedidos/${orderId}`;
   const year = new Date().getFullYear();
 
   const itemRows = items
@@ -152,7 +161,9 @@ export function nuevoPedidoAdminEmailHtml(
               <p style="margin:0;font-size:14px;color:#5a6a7d;line-height:1.8;">
                 <strong style="color:#0d1b2e;font-weight:600;">Correo:</strong> ${customerEmail}<br/>
                 ${customerPhone ? `<strong style="color:#0d1b2e;font-weight:600;">Teléfono:</strong> ${customerPhone}<br/>` : ""}
-                ${shippingAddress ? `<strong style="color:#0d1b2e;font-weight:600;">Dirección:</strong> ${shippingAddress}` : ""}
+                ${shippingAddress ? `<strong style="color:#0d1b2e;font-weight:600;">Dirección:</strong> ${shippingAddress}<br/>` : ""}
+                ${paymentMethod ? `<strong style="color:#0d1b2e;font-weight:600;">Pago:</strong> ${paymentMethod}${bankAccount ? ` — ${bankAccount}` : ""}<br/>` : ""}
+                ${notes ? `<strong style="color:#0d1b2e;font-weight:600;">Nota del cliente:</strong> ${notes.replace(/</g, "&lt;")}` : ""}
               </p>
             </td>
           </tr>
@@ -234,6 +245,9 @@ export function nuevoPedidoAdminEmailText(
     discount,
     total,
     currency = "DOP",
+    paymentMethod,
+    bankAccount,
+    notes,
   } = data;
   const fmt = (c: number) => formatPrice(c, currency);
   const lines = items
@@ -246,7 +260,7 @@ export function nuevoPedidoAdminEmailText(
   return `The Spot — Nuevo pedido #${orderNumber}
 
 Cliente: ${customerName}
-Correo: ${customerEmail}${customerPhone ? `\nTeléfono: ${customerPhone}` : ""}${shippingAddress ? `\nDirección: ${shippingAddress}` : ""}
+Correo: ${customerEmail}${customerPhone ? `\nTeléfono: ${customerPhone}` : ""}${shippingAddress ? `\nDirección: ${shippingAddress}` : ""}${paymentMethod ? `\nPago: ${paymentMethod}${bankAccount ? ` — ${bankAccount}` : ""}` : ""}${notes ? `\nNota: ${notes}` : ""}
 
 Productos:
 ${lines}
@@ -255,7 +269,7 @@ Subtotal: ${fmt(subtotal)}${discountLine}
 Envío: ${shipping === 0 ? "GRATIS" : fmt(shipping)}
 TOTAL: ${fmt(total)}
 
-Ver en el panel: ${SITE}/admin/pedidos
+Ver en el panel: ${SITE}/admin/pedidos/${orderId}
 ID: ${orderId}
 
 — The Spot`;

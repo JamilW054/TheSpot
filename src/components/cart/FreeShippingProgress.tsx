@@ -2,10 +2,10 @@
 
 import { Truck } from "lucide-react";
 import {
-  FREE_SHIPPING_MIN_CENTS,
   qualifiesForFreeShipping,
   remainingForFreeShipping,
 } from "@/config/shipping";
+import { useStoreSettings } from "@/contexts/store-settings-context";
 import { formatDOPFromCents } from "@/lib/format-currency";
 
 /**
@@ -19,10 +19,11 @@ export function FreeShippingProgress({
   subtotalCents: number;
   className?: string;
 }) {
+  const { freeShippingMinCents: FREE_SHIPPING_MIN_CENTS } = useStoreSettings();
   if (FREE_SHIPPING_MIN_CENTS <= 0) return null;
 
-  const free = qualifiesForFreeShipping(subtotalCents);
-  const remaining = remainingForFreeShipping(subtotalCents);
+  const free = qualifiesForFreeShipping(subtotalCents, FREE_SHIPPING_MIN_CENTS);
+  const remaining = remainingForFreeShipping(subtotalCents, FREE_SHIPPING_MIN_CENTS);
   const pct = Math.min(
     100,
     Math.round((subtotalCents / FREE_SHIPPING_MIN_CENTS) * 100),

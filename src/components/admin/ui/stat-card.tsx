@@ -1,4 +1,5 @@
-import { TrendingDown, TrendingUp } from "lucide-react";
+import { ChevronRight, TrendingDown, TrendingUp } from "lucide-react";
+import Link from "next/link";
 import type { ReactNode } from "react";
 import { AdminCard } from "./admin-card";
 
@@ -19,6 +20,8 @@ export interface StatCardProps {
   valueTone?: "default" | "danger";
   /** Tamaño del valor. "sm" para textos largos (p. ej. nombre de producto). */
   valueSize?: "default" | "sm";
+  /** Si se indica, toda la tarjeta es un enlace (p. ej. al listado filtrado). */
+  href?: string;
 }
 
 /**
@@ -34,11 +37,14 @@ export function StatCard({
   accent = false,
   valueTone = "default",
   valueSize = "default",
+  href,
 }: StatCardProps) {
   const hasDelta = deltaPct != null && Number.isFinite(deltaPct);
   const deltaUp = hasDelta && (deltaPct as number) >= 0;
-  return (
-    <AdminCard className="p-5">
+  const card = (
+    <AdminCard
+      className={`p-5 ${href ? "h-full transition-shadow group-hover:ring-2 group-hover:ring-primary/25" : ""}`}
+    >
       <div className="flex items-center justify-between gap-3">
         <p className="text-xs font-medium uppercase tracking-[0.05em] text-muted-foreground">
           {label}
@@ -85,8 +91,23 @@ export function StatCard({
             </span>
           ) : null}
           {sub ? <span className="truncate">{sub}</span> : null}
+          {href ? (
+            <ChevronRight
+              className="ml-auto size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5"
+              aria-hidden
+            />
+          ) : null}
         </div>
       )}
     </AdminCard>
+  );
+  if (!href) return card;
+  return (
+    <Link
+      href={href}
+      className="group block rounded-3xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+    >
+      {card}
+    </Link>
   );
 }

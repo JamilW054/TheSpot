@@ -20,6 +20,7 @@
     "format": "biome format --write",
     "og:image": "node scripts/generate-og-image.mjs",
     "import:esencia": "node scripts/import-esencia.mjs",
+    "bootstrap-admin": "node --env-file=.env.local --experimental-strip-types scripts/bootstrap-admin.mts",
     "supabase": "supabase",
     "db:start": "supabase start",
     "db:stop": "supabase stop",

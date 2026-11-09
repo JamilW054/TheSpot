@@ -31,15 +31,33 @@ export const ADMIN_NAV: NavItem[] = [
     adminSection: "Resumen",
   },
   {
-    label: "Todos los pedidos",
+    label: "Pedidos",
     href: "/admin/pedidos",
     icon: "ShoppingCart",
+    adminSection: "Ventas",
+  },
+  {
+    label: "Reporte de ventas",
+    href: "/admin/ventas",
+    icon: "BarChart3",
+    adminSection: "Ventas",
+  },
+  {
+    label: "Pagos y cuentas",
+    href: "/admin/pagos",
+    icon: "Landmark",
     adminSection: "Ventas",
   },
   {
     label: "Catálogo",
     href: "/admin/catalogo",
     icon: "Store",
+    adminSection: "Catálogo",
+  },
+  {
+    label: "Inventario",
+    href: "/admin/inventario",
+    icon: "Boxes",
     adminSection: "Catálogo",
   },
   {

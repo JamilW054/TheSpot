@@ -11,6 +11,8 @@ export interface CategoryRow {
   parent_id?: string | null;
   /** Preset de tallas asignado a esta categoría. */
   size_preset_id?: string | null;
+  /** "Próximamente": visible pero sin productos a la venta (editable en admin). */
+  coming_soon?: boolean;
 }
 
 /** Detecta cualquier error de columna no encontrada en PostgREST (PGRST204). */
@@ -51,7 +53,7 @@ export async function getCategoryAdminById(
 
   const full = await supabase
     .from("categories")
-    .select("id, slug, name, sort_order, parent_id, image_url, size_preset_id")
+    .select("id, slug, name, sort_order, parent_id, image_url, size_preset_id, coming_soon")
     .eq("id", s)
     .maybeSingle();
 
@@ -75,7 +77,7 @@ export async function getCategoriesForAdmin(): Promise<CategoryRow[]> {
 
   const full = await supabase
     .from("categories")
-    .select("id, slug, name, sort_order, parent_id, image_url, size_preset_id")
+    .select("id, slug, name, sort_order, parent_id, image_url, size_preset_id, coming_soon")
     .order("sort_order", { ascending: true });
 
   if (!full.error) return (full.data ?? []) as CategoryRow[];
@@ -104,7 +106,7 @@ export async function getCategoriesPublic(): Promise<CategoryRow[]> {
     // 1st attempt: full columns
     const full = await supabase
       .from("categories")
-      .select("id, slug, name, sort_order, parent_id, image_url")
+      .select("id, slug, name, sort_order, parent_id, image_url, coming_soon")
       .order("sort_order", { ascending: true });
 
     if (!full.error) return (full.data ?? []) as CategoryRow[];
@@ -174,4 +176,23 @@ export async function getCategoryCoverByCategoryId(): Promise<
     }
     return map;
   }, {});
+}
+
+/**
+ * Slugs de categorías marcadas como "Próximamente" en el admin.
+ * Server-only; en cliente usar `useComingSoon()` (StoreSettingsProvider).
+ */
+export async function getComingSoonSlugs(): Promise<string[]> {
+  try {
+    const supabase = createServiceClient();
+    const { data, error } = await supabase
+      .from("categories")
+      .select("slug")
+      .eq("coming_soon", true)
+      .is("deleted_at", null);
+    if (error) return [];
+    return ((data ?? []) as { slug: string }[]).map((r) => r.slug);
+  } catch {
+    return [];
+  }
 }

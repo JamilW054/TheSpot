@@ -32,11 +32,15 @@ function LoginForm() {
     setError(null);
     const trimmedEmail = email.trim();
     if (!trimmedEmail || !password) {
-      setError("Introduce email y contraseña.");
+      setError("Introduce usuario y contraseña.");
       return;
     }
     try {
-      await login(trimmedEmail, password);
+      // Usuario sin "@" (p. ej. "admin") → correo interno de Supabase Auth.
+      const loginEmail = trimmedEmail.includes("@")
+        ? trimmedEmail
+        : `${trimmedEmail.toLowerCase()}@jwparfum.local`;
+      await login(loginEmail, password);
     } catch (err) {
       setError(
         err instanceof Error
@@ -68,13 +72,13 @@ function LoginForm() {
               className="mb-1.5 block text-sm font-medium text-foreground"
               htmlFor="email"
             >
-              Correo electrónico
+              Usuario o correo
             </label>
             <input
               id="email"
-              type="email"
-              autoComplete="email"
-              placeholder="tu@correo.com"
+              type="text"
+              autoComplete="username"
+              placeholder="admin"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={isLoading}

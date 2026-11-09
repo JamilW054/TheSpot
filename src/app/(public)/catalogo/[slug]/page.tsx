@@ -9,7 +9,8 @@ import { ShareProductButton } from "@/components/catalog/ShareProductButton";
 import { StickyBuyBar } from "@/components/catalog/StickyBuyBar";
 import { WishlistButton } from "@/components/catalog/WishlistButton";
 import { isComingSoonCategory, SITE_URL } from "@/config/brand";
-import { FREE_SHIPPING_MIN_CENTS } from "@/config/shipping";
+import { getComingSoonSlugs } from "@/database/repositories/categories";
+import { getFreeShippingMinCents } from "@/database/repositories/payments";
 import { getProductBySlug } from "@/database/repositories";
 import { getStockMatrixForProduct } from "@/database/repositories/inventory";
 import { formatDOPFromCents } from "@/lib/format-currency";
@@ -21,9 +22,9 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps) {
   const { slug } = await params;
   const product = await getProductBySlug(slug);
-  if (!product) return { title: "Producto | The Spot" };
+  if (!product) return { title: "Producto" };
   return {
-    title: `${product.name} | The Spot`,
+    title: product.name,
     description: product.description,
     openGraph: {
       images: product.coverImage ? [{ url: product.coverImage }] : [],
@@ -37,11 +38,14 @@ export default async function CatalogProductPage({ params }: PageProps) {
 
   if (!product) notFound();
 
-  if (isComingSoonCategory(product.categorySlug)) {
+  if (isComingSoonCategory(product.categorySlug, await getComingSoonSlugs())) {
     redirect(`/catalogo?categoria=${product.categorySlug}`);
   }
 
-  const stock = await getStockMatrixForProduct(product.id);
+  const [stock, freeShippingMinCents] = await Promise.all([
+    getStockMatrixForProduct(product.id),
+    getFreeShippingMinCents(),
+  ]);
 
   const hasDiscount =
     product.originalPriceCents != null &&
@@ -187,6 +191,8 @@ export default async function CatalogProductPage({ params }: PageProps) {
                   colors={product.colors}
                   stockByKey={stock.stockByKey}
                   stockTracked={stock.tracked}
+                  priceByVariant={product.priceByVariant}
+                  basePriceCents={product.priceCents}
                   variant="primary"
                   className="w-full justify-center rounded-full py-3.5 text-[15px] font-bold"
                 />
@@ -199,7 +205,7 @@ export default async function CatalogProductPage({ params }: PageProps) {
                     />
                     <span>
                       Envío gratis en pedidos desde{" "}
-                      {formatDOPFromCents(FREE_SHIPPING_MIN_CENTS)}
+                      {formatDOPFromCents(freeShippingMinCents)}
                     </span>
                   </div>
                   <div className="flex items-center gap-3 px-4 py-3 text-sm text-muted-foreground">

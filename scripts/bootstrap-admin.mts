@@ -1,9 +1,9 @@
-#!/usr/bin/env bun
+#!/usr/bin/env node
 /**
  * Crea (o actualiza contraseña de) un usuario admin en Supabase Auth y pone profiles.role = admin.
- * Requiere migración 00005_profiles_role_admin.sql aplicada en el proyecto.
+ * Requiere las migraciones de supabase/migrations/ aplicadas.
  *
- * Uso: bun run bootstrap-admin
+ * Uso: pnpm bootstrap-admin (lee .env.local)
  * Variables: NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, ADMIN_EMAIL, ADMIN_BOOTSTRAP_PASSWORD (≥1; Supabase puede exigir más en el Dashboard).
  */
 
@@ -98,7 +98,7 @@ async function main() {
     console.error(
       "No se pudo fijar profiles.role:",
       upsertErr.message,
-      "\n→ Ejecuta supabase/migrations/00005_profiles_role_admin.sql en el SQL Editor del proyecto.",
+      "\n→ Aplica las migraciones de supabase/migrations/ (pnpm db:push, o pnpm db:reset en local).",
       "\n→ Opcional en SQL Editor: NOTIFY pgrst, 'reload schema';",
     );
     process.exit(1);

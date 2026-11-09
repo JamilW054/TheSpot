@@ -2,27 +2,40 @@
 
 import { getOrderStatusAction } from "@/app/(public)/estado-pedido/actions";
 import { OrderDetailView } from "@/components/order/OrderDetailView";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { OrderStatusDetail } from "@/types";
 
-export function OrderStatusContent() {
-  const [orderId, setOrderId] = useState("");
+export function OrderStatusContent({
+  initialOrderId = "",
+}: {
+  /** Número de pedido precargado (p. ej. desde `?pedido=` tras el checkout). */
+  initialOrderId?: string;
+}) {
+  const [orderId, setOrderId] = useState(initialOrderId);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<OrderStatusDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const lookup = useCallback(async (value: string) => {
     setError(null);
     setResult(null);
     setLoading(true);
-    const res = await getOrderStatusAction(orderId);
+    const res = await getOrderStatusAction(value);
     setLoading(false);
     if (res.ok) {
       setResult(res.order);
     } else {
       setError(res.error);
     }
+  }, []);
+
+  useEffect(() => {
+    if (initialOrderId) void lookup(initialOrderId);
+  }, [initialOrderId, lookup]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await lookup(orderId);
   };
 
   return (
@@ -47,7 +60,7 @@ export function OrderStatusContent() {
               type="text"
               value={orderId}
               onChange={(e) => setOrderId(e.target.value)}
-              placeholder="Ej: a09b3ef2-..."
+              placeholder="Ej: A09B3EF2"
               className="mt-1.5 w-full rounded-xl border border-border bg-background px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors font-mono text-sm"
             />
           </div>
