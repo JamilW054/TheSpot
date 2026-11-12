@@ -108,3 +108,16 @@ Probar en el runtime de Workers en local: `pnpm cf:preview` (en Windows falla al
 - Copiados desde local: 55 marcas, 5 categorías, 194 productos, 200 variantes, inventario (sin reservas), etiquetas, presets, método de envío y ajustes (WhatsApp, correo de avisos, envío gratis, métodos de pago). **No** se copiaron pedidos, perfiles ni la cuenta bancaria de prueba: Banreservas y Popular están inactivas esperando datos reales.
 - Admin de producción: usuario `admin` (`admin@jwparfum.local`), contraseña entregada al dueño en el chat; no se guarda en el repo.
 - Pendiente en el dashboard de Supabase: copiar la clave `service_role` (Project Settings → API Keys) como secreto del Worker; recomendado desactivar el registro público (Authentication → Sign In / Providers → "Allow new users to sign up") y activar la protección de contraseñas filtradas.
+
+## Marketplace multi-tienda (2026-11-11)
+
+Plan: `~/.claude/plans/compressed-chasing-newell.md`. Decisiones: cada tienda cobra (sus cuentas/WhatsApp), sin comisión por ahora, un checkout que se divide en un pedido por tienda, compradores siguen como invitados. Ver CLAUDE.md para la arquitectura.
+
+**Implementado:** migración `00009_marketplace.sql` (tiendas, tienda oficial con backfill, `store_id` en todo, moderación, denuncias, checkouts, RLS); registro y aprobación de tiendas con correos; panel `/panel` completo; checkout dividido por tienda; `/estado-pedido` por número de compra; panel general `/admin` (métricas de plataforma, tiendas, moderación, filtros por tienda); `/tiendas`, `/tiendas/[slug]`, "Vendido por", tiendas destacadas en portada; botón "Reportar producto"; tests en `src/lib/__tests__/marketplace.test.ts`.
+
+**Verificado en local (2026-11-11):** `00009` aplicada con `supabase migration up --local` sobre los datos existentes (respaldo previo en el scratchpad de la sesión): 194 productos, 4 pedidos, 2 cuentas, envío y bodega pasaron a la tienda oficial con el admin como dueño. Prueba de punta a punta en el navegador: registro de "Moda Bella Prueba" → aprobación en `/admin/tiendas` → producto nuevo queda "en revisión" → aprobado en `/admin/moderacion` → compra mixta de invitado → 2 pedidos (uno por tienda) con su envío, cuenta bancaria y WhatsApp de cada tienda → `/estado-pedido` por número de compra → la tienda solo ve su pedido y confirma el pago. Arreglos encontrados en la prueba: `profiles` no tiene `phone` (registro fallaba) y **el middleware ahora exige rol admin para `/admin`** (antes una tienda con sesión podía renderizar páginas del admin).
+- Datos de prueba que quedaron en local: tienda "Moda Bella Prueba" (`moda.bella@prueba.test`), producto "Vestido Floral Verano", compra #94D8A99F, admin de prueba `qa-admin` (contraseña en `.qa-admin.local`, ignorado por git; script `scripts/create-test-admin.mts`, solo local).
+
+**Pendiente:**
+- En la nube (`pnpm db:push`) solo cuando el dueño lo pida; después revisar en `/panel/pagos` y `/panel/envios` de la tienda oficial que se copiaron bien las cuentas y envíos.
+- Las tiendas suben imágenes por `/api/storage/r2/upload` (solo aprobadas).

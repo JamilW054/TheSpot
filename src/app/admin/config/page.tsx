@@ -1,32 +1,32 @@
 import Link from "next/link";
 import { PageLayout } from "@/components/layout";
-import { getFreeShippingMinCents } from "@/database/repositories/payments";
+import { getBlockedWords } from "@/database/repositories/stores";
 import { getOrderNotificationEmail, getStoreConfig } from "@/database/repositories/settings";
 import { getStoreWhatsAppNumber } from "@/lib/whatsapp-server";
-import { FreeShippingForm } from "./FreeShippingForm";
+import { BlockedWordsForm } from "./BlockedWordsForm";
 import { OrderNotificationForm } from "./OrderNotificationForm";
 import { StoreConfigForm } from "./StoreConfigForm";
 import { WhatsAppNumberForm } from "./WhatsAppNumberForm";
 
 export default async function AdminConfigPage() {
-  const [orderNotificationEmail, whatsappNumber, storeConfig, freeShippingCents] =
+  const [orderNotificationEmail, whatsappNumber, storeConfig, blockedWords] =
     await Promise.all([
       getOrderNotificationEmail(),
       getStoreWhatsAppNumber(),
       getStoreConfig(),
-      getFreeShippingMinCents(),
+      getBlockedWords(),
     ]);
 
   return (
     <PageLayout
       title="Configuración"
-      description="Todo lo que la tienda necesita para operar, sin tocar código."
+      description="Ajustes de la plataforma. Pagos, envíos y cupones son de cada tienda (tu tienda oficial se configura en /panel)."
     >
       <div className="space-y-6">
         <div className="grid gap-3 sm:grid-cols-3">
           {[
-            ["/admin/pagos", "Pagos y cuentas bancarias", "Contra entrega, transferencia, Banreservas, Popular…"],
-            ["/admin/envios", "Métodos de envío", "Precios y tiempos de entrega"],
+            ["/admin/tiendas", "Tiendas", "Aprobar, rechazar y suspender"],
+            ["/admin/moderacion", "Moderación", "Productos en revisión y denuncias"],
             ["/admin/categorias", "Categorías", "Orden, fotos y «Próximamente»"],
           ].map(([href, title, sub]) => (
             <Link
@@ -41,7 +41,7 @@ export default async function AdminConfigPage() {
         </div>
         <WhatsAppNumberForm initialNumber={whatsappNumber} />
         <OrderNotificationForm initialEmail={orderNotificationEmail} />
-        <FreeShippingForm initialCents={freeShippingCents} />
+        <BlockedWordsForm initial={blockedWords} />
         <StoreConfigForm initial={storeConfig} />
       </div>
     </PageLayout>

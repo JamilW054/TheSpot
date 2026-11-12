@@ -1,18 +1,6 @@
-import { PageLayout } from "@/components/layout";
-import { couponFields } from "@/features/admin/resource-fields";
-import { ResourceForm } from "@/features/admin/resource-form";
-import { adminCreateCoupon } from "@/lib/actions/admin-crud";
+import { redirect } from "next/navigation";
 
-export default function AdminCuponNuevoPage() {
-  return (
-    <PageLayout title="Nuevo cupón" description="Crea un código de descuento.">
-      <ResourceForm
-        mode="create"
-        entityLabel="el cupón"
-        listHref="/admin/cupones"
-        action={adminCreateCoupon}
-        fields={couponFields()}
-      />
-    </PageLayout>
-  );
+/** Se gestiona por tienda en /panel/cupones. */
+export default function Page() {
+  redirect("/panel/cupones");
 }

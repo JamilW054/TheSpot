@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getProducts, getShippingMethods } from "@/database/repositories";
-import { getCheckoutPaymentOptions } from "@/database/repositories/payments";
+import { getCheckoutPaymentOptionsByStore } from "@/database/repositories/payments";
+import { getStoresCheckoutInfo } from "@/database/repositories/stores";
 import { CheckoutContent } from "./CheckoutContent";
 
 export const metadata = {
@@ -11,11 +12,19 @@ export const metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function CheckoutPage() {
-  const [products, shippingMethods, paymentOptions] = await Promise.all([
-    getProducts(),
-    getShippingMethods(),
-    getCheckoutPaymentOptions(),
+  const [products, shippingMethods] = await Promise.all([getProducts(), getShippingMethods()]);
+  // Tiendas presentes en el catálogo: opciones de pago y envío gratis de cada una.
+  const storeIds = [...new Set(products.map((p) => p.storeId).filter((x): x is string => Boolean(x)))];
+  const [paymentOptionsByStore, storeInfo] = await Promise.all([
+    getCheckoutPaymentOptionsByStore(storeIds),
+    getStoresCheckoutInfo(storeIds),
   ]);
+  const stores = [...storeInfo.values()].map((s) => ({
+    id: s.id,
+    name: s.name,
+    slug: s.slug,
+    freeShippingMinCents: s.freeShippingMinCents ?? 0,
+  }));
   return (
     <article className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-2 sm:pt-4 pb-16 sm:pb-20">
       <nav className="mb-4 sm:mb-5" aria-label="Navegación">
@@ -48,14 +57,16 @@ export default async function CheckoutPage() {
         </h1>
         <p className="mt-2 text-sm text-muted-foreground max-w-lg">
           Introduce tus datos de entrega y elige cómo quieres pagar: contra
-          entrega o transferencia bancaria.
+          entrega o transferencia bancaria. Si compras en varias tiendas, cada una
+          recibe y te cobra su parte.
         </p>
       </header>
 
       <CheckoutContent
         products={products}
         shippingMethods={shippingMethods}
-        paymentOptions={paymentOptions}
+        paymentOptionsByStore={paymentOptionsByStore}
+        stores={stores}
       />
     </article>
   );

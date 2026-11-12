@@ -1,15 +1,18 @@
 "use client";
 
 import {
+  ArrowRightLeft,
   BarChart3,
   Boxes,
   Landmark,
   LayoutDashboard,
   Layers,
   LogOut,
+  Package,
   PanelLeftClose,
   Ruler,
   Settings,
+  ShieldAlert,
   ShoppingCart,
   Store,
   Tag,
@@ -20,17 +23,20 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Fragment } from "react";
 import type { NavItem } from "@/config/navigation";
-import { ADMIN_NAV } from "@/config/navigation";
+import { ADMIN_NAV, SELLER_NAV } from "@/config/navigation";
 import { useAuth } from "@/lib/auth-context";
 
 const ADMIN_ICONS: Record<
   string,
   React.ComponentType<{ className?: string }>
 > = {
+  ArrowRightLeft,
   BarChart3,
   Boxes,
   Landmark,
   LayoutDashboard,
+  Package,
+  ShieldAlert,
   ShoppingCart,
   Store,
   Layers,
@@ -47,7 +53,7 @@ function navItemActive(
   items: NavItem[],
 ): boolean {
   if (pathname === itemHref) return true;
-  if (itemHref === "/" || itemHref === "/admin") return false;
+  if (itemHref === "/" || itemHref === "/admin" || itemHref === "/panel") return false;
   if (!pathname.startsWith(`${itemHref}/`)) return false;
   const hasMoreSpecific = items.some(
     (o) =>
@@ -63,6 +69,14 @@ export interface AppSidebarProps {
   onClose?: () => void;
   collapsed?: boolean;
   onCollapsedChange?: (collapsed: boolean) => void;
+  /** `admin` = panel de plataforma; `seller` = panel de una tienda. */
+  variant?: "admin" | "seller";
+  /** Nombre de la tienda (variante seller). */
+  storeName?: string | null;
+  /** Admin navegando `/panel`: muestra el atajo de vuelta a `/admin`. */
+  showAdminLink?: boolean;
+  /** Reemplaza el menú (p. ej. tienda en revisión: solo "Mi solicitud"). */
+  navOverride?: NavItem[];
 }
 
 /** Sidebar del panel admin — único login del sitio, no hay cuentas de cliente. */
@@ -71,10 +85,28 @@ export function AppSidebar({
   onClose,
   collapsed = false,
   onCollapsedChange,
+  variant = "admin",
+  storeName,
+  showAdminLink = false,
+  navOverride,
 }: AppSidebarProps) {
   const pathname = usePathname();
   const { logout } = useAuth();
-  const items = ADMIN_NAV;
+  const items: NavItem[] = navOverride
+    ? navOverride
+    : variant === "seller"
+      ? showAdminLink
+        ? [
+            ...SELLER_NAV,
+            {
+              label: "Panel general",
+              href: "/admin",
+              icon: "ArrowRightLeft",
+              adminSection: "Plataforma",
+            },
+          ]
+        : SELLER_NAV
+      : ADMIN_NAV;
   const hiddenOnDesktop = collapsed;
 
   return (
@@ -88,7 +120,7 @@ export function AppSidebar({
         }`}
       />
       <aside
-        aria-label="Navegación de administración"
+        aria-label={variant === "seller" ? "Navegación de la tienda" : "Navegación de administración"}
         className={`
           fixed md:sticky top-0 left-0 z-50 w-64 shrink-0
           min-h-screen h-screen
@@ -104,11 +136,11 @@ export function AppSidebar({
         <div className="scrollbar-hide flex flex-1 flex-col overflow-y-auto py-4 px-3">
           <div className="flex items-center justify-between gap-2 px-2 mb-5">
             <div className="flex flex-col">
-              <span className="text-[15px] font-semibold tracking-tight text-(--admin-brand-strong)">
-                The Spot
+              <span className="truncate text-[15px] font-semibold tracking-tight text-(--admin-brand-strong)">
+                {variant === "seller" ? (storeName ?? "Mi tienda") : "The Spot"}
               </span>
               <span className="text-[11px] text-muted-foreground">
-                Panel admin
+                {variant === "seller" ? "Panel de tienda" : "Panel general"}
               </span>
             </div>
             {onCollapsedChange && (

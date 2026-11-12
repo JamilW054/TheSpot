@@ -5,13 +5,12 @@ import {
   type BankAccountInput,
   createBankAccount,
   deleteBankAccount,
-  FREE_SHIPPING_SETTING_KEY,
   type PaymentSettings,
+  setFreeShippingMinCents,
   setPaymentSettings,
   updateBankAccount,
 } from "@/database/repositories/payments";
-import { setSetting } from "@/database/repositories/settings";
-import { requireAdmin } from "@/lib/auth/require-admin";
+import { assertRowAccess, requireOwnStore, requireStoreActor } from "@/lib/auth/store-actor";
 
 export type PaymentActionResult = { ok: true } | { ok: false; error: string };
 
@@ -20,8 +19,8 @@ function fail(e: unknown): PaymentActionResult {
 }
 
 function revalidateStore() {
-  revalidatePath("/admin/pagos");
-  revalidatePath("/admin/config");
+  revalidatePath("/panel/pagos");
+  revalidatePath("/panel/tienda");
   revalidatePath("/carrito", "layout");
   revalidatePath("/", "layout");
 }
@@ -63,10 +62,15 @@ export async function adminSaveBankAccount(
   input: Record<string, unknown>,
 ): Promise<PaymentActionResult> {
   try {
-    await requireAdmin();
     const data = parseBank(input);
-    if (id) await updateBankAccount(id, data);
-    else await createBankAccount(data);
+    if (id) {
+      const actor = await requireStoreActor();
+      await assertRowAccess(actor, "bank_accounts", id);
+      await updateBankAccount(id, data);
+    } else {
+      const actor = await requireOwnStore();
+      await createBankAccount(actor.store.id, data);
+    }
     revalidateStore();
     return { ok: true };
   } catch (e) {
@@ -76,7 +80,8 @@ export async function adminSaveBankAccount(
 
 export async function adminDeleteBankAccount(id: string): Promise<PaymentActionResult> {
   try {
-    await requireAdmin();
+    const actor = await requireStoreActor();
+    await assertRowAccess(actor, "bank_accounts", id);
     await deleteBankAccount(id);
     revalidateStore();
     return { ok: true };
@@ -89,11 +94,11 @@ export async function adminSavePaymentSettings(
   s: PaymentSettings,
 ): Promise<PaymentActionResult> {
   try {
-    await requireAdmin();
+    const actor = await requireOwnStore();
     if (!s.cashOnDelivery && !s.bankTransfer) {
       throw new Error("Deja al menos un método de pago activo.");
     }
-    await setPaymentSettings({
+    await setPaymentSettings(actor.store.id, {
       cashOnDelivery: s.cashOnDelivery === true,
       bankTransfer: s.bankTransfer === true,
       cashOnDeliveryNote: clean(s.cashOnDeliveryNote, 300),
@@ -111,11 +116,11 @@ export async function adminSaveFreeShipping(
   pesos: number,
 ): Promise<PaymentActionResult> {
   try {
-    await requireAdmin();
+    const actor = await requireOwnStore();
     if (!Number.isFinite(pesos) || pesos < 0 || pesos > 10_000_000) {
       throw new Error("Monto no válido.");
     }
-    await setSetting(FREE_SHIPPING_SETTING_KEY, String(Math.round(pesos * 100)));
+    await setFreeShippingMinCents(actor.store.id, Math.round(pesos * 100));
     revalidateStore();
     return { ok: true };
   } catch (e) {

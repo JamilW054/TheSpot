@@ -1,4 +1,6 @@
+import { StoreFilter } from "@/components/admin/StoreFilter";
 import { AdminPageHeader, StatCard } from "@/components/admin/ui";
+import { listStoreOptions } from "@/database/repositories/stores";
 import { getProductsAdmin } from "@/database/repositories";
 import { getCategoriesForAdmin } from "@/database/repositories/categories";
 import {
@@ -13,14 +15,16 @@ interface PageProps {
 }
 
 export default async function AdminCatalogoPage({ searchParams }: PageProps) {
-  const [products, categories, sizePresets, brands, allWarehouses, params] =
+  const params = (await searchParams) ?? {};
+  const tienda = typeof params.tienda === "string" ? params.tienda : null;
+  const [products, categories, sizePresets, brands, allWarehouses, stores] =
     await Promise.all([
-      getProductsAdmin(),
+      getProductsAdmin({ storeId: tienda }),
       getCategoriesForAdmin(),
       getSizePresetsForAdmin(),
       brandOptionsRepo.findMany(),
       warehousesRepo.findMany(),
-      searchParams ?? Promise.resolve(undefined),
+      listStoreOptions(),
     ]);
 
   const warehouses = allWarehouses
@@ -34,7 +38,8 @@ export default async function AdminCatalogoPage({ searchParams }: PageProps) {
     <div className="space-y-6">
       <AdminPageHeader
         title="Productos"
-        description="Gestiona el catálogo: precios, rentabilidad, inventario y publicación."
+        description="Todos los productos del marketplace. Puedes editar o despublicar cualquiera; los nuevos de tu tienda se crean desde /panel."
+        actions={<StoreFilter stores={stores} value={tienda} />}
         breadcrumbs={[
           { label: "Admin", href: "/admin" },
           { label: "Productos" },

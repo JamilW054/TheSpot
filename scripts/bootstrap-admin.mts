@@ -104,6 +104,16 @@ async function main() {
     process.exit(1);
   }
 
+  // Marketplace: el admin es dueño de la tienda oficial (si aún no tiene dueño).
+  const { error: storeErr } = await admin
+    .from("stores")
+    .update({ owner_id: userId })
+    .eq("is_official", true)
+    .is("owner_id", null);
+  if (storeErr) {
+    console.warn("No se pudo asignar la tienda oficial:", storeErr.message);
+  }
+
   console.log("Listo:", email, "→ profiles.role = admin");
 }
 

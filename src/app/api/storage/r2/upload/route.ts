@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { ROLE } from "@/lib/auth/roles";
 import { getSessionUserWithRole } from "@/lib/auth/session-user";
+import { getStoreByOwner } from "@/lib/auth/store-actor";
 import { uploadUserImage } from "@/lib/storage/upload-image-service";
 
 export const runtime = "nodejs";
@@ -11,13 +12,18 @@ export const runtime = "nodejs";
  * Campo opcional `scope`: `catalog` → prefijo catalog/{userId}; `categories` → catalog/categories/{userId}; otro → uploads/{userId}.
  */
 export async function POST(request: Request) {
-  // Solo administradores suben imágenes (no hay cuentas de cliente).
+  // Suben imágenes el admin y las tiendas aprobadas (no hay cuentas de cliente).
   const session = await getSessionUserWithRole();
   if (!session) {
     return NextResponse.json({ error: "No autorizado." }, { status: 401 });
   }
   if (session.role !== ROLE.ADMIN) {
-    return NextResponse.json({ error: "No autorizado." }, { status: 403 });
+    // Dueños de tienda: solo con la tienda aprobada (o suspendida, para su perfil).
+    const store =
+      session.role === ROLE.SELLER ? await getStoreByOwner(session.user.id) : null;
+    if (!store || (store.status !== "approved" && store.status !== "suspended")) {
+      return NextResponse.json({ error: "No autorizado." }, { status: 403 });
+    }
   }
 
   const ct = request.headers.get("content-type") ?? "";

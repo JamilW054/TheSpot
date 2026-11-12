@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth/require-admin";
+import { assertRowAccess, requireOwnStore, requireStoreActor } from "@/lib/auth/store-actor";
 import {
   brandsRepo,
   couponsRepo,
@@ -145,11 +146,12 @@ export async function adminCreateCoupon(
   fd: FormData,
 ): Promise<CrudState> {
   try {
-    await requireAdmin();
+    const actor = await requireOwnStore();
     const code = requiredStr(fd, "code", "El código").toUpperCase();
-    if (await couponsRepo.exists({ code }))
-      throw new Error("Ya existe un cupón con ese código.");
+    if (await couponsRepo.exists({ code, store_id: actor.store.id }))
+      throw new Error("Ya tienes un cupón con ese código.");
     await couponsRepo.insert({
+      store_id: actor.store.id,
       code,
       description: str(fd, "description"),
       discount_type: str(fd, "discount_type") ?? "percent",
@@ -161,7 +163,7 @@ export async function adminCreateCoupon(
       starts_at: dateTime(fd, "starts_at"),
       expires_at: dateTime(fd, "expires_at"),
     });
-    revalidatePath("/admin/cupones");
+    revalidateCoupons();
     return ok();
   } catch (e) {
     return fail(e);
@@ -173,9 +175,12 @@ export async function adminUpdateCoupon(
   fd: FormData,
 ): Promise<CrudState> {
   try {
-    await requireAdmin();
+    const actor = await requireStoreActor();
     const id = requiredStr(fd, "coupon_id", "El identificador");
+    const storeId = await assertRowAccess(actor, "coupons", id);
     const code = requiredStr(fd, "code", "El código").toUpperCase();
+    const dup = (await couponsRepo.findOne({ code, store_id: storeId })) as { id: string } | null;
+    if (dup && dup.id !== id) throw new Error("Ya tienes un cupón con ese código.");
     await couponsRepo.updateById(id, {
       code,
       description: str(fd, "description"),
@@ -188,7 +193,7 @@ export async function adminUpdateCoupon(
       starts_at: dateTime(fd, "starts_at"),
       expires_at: dateTime(fd, "expires_at"),
     });
-    revalidatePath("/admin/cupones");
+    revalidateCoupons();
     return ok();
   } catch (e) {
     return fail(e);
@@ -196,9 +201,21 @@ export async function adminUpdateCoupon(
 }
 
 export async function adminDeleteCoupon(id: string): Promise<void> {
-  await requireAdmin();
+  const actor = await requireStoreActor();
+  await assertRowAccess(actor, "coupons", id);
   await couponsRepo.remove(id);
+  revalidateCoupons();
+}
+
+function revalidateCoupons() {
+  revalidatePath("/panel/cupones");
   revalidatePath("/admin/cupones");
+}
+
+function revalidateShipping() {
+  revalidatePath("/panel/envios");
+  revalidatePath("/admin/envios");
+  revalidatePath("/carrito", "layout");
 }
 
 // ===========================================================================
@@ -210,8 +227,9 @@ export async function adminCreateShippingMethod(
   fd: FormData,
 ): Promise<CrudState> {
   try {
-    await requireAdmin();
+    const actor = await requireOwnStore();
     await shippingMethodsRepo.insert({
+      store_id: actor.store.id,
       name: requiredStr(fd, "name", "El nombre"),
       description: str(fd, "description"),
       price_cents: moneyToCents(fd, "price_dop") ?? 0,
@@ -220,7 +238,7 @@ export async function adminCreateShippingMethod(
       country_code: str(fd, "country_code"),
       is_active: bool(fd, "is_active"),
     });
-    revalidatePath("/admin/envios");
+    revalidateShipping();
     return ok();
   } catch (e) {
     return fail(e);
@@ -232,8 +250,9 @@ export async function adminUpdateShippingMethod(
   fd: FormData,
 ): Promise<CrudState> {
   try {
-    await requireAdmin();
+    const actor = await requireStoreActor();
     const id = requiredStr(fd, "shipping_method_id", "El identificador");
+    await assertRowAccess(actor, "shipping_methods", id);
     await shippingMethodsRepo.updateById(id, {
       name: requiredStr(fd, "name", "El nombre"),
       description: str(fd, "description"),
@@ -243,7 +262,7 @@ export async function adminUpdateShippingMethod(
       country_code: str(fd, "country_code"),
       is_active: bool(fd, "is_active"),
     });
-    revalidatePath("/admin/envios");
+    revalidateShipping();
     return ok();
   } catch (e) {
     return fail(e);
@@ -251,8 +270,9 @@ export async function adminUpdateShippingMethod(
 }
 
 export async function adminDeleteShippingMethod(id: string): Promise<void> {
-  await requireAdmin();
+  const actor = await requireStoreActor();
+  await assertRowAccess(actor, "shipping_methods", id);
   await shippingMethodsRepo.remove(id);
-  revalidatePath("/admin/envios");
+  revalidateShipping();
 }
 

@@ -13,6 +13,8 @@ export interface NuevoPedidoAdminEmailData {
   orderNumber: string;
   /** UUID completo del pedido. */
   orderId: string;
+  /** Panel donde se gestiona el pedido (`/panel` para tiendas). */
+  panelBase?: "/admin" | "/panel";
   customerName: string;
   customerEmail: string;
   customerPhone?: string | null;
@@ -60,7 +62,7 @@ export function nuevoPedidoAdminEmailHtml(
     notes,
   } = data;
   const fmt = (c: number) => formatPrice(c, currency);
-  const orderUrl = `${SITE}/admin/pedidos/${orderId}`;
+  const orderUrl = `${SITE}${data.panelBase ?? "/admin"}/pedidos/${orderId}`;
   const year = new Date().getFullYear();
 
   const itemRows = items
@@ -269,7 +271,7 @@ Subtotal: ${fmt(subtotal)}${discountLine}
 Envío: ${shipping === 0 ? "GRATIS" : fmt(shipping)}
 TOTAL: ${fmt(total)}
 
-Ver en el panel: ${SITE}/admin/pedidos/${orderId}
+Ver en el panel: ${SITE}${data.panelBase ?? "/admin"}/pedidos/${orderId}
 ID: ${orderId}
 
 — The Spot`;

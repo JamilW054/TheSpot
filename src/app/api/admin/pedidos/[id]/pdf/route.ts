@@ -3,8 +3,7 @@ import {
   getOrderAdminDetail,
   orderToReceiptData,
 } from "@/database/repositories/order-detail";
-import { ROLE } from "@/lib/auth/roles";
-import { getSessionUserWithRole } from "@/lib/auth/session-user";
+import { getStoreActor } from "@/lib/auth/store-actor";
 import { renderReceiptPdf } from "@/lib/resend/pdf/receipt-pdf";
 
 export const runtime = "nodejs";
@@ -15,13 +14,14 @@ export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const session = await getSessionUserWithRole();
-  if (!session || session.role !== ROLE.ADMIN) {
+  // Admin: cualquier pedido. Tienda aprobada: solo los suyos.
+  const actor = await getStoreActor();
+  if (!actor || (!actor.isAdmin && actor.store?.status !== "approved")) {
     return NextResponse.json({ error: "No autorizado." }, { status: 401 });
   }
   const { id } = await params;
   const order = await getOrderAdminDetail(id);
-  if (!order) {
+  if (!order || (!actor.isAdmin && order.storeId !== actor.store?.id)) {
     return NextResponse.json({ error: "Pedido no encontrado." }, { status: 404 });
   }
   const pdf = await renderReceiptPdf(orderToReceiptData(order));

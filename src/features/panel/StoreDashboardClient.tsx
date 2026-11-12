@@ -40,9 +40,9 @@ import {
 } from "@/lib/orders/status";
 import type { Pedido } from "@/types";
 
-/** Estado con el que se abre /admin/pedidos para los pedidos sin cobrar. */
+/** Estado con el que se abre /panel/pedidos para los pedidos sin cobrar. */
 const UNPAID_STATUS: OrderStatusFilter = "pending";
-const UNPAID_ORDERS_HREF = `/admin/pedidos?${ORDER_STATUS_PARAM}=${UNPAID_STATUS}`;
+const UNPAID_ORDERS_HREF = `/panel/pedidos?${ORDER_STATUS_PARAM}=${UNPAID_STATUS}`;
 
 const ESTADO_BADGE: Record<
   Pedido["estado"],
@@ -63,14 +63,14 @@ const PAGO_BADGE: Record<
 };
 
 const QUICK_ACTIONS = [
-  { label: "Nuevo producto", href: "/admin/catalogo?create=1", icon: Plus },
-  { label: "Pedidos pendientes", href: "/admin/pedidos?estado=pending", icon: ShoppingCart },
-  { label: "Reporte de ventas", href: "/admin/ventas", icon: TrendingUp },
-  { label: "Inventario", href: "/admin/inventario", icon: PackageX },
-  { label: "Cuentas bancarias", href: "/admin/pagos", icon: CircleDollarSign },
-  { label: "Cupón", href: "/admin/cupones/nuevo", icon: Tag },
-  { label: "Envíos", href: "/admin/envios", icon: Clock },
-  { label: "Configuración", href: "/admin/config", icon: Settings },
+  { label: "Nuevo producto", href: "/panel/catalogo?create=1", icon: Plus },
+  { label: "Pedidos pendientes", href: "/panel/pedidos?estado=pending", icon: ShoppingCart },
+  { label: "Reporte de ventas", href: "/panel/ventas", icon: TrendingUp },
+  { label: "Inventario", href: "/panel/inventario", icon: PackageX },
+  { label: "Cuentas bancarias", href: "/panel/pagos", icon: CircleDollarSign },
+  { label: "Cupón", href: "/panel/cupones/nuevo", icon: Tag },
+  { label: "Envíos", href: "/panel/envios", icon: Clock },
+  { label: "Mi tienda", href: "/panel/tienda", icon: Settings },
 ] as const;
 
 const PEDIDO_COLUMNS: DataTableColumn<Pedido>[] = [
@@ -79,7 +79,7 @@ const PEDIDO_COLUMNS: DataTableColumn<Pedido>[] = [
     header: "Pedido",
     cell: (p) => (
       <Link
-        href={`/admin/pedidos/${p.id}`}
+        href={`/panel/pedidos/${p.id}`}
         className="font-mono text-xs font-semibold text-primary hover:underline"
       >
         #{p.id.slice(0, 8).toUpperCase()}
@@ -143,15 +143,17 @@ export interface AdminDashboardClientProps {
   metrics: AdminDashboardMetrics;
   /** Pedidos recientes ya **pagados** (los únicos que lista el resumen). */
   recentPedidos: Pedido[];
-  /** Total de pedidos sin cobrar; enlazan a /admin/pedidos con ese filtro. */
+  /** Total de pedidos sin cobrar; enlazan a /panel/pedidos con ese filtro. */
   unpaidOrdersCount: number;
 }
 
-export function AdminDashboardClient({
+export function StoreDashboardClient({
   metrics,
   recentPedidos,
   unpaidOrdersCount,
-}: AdminDashboardClientProps) {
+  storeName,
+  storeSlug,
+}: AdminDashboardClientProps & { storeName: string; storeSlug: string }) {
   const today = formatDate(new Date().toISOString(), {
     weekday: "long",
     day: "numeric",
@@ -184,22 +186,25 @@ export function AdminDashboardClient({
       <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-[-0.025em] text-foreground">
-            Panel de administración
+            {storeName}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {todayCapitalized}
+            {todayCapitalized} ·{" "}
+            <Link href={`/tiendas/${storeSlug}`} target="_blank" className="text-primary hover:underline">
+              Ver mi tienda
+            </Link>
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Link
-            href="/admin/catalogo?create=1"
+            href="/panel/catalogo?create=1"
             className="inline-flex h-9 items-center gap-2 rounded-[18px] border border-border bg-card px-4 text-sm font-medium text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <Plus className="size-4" aria-hidden />
             Nuevo artículo
           </Link>
           <Link
-            href="/admin/pedidos"
+            href="/panel/pedidos"
             className="inline-flex h-9 items-center gap-2 rounded-[18px] bg-primary px-4 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <ShoppingCart className="size-4" aria-hidden />
@@ -247,7 +252,7 @@ export function AdminDashboardClient({
           deltaPct={metrics.todayRevenueDeltaPct}
           icon={<CircleDollarSign className="size-4" />}
           accent
-          href="/admin/ventas?periodo=hoy&base=todas"
+          href="/panel/ventas?periodo=hoy&base=todas"
         />
         <StatCard
           label="Ingresos · 30 días"
@@ -255,14 +260,14 @@ export function AdminDashboardClient({
           deltaPct={metrics.revenue30dDeltaPct}
           sub="vs. 30 días previos"
           icon={<TrendingUp className="size-4" />}
-          href="/admin/ventas?periodo=30d"
+          href="/panel/ventas?periodo=30d"
         />
         <StatCard
           label="Pedidos pendientes"
           value={metrics.pendingOrders}
           sub="requieren atención"
           icon={<Clock className="size-4" />}
-          href="/admin/pedidos?estado=pending"
+          href="/panel/pedidos?estado=pending"
         />
       </section>
 
@@ -276,21 +281,21 @@ export function AdminDashboardClient({
           value={metrics.outOfStockCount}
           sub={`de ${metrics.catalog.active} productos activos`}
           icon={<PackageX className="size-4" />}
-          href="/admin/inventario?filtro=agotado"
+          href="/panel/inventario?filtro=agotado"
         />
         <StatCard
           label="Inventario bajo"
           value={metrics.lowStockCount}
           sub="5 unidades o menos"
           icon={<AlertTriangle className="size-4" />}
-          href="/admin/inventario?filtro=bajo"
+          href="/panel/inventario?filtro=bajo"
         />
         <StatCard
           label="Pedidos · 30 días"
           value={metrics.totalOrders.toLocaleString("es-DO")}
           sub="pagados y sin pagar"
           icon={<ShoppingBag className="size-4" />}
-          href="/admin/ventas?periodo=30d&base=todas"
+          href="/panel/ventas?periodo=30d&base=todas"
         />
         <StatCard
           label="Más vendido"
@@ -303,7 +308,7 @@ export function AdminDashboardClient({
           }
           icon={<Trophy className="size-4" />}
           accent
-          href="/admin/ventas?periodo=30d"
+          href="/panel/ventas?periodo=30d"
         />
       </section>
 
@@ -380,7 +385,7 @@ export function AdminDashboardClient({
           <AdminCardHeader>
             <AdminCardTitle>Inventario bajo</AdminCardTitle>
             <Link
-              href="/admin/catalogo"
+              href="/panel/catalogo"
               className="flex items-center gap-1 text-xs font-medium text-(--admin-brand-strong) hover:opacity-80"
             >
               Ver catálogo <ArrowRight className="size-3" aria-hidden />
@@ -398,7 +403,7 @@ export function AdminDashboardClient({
               {metrics.lowStockProducts.map((p) => (
                 <Link
                   key={p.id}
-                  href={`/admin/inventario?q=${encodeURIComponent(p.name)}`}
+                  href={`/panel/inventario?q=${encodeURIComponent(p.name)}`}
                   className="flex items-center justify-between gap-3 rounded-[10px] px-2.5 py-2 transition-colors hover:bg-muted/60"
                 >
                   <span className="min-w-0 truncate text-sm font-medium text-foreground">
@@ -463,7 +468,7 @@ export function AdminDashboardClient({
               </Link>
             )}
             <Link
-              href="/admin/pedidos"
+              href="/panel/pedidos"
               className="flex items-center gap-1 text-xs font-medium text-(--admin-brand-strong) hover:opacity-80"
             >
               Ver pagados <ArrowRight className="size-3" aria-hidden />

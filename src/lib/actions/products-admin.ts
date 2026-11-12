@@ -2,7 +2,13 @@
 
 import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
-import { requireAdmin } from "@/lib/auth/require-admin";
+import { getBlockedWords } from "@/database/repositories/stores";
+import {
+  assertRowAccess,
+  requireOwnStore,
+  requireStoreActor,
+} from "@/lib/auth/store-actor";
+import { findBlockedWords } from "@/lib/stores/status";
 import { createServiceClient } from "@/lib/supabase/server";
 import { variantKey } from "@/lib/variants";
 
@@ -133,11 +139,12 @@ async function pickUniqueProductSlug(
   return `${base}-${randomUUID().replace(/-/g, "").slice(0, 10)}`.slice(0, 96);
 }
 
-/** Almacén por defecto para registrar inventario; crea "Principal" si no existe. */
-async function getDefaultWarehouseId(supabase: ServiceClient): Promise<string> {
+/** Bodega de la tienda para registrar inventario; la crea si no existe. */
+async function getDefaultWarehouseId(supabase: ServiceClient, storeId: string): Promise<string> {
   const { data } = await supabase
     .from("warehouses")
     .select("id")
+    .eq("store_id", storeId)
     .eq("is_active", true)
     .order("created_at", { ascending: true })
     .limit(1)
@@ -146,7 +153,7 @@ async function getDefaultWarehouseId(supabase: ServiceClient): Promise<string> {
   if (existing) return existing;
   const { data: created, error } = await supabase
     .from("warehouses")
-    .insert({ name: "Principal", country_code: "DO", is_active: true })
+    .insert({ name: "Principal", country_code: "DO", is_active: true, store_id: storeId })
     .select("id")
     .single();
   if (error) throw new Error(error.message);
@@ -228,7 +235,7 @@ async function syncVariants(
   productSlug: string,
   basePriceCents: number,
   variants: VariantInput[],
-  explicitWarehouseId?: string | null,
+  storeId: string,
 ): Promise<void> {
   const { data: existingData } = await supabase
     .from("product_variants")
@@ -258,8 +265,8 @@ async function syncVariants(
     else canonical.set(k, v);
   }
 
-  const warehouseId =
-    explicitWarehouseId?.trim() || (await getDefaultWarehouseId(supabase));
+  // Siempre la bodega de la tienda dueña del producto (nunca la que mande el navegador).
+  const warehouseId = await getDefaultWarehouseId(supabase, storeId);
   const submittedKeys = new Set(
     variants.map((v) => variantKey(v.size, v.color)),
   );
@@ -383,18 +390,77 @@ function readProductFields(formData: FormData) {
   };
 }
 
+/**
+ * Estado de moderación de un producto al guardarlo:
+ * - Tienda oficial → `approved`.
+ * - Palabras prohibidas en nombre/descripción/etiquetas → `pending`.
+ * - Tienda confiable → `approved`.
+ * - Resto → `pending` al crear, o al cambiar nombre, descripción o fotos.
+ * - Un producto `blocked` por el admin solo lo desbloquea el admin.
+ * Devuelve null si no hay que cambiar el estado.
+ */
+async function resolveModeration(
+  supabase: ServiceClient,
+  storeId: string,
+  text: string,
+  opts: { prevStatus?: string | null; contentChanged: boolean },
+): Promise<{ status: string; note: string | null } | null> {
+  if (opts.prevStatus === "blocked") return null;
+  const { data } = await supabase
+    .from("stores")
+    .select("is_official, trusted")
+    .eq("id", storeId)
+    .maybeSingle();
+  const store = (data ?? { is_official: false, trusted: false }) as {
+    is_official: boolean;
+    trusted: boolean;
+  };
+  if (store.is_official) return { status: "approved", note: null };
+  const hits = findBlockedWords(text, await getBlockedWords());
+  if (hits.length > 0) {
+    return {
+      status: "pending",
+      note: `Revisión automática: contiene «${hits.slice(0, 3).join("», «")}».`,
+    };
+  }
+  if (store.trusted) return { status: "approved", note: null };
+  if (!opts.prevStatus || opts.contentChanged || opts.prevStatus === "rejected") {
+    return { status: "pending", note: null };
+  }
+  return null;
+}
+
+function revalidateCatalog(slug?: string) {
+  revalidatePath("/admin/catalogo");
+  revalidatePath("/panel/catalogo");
+  revalidatePath("/admin/moderacion");
+  revalidatePath("/catalogo");
+  if (slug) revalidatePath(`/catalogo/${slug}`);
+}
+
 export async function adminCreateProduct(
   _prev: AdminProductActionState | undefined,
   formData: FormData,
 ): Promise<AdminProductActionState> {
   try {
-    await requireAdmin();
+    // Siempre en la tienda propia (el admin crea en la tienda oficial).
+    const actor = await requireOwnStore();
+    const storeId = actor.store.id;
     const supabase = createServiceClient();
     const f = readProductFields(formData);
     const slug = await pickUniqueProductSlug(supabase, f.name);
+    const moderation = await resolveModeration(
+      supabase,
+      storeId,
+      [f.name, f.description ?? "", f.tags.join(" ")].join(" "),
+      { contentChanged: true },
+    );
 
     const insertPayload = {
       slug,
+      store_id: storeId,
+      moderation_status: moderation?.status ?? "pending",
+      moderation_note: moderation?.note ?? null,
       name: f.name,
       description: f.description,
       category_id: f.category_id,
@@ -436,11 +502,10 @@ export async function adminCreateProduct(
       product.slug,
       f.base_price_cents,
       f.variants,
-      f.warehouse_id,
+      storeId,
     );
 
-    revalidatePath("/admin/catalogo");
-    revalidatePath("/catalogo");
+    revalidateCatalog();
     return { ok: true };
   } catch (e) {
     return { error: e instanceof Error ? e.message : "Error desconocido." };
@@ -452,22 +517,48 @@ export async function adminUpdateProduct(
   formData: FormData,
 ): Promise<AdminProductActionState> {
   try {
-    await requireAdmin();
+    const actor = await requireStoreActor();
     const supabase = createServiceClient();
     const id = formData.get("product_id")?.toString().trim();
     if (!id) throw new Error("Producto no válido.");
+    const storeId = await assertRowAccess(actor, "products", id);
 
     const { data: prevRow, error: prevErr } = await supabase
       .from("products")
-      .select("slug")
+      .select("slug, name, description, moderation_status, product_media(url)")
       .eq("id", id)
       .single();
     if (prevErr || !prevRow) throw new Error("Producto no encontrado.");
-    const prev = prevRow as { slug: string };
+    const prev = prevRow as {
+      slug: string;
+      name: string;
+      description: string | null;
+      moderation_status: string | null;
+      product_media: { url: string }[] | null;
+    };
 
     const f = readProductFields(formData);
+    const prevUrls = (prev.product_media ?? []).map((m) => m.url).sort().join("|");
+    const nextUrls = [...f.media].sort().join("|");
+    const contentChanged =
+      prev.name !== f.name ||
+      (prev.description ?? "") !== (f.description ?? "") ||
+      prevUrls !== nextUrls;
+    // El admin de plataforma editando la tienda de otro no dispara revisión.
+    const moderation =
+      actor.isAdmin && actor.store?.id !== storeId
+        ? null
+        : await resolveModeration(
+            supabase,
+            storeId,
+            [f.name, f.description ?? "", f.tags.join(" ")].join(" "),
+            { prevStatus: prev.moderation_status, contentChanged },
+          );
 
     const updatePayload = {
+      ...(moderation
+        ? { moderation_status: moderation.status, moderation_note: moderation.note }
+        : {}),
       name: f.name,
       description: f.description,
       category_id: f.category_id,
@@ -500,12 +591,10 @@ export async function adminUpdateProduct(
       prev.slug,
       f.base_price_cents,
       f.variants,
-      f.warehouse_id,
+      storeId,
     );
 
-    revalidatePath("/admin/catalogo");
-    revalidatePath("/catalogo");
-    revalidatePath(`/catalogo/${prev.slug}`);
+    revalidateCatalog(prev.slug);
     return { ok: true };
   } catch (e) {
     return { error: e instanceof Error ? e.message : "Error desconocido." };
@@ -513,7 +602,8 @@ export async function adminUpdateProduct(
 }
 
 export async function adminDeleteProduct(productId: string): Promise<void> {
-  await requireAdmin();
+  const actor = await requireStoreActor();
+  await assertRowAccess(actor, "products", productId);
   const supabase = createServiceClient();
 
   // Bloquea el borrado si alguna variante aparece en pedidos.
@@ -540,6 +630,5 @@ export async function adminDeleteProduct(productId: string): Promise<void> {
     .delete()
     .eq("id", productId);
   if (error) throw new Error(error.message);
-  revalidatePath("/admin/catalogo");
-  revalidatePath("/catalogo");
+  revalidateCatalog();
 }

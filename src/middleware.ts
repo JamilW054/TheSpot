@@ -1,9 +1,9 @@
 // Runtime edge (formato `middleware.ts`): es el que OpenNext soporta oficialmente
-// en Cloudflare Workers. Solo refresca la sesión de Supabase y protege /admin.
+// en Cloudflare Workers. Solo refresca la sesión de Supabase y protege /admin y /panel.
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 
-const PROTECTED_PREFIXES = ["/admin"];
+const PROTECTED_PREFIXES = ["/admin", "/panel"];
 
 function isProtectedPath(pathname: string): boolean {
   return PROTECTED_PREFIXES.some(
@@ -53,6 +53,31 @@ export async function middleware(request: NextRequest) {
       redirect.cookies.set(cookie);
     }
     return redirect;
+  }
+
+  // Rol en el servidor, antes de renderizar: los Server Components de /admin
+  // cargan datos de toda la plataforma, así que solo el admin (role 0) puede
+  // llegar a renderizarlos. /panel admite tiendas (2) y admin; cada página de
+  // /panel además exige tienda aprobada (`requirePanelStore`).
+  const path = request.nextUrl.pathname;
+  const onAdmin = path === "/admin" || path.startsWith("/admin/");
+  const onPanel = path === "/panel" || path.startsWith("/panel/");
+  if (user && (onAdmin || onPanel)) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .maybeSingle();
+    const role = Number((profile as { role?: number | string } | null)?.role);
+    const allowed = onAdmin ? role === 0 : role === 0 || role === 2;
+    if (!allowed) {
+      const target = new URL(role === 2 ? "/panel" : "/", request.url);
+      const redirect = NextResponse.redirect(target);
+      for (const cookie of supabaseResponse.cookies.getAll()) {
+        redirect.cookies.set(cookie);
+      }
+      return redirect;
+    }
   }
 
   return supabaseResponse;

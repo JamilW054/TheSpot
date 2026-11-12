@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { onOrderPaymentSucceeded } from "@/database/repositories";
 import { paymentMethodLabel } from "@/database/repositories/payments";
-import { requireAdmin } from "@/lib/auth/require-admin";
+import { assertRowAccess, requireStoreActor } from "@/lib/auth/store-actor";
 import {
   inventoryEffect,
   isOrderStatus,
@@ -22,11 +22,20 @@ type ServiceClient = ReturnType<typeof createServiceClient>;
 export type OrderFulfillmentStatus = OrderStatusFilter | "shipped";
 
 function revalidateOrders(orderId?: string) {
-  revalidatePath("/admin/pedidos");
-  revalidatePath("/admin");
-  revalidatePath("/admin/inventario");
-  revalidatePath("/admin/ventas");
-  if (orderId) revalidatePath(`/admin/pedidos/${orderId}`);
+  for (const base of ["/admin", "/panel"]) {
+    revalidatePath(`${base}/pedidos`);
+    revalidatePath(base);
+    revalidatePath(`${base}/inventario`);
+    revalidatePath(`${base}/ventas`);
+    if (orderId) revalidatePath(`${base}/pedidos/${orderId}`);
+  }
+}
+
+/** Actor con acceso al pedido (admin: todos; tienda: solo los suyos). */
+async function authorizeOrder(orderId: string): Promise<{ userId: string }> {
+  const actor = await requireStoreActor();
+  await assertRowAccess(actor, "orders", orderId);
+  return { userId: actor.userId };
 }
 
 // ---------------------------------------------------------------------------
@@ -193,7 +202,7 @@ export async function adminSetOrderStatus(
   note?: string | null,
 ): Promise<OrderActionResult> {
   try {
-    const { userId } = await requireAdmin();
+    const { userId } = await authorizeOrder(orderId);
     if (!isOrderStatus(status)) throw new Error("Estado no válido.");
     const supabase = createServiceClient();
     const order = await loadOrder(supabase, orderId);
@@ -211,7 +220,7 @@ export async function adminSetOrderPaid(
   paid: boolean,
 ): Promise<OrderActionResult> {
   try {
-    const { userId } = await requireAdmin();
+    const { userId } = await authorizeOrder(orderId);
     const supabase = createServiceClient();
     const order = await loadOrder(supabase, orderId);
     if (paid) {
@@ -250,7 +259,7 @@ export async function adminUpdateOrderNotes(
   adminNotes: string,
 ): Promise<OrderActionResult> {
   try {
-    await requireAdmin();
+    await authorizeOrder(orderId);
     const supabase = createServiceClient();
     const { error } = await supabase
       .from("orders")
@@ -272,11 +281,13 @@ export async function adminSetOrdersStatus(
   ids: string[],
   status: OrderFulfillmentStatus,
 ): Promise<void> {
-  const { userId } = await requireAdmin();
+  const actor = await requireStoreActor();
+  const userId = actor.userId;
   const unique = [...new Set(ids.map((x) => x.trim()).filter(Boolean))];
   if (unique.length === 0) return;
   const supabase = createServiceClient();
   for (const id of unique) {
+    await assertRowAccess(actor, "orders", id);
     const order = await loadOrder(supabase, id);
     if (status === "paid") {
       await markPaid(supabase, order, userId);
@@ -293,9 +304,9 @@ export async function adminSetOrdersStatus(
 }
 
 export async function adminDeleteOrder(id: string): Promise<void> {
-  const { userId } = await requireAdmin();
-  const supabase = createServiceClient();
   const orderId = id.trim();
+  const { userId } = await authorizeOrder(orderId);
+  const supabase = createServiceClient();
   const order = await loadOrder(supabase, orderId);
   // Libera la reserva (o repone si estaba entregado) antes de borrar.
   await setStatus(supabase, order, "cancelled", userId, "Pedido eliminado");

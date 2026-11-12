@@ -45,3 +45,23 @@ export async function sendNewOrderAdminEmail(
   });
 }
 
+
+/** Envía un correo simple (plantillas de tiendas). Nunca lanza: registra y sigue. */
+export async function sendSimpleEmail(
+  to: string | null | undefined,
+  email: { subject: string; html: string; text: string },
+): Promise<void> {
+  const dest = to?.trim();
+  if (!dest || !process.env.RESEND_API_KEY) return;
+  try {
+    await getResend().emails.send({
+      from: FROM,
+      to: dest,
+      subject: email.subject,
+      html: email.html,
+      text: email.text,
+    });
+  } catch (e) {
+    console.error("[resend] no se pudo enviar:", e instanceof Error ? e.message : e);
+  }
+}

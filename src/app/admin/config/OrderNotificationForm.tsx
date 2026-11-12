@@ -32,7 +32,7 @@ export function OrderNotificationForm({
   return (
     <Card className="border-border">
       <CardHeader>
-        <CardTitle>Notificaciones de pedido</CardTitle>
+        <CardTitle>Correo de avisos de la plataforma</CardTitle>
       </CardHeader>
       <CardContent>
         <form action={formAction} className="space-y-4">
@@ -45,8 +45,8 @@ export function OrderNotificationForm({
             placeholder="pedidos@ejemplo.com"
           />
           <p className="text-xs text-muted-foreground">
-            Cada vez que un cliente registre un pedido, se enviará un correo a
-            esta dirección con el detalle del pedido y un enlace al panel.
+            Aquí te avisamos cuando un negocio solicite abrir su tienda. Los
+            avisos de pedidos llegan al correo de cada tienda.
           </p>
           <button
             type="submit"

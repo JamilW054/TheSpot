@@ -1,5 +1,6 @@
 "use client";
 
+import { usePanelBase } from "@/lib/panel-base";
 import {
   Banknote,
   ChevronDown,
@@ -102,6 +103,7 @@ export function SalesReportClient({
   report: SalesReport;
   preset: string | null;
 }) {
+  const panelBase = usePanelBase();
   const router = useRouter();
   const pathname = usePathname();
   const [pending, start] = useTransition();
@@ -130,7 +132,7 @@ export function SalesReportClient({
     start(() => router.push(`${pathname}?${sp.toString()}`, { scroll: false }));
   };
 
-  const pdfHref = `/api/admin/ventas/pdf?${currentQuery()}`;
+  const pdfHref = `/api/admin/ventas/pdf?${currentQuery()}${panelBase === "/panel" ? "&scope=panel" : ""}`;
   const daily = report.byDay.map((d) => ({
     label: formatRdDay(d.day).replace(/ de /g, " "),
     value: Math.round(d.totalCents / 100),
@@ -149,7 +151,7 @@ export function SalesReportClient({
             ? "solo pedidos cobrados"
             : "todos los pedidos no cancelados (cobrados y por cobrar)"
         }`}
-        breadcrumbs={[{ label: "Dashboard", href: "/admin" }, { label: "Ventas" }]}
+        breadcrumbs={[{ label: "Dashboard", href: `${panelBase}` }, { label: "Ventas" }]}
         actions={
           <>
             <button
@@ -319,14 +321,14 @@ export function SalesReportClient({
           </dl>
           <div className="mt-4 flex flex-wrap gap-3 text-xs">
             <Link
-              href="/admin/pedidos?estado=pending"
+              href={`${panelBase}/pedidos?estado=pending`}
               className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 font-medium text-amber-700 hover:underline"
             >
               <Banknote className="size-3.5" aria-hidden />
               {t.unpaidOrders} pedidos por cobrar · {fmt(t.unpaidCents)}
             </Link>
             <Link
-              href="/admin/pedidos?estado=cancelled"
+              href={`${panelBase}/pedidos?estado=cancelled`}
               className="inline-flex items-center gap-1.5 rounded-full bg-muted px-3 py-1 font-medium text-muted-foreground hover:underline"
             >
               {t.cancelledOrders} cancelados en el periodo
@@ -450,7 +452,7 @@ export function SalesReportClient({
                     >
                       <td className="px-4 py-2.5">
                         <Link
-                          href={`/admin/pedidos/${o.id}`}
+                          href={`${panelBase}/pedidos/${o.id}`}
                           onClick={(e) => e.stopPropagation()}
                           className="font-mono font-semibold text-primary hover:underline"
                         >

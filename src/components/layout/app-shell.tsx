@@ -3,6 +3,7 @@
 import { PanelLeft } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import type { NavItem } from "@/config/navigation";
 import { AppSidebar } from "./app-sidebar";
 import type { NavbarUser } from "./navbar";
 import { Navbar } from "./navbar";
@@ -11,10 +12,22 @@ export interface AppShellProps {
   children: React.ReactNode;
   user?: NavbarUser | null;
   onLogout?: () => void;
+  variant?: "admin" | "seller";
+  storeName?: string | null;
+  showAdminLink?: boolean;
+  navOverride?: NavItem[];
 }
 
-/** Shell del panel admin — único login del sitio, no hay cuentas de cliente. */
-export function AppShell({ children, user, onLogout }: AppShellProps) {
+/** Shell de los paneles: plataforma (`/admin`) y tienda (`/panel`). */
+export function AppShell({
+  children,
+  user,
+  onLogout,
+  variant = "admin",
+  storeName,
+  showAdminLink,
+  navOverride,
+}: AppShellProps) {
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -31,6 +44,10 @@ export function AppShell({ children, user, onLogout }: AppShellProps) {
         onClose={() => setSidebarOpen(false)}
         collapsed={sidebarCollapsed}
         onCollapsedChange={setSidebarCollapsed}
+        variant={variant}
+        storeName={storeName}
+        showAdminLink={showAdminLink}
+        navOverride={navOverride}
       />
       {sidebarCollapsed && (
         <button
@@ -44,9 +61,9 @@ export function AppShell({ children, user, onLogout }: AppShellProps) {
       )}
       <div className="flex flex-1 flex-col min-w-0">
         <Navbar
-          homeHref="/admin"
-          homeLabel="The Spot Admin"
-          homeLabelShort="Admin"
+          homeHref={variant === "seller" ? "/panel" : "/admin"}
+          homeLabel={variant === "seller" ? (storeName ?? "Mi tienda") : "The Spot Admin"}
+          homeLabelShort={variant === "seller" ? "Tienda" : "Admin"}
           hideCart
           user={user}
           onLogout={onLogout}

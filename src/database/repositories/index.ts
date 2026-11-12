@@ -111,6 +111,10 @@ export interface GetProductsOptions {
   precio?: CatalogPrecio;
   color?: string;
   busqueda?: string;
+  /** Solo productos de esta tienda (página pública de la tienda). */
+  storeId?: string;
+  /** Máximo de filas. */
+  limit?: number;
 }
 
 /** Etiquetas distintas (slugs) para filtros del catálogo. */
@@ -175,6 +179,8 @@ export async function getProducts(
       query = query.eq("categories.slug", slug);
     }
 
+    if (options?.storeId) query = query.eq("store_id", options.storeId);
+
     const busqueda = options?.busqueda?.trim();
     if (busqueda) {
       query = query.ilike("name", `%${busqueda}%`);
@@ -206,7 +212,7 @@ export async function getProducts(
       query = query.order("created_at", { ascending: false });
     }
 
-    const { data, error } = await query;
+    const { data, error } = await (options?.limit ? query.limit(options.limit) : query);
     if (error) throw toError(error);
     let products = (data ?? []).map((row) =>
       rowToCatalogProduct(row as unknown as ProductRow),
@@ -299,20 +305,24 @@ export async function getProductsByIds(
 /** PostgREST: columna inexistente (migración 00023 pendiente). */
 const UNDEFINED_COLUMN = "42703";
 
-/** Catálogo completo para admin (incluye no publicados). Service role. */
-export async function getProductsAdmin(): Promise<AdminProductRow[]> {
+/**
+ * Catálogo para paneles (incluye no publicados). Service role.
+ * `storeId` limita a una tienda (siempre en `/panel`; opcional en `/admin`).
+ */
+export async function getProductsAdmin(
+  opts: { storeId?: string | null } = {},
+): Promise<AdminProductRow[]> {
   return withNetworkFallback(async () => {
     const supabase = createServiceClient();
-    let { data, error } = await supabase
-      .from("products")
-      .select(PRODUCT_ADMIN_SELECT)
-      .order("created_at", { ascending: false });
+    const run = (select: string) => {
+      let q = supabase.from("products").select(select).is("deleted_at", null);
+      if (opts.storeId) q = q.eq("store_id", opts.storeId);
+      return q.order("created_at", { ascending: false });
+    };
+    let { data, error } = await run(PRODUCT_ADMIN_SELECT);
     // BD sin `cost_cents` todavía: reintenta sin la columna.
     if (error?.code === UNDEFINED_COLUMN) {
-      ({ data, error } = await supabase
-        .from("products")
-        .select(PRODUCT_ADMIN_SELECT_LEGACY)
-        .order("created_at", { ascending: false }));
+      ({ data, error } = await run(PRODUCT_ADMIN_SELECT_LEGACY));
     }
     if (error) throw toError(error);
     return (data ?? []) as unknown as AdminProductRow[];
@@ -430,6 +440,8 @@ function applyOrderStatusFilter<Q extends OrdersQueryBuilder>(
 export interface GetOrdersAdminOptions {
   /** Filtra por estado en la consulta; sin valor devuelve todos los pedidos. */
   status?: OrderStatusFilter;
+  /** Solo pedidos de esta tienda (siempre en `/panel`). */
+  storeId?: string | null;
   /** Máximo de filas a traer (vistas resumidas como el dashboard). */
   limit?: number;
 }
@@ -441,14 +453,16 @@ export interface GetOrdersAdminOptions {
 export async function getOrdersAdmin({
   status,
   limit,
+  storeId,
 }: GetOrdersAdminOptions = {}): Promise<Pedido[]> {
   return withNetworkFallback(async () => {
     const supabase = createServiceClient();
     let query = supabase
       .from("orders")
       .select(
-        "id, user_id, status, payment_status, shipping_address, contact_email, total_cents, created_at",
+        "id, user_id, status, payment_status, shipping_address, contact_email, total_cents, created_at, store_id, stores(name)",
       );
+    if (storeId) query = query.eq("store_id", storeId);
     if (status) query = applyOrderStatusFilter(query, status);
     let ordered = query.order("created_at", { ascending: false });
     if (limit !== undefined) ordered = ordered.limit(limit);
@@ -479,13 +493,13 @@ export async function getOrdersAdmin({
  */
 export async function countOrdersAdmin(
   status: OrderStatusFilter,
+  storeId?: string | null,
 ): Promise<number> {
   return withNetworkFallback(async () => {
     const supabase = createServiceClient();
-    const { count, error } = await applyOrderStatusFilter(
-      supabase.from("orders").select("id", { count: "exact", head: true }),
-      status,
-    );
+    let base = supabase.from("orders").select("id", { count: "exact", head: true });
+    if (storeId) base = base.eq("store_id", storeId);
+    const { count, error } = await applyOrderStatusFilter(base, status);
     if (error) throw toError(error);
     return count ?? 0;
   }, 0);
@@ -566,6 +580,41 @@ export async function markLinkedOrderAsPaid(orderId: string): Promise<boolean> {
   return row !== null;
 }
 
+/**
+ * Consulta pública por número: primero como pedido; si no existe, como número
+ * de compra (checkout) y devuelve los pedidos de todas sus tiendas.
+ */
+export async function getOrderStatusesByNumber(input: string): Promise<OrderStatusDetail[]> {
+  const single = await getOrderStatusById(input);
+  if (single) return [single];
+  const raw = input?.trim().replace(/^#/, "").toUpperCase() ?? "";
+  if (!/^[0-9A-F]{8}$/.test(raw)) return [];
+  try {
+    const supabase = createServiceClient();
+    const { data: checkout } = await supabase
+      .from("checkouts")
+      .select("id")
+      .eq("checkout_number", raw)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (!checkout) return [];
+    const { data: rows } = await supabase
+      .from("orders")
+      .select("id")
+      .eq("checkout_id", (checkout as { id: string }).id)
+      .order("created_at", { ascending: true });
+    const out: OrderStatusDetail[] = [];
+    for (const r of (rows ?? []) as { id: string }[]) {
+      const d = await getOrderStatusById(r.id);
+      if (d) out.push(d);
+    }
+    return out;
+  } catch {
+    return [];
+  }
+}
+
 /** Consulta pública: obtiene el estado de un pedido por ID (sin auth). Usa service role. */
 export async function getOrderStatusById(
   orderId: string,
@@ -581,7 +630,7 @@ export async function getOrderStatusById(
     const query = supabase
       .from("orders")
       .select(
-        "id, status, total_cents, subtotal_cents, shipping_cents, coupon_discount_cents, created_at, shipping_address, contact_email, payment_status, paid_at, payment_method, bank_account_snapshot",
+        "id, order_number, status, total_cents, subtotal_cents, shipping_cents, coupon_discount_cents, created_at, shipping_address, contact_email, payment_status, paid_at, payment_method, bank_account_snapshot, stores(name, slug, whatsapp)",
       );
     const { data: orderRows, error: orderError } = isUuid
       ? await query.eq("id", raw.toLowerCase()).limit(1)
@@ -606,7 +655,10 @@ export async function getOrderStatusById(
       coupon_discount_cents: number;
       payment_method: string | null;
       bank_account_snapshot: OrderStatusDetail["bankAccount"];
+      order_number: string | null;
+      stores: { name: string; slug: string } | { name: string; slug: string }[] | null;
     };
+    const storeRow = Array.isArray(o.stores) ? o.stores[0] : o.stores;
 
     const { data: itemsData } = await supabase
       .from("order_items")
@@ -640,6 +692,9 @@ export async function getOrderStatusById(
 
     return {
       id: o.id,
+      orderNumber: o.order_number ?? o.id.slice(0, 8).toUpperCase(),
+      storeName: storeRow?.name ?? null,
+      storeSlug: storeRow?.slug ?? null,
       status: statusMap[o.status] ?? "pendiente",
       totalCents: o.total_cents,
       createdAt: formatDateTime(o.created_at, {
@@ -668,6 +723,7 @@ export async function getOrderStatusById(
 
 export interface ShippingMethod {
   id: string;
+  storeId: string;
   name: string;
   description: string | null;
   priceCents: number;
@@ -680,13 +736,14 @@ export async function getShippingMethods(): Promise<ShippingMethod[]> {
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("shipping_methods")
-      .select("id, name, description, price_cents, min_days, max_days")
+      .select("id, store_id, name, description, price_cents, min_days, max_days")
       .eq("is_active", true)
       .order("price_cents", { ascending: true });
     if (error) throw toError(error);
     return (data ?? []).map((row) => {
       const r = row as {
         id: string;
+        store_id: string;
         name: string;
         description: string | null;
         price_cents: number;
@@ -695,6 +752,7 @@ export async function getShippingMethods(): Promise<ShippingMethod[]> {
       };
       return {
         id: r.id,
+        storeId: r.store_id,
         name: r.name,
         description: r.description,
         priceCents: r.price_cents,

@@ -63,19 +63,20 @@ type Row = {
 const one = <T,>(v: T | T[] | null | undefined): T | null =>
   Array.isArray(v) ? (v[0] ?? null) : (v ?? null);
 
-export async function listInventoryAdmin(): Promise<{
+export async function listInventoryAdmin(opts: { storeId?: string | null } = {}): Promise<{
   rows: InventoryRow[];
   summary: InventorySummary;
 }> {
   const supabase = createServiceClient();
-  const { data, error } = await supabase
+  let query = supabase
     .from("product_variants")
     .select(
-      "id, sku, price_cents, attributes, is_active, inventory(quantity, reserved, deleted_at), products!inner(id, name, slug, is_active, deleted_at, base_price_cents, cost_cents, categories(name), brands(name), product_media(url, is_cover, sort_order))",
+      "id, sku, price_cents, attributes, is_active, inventory(quantity, reserved, deleted_at), products!inner(id, name, slug, is_active, deleted_at, store_id, base_price_cents, cost_cents, categories(name), brands(name), product_media(url, is_cover, sort_order))",
     )
     .eq("is_active", true)
-    .is("products.deleted_at", null)
-    .order("sort_order", { ascending: true });
+    .is("products.deleted_at", null);
+  if (opts.storeId) query = query.eq("products.store_id", opts.storeId);
+  const { data, error } = await query.order("sort_order", { ascending: true });
   if (error) throw new Error(error.message);
 
   const rows: InventoryRow[] = [];

@@ -53,9 +53,14 @@ export function computeDiscountCents(
   return Math.min(subtotalCents, Math.max(0, Math.round(discountValue)));
 }
 
+/**
+ * Valida un cupón de una tienda concreta: los cupones son de cada tienda y solo
+ * descuentan del subtotal de sus productos.
+ */
 export async function validateCoupon(
   code: string,
   subtotalCents: number,
+  storeId: string,
   userId?: string | null,
 ): Promise<CouponValidation> {
   const normalized = code.trim().toUpperCase();
@@ -68,6 +73,7 @@ export async function validateCoupon(
       "id, code, discount_type, discount_value, min_order_cents, max_uses, uses_count, max_uses_per_user, is_active, starts_at, expires_at",
     )
     .eq("code", normalized)
+    .eq("store_id", storeId)
     .is("deleted_at", null)
     .maybeSingle();
 

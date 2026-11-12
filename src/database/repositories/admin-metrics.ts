@@ -174,28 +174,37 @@ const EMPTY_METRICS: AdminDashboardMetrics = {
   totalOrders: 0,
 };
 
-export async function getAdminDashboardMetrics(): Promise<AdminDashboardMetrics> {
+export async function getAdminDashboardMetrics(
+  opts: { storeId?: string | null } = {},
+): Promise<AdminDashboardMetrics> {
   try {
     const supabase = createServiceClient();
     const windowStart = new Date(Date.now() - ORDERS_WINDOW_DAYS * DAY_MS);
     const windowIso = windowStart.toISOString();
+    const storeId = opts.storeId ?? null;
+
+    let ordersQ = supabase
+      .from("orders")
+      .select("id, status, payment_status, total_cents, created_at")
+      .gte("created_at", windowIso);
+    if (storeId) ordersQ = ordersQ.eq("store_id", storeId);
+    let itemsQ = supabase
+      .from("order_items")
+      .select("quantity, unit_price_cents, product_snapshot, created_at, orders!inner(store_id)")
+      .gte("created_at", windowIso);
+    if (storeId) itemsQ = itemsQ.eq("orders.store_id", storeId);
+    let productsQ = supabase
+      .from("products")
+      .select(
+        "id, name, slug, is_active, category_id, categories(name), product_variants(is_active, inventory(quantity, reserved))",
+      )
+      .is("deleted_at", null);
+    if (storeId) productsQ = productsQ.eq("store_id", storeId);
 
     const [ordersRes, itemsRes, productsRes] = await Promise.all([
-      supabase
-        .from("orders")
-        .select("id, status, payment_status, total_cents, created_at")
-        .gte("created_at", windowIso)
-        .order("created_at", { ascending: false }),
-      supabase
-        .from("order_items")
-        .select("quantity, unit_price_cents, product_snapshot, created_at")
-        .gte("created_at", windowIso),
-      supabase
-        .from("products")
-        .select(
-          "id, name, slug, is_active, category_id, categories(name), product_variants(is_active, inventory(quantity, reserved))",
-        )
-        .is("deleted_at", null),
+      ordersQ.order("created_at", { ascending: false }),
+      itemsQ,
+      productsQ,
     ]);
 
     if (ordersRes.error) throw ordersRes.error;

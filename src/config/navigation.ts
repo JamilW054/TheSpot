@@ -20,80 +20,36 @@ export interface NavItem {
 }
 
 /**
- * Panel administración (`/admin`), único login del sitio — no hay cuentas de
- * cliente. Rutas agrupadas por sección.
+ * Panel general de la plataforma (`/admin`): el dueño del marketplace aprueba
+ * tiendas, modera productos y ve pedidos/ventas de todas las tiendas. La
+ * operación diaria de su propia tienda (The Spot oficial) va en `/panel`.
  */
 export const ADMIN_NAV: NavItem[] = [
-  {
-    label: "Dashboard",
-    href: "/admin",
-    icon: "LayoutDashboard",
-    adminSection: "Resumen",
-  },
-  {
-    label: "Pedidos",
-    href: "/admin/pedidos",
-    icon: "ShoppingCart",
-    adminSection: "Ventas",
-  },
-  {
-    label: "Reporte de ventas",
-    href: "/admin/ventas",
-    icon: "BarChart3",
-    adminSection: "Ventas",
-  },
-  {
-    label: "Pagos y cuentas",
-    href: "/admin/pagos",
-    icon: "Landmark",
-    adminSection: "Ventas",
-  },
-  {
-    label: "Catálogo",
-    href: "/admin/catalogo",
-    icon: "Store",
-    adminSection: "Catálogo",
-  },
-  {
-    label: "Inventario",
-    href: "/admin/inventario",
-    icon: "Boxes",
-    adminSection: "Catálogo",
-  },
-  {
-    label: "Categorías",
-    href: "/admin/categorias",
-    icon: "Layers",
-    adminSection: "Catálogo",
-  },
-  {
-    label: "Marcas",
-    href: "/admin/marcas",
-    icon: "Tag",
-    adminSection: "Catálogo",
-  },
-  {
-    label: "Tallas y tamaños",
-    href: "/admin/tamanos",
-    icon: "Ruler",
-    adminSection: "Catálogo",
-  },
-  {
-    label: "Cupones",
-    href: "/admin/cupones",
-    icon: "Ticket",
-    adminSection: "Marketing",
-  },
-  {
-    label: "Métodos de envío",
-    href: "/admin/envios",
-    icon: "Truck",
-    adminSection: "Logística",
-  },
-  {
-    label: "Configuración",
-    href: "/admin/config",
-    icon: "Settings",
-    adminSection: "Sistema",
-  },
+  { label: "Dashboard", href: "/admin", icon: "LayoutDashboard", adminSection: "Resumen" },
+  { label: "Tiendas", href: "/admin/tiendas", icon: "Store", adminSection: "Marketplace" },
+  { label: "Moderación", href: "/admin/moderacion", icon: "ShieldAlert", adminSection: "Marketplace" },
+  { label: "Pedidos", href: "/admin/pedidos", icon: "ShoppingCart", adminSection: "Ventas" },
+  { label: "Reporte de ventas", href: "/admin/ventas", icon: "BarChart3", adminSection: "Ventas" },
+  { label: "Productos", href: "/admin/catalogo", icon: "Package", adminSection: "Catálogo global" },
+  { label: "Categorías", href: "/admin/categorias", icon: "Layers", adminSection: "Catálogo global" },
+  { label: "Marcas", href: "/admin/marcas", icon: "Tag", adminSection: "Catálogo global" },
+  { label: "Tallas y tamaños", href: "/admin/tamanos", icon: "Ruler", adminSection: "Catálogo global" },
+  { label: "Configuración", href: "/admin/config", icon: "Settings", adminSection: "Sistema" },
+  { label: "Mi tienda (panel)", href: "/panel", icon: "ArrowRightLeft", adminSection: "Sistema" },
+];
+
+/**
+ * Panel de cada tienda (`/panel`). Mismos segmentos que `/admin` para que los
+ * componentes compartidos construyan enlaces con `usePanelBase()`.
+ */
+export const SELLER_NAV: NavItem[] = [
+  { label: "Dashboard", href: "/panel", icon: "LayoutDashboard", adminSection: "Resumen" },
+  { label: "Pedidos", href: "/panel/pedidos", icon: "ShoppingCart", adminSection: "Ventas" },
+  { label: "Reporte de ventas", href: "/panel/ventas", icon: "BarChart3", adminSection: "Ventas" },
+  { label: "Pagos y cuentas", href: "/panel/pagos", icon: "Landmark", adminSection: "Ventas" },
+  { label: "Productos", href: "/panel/catalogo", icon: "Package", adminSection: "Catálogo" },
+  { label: "Inventario", href: "/panel/inventario", icon: "Boxes", adminSection: "Catálogo" },
+  { label: "Cupones", href: "/panel/cupones", icon: "Ticket", adminSection: "Marketing" },
+  { label: "Métodos de envío", href: "/panel/envios", icon: "Truck", adminSection: "Logística" },
+  { label: "Mi tienda", href: "/panel/tienda", icon: "Store", adminSection: "Tienda" },
 ];

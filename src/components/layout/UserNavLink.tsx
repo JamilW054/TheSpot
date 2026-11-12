@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuth } from "@/lib/auth-context";
-import { ROLE } from "@/lib/auth/roles";
+import { homePathForRole, ROLE } from "@/lib/auth/roles";
 import Link from "next/link";
 
 /**
@@ -12,7 +12,15 @@ import Link from "next/link";
 export function UserNavLink({ className = "" }: { className?: string }) {
   const { user, isLoading } = useAuth();
 
-  if (isLoading || !user || user.role !== ROLE.ADMIN) return null;
+  if (
+    isLoading ||
+    !user ||
+    (user.role !== ROLE.ADMIN && user.role !== ROLE.SELLER)
+  ) {
+    return null;
+  }
+  const href = homePathForRole(user.role);
+  const label = user.role === ROLE.ADMIN ? "Panel de administración" : "Panel de mi tienda";
 
   const initials =
     user.name
@@ -24,9 +32,9 @@ export function UserNavLink({ className = "" }: { className?: string }) {
 
   return (
     <Link
-      href="/admin"
-      aria-label="Panel de administración"
-      title={`Panel de administración — ${user.name}`}
+      href={href}
+      aria-label={label}
+      title={`${label} — ${user.name}`}
       className={`relative flex h-8 w-8 items-center justify-center rounded-full bg-primary/15 font-bold text-[11px] text-primary ring-1 ring-primary/25 transition-all duration-200 hover:bg-primary/25 hover:ring-primary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${className}`}
     >
       {initials}

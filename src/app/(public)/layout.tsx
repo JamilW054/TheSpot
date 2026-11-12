@@ -2,17 +2,15 @@ import { ConditionalFooter, PublicShell } from "@/components/layout";
 import { StoreSettingsProvider } from "@/contexts/store-settings-context";
 import { WishlistProvider } from "@/contexts/wishlist-context";
 import { getCategoriesPublic } from "@/database/repositories/categories";
-import { getFreeShippingMinCents } from "@/database/repositories/payments";
 
 export default async function PublicLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const [categories, freeShippingMinCents] = await Promise.all([
-    getCategoriesPublic(),
-    getFreeShippingMinCents().catch(() => 350000),
-  ]);
+  const categories = await getCategoriesPublic();
+  // Marketplace: el envío gratis es por tienda (se calcula en el checkout).
+  const freeShippingMinCents = 0;
   const comingSoonSlugs = categories
     .filter((c) => c.coming_soon)
     .map((c) => c.slug);

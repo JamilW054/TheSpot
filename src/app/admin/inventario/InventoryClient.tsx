@@ -1,5 +1,6 @@
 "use client";
 
+import { usePanelBase } from "@/lib/panel-base";
 import {
   AlertTriangle,
   Boxes,
@@ -188,6 +189,7 @@ export function InventoryClient({
   initialFilter: string;
   initialQuery: string;
 }) {
+  const panelBase = usePanelBase();
   const [filter, setFilter] = useState<Filter>(
     (FILTERS.some((f) => f.value === initialFilter)
       ? initialFilter
@@ -226,7 +228,7 @@ export function InventoryClient({
       <AdminPageHeader
         title="Inventario"
         description="Existencias por producto y variante. Edita el número y pulsa Enter (o usa − / +). Lo reservado son unidades en pedidos abiertos; al marcar un pedido como Entregado se descuenta de la existencia y al cancelarlo se libera."
-        breadcrumbs={[{ label: "Dashboard", href: "/admin" }, { label: "Inventario" }]}
+        breadcrumbs={[{ label: "Dashboard", href: `${panelBase}` }, { label: "Inventario" }]}
         actions={
           <button
             type="button"
@@ -343,7 +345,7 @@ export function InventoryClient({
                         </div>
                         <div className="min-w-0">
                           <Link
-                            href={`/admin/catalogo/${r.productSlug}/editar`}
+                            href={`${panelBase}/catalogo/${r.productSlug}/editar`}
                             className="line-clamp-1 font-medium text-foreground hover:text-primary"
                           >
                             {r.productName}
@@ -371,7 +373,7 @@ export function InventoryClient({
                     <td className="px-4 py-3 text-right tabular-nums">
                       {r.reserved > 0 ? (
                         <Link
-                          href="/admin/pedidos?estado=pending"
+                          href={`${panelBase}/pedidos?estado=pending`}
                           className="text-amber-700 hover:underline"
                         >
                           {r.reserved}
@@ -399,7 +401,7 @@ export function InventoryClient({
                     </td>
                     <td className="px-4 py-3 text-right">
                       <Link
-                        href={`/admin/catalogo/${r.productSlug}/editar`}
+                        href={`${panelBase}/catalogo/${r.productSlug}/editar`}
                         aria-label={`Editar ${r.productName}`}
                         className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
                       >
