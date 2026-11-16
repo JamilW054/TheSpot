@@ -1,5 +1,6 @@
 "use client";
 
+import { usePanelBase } from "@/lib/panel-base";
 import { Crown, ImagePlus, Loader2, Plus, Save, Trash2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
@@ -156,6 +157,7 @@ export function ProductForm({
   onSuccess,
   onCancel,
 }: ProductFormProps) {
+  const panelBase = usePanelBase();
   const router = useRouter();
   const { showSuccess, showError } = useAdminFeedback();
   const actionFn = mode === "create" ? adminCreateProduct : adminUpdateProduct;
@@ -334,7 +336,7 @@ export function ProductForm({
             onSuccess();
             return;
           }
-          router.replace("/admin/catalogo");
+          router.replace(`${panelBase}/catalogo`);
           router.refresh();
         },
       );
@@ -971,7 +973,7 @@ export function ProductForm({
                 onCancel();
                 return;
               }
-              router.push("/admin/catalogo");
+              router.push(`${panelBase}/catalogo`);
             }}
           >
             <X className="size-4" aria-hidden />

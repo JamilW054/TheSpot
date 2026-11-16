@@ -1,5 +1,6 @@
 "use client";
 
+import { usePanelBase } from "@/lib/panel-base";
 import {
   Banknote,
   Eye,
@@ -310,6 +311,7 @@ export function PaymentsAdminClient({
   settings: PaymentSettings;
   accounts: BankAccount[];
 }) {
+  const panelBase = usePanelBase();
   const router = useRouter();
   const { showSuccess, showError } = useAdminFeedback();
   const [s, setS] = useState(settings);
@@ -332,7 +334,7 @@ export function PaymentsAdminClient({
       <AdminPageHeader
         title="Pagos y cuentas bancarias"
         description="Elige qué métodos de pago ve el cliente en el checkout y administra las cuentas para transferencias. Los cambios se aplican al instante en la tienda."
-        breadcrumbs={[{ label: "Dashboard", href: "/admin" }, { label: "Pagos y cuentas" }]}
+        breadcrumbs={[{ label: "Dashboard", href: `${panelBase}` }, { label: "Pagos y cuentas" }]}
       />
 
       <AdminCard>

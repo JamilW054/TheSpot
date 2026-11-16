@@ -1,15 +1,16 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireAdmin } from "@/lib/auth/require-admin";
+import { requireStoreActor, assertStoreAccess } from "@/lib/auth/store-actor";
 import { createServiceClient } from "@/lib/supabase/server";
 
 type ServiceClient = ReturnType<typeof createServiceClient>;
 
-async function defaultWarehouseId(supabase: ServiceClient): Promise<string> {
+async function defaultWarehouseId(supabase: ServiceClient, storeId: string): Promise<string> {
   const { data } = await supabase
     .from("warehouses")
     .select("id")
+    .eq("store_id", storeId)
     .eq("is_active", true)
     .order("created_at", { ascending: true })
     .limit(1)
@@ -18,7 +19,7 @@ async function defaultWarehouseId(supabase: ServiceClient): Promise<string> {
   if (id) return id;
   const { data: created, error } = await supabase
     .from("warehouses")
-    .insert({ name: "Principal", country_code: "DO", is_active: true })
+    .insert({ name: "Principal", country_code: "DO", is_active: true, store_id: storeId })
     .select("id")
     .single();
   if (error) throw new Error(error.message);
@@ -37,11 +38,19 @@ export async function adminSetVariantStock(
   quantity: number,
 ): Promise<InventoryActionResult> {
   try {
-    await requireAdmin();
+    const actor = await requireStoreActor();
     if (!Number.isInteger(quantity) || quantity < 0 || quantity > 1_000_000) {
       throw new Error("La existencia debe ser un número entero ≥ 0.");
     }
     const supabase = createServiceClient();
+    const { data: variant } = await supabase
+      .from("product_variants")
+      .select("id, products!inner(store_id)")
+      .eq("id", variantId)
+      .maybeSingle();
+    const storeId = (variant as { products?: { store_id?: string } } | null)?.products?.store_id;
+    if (!storeId) throw new Error("Variante no encontrada.");
+    assertStoreAccess(actor, storeId);
     const { data: rows } = await supabase
       .from("inventory")
       .select("id")
@@ -50,7 +59,7 @@ export async function adminSetVariantStock(
       .order("quantity", { ascending: false });
     const list = (rows ?? []) as { id: string }[];
     if (list.length === 0) {
-      const warehouseId = await defaultWarehouseId(supabase);
+      const warehouseId = await defaultWarehouseId(supabase, storeId);
       const { error } = await supabase.from("inventory").insert({
         variant_id: variantId,
         warehouse_id: warehouseId,
@@ -76,7 +85,8 @@ export async function adminSetVariantStock(
       }
     }
     revalidatePath("/admin/inventario");
-    revalidatePath("/admin");
+    revalidatePath("/panel/inventario");
+    revalidatePath("/panel");
     revalidatePath("/catalogo", "layout");
     return { ok: true };
   } catch (e) {

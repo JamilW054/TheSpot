@@ -33,6 +33,8 @@ export interface OrderWhatsAppData {
   paymentMethod?: string | null;
   /** Banco elegido para transferir, si aplica. */
   bankName?: string | null;
+  /** Tienda del marketplace que atiende el pedido. */
+  storeName?: string | null;
 }
 
 function formatCents(cents: number, currency = "DOP"): string {
@@ -60,7 +62,7 @@ function paymentLines(data: OrderWhatsAppData): string[] {
 export function buildCustomerOrderMessage(data: OrderWhatsAppData): string {
   return [
     `Hola, soy ${data.customerName}.`,
-    `Quiero confirmar mi pedido #${data.orderNumber} en The Spot:`,
+    `Quiero confirmar mi pedido #${data.orderNumber} en ${data.storeName && data.storeName !== "The Spot" ? `${data.storeName} (The Spot)` : "The Spot"}:`,
     itemLines(data.items),
     `Total: ${formatCents(data.totalCents, data.currency)}`,
     ...paymentLines(data),

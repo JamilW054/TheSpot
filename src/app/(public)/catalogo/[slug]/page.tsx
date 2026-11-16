@@ -1,5 +1,6 @@
-import { ChevronRight, ShieldCheck, Truck } from "lucide-react";
+import { ChevronRight, ShieldCheck, Store, Truck } from "lucide-react";
 import Link from "next/link";
+import { ReportProductButton } from "@/components/catalog/ReportProductButton";
 import { notFound, redirect } from "next/navigation";
 import { AcceptedPayments } from "@/components/brand/AcceptedPayments";
 import { AddToCartButton } from "@/components/catalog/AddToCartButton";
@@ -44,7 +45,7 @@ export default async function CatalogProductPage({ params }: PageProps) {
 
   const [stock, freeShippingMinCents] = await Promise.all([
     getStockMatrixForProduct(product.id),
-    getFreeShippingMinCents(),
+    product.storeId ? getFreeShippingMinCents(product.storeId).catch(() => 0) : Promise.resolve(0),
   ]);
 
   const hasDiscount =
@@ -147,6 +148,22 @@ export default async function CatalogProductPage({ params }: PageProps) {
                   {product.name}
                 </h1>
 
+                {product.storeName && product.storeSlug ? (
+                  <Link
+                    href={`/tiendas/${product.storeSlug}`}
+                    className="inline-flex w-fit items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-sm transition hover:border-primary"
+                  >
+                    <Store className="size-4 text-primary" aria-hidden />
+                    <span className="text-muted-foreground">Vendido por</span>
+                    <span className="font-semibold text-foreground">{product.storeName}</span>
+                    {product.storeIsOfficial ? (
+                      <span className="rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-bold uppercase text-primary-foreground">
+                        Oficial
+                      </span>
+                    ) : null}
+                  </Link>
+                ) : null}
+
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <p className="font-mono text-4xl font-black leading-none text-primary tabular-nums">
@@ -198,16 +215,15 @@ export default async function CatalogProductPage({ params }: PageProps) {
                 />
 
                 <div className="divide-y divide-rose-100 overflow-hidden rounded-2xl border border-rose-100 bg-[#fff8f9]">
-                  <div className="flex items-center gap-3 px-4 py-3 text-sm text-muted-foreground">
-                    <Truck
-                      className="size-4 shrink-0 text-primary"
-                      aria-hidden
-                    />
-                    <span>
-                      Envío gratis en pedidos desde{" "}
-                      {formatDOPFromCents(freeShippingMinCents)}
-                    </span>
-                  </div>
+                  {freeShippingMinCents > 0 ? (
+                    <div className="flex items-center gap-3 px-4 py-3 text-sm text-muted-foreground">
+                      <Truck className="size-4 shrink-0 text-primary" aria-hidden />
+                      <span>
+                        Envío gratis en {product.storeName ?? "esta tienda"} desde{" "}
+                        {formatDOPFromCents(freeShippingMinCents)}
+                      </span>
+                    </div>
+                  ) : null}
                   <div className="flex items-center gap-3 px-4 py-3 text-sm text-muted-foreground">
                     <AcceptedPayments label={null} />
                   </div>
@@ -219,6 +235,8 @@ export default async function CatalogProductPage({ params }: PageProps) {
                     <span>Devoluciones en 30 días</span>
                   </div>
                 </div>
+
+                <ReportProductButton productId={product.id} />
 
                 {product.description && (
                   <div>

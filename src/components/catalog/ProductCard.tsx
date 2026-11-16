@@ -112,6 +112,11 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
             {product.brandName}
           </p>
         ) : null}
+        {product.storeName && !product.storeIsOfficial ? (
+          <p className="truncate text-[11px] text-muted-foreground">
+            por <span className="font-medium text-foreground/80">{product.storeName}</span>
+          </p>
+        ) : null}
         <h2 className="line-clamp-2 min-h-9 text-[13px] font-semibold leading-snug text-foreground">
           {product.name}
         </h2>

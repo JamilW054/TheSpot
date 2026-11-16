@@ -22,6 +22,8 @@ const PRIMARY = BRAND_PRIMARY;
 const BASE_ITEMS = [
   { label: "Inicio", ariaLabel: "Ir a inicio", link: "/" },
   { label: "Catálogo", ariaLabel: "Ver catálogo", link: "/catalogo" },
+  { label: "Tiendas", ariaLabel: "Ver tiendas del marketplace", link: "/tiendas" },
+  { label: "Vender", ariaLabel: "Vende en The Spot", link: "/vender" },
   {
     label: ORDER_STATUS_PAGE.label,
     ariaLabel: ORDER_STATUS_PAGE.ariaLabel,

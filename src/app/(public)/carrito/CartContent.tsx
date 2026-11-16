@@ -1,26 +1,16 @@
 "use client";
 
 import { sizeAxisLabel, unitPriceForSelection } from "@/lib/variants";
-import { ChevronLeft, Tag, Trash2, Truck } from "lucide-react";
+import { ChevronLeft, Trash2, Truck } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { AcceptedPayments } from "@/components/brand/AcceptedPayments";
-import { FreeShippingProgress } from "@/components/cart/FreeShippingProgress";
-import { qualifiesForFreeShipping } from "@/config/shipping";
-import { useStoreSettings } from "@/contexts/store-settings-context";
 import { useCart } from "@/contexts/cart-context";
 import type { ShippingMethod } from "@/database/repositories";
 import { formatDOPFromCents } from "@/lib/format-currency";
 import type { CartItem, CatalogProduct } from "@/types";
 
-function formatShippingDesc(method: ShippingMethod): string {
-  if (method.description) return method.description;
-  if (method.minDays != null && method.maxDays != null)
-    return `${method.minDays}-${method.maxDays} días hábiles`;
-  if (method.minDays != null) return `A partir de ${method.minDays} días`;
-  return "";
-}
 
 function isExternalImage(src: string): boolean {
   return src.startsWith("http") || src.includes("placehold.co");
@@ -180,215 +170,14 @@ function CartItemCard({
   );
 }
 
-/* ── Shipping selector ───────────────────────────────────── */
-interface ShippingSelectorProps {
-  methods: ShippingMethod[];
-  selected: string;
-  onSelect: (id: string) => void;
-  freeShipping: boolean;
-}
-
-function ShippingSelector({
-  methods,
-  selected,
-  onSelect,
-  freeShipping,
-}: ShippingSelectorProps) {
-  return (
-    <div className="rounded-[14px] border border-border bg-card p-4">
-      <div className="mb-3 flex items-center gap-2">
-        <Truck className="size-4 text-muted-foreground" aria-hidden />
-        <h3 className="text-sm font-semibold text-foreground">Tipo de envío</h3>
-      </div>
-      <div className="space-y-2">
-        {methods.map((method) => {
-          const active = selected === method.id;
-          const desc = formatShippingDesc(method);
-          return (
-            <label
-              key={method.id}
-              className={`flex cursor-pointer items-center gap-3 rounded-[10px] border p-3 transition-all duration-150 ${
-                active
-                  ? "border-primary bg-primary/5"
-                  : "border-border bg-muted/20 hover:border-border/60"
-              }`}
-            >
-              <input
-                type="radio"
-                name="shipping"
-                value={method.id}
-                checked={active}
-                onChange={() => onSelect(method.id)}
-                className="sr-only"
-              />
-              <span
-                className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border transition-colors ${
-                  active ? "border-primary" : "border-border"
-                }`}
-                aria-hidden
-              >
-                {active && <span className="h-2 w-2 rounded-full bg-primary" />}
-              </span>
-
-              <span className="flex-1 min-w-0">
-                <span className="block text-sm font-semibold text-foreground">
-                  {method.name}
-                </span>
-                {desc && (
-                  <span className="block text-xs text-muted-foreground">
-                    {desc}
-                  </span>
-                )}
-              </span>
-
-              <span className="flex shrink-0 items-center gap-1.5">
-                {freeShipping && method.priceCents > 0 && (
-                  <span className="font-mono text-xs text-muted-foreground line-through tabular-nums">
-                    {formatDOPFromCents(method.priceCents)}
-                  </span>
-                )}
-                <span className="font-mono text-sm font-bold text-foreground tabular-nums">
-                  {freeShipping || method.priceCents === 0
-                    ? "Gratis"
-                    : formatDOPFromCents(method.priceCents)}
-                </span>
-              </span>
-            </label>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-/* ── Promo code ──────────────────────────────────────────── */
-interface PromoInputProps {
-  code: string;
-  onChange: (v: string) => void;
-  onApply: () => void;
-  error: string | null;
-  applied: boolean;
-}
-
-function PromoInput({
-  code,
-  onChange,
-  onApply,
-  error,
-  applied,
-}: PromoInputProps) {
-  return (
-    <div className="rounded-[14px] border border-border bg-card p-4">
-      <div className="mb-3 flex items-center gap-2">
-        <Tag className="size-4 text-muted-foreground" aria-hidden />
-        <h3 className="text-sm font-semibold text-foreground">
-          ¿Tienes un código?
-        </h3>
-      </div>
-      <div className="flex gap-2">
-        <input
-          type="text"
-          value={code}
-          onChange={(e) => onChange(e.target.value.toUpperCase())}
-          placeholder="SPOT10"
-          className="flex-1 rounded-[10px] border border-border bg-background px-3 py-2 font-mono text-sm text-foreground placeholder:text-muted-foreground/50 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15"
-        />
-        <button
-          type="button"
-          onClick={onApply}
-          className="rounded-[10px] bg-muted px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:bg-muted/80"
-        >
-          Aplicar
-        </button>
-      </div>
-      {error && <p className="mt-2 text-xs text-destructive">{error}</p>}
-      {applied && (
-        <p className="mt-2 text-xs text-primary font-medium">
-          ¡Código aplicado correctamente!
-        </p>
-      )}
-    </div>
-  );
-}
-
-/* ── Order summary ───────────────────────────────────────── */
-interface OrderSummaryProps {
-  subtotalCents: number;
-  shippingCents: number;
-  grandTotalCents: number;
-  shippingId: string;
-  className?: string;
-  showCheckoutBtn?: boolean;
-}
-
-function OrderSummary({
-  subtotalCents,
-  shippingCents,
-  grandTotalCents,
-  shippingId,
-  className = "",
-  showCheckoutBtn = true,
-}: OrderSummaryProps) {
-  return (
-    <div
-      className={`rounded-[14px] border border-border bg-card p-4 ${className}`}
-    >
-      <h3 className="mb-3 text-sm font-semibold text-foreground">Resumen</h3>
-      <div className="space-y-2">
-        <div className="flex items-center justify-between gap-4">
-          <span className="text-sm text-muted-foreground">Subtotal</span>
-          <span className="font-mono text-sm font-medium tabular-nums text-foreground">
-            {formatDOPFromCents(subtotalCents)}
-          </span>
-        </div>
-        <div className="flex items-center justify-between gap-4">
-          <span className="text-sm text-muted-foreground">Envío</span>
-          <span className="font-mono text-sm font-medium tabular-nums text-foreground">
-            {shippingCents === 0 ? "Gratis" : formatDOPFromCents(shippingCents)}
-          </span>
-        </div>
-        <div className="flex items-baseline justify-between gap-4 border-t border-border pt-2">
-          <span className="text-sm font-semibold text-foreground">Total</span>
-          <span className="font-mono text-xl font-bold tabular-nums text-primary">
-            {formatDOPFromCents(grandTotalCents)}
-          </span>
-        </div>
-      </div>
-
-      {showCheckoutBtn && (
-        <>
-          <Link
-            href={`/carrito/checkout?shipping=${shippingId}`}
-            className="mt-4 flex w-full items-center justify-center rounded-[10px] bg-primary py-3 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
-          >
-            Finalizar pedido
-          </Link>
-          <p className="mt-2 text-center text-xs text-muted-foreground">
-            Pago contra entrega o transferencia
-          </p>
-          <AcceptedPayments className="mt-3" align="center" label={null} />
-        </>
-      )}
-    </div>
-  );
-}
-
 /* ── Main export ─────────────────────────────────────────── */
 export function CartContent({
   products,
-  shippingMethods,
 }: {
   products: CatalogProduct[];
-  shippingMethods: ShippingMethod[];
+  shippingMethods?: ShippingMethod[];
 }) {
   const { items, updateQuantity, removeItem } = useCart();
-  const [shippingId, setShippingId] = useState<string>(
-    () => shippingMethods[0]?.id ?? "",
-  );
-  const [promoCode, setPromoCode] = useState("");
-  const [promoError, setPromoError] = useState<string | null>(null);
-  const [promoApplied, setPromoApplied] = useState(false);
-
   const productMap = new Map(products.map((p) => [p.id, p]));
 
   // Auto-remove stale cart items (products deleted or not returned by the catalog).
@@ -405,26 +194,20 @@ export function CartContent({
 
   let subtotalCents = 0;
   let totalItems = 0;
-
+  // Marketplace: el carrito se muestra agrupado por tienda (cada una envía su pedido).
+  const groups = new Map<string, { name: string; slug: string | null; items: CartItem[]; subtotal: number }>();
   for (const item of items) {
     const p = productMap.get(item.productId);
-    if (p)
-      subtotalCents +=
-        unitPriceForSelection(p, item.size, item.color) * item.quantity;
     totalItems += item.quantity;
+    if (!p) continue;
+    const line = unitPriceForSelection(p, item.size, item.color) * item.quantity;
+    subtotalCents += line;
+    const key = p.storeId ?? "unknown";
+    const g = groups.get(key) ?? { name: p.storeName ?? "The Spot", slug: p.storeSlug ?? null, items: [], subtotal: 0 };
+    g.items.push(item);
+    g.subtotal += line;
+    groups.set(key, g);
   }
-
-  const selectedShipping =
-    shippingMethods.find((s) => s.id === shippingId) ?? shippingMethods[0];
-  const { freeShippingMinCents } = useStoreSettings();
-  const freeShipping = qualifiesForFreeShipping(subtotalCents, freeShippingMinCents);
-  const shippingCents = freeShipping ? 0 : (selectedShipping?.priceCents ?? 0);
-  const grandTotalCents = subtotalCents + shippingCents;
-
-  const handleApplyPromo = () => {
-    setPromoError("Código inválido o expirado.");
-    setPromoApplied(false);
-  };
 
   return (
     <>
@@ -433,23 +216,45 @@ export function CartContent({
         <div>
           <p className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
             {totalItems} {totalItems === 1 ? "artículo" : "artículos"}
+            {groups.size > 1 ? ` · ${groups.size} tiendas` : ""}
           </p>
 
-          <ul className="animate-stagger space-y-3">
-            {items.map((item) => {
-              const product = productMap.get(item.productId);
-              if (!product) return null;
-              return (
-                <CartItemCard
-                  key={`${item.productId}:${item.size ?? ""}:${item.color ?? ""}`}
-                  item={item}
-                  product={product}
-                  onUpdate={updateQuantity}
-                  onRemove={removeItem}
-                />
-              );
-            })}
-          </ul>
+          <div className="space-y-6">
+            {[...groups.entries()].map(([storeId, g]) => (
+              <section key={storeId} aria-label={`Productos de ${g.name}`}>
+                <div className="mb-2 flex items-center justify-between gap-3">
+                  <p className="text-sm font-semibold text-foreground">
+                    Vendido por{" "}
+                    {g.slug ? (
+                      <Link href={`/tiendas/${g.slug}`} className="text-primary hover:underline">
+                        {g.name}
+                      </Link>
+                    ) : (
+                      g.name
+                    )}
+                  </p>
+                  <span className="font-mono text-sm tabular-nums text-muted-foreground">
+                    {formatDOPFromCents(g.subtotal)}
+                  </span>
+                </div>
+                <ul className="animate-stagger space-y-3">
+                  {g.items.map((item) => {
+                    const product = productMap.get(item.productId);
+                    if (!product) return null;
+                    return (
+                      <CartItemCard
+                        key={`${item.productId}:${item.size ?? ""}:${item.color ?? ""}`}
+                        item={item}
+                        product={product}
+                        onUpdate={updateQuantity}
+                        onRemove={removeItem}
+                      />
+                    );
+                  })}
+                </ul>
+              </section>
+            ))}
+          </div>
 
           <Link
             href="/catalogo"
@@ -462,31 +267,27 @@ export function CartContent({
 
         {/* ── Sidebar ── */}
         <aside className="mt-6 space-y-3 lg:mt-0 lg:sticky lg:top-28">
-          <FreeShippingProgress subtotalCents={subtotalCents} />
-
-          <ShippingSelector
-            methods={shippingMethods}
-            selected={shippingId}
-            onSelect={setShippingId}
-            freeShipping={freeShipping}
-          />
-
-          <PromoInput
-            code={promoCode}
-            onChange={setPromoCode}
-            onApply={handleApplyPromo}
-            error={promoError}
-            applied={promoApplied}
-          />
-
-          <OrderSummary
-            subtotalCents={subtotalCents}
-            shippingCents={shippingCents}
-            grandTotalCents={grandTotalCents}
-            shippingId={shippingId}
-            showCheckoutBtn
-            className="hidden lg:block"
-          />
+          <div className="rounded-[14px] border border-border bg-card p-4">
+            <h3 className="mb-3 text-sm font-semibold text-foreground">Resumen</h3>
+            <div className="flex items-baseline justify-between gap-4">
+              <span className="text-sm text-muted-foreground">Subtotal</span>
+              <span className="font-mono text-xl font-bold tabular-nums text-primary">
+                {formatDOPFromCents(subtotalCents)}
+              </span>
+            </div>
+            <p className="mt-2 flex items-start gap-2 text-xs text-muted-foreground">
+              <Truck className="mt-0.5 size-3.5 shrink-0" aria-hidden />
+              El envío y los cupones se eligen al finalizar, por cada tienda.
+            </p>
+            <Link
+              href="/carrito/checkout"
+              className="mt-4 flex w-full items-center justify-center rounded-[10px] bg-primary py-3 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
+            >
+              Finalizar pedido
+            </Link>
+            <p className="mt-2 text-center text-xs text-muted-foreground">Pago contra entrega o transferencia</p>
+            <AcceptedPayments className="mt-3" align="center" label={null} />
+          </div>
         </aside>
       </div>
 
@@ -494,15 +295,13 @@ export function CartContent({
       <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background/95 px-4 py-3 backdrop-blur-lg lg:hidden">
         <div className="mx-auto flex max-w-lg items-center gap-3">
           <div className="min-w-0 flex-1">
-            <p className="text-xs text-muted-foreground">
-              {totalItems} artículo(s)
-            </p>
+            <p className="text-xs text-muted-foreground">{totalItems} artículo(s)</p>
             <p className="font-mono text-lg font-bold tabular-nums text-primary leading-tight">
-              {formatDOPFromCents(grandTotalCents)}
+              {formatDOPFromCents(subtotalCents)}
             </p>
           </div>
           <Link
-            href={`/carrito/checkout?shipping=${shippingId}`}
+            href="/carrito/checkout"
             className="flex-1 rounded-[10px] bg-primary py-3 text-center text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
           >
             Finalizar pedido

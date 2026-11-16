@@ -1,5 +1,6 @@
 "use client";
 
+import { usePanelBase } from "@/lib/panel-base";
 import {
   Banknote,
   Check,
@@ -58,6 +59,7 @@ function when(iso: string): string {
 }
 
 export function OrderDetailClient({ order }: { order: OrderAdminDetail }) {
+  const panelBase = usePanelBase();
   const router = useRouter();
   const { showSuccess, showError } = useAdminFeedback();
   const [pending, start] = useTransition();
@@ -136,8 +138,8 @@ export function OrderDetailClient({ order }: { order: OrderAdminDetail }) {
         title={`Pedido #${order.number}`}
         description={`Creado el ${when(order.createdAt)} · ${order.items.reduce((s, i) => s + i.quantity, 0)} unidades`}
         breadcrumbs={[
-          { label: "Dashboard", href: "/admin" },
-          { label: "Pedidos", href: "/admin/pedidos?estado=pending" },
+          { label: "Dashboard", href: `${panelBase}` },
+          { label: "Pedidos", href: `${panelBase}/pedidos?estado=pending` },
           { label: `#${order.number}` },
         ]}
         actions={
@@ -294,7 +296,7 @@ export function OrderDetailClient({ order }: { order: OrderAdminDetail }) {
                     try {
                       await adminDeleteOrder(order.id);
                       showSuccess("Pedido eliminado.");
-                      router.replace("/admin/pedidos?estado=pending");
+                      router.replace(`${panelBase}/pedidos?estado=pending`);
                     } catch (e) {
                       showError(e instanceof Error ? e.message : "No se pudo eliminar.");
                     }
@@ -338,7 +340,7 @@ export function OrderDetailClient({ order }: { order: OrderAdminDetail }) {
                   <div className="min-w-0 flex-1">
                     {it.productSlug ? (
                       <Link
-                        href={`/admin/catalogo/${it.productSlug}/editar`}
+                        href={`${panelBase}/catalogo/${it.productSlug}/editar`}
                         className="font-medium text-foreground hover:text-primary"
                       >
                         {it.productName}

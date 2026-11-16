@@ -1,15 +1,6 @@
-import {
-  getPaymentSettings,
-  listBankAccounts,
-} from "@/database/repositories/payments";
-import { PaymentsAdminClient } from "./PaymentsAdminClient";
+import { redirect } from "next/navigation";
 
-export const dynamic = "force-dynamic";
-
-export default async function AdminPagosPage() {
-  const [settings, accounts] = await Promise.all([
-    getPaymentSettings(),
-    listBankAccounts(),
-  ]);
-  return <PaymentsAdminClient settings={settings} accounts={accounts} />;
+/** Se gestiona por tienda en /panel/pagos. */
+export default function Page() {
+  redirect("/panel/pagos");
 }

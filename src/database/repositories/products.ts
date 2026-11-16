@@ -51,7 +51,11 @@ export interface ProductRow {
   product_tags?: ProductTagJoinRow[] | null;
   categories?: { slug: string } | { slug: string }[] | null;
   brands?: { name: string } | null;
+  store_id?: string | null;
+  stores?: StoreJoin | StoreJoin[] | null;
 }
+
+type StoreJoin = { id?: string; name: string; slug: string; is_official?: boolean | null };
 
 /** Columnas (select PostgREST) para leer un producto de catálogo con sus joins. */
 export const PRODUCT_CATALOG_SELECT =
@@ -60,7 +64,8 @@ export const PRODUCT_CATALOG_SELECT =
   "product_variants(id, price_cents, attributes, is_active, sort_order), " +
   "product_tags(tags(slug, name)), " +
   "categories(slug), " +
-  "brands(name)";
+  "brands(name), " +
+  "store_id, stores(id, name, slug, is_official)";
 
 /** Variante con datos completos para el admin (SKU, inventario). */
 export interface AdminVariantRow {
@@ -83,6 +88,9 @@ export interface AdminProductMediaRow extends ProductMediaRow {
 export interface AdminProductRow extends ProductRow {
   /** Coste unitario en céntimos (para beneficio neto y margen). */
   cost_cents?: number | string | null;
+  /** `pending | approved | rejected | blocked`. */
+  moderation_status?: string | null;
+  moderation_note?: string | null;
   meta_title?: string | null;
   meta_description?: string | null;
   product_variants?: (ProductVariantJoinRow & AdminVariantRow)[] | null;
@@ -91,7 +99,7 @@ export interface AdminProductRow extends ProductRow {
 
 /** Select PostgREST con todo lo necesario para editar un producto en el admin. */
 export const PRODUCT_ADMIN_SELECT =
-  "id, slug, name, description, base_price_cents, original_price_cents, cost_cents, is_active, in_stock, category_id, brand_id, meta_title, meta_description, created_at, " +
+  "id, slug, name, description, base_price_cents, original_price_cents, cost_cents, is_active, in_stock, category_id, brand_id, meta_title, meta_description, created_at, store_id, moderation_status, moderation_note, stores(name, slug), " +
   "product_media(id, url, media_type, is_cover, sort_order), " +
   "product_variants(id, sku, price_cents, attributes, is_active, sort_order, inventory(warehouse_id, quantity, reserved)), " +
   "product_tags(tags(slug, name)), " +
@@ -103,7 +111,7 @@ export const PRODUCT_ADMIN_SELECT =
  * falla con "columna no existe" (42703).
  */
 export const PRODUCT_ADMIN_SELECT_LEGACY =
-  "id, slug, name, description, base_price_cents, original_price_cents, is_active, in_stock, category_id, brand_id, meta_title, meta_description, created_at, " +
+  "id, slug, name, description, base_price_cents, original_price_cents, is_active, in_stock, category_id, brand_id, meta_title, meta_description, created_at, store_id, moderation_status, moderation_note, stores(name, slug), " +
   "product_media(id, url, media_type, is_cover, sort_order), " +
   "product_variants(id, sku, price_cents, attributes, is_active, sort_order, inventory(warehouse_id, quantity, reserved)), " +
   "product_tags(tags(slug, name)), " +
@@ -231,6 +239,11 @@ export function tagsFromRow(
   return out;
 }
 
+function storeOf(row: ProductRow): StoreJoin | null {
+  const s = row.stores;
+  return Array.isArray(s) ? (s[0] ?? null) : (s ?? null);
+}
+
 export function rowToCatalogProduct(row: ProductRow): CatalogProduct {
   const priceCents = effectivePriceCents(row);
   const originalCents = toCents(row.original_price_cents ?? null);
@@ -244,6 +257,10 @@ export function rowToCatalogProduct(row: ProductRow): CatalogProduct {
     originalPrice: originalCents > 0 ? formatDOPFromCents(originalCents) : null,
     originalPriceCents: originalCents > 0 ? originalCents : null,
     brandName: row.brands?.name ?? null,
+    storeId: row.store_id ?? null,
+    storeName: storeOf(row)?.name ?? null,
+    storeSlug: storeOf(row)?.slug ?? null,
+    storeIsOfficial: Boolean(storeOf(row)?.is_official),
     coverImage: coverFromMedia(row.product_media),
     gallery: galleryFromMedia(row.product_media),
     categorySlug: categorySlugFromRow(row.categories),

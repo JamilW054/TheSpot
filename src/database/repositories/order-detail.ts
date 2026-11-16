@@ -31,6 +31,11 @@ export interface OrderHistoryEntry {
 export interface OrderAdminDetail {
   id: string;
   number: string;
+  /** Tienda que gestiona el pedido. */
+  storeId: string | null;
+  storeName: string | null;
+  /** Compra (checkout) a la que pertenece, con su número. */
+  checkoutNumber: string | null;
   status: string;
   paymentStatus: string;
   paidAt: string | null;
@@ -60,6 +65,9 @@ export interface OrderAdminDetail {
 type Row = {
   id: string;
   order_number: string | null;
+  store_id: string | null;
+  stores: { name: string } | { name: string }[] | null;
+  checkouts: { checkout_number: string } | { checkout_number: string }[] | null;
   status: string;
   payment_status: string;
   paid_at: string | null;
@@ -118,7 +126,7 @@ export async function getOrderAdminDetail(
   const { data, error } = await supabase
     .from("orders")
     .select(
-      "id, order_number, status, payment_status, paid_at, payment_method, bank_account_snapshot, created_at, updated_at, contact_email, shipping_address, notes, admin_notes, subtotal_cents, coupon_discount_cents, discount_cents, shipping_cents, tax_cents, total_cents, coupons(code), shipping_methods(name), order_items(id, quantity, unit_price_cents, unit_cost_cents, total_price_cents, size, color, product_snapshot, product_variants(sku)), order_status_history(id, status, note, created_at, changed_by)",
+      "id, order_number, store_id, stores(name), checkouts(checkout_number), status, payment_status, paid_at, payment_method, bank_account_snapshot, created_at, updated_at, contact_email, shipping_address, notes, admin_notes, subtotal_cents, coupon_discount_cents, discount_cents, shipping_cents, tax_cents, total_cents, coupons(code), shipping_methods(name), order_items(id, quantity, unit_price_cents, unit_cost_cents, total_price_cents, size, color, product_snapshot, product_variants(sku)), order_status_history(id, status, note, created_at, changed_by)",
     )
     .eq("id", orderId)
     .maybeSingle();
@@ -142,6 +150,9 @@ export async function getOrderAdminDetail(
   return {
     id: o.id,
     number: o.order_number ?? o.id.slice(0, 8).toUpperCase(),
+    storeId: o.store_id ?? null,
+    storeName: one(o.stores)?.name ?? null,
+    checkoutNumber: one(o.checkouts)?.checkout_number ?? null,
     status: o.status,
     paymentStatus: o.payment_status,
     paidAt: o.paid_at,

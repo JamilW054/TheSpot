@@ -1,5 +1,7 @@
 "use client";
 
+import { usePanelBase } from "@/lib/panel-base";
+import { MODERATION_LABEL, type ModerationStatus } from "@/lib/stores/status";
 import { ExternalLink, Eye, Package, Pencil, Plus, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -73,6 +75,7 @@ export function CatalogoManager({
   warehouses,
   initialOpenCreate = false,
 }: Props) {
+  const panelBase = usePanelBase();
   const router = useRouter();
   const [previewProduct, setPreviewProduct] = useState<AdminProductRow | null>(
     null,
@@ -136,15 +139,15 @@ export function CatalogoManager({
 
   const closeCreate = useCallback(() => {
     setCreateOpen(false);
-    router.replace("/admin/catalogo");
-  }, [router]);
+    router.replace(`${panelBase}/catalogo`);
+  }, [router, panelBase]);
 
   const handleCreateSuccess = useCallback(() => {
     setCreateOpen(false);
     setPreviewProduct(null);
-    router.replace("/admin/catalogo");
+    router.replace(`${panelBase}/catalogo`);
     router.refresh();
-  }, [router]);
+  }, [router, panelBase]);
 
   const openEdit = useCallback((p: AdminProductRow) => {
     editKeyRef.current += 1;
@@ -188,7 +191,22 @@ export function CatalogoManager({
                   {p.category_id
                     ? (categoryById.get(p.category_id) ?? "Sin categoría")
                     : "Sin categoría"}
+                  {panelBase === "/admin" && p.stores
+                    ? ` · ${(Array.isArray(p.stores) ? p.stores[0]?.name : p.stores.name) ?? ""}`
+                    : ""}
                 </span>
+                {p.moderation_status && p.moderation_status !== "approved" ? (
+                  <span
+                    className={`mt-0.5 inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                      p.moderation_status === "pending"
+                        ? "bg-amber-100 text-amber-800"
+                        : "bg-red-100 text-red-700"
+                    }`}
+                    title={p.moderation_note ?? undefined}
+                  >
+                    {MODERATION_LABEL[p.moderation_status as ModerationStatus] ?? p.moderation_status}
+                  </span>
+                ) : null}
               </span>
             </span>
           );

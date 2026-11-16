@@ -32,7 +32,7 @@ export function WhatsAppNumberForm({
   return (
     <Card className="border-border">
       <CardHeader>
-        <CardTitle>WhatsApp de la tienda</CardTitle>
+        <CardTitle>WhatsApp de soporte de The Spot</CardTitle>
       </CardHeader>
       <CardContent>
         <form action={formAction} className="space-y-4">

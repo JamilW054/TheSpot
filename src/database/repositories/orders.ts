@@ -33,6 +33,8 @@ export interface OrderRow {
   created_at: string;
   shipping_address: ShippingAddress | null;
   contact_email: string | null;
+  store_id?: string | null;
+  stores?: { name: string } | { name: string }[] | null;
 }
 
 /** Nombre de cliente legible a partir de la dirección de envío / email. */
@@ -121,6 +123,7 @@ export function rowToPedido(
   return {
     id: row.id,
     cliente: customerNameFromOrder(row.shipping_address, row.contact_email),
+    tienda: (Array.isArray(row.stores) ? row.stores[0]?.name : row.stores?.name) ?? null,
     items: lineItems.reduce((sum, li) => sum + li.quantity, 0),
     lineItems,
     total: formatDOPFromCents(row.total_cents),

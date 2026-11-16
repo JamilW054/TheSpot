@@ -3,6 +3,8 @@
 import { Eye, EyeOff } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
+import Link from "next/link";
+import { homePathForRole } from "@/lib/auth/roles";
 import { useAuth } from "@/lib/auth-context";
 
 function LoginForm() {
@@ -17,13 +19,16 @@ function LoginForm() {
     return e ? decodeURIComponent(e) : null;
   });
 
-  // Único login del sitio: el de administrador. Tras iniciar sesión siempre
-  // va a /admin (respetando ?next=/admin/... si viene de un redirect del
-  // guard de sesión).
+  // Login compartido: admin → /admin, tiendas → /panel (respetando ?next=
+  // solo si pertenece a la zona del rol).
   useEffect(() => {
     if (!user) return;
+    const home = homePathForRole(user.role);
     const next = searchParams.get("next");
-    const safeNext = next && next.startsWith("/admin") ? next : "/admin";
+    const safeNext =
+      next && home !== "/" && (next === home || next.startsWith(`${home}/`))
+        ? next
+        : home;
     router.replace(safeNext);
   }, [user, router, searchParams]);
 
@@ -62,7 +67,7 @@ function LoginForm() {
             Iniciar sesión
           </h1>
           <p className="mt-1.5 text-sm text-muted-foreground">
-            Acceso de administrador
+            Tiendas y administración
           </p>
         </div>
 
@@ -139,6 +144,13 @@ function LoginForm() {
             {isLoading ? "Iniciando sesión…" : "Iniciar sesión"}
           </button>
         </form>
+
+        <p className="mt-6 text-center text-sm text-muted-foreground">
+          ¿Quieres vender en The Spot?{" "}
+          <Link href="/vender/registro" className="font-semibold text-primary hover:underline">
+            Registra tu tienda
+          </Link>
+        </p>
       </div>
     </div>
   );

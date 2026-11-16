@@ -21,6 +21,7 @@ export interface BrandRow {
 
 export interface CouponRow {
   id: string;
+  store_id: string;
   code: string;
   description: string | null;
   discount_type: string;
@@ -36,6 +37,7 @@ export interface CouponRow {
 
 export interface ShippingMethodRow {
   id: string;
+  store_id: string;
   name: string;
   description: string | null;
   price_cents: number;
@@ -47,6 +49,7 @@ export interface ShippingMethodRow {
 
 export interface WarehouseRow {
   id: string;
+  store_id: string;
   name: string;
   address: string | null;
   city: string | null;
@@ -60,10 +63,10 @@ export interface WarehouseRow {
 
 const BRAND_COLS = "id, slug, name, logo_url, website_url, is_active";
 const COUPON_COLS =
-  "id, code, description, discount_type, discount_value, min_order_cents, max_uses, uses_count, max_uses_per_user, is_active, starts_at, expires_at";
+  "id, store_id, code, description, discount_type, discount_value, min_order_cents, max_uses, uses_count, max_uses_per_user, is_active, starts_at, expires_at";
 const SHIPPING_COLS =
-  "id, name, description, price_cents, min_days, max_days, is_active, country_code";
-const WAREHOUSE_COLS = "id, name, address, city, country_code, is_active";
+  "id, store_id, name, description, price_cents, min_days, max_days, is_active, country_code";
+const WAREHOUSE_COLS = "id, store_id, name, address, city, country_code, is_active";
 
 // ---------------------------------------------------------------------------
 // Repositorios

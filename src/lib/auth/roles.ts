@@ -7,6 +7,8 @@
 export const ROLE = {
   ADMIN: "admin",
   CLIENT: "client",
+  /** Dueño de una tienda del marketplace (panel `/panel`). */
+  SELLER: "seller",
 } as const;
 
 export type UserRole = (typeof ROLE)[keyof typeof ROLE];
@@ -15,6 +17,7 @@ export type UserRole = (typeof ROLE)[keyof typeof ROLE];
 export const ROLE_DB = {
   ADMIN: 0,
   CLIENT: 1,
+  SELLER: 2,
 } as const;
 
 export type RoleDbValue = (typeof ROLE_DB)[keyof typeof ROLE_DB];
@@ -26,7 +29,7 @@ export function roleFromEmail(_email: string): UserRole {
 
 /**
  * Prioriza `profiles.role`; si falta o es inválido, client.
- * Acepta el `smallint` del esquema nuevo (0 = admin, 1 = client) y, por
+ * Acepta el `smallint` del esquema nuevo (0 = admin, 1 = client, 2 = seller) y, por
  * compatibilidad, los strings antiguos ("admin"/"client").
  */
 export function resolveUserRole(
@@ -41,6 +44,13 @@ export function resolveUserRole(
     return ROLE.ADMIN;
   }
   if (
+    profileRole === ROLE.SELLER ||
+    profileRole === ROLE_DB.SELLER ||
+    profileRole === String(ROLE_DB.SELLER)
+  ) {
+    return ROLE.SELLER;
+  }
+  if (
     profileRole === ROLE.CLIENT ||
     profileRole === ROLE_DB.CLIENT ||
     profileRole === String(ROLE_DB.CLIENT)
@@ -53,4 +63,16 @@ export function resolveUserRole(
 /** True si el rol resuelto es administrador. */
 export function isAdminRole(role: UserRole | null | undefined): boolean {
   return role === ROLE.ADMIN;
+}
+
+/** True si el rol resuelto es dueño de tienda. */
+export function isSellerRole(role: UserRole | null | undefined): boolean {
+  return role === ROLE.SELLER;
+}
+
+/** Ruta de inicio de cada rol tras iniciar sesión. */
+export function homePathForRole(role: UserRole | null | undefined): string {
+  if (role === ROLE.ADMIN) return "/admin";
+  if (role === ROLE.SELLER) return "/panel";
+  return "/";
 }

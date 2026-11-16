@@ -79,6 +79,12 @@ export function PublicFooter() {
               >
                 Centro de ayuda
               </Link>
+              <Link href="/vender" className="transition-colors hover:text-primary">
+                Vende en The Spot
+              </Link>
+              <Link href="/vender/politicas" className="transition-colors hover:text-primary">
+                Políticas para vendedores
+              </Link>
               <Link
                 href="/devoluciones"
                 className="transition-colors hover:text-primary"

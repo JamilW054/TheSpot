@@ -13,7 +13,7 @@ export function OrderStatusContent({
 }) {
   const [orderId, setOrderId] = useState(initialOrderId);
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<OrderStatusDetail | null>(null);
+  const [result, setResult] = useState<OrderStatusDetail[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const lookup = useCallback(async (value: string) => {
@@ -23,7 +23,7 @@ export function OrderStatusContent({
     const res = await getOrderStatusAction(value);
     setLoading(false);
     if (res.ok) {
-      setResult(res.order);
+      setResult(res.orders);
     } else {
       setError(res.error);
     }
@@ -42,7 +42,7 @@ export function OrderStatusContent({
     <div className="space-y-8">
       <div className="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
         <p className="mb-4 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-          Consultar por número de pedido
+          Consultar por número de pedido o de compra
         </p>
         <form
           onSubmit={handleSubmit}
@@ -53,7 +53,7 @@ export function OrderStatusContent({
               htmlFor="order-id"
               className="block text-sm font-medium text-foreground"
             >
-              Número de pedido
+              Número de pedido o de compra
             </label>
             <input
               id="order-id"
@@ -79,13 +79,26 @@ export function OrderStatusContent({
         )}
       </div>
 
-      {result && (
-        <OrderDetailView
-          order={result}
-          backHref="/catalogo"
-          backLabel="Volver al catálogo"
-        />
+      {result && result.length > 1 && (
+        <p className="text-sm text-muted-foreground">
+          Esta compra tiene {result.length} pedidos: cada tienda envía y cobra el suyo.
+        </p>
       )}
+      {result?.map((order) => (
+        <div key={order.id} className="space-y-2">
+          {order.storeName ? (
+            <p className="text-sm font-semibold text-foreground">
+              {order.storeName}
+              {order.orderNumber ? (
+                <span className="ml-2 font-mono text-xs font-normal text-muted-foreground">
+                  Pedido #{order.orderNumber}
+                </span>
+              ) : null}
+            </p>
+          ) : null}
+          <OrderDetailView order={order} backHref="/catalogo" backLabel="Volver al catálogo" />
+        </div>
+      ))}
     </div>
   );
 }

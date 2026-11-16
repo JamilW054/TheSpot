@@ -116,7 +116,7 @@ async function enrichUserFromProfile(
       .maybeSingle());
   }
   if (error) return base;
-  // role es smallint en `profiles`: ROLE_DB.ADMIN (0) = admin, resto = client.
+  // role es smallint en `profiles`: 0 = admin, 2 = seller, resto = client.
   const pr = profile?.role;
   return {
     ...base,
@@ -158,7 +158,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (event === "SIGNED_OUT" && typeof window !== "undefined") {
         // Único login del sitio: el admin en /admin. Sin cuentas de cliente,
         // no hay más zonas protegidas que forzar a /login al cerrar sesión.
-        const PROTECTED = ["/admin"];
+        const PROTECTED = ["/admin", "/panel"];
         const onProtected = PROTECTED.some(
           (p) =>
             window.location.pathname === p ||

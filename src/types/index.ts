@@ -33,6 +33,11 @@ export interface CatalogProduct {
   originalPriceCents?: number | null;
   /** Nombre de la marca asociada. */
   brandName?: string | null;
+  /** Tienda del marketplace que vende el producto. */
+  storeId?: string | null;
+  storeName?: string | null;
+  storeSlug?: string | null;
+  storeIsOfficial?: boolean;
   /** Imagen de portada para la ficha y el listado. */
   coverImage: string;
   /** Todas las imágenes del producto ordenadas (cover primero). */

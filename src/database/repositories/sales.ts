@@ -100,18 +100,22 @@ type OrderRow = {
 
 const VOID = new Set(["cancelled", "refunded"]);
 
+const SALES_ORDER_SELECT =
+  "id, order_number, created_at, status, payment_status, payment_method, subtotal_cents, coupon_discount_cents, discount_cents, shipping_cents, total_cents, shipping_address, contact_email, order_items(quantity, unit_price_cents, unit_cost_cents, total_price_cents, size, color, product_snapshot)";
+
 export async function getSalesReport(opts: {
   from: string;
   to: string;
   basis: SalesBasis;
+  /** Solo ventas de esta tienda (siempre en `/panel`). */
+  storeId?: string | null;
 }): Promise<SalesReport> {
   const { startIso, endIso } = rangeToIso(opts.from, opts.to);
   const supabase = createServiceClient();
-  const { data, error } = await supabase
-    .from("orders")
-    .select(
-      "id, order_number, created_at, status, payment_status, payment_method, subtotal_cents, coupon_discount_cents, discount_cents, shipping_cents, total_cents, shipping_address, contact_email, order_items(quantity, unit_price_cents, unit_cost_cents, total_price_cents, size, color, product_snapshot)",
-    )
+  let base = supabase.from("orders");
+  const { data, error } = await (opts.storeId
+    ? base.select(SALES_ORDER_SELECT).eq("store_id", opts.storeId)
+    : base.select(SALES_ORDER_SELECT))
     .gte("created_at", startIso)
     .lte("created_at", endIso)
     .order("created_at", { ascending: false })

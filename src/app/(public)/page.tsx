@@ -13,6 +13,7 @@ import Link from "next/link";
 import { AcceptedPayments } from "@/components/brand/AcceptedPayments";
 import { SpotWordmark } from "@/components/brand/SpotWordmark";
 import { ProductCard } from "@/components/catalog/ProductCard";
+import { getPublicStores } from "@/database/repositories/stores";
 import { ScrollReveal } from "@/components/landing/ScrollReveal";
 import { SpotTicker } from "@/components/landing/SpotTicker";
 import {
@@ -68,11 +69,13 @@ const PERKS = [
 ];
 
 export default async function PublicPage() {
-  const [products, categories, covers] = await Promise.all([
+  const [products, categories, covers, stores] = await Promise.all([
     getProducts(),
     getCategoriesPublic(),
     getCategoryCoverByCategoryId(),
+    getPublicStores({ limit: 12 }),
   ]);
+  const featuredStores = stores.filter((s) => s.isFeatured || s.isOfficial).slice(0, 8);
   const soonSlugs = categories.filter((c) => c.coming_soon).map((c) => c.slug);
   // Copy de portada según las categorías configuradas en el admin.
   const roots = categories.filter((c) => !c.parent_id);
@@ -325,6 +328,51 @@ export default async function PublicPage() {
                 <ProductCard key={product.id} product={product} />
               ))}
             </div>
+          </div>
+        </section>
+      )}
+
+      {featuredStores.length > 0 && (
+        <section className="border-t border-rose-100 bg-white" aria-labelledby="sec-stores">
+          <div className={`${C} py-12 sm:py-16`}>
+            <div className="mb-6 flex items-end justify-between gap-3">
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-primary">Marketplace</p>
+                <h2 id="sec-stores" className="mt-1 text-3xl font-black tracking-tight sm:text-4xl">
+                  Tiendas destacadas
+                </h2>
+              </div>
+              <Link href="/tiendas" className="text-sm font-semibold text-primary hover:underline">
+                Ver todas
+              </Link>
+            </div>
+            <ul className="flex snap-x gap-4 overflow-x-auto pb-2">
+              {featuredStores.map((s) => (
+                <li key={s.id} className="w-40 shrink-0 snap-start">
+                  <Link href={`/tiendas/${s.slug}`} className="group block text-center">
+                    <div className="mx-auto flex size-24 items-center justify-center overflow-hidden rounded-full border border-rose-100 bg-[#fff8f9] text-xl font-black text-primary transition group-hover:scale-105">
+                      {s.logoUrl ? (
+                        // biome-ignore lint/performance/noImgElement: logo de tienda (URL externa)
+                        <img src={s.logoUrl} alt="" className="size-full object-cover" />
+                      ) : (
+                        s.name.slice(0, 2).toUpperCase()
+                      )}
+                    </div>
+                    <p className="mt-2 truncate text-sm font-semibold group-hover:text-primary">{s.name}</p>
+                    {s.tagline ? <p className="truncate text-xs text-muted-foreground">{s.tagline}</p> : null}
+                  </Link>
+                </li>
+              ))}
+              <li className="w-40 shrink-0 snap-start">
+                <Link href="/vender" className="group block text-center">
+                  <div className="mx-auto flex size-24 items-center justify-center rounded-full border-2 border-dashed border-primary/40 text-3xl font-black text-primary transition group-hover:bg-primary/5">
+                    +
+                  </div>
+                  <p className="mt-2 text-sm font-semibold text-primary">Tu tienda aquí</p>
+                  <p className="text-xs text-muted-foreground">Vende con nosotros</p>
+                </Link>
+              </li>
+            </ul>
           </div>
         </section>
       )}

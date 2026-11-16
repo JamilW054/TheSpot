@@ -1,11 +1,10 @@
-import { getSetting, setSetting } from "@/database/repositories/settings";
 import { createServiceClient } from "@/lib/supabase/server";
 
 /**
- * Métodos de pago offline de la tienda (no hay pasarela):
+ * Métodos de pago offline de cada tienda (no hay pasarela; cada tienda cobra):
  * - `cash_on_delivery`: el cliente paga al recibir.
- * - `bank_transfer`: el cliente transfiere a una de las cuentas activas.
- * Todo se administra en /admin/pagos.
+ * - `bank_transfer`: el cliente transfiere a una de las cuentas activas de la tienda.
+ * Cada tienda lo administra en /panel/pagos (`stores.payment_methods` + `bank_accounts.store_id`).
  */
 
 export const PAYMENT_METHODS = ["cash_on_delivery", "bank_transfer"] as const;
@@ -78,7 +77,8 @@ export function isBankAccountUsable(b: BankAccount): boolean {
   return b.isActive && b.accountNumber.trim() !== "" && b.holderName.trim() !== "";
 }
 
-export async function listBankAccounts(opts?: {
+export async function listBankAccounts(opts: {
+  storeId: string;
   onlyUsable?: boolean;
 }): Promise<BankAccount[]> {
   const supabase = createServiceClient();
@@ -87,14 +87,16 @@ export async function listBankAccounts(opts?: {
     .select(
       "id, bank_name, account_type, account_number, holder_name, holder_document, currency, instructions, is_active, sort_order",
     )
+    .eq("store_id", opts.storeId)
     .order("sort_order", { ascending: true })
     .order("created_at", { ascending: true });
   if (error) throw new Error(error.message);
   const all = ((data ?? []) as BankAccountRow[]).map(mapBank);
-  return opts?.onlyUsable ? all.filter(isBankAccountUsable) : all;
+  return opts.onlyUsable ? all.filter(isBankAccountUsable) : all;
 }
 
-export async function getBankAccount(id: string): Promise<BankAccount | null> {
+/** Cuenta por id, solo si pertenece a `storeId`. */
+export async function getBankAccount(id: string, storeId: string): Promise<BankAccount | null> {
   const supabase = createServiceClient();
   const { data } = await supabase
     .from("bank_accounts")
@@ -102,6 +104,7 @@ export async function getBankAccount(id: string): Promise<BankAccount | null> {
       "id, bank_name, account_type, account_number, holder_name, holder_document, currency, instructions, is_active, sort_order",
     )
     .eq("id", id)
+    .eq("store_id", storeId)
     .maybeSingle();
   return data ? mapBank(data as BankAccountRow) : null;
 }
@@ -133,9 +136,9 @@ function toRow(i: BankAccountInput) {
   };
 }
 
-export async function createBankAccount(input: BankAccountInput): Promise<void> {
+export async function createBankAccount(storeId: string, input: BankAccountInput): Promise<void> {
   const supabase = createServiceClient();
-  const { error } = await supabase.from("bank_accounts").insert(toRow(input));
+  const { error } = await supabase.from("bank_accounts").insert({ ...toRow(input), store_id: storeId });
   if (error) throw new Error(error.message);
 }
 
@@ -161,8 +164,6 @@ export async function deleteBankAccount(id: string): Promise<void> {
 // Ajustes de métodos de pago
 // ---------------------------------------------------------------------------
 
-export const PAYMENT_SETTINGS_KEY = "payment_methods";
-
 export interface PaymentSettings {
   cashOnDelivery: boolean;
   bankTransfer: boolean;
@@ -178,18 +179,34 @@ export const DEFAULT_PAYMENT_SETTINGS: PaymentSettings = {
     "Transfiere el total y envíanos el comprobante por WhatsApp con tu número de pedido.",
 };
 
-export async function getPaymentSettings(): Promise<PaymentSettings> {
-  const raw = await getSetting(PAYMENT_SETTINGS_KEY);
-  if (!raw) return DEFAULT_PAYMENT_SETTINGS;
-  try {
-    return { ...DEFAULT_PAYMENT_SETTINGS, ...(JSON.parse(raw) as Partial<PaymentSettings>) };
-  } catch {
-    return DEFAULT_PAYMENT_SETTINGS;
-  }
+export function parsePaymentSettings(raw: unknown): PaymentSettings {
+  if (!raw || typeof raw !== "object") return DEFAULT_PAYMENT_SETTINGS;
+  const r = raw as Partial<PaymentSettings>;
+  return {
+    cashOnDelivery: typeof r.cashOnDelivery === "boolean" ? r.cashOnDelivery : true,
+    bankTransfer: typeof r.bankTransfer === "boolean" ? r.bankTransfer : true,
+    cashOnDeliveryNote: r.cashOnDeliveryNote || DEFAULT_PAYMENT_SETTINGS.cashOnDeliveryNote,
+    bankTransferNote: r.bankTransferNote || DEFAULT_PAYMENT_SETTINGS.bankTransferNote,
+  };
 }
 
-export async function setPaymentSettings(s: PaymentSettings): Promise<void> {
-  await setSetting(PAYMENT_SETTINGS_KEY, JSON.stringify(s));
+export async function getPaymentSettings(storeId: string): Promise<PaymentSettings> {
+  const supabase = createServiceClient();
+  const { data } = await supabase
+    .from("stores")
+    .select("payment_methods")
+    .eq("id", storeId)
+    .maybeSingle();
+  return parsePaymentSettings((data as { payment_methods?: unknown } | null)?.payment_methods);
+}
+
+export async function setPaymentSettings(storeId: string, s: PaymentSettings): Promise<void> {
+  const supabase = createServiceClient();
+  const { error } = await supabase
+    .from("stores")
+    .update({ payment_methods: s, updated_at: new Date().toISOString() })
+    .eq("id", storeId);
+  if (error) throw new Error(error.message);
 }
 
 /** Lo que el checkout público necesita: métodos habilitados + cuentas usables. */
@@ -198,11 +215,11 @@ export interface CheckoutPaymentOptions {
   bankAccounts: BankAccountSnapshot[];
 }
 
-export async function getCheckoutPaymentOptions(): Promise<CheckoutPaymentOptions> {
-  const [settings, banks] = await Promise.all([
-    getPaymentSettings(),
-    listBankAccounts({ onlyUsable: true }).catch(() => [] as BankAccount[]),
-  ]);
+/** Opciones de pago a partir de ajustes y cuentas ya cargados (puro). */
+export function buildCheckoutPaymentOptions(
+  settings: PaymentSettings,
+  banks: BankAccount[],
+): CheckoutPaymentOptions {
   const methods: CheckoutPaymentOptions["methods"] = [];
   if (settings.cashOnDelivery) {
     methods.push({
@@ -230,16 +247,70 @@ export async function getCheckoutPaymentOptions(): Promise<CheckoutPaymentOption
   return { methods, bankAccounts: banks.map(bankSnapshot) };
 }
 
+export async function getCheckoutPaymentOptions(storeId: string): Promise<CheckoutPaymentOptions> {
+  const [settings, banks] = await Promise.all([
+    getPaymentSettings(storeId),
+    listBankAccounts({ storeId, onlyUsable: true }).catch(() => [] as BankAccount[]),
+  ]);
+  return buildCheckoutPaymentOptions(settings, banks);
+}
+
+/** Opciones de pago de varias tiendas a la vez (checkout dividido). */
+export async function getCheckoutPaymentOptionsByStore(
+  storeIds: string[],
+): Promise<Record<string, CheckoutPaymentOptions>> {
+  const unique = [...new Set(storeIds.filter(Boolean))];
+  const out: Record<string, CheckoutPaymentOptions> = {};
+  if (unique.length === 0) return out;
+  const supabase = createServiceClient();
+  const [{ data: stores }, { data: banks }] = await Promise.all([
+    supabase.from("stores").select("id, payment_methods").in("id", unique),
+    supabase
+      .from("bank_accounts")
+      .select(
+        "id, store_id, bank_name, account_type, account_number, holder_name, holder_document, currency, instructions, is_active, sort_order",
+      )
+      .in("store_id", unique)
+      .order("sort_order", { ascending: true }),
+  ]);
+  const banksByStore = new Map<string, BankAccount[]>();
+  for (const r of (banks ?? []) as (BankAccountRow & { store_id: string })[]) {
+    const b = mapBank(r);
+    if (!isBankAccountUsable(b)) continue;
+    const list = banksByStore.get(r.store_id) ?? [];
+    list.push(b);
+    banksByStore.set(r.store_id, list);
+  }
+  for (const st of (stores ?? []) as { id: string; payment_methods: unknown }[]) {
+    out[st.id] = buildCheckoutPaymentOptions(
+      parsePaymentSettings(st.payment_methods),
+      banksByStore.get(st.id) ?? [],
+    );
+  }
+  return out;
+}
+
 // ---------------------------------------------------------------------------
 // Envío gratis configurable
 // ---------------------------------------------------------------------------
 
-export const FREE_SHIPPING_SETTING_KEY = "free_shipping_min_cents";
+/** Umbral de envío gratis de una tienda en centavos (0 = desactivado). */
+export async function getFreeShippingMinCents(storeId: string): Promise<number> {
+  const supabase = createServiceClient();
+  const { data } = await supabase
+    .from("stores")
+    .select("free_shipping_min_cents")
+    .eq("id", storeId)
+    .maybeSingle();
+  const n = Number((data as { free_shipping_min_cents?: number | null } | null)?.free_shipping_min_cents ?? 0);
+  return Number.isFinite(n) && n > 0 ? n : 0;
+}
 
-/** Umbral de envío gratis en centavos (0 = desactivado). */
-export async function getFreeShippingMinCents(): Promise<number> {
-  const raw = await getSetting(FREE_SHIPPING_SETTING_KEY);
-  const n = raw == null ? Number.NaN : Number.parseInt(raw, 10);
-  if (Number.isFinite(n) && n >= 0) return n;
-  return Number(process.env.NEXT_PUBLIC_FREE_SHIPPING_CENTS ?? "350000");
+export async function setFreeShippingMinCents(storeId: string, cents: number): Promise<void> {
+  const supabase = createServiceClient();
+  const { error } = await supabase
+    .from("stores")
+    .update({ free_shipping_min_cents: cents > 0 ? cents : null, updated_at: new Date().toISOString() })
+    .eq("id", storeId);
+  if (error) throw new Error(error.message);
 }

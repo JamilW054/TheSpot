@@ -1,5 +1,15 @@
 -- JW — datos demo para desarrollo local (`pnpm db:reset`).
 
+-- Marketplace: todo lo de la demo pertenece a la tienda oficial (creada por la
+-- migración 00009). Default temporal de store_id solo durante el seed.
+do $$
+declare sid uuid := (select id from public.stores where is_official limit 1);
+begin
+  execute format('alter table public.warehouses alter column store_id set default %L', sid);
+  execute format('alter table public.products alter column store_id set default %L', sid);
+  execute format('alter table public.shipping_methods alter column store_id set default %L', sid);
+end $$;
+
 insert into public.warehouses (id, name, country_code, is_active)
 values ('00000000-0000-0000-0000-000000000001', 'Principal', 'DO', true);
 
@@ -84,3 +94,13 @@ insert into public.app_settings (key, value)
 values
   ('order_notification_email', 'jamilwilliams054@gmail.com'),
   ('whatsapp_number', '18097612875');
+
+-- Fin del seed: quita los defaults temporales y completa el contacto de la tienda oficial.
+alter table public.warehouses alter column store_id drop default;
+alter table public.products alter column store_id drop default;
+alter table public.shipping_methods alter column store_id drop default;
+
+update public.stores
+set whatsapp = coalesce(whatsapp, (select value from public.app_settings where key = 'whatsapp_number')),
+    notification_email = coalesce(notification_email, (select value from public.app_settings where key = 'order_notification_email'))
+where is_official;

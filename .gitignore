@@ -54,3 +54,6 @@ supabase/.temp/
 .dev.vars*
 !.dev.vars.example
 cloudflare-env.d.ts
+
+# Credenciales de prueba locales (scripts/create-test-admin.mts)
+.qa-admin.local

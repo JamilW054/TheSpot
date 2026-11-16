@@ -1,5 +1,6 @@
 "use client";
 
+import { usePanelBase } from "@/lib/panel-base";
 import {
   CheckCircle2,
   ChevronDown,
@@ -319,6 +320,7 @@ function PedidoCard({
   onMarkCompletado?: () => void;
   onDelete?: () => void;
 }) {
+  const panelBase = usePanelBase();
   const s = pedido.shipping;
   const canDelete = pedido.paymentStatus !== "paid";
   const hasAddress = s && (s.addressLine1 || s.city);
@@ -343,7 +345,7 @@ function PedidoCard({
         <div className="min-w-0 flex-1">
           {/* Nombre */}
           <Link
-            href={`/admin/pedidos/${pedido.id}`}
+            href={`${panelBase}/pedidos/${pedido.id}`}
             className="block truncate font-semibold leading-snug text-foreground hover:text-primary"
           >
             {pedido.cliente}
@@ -351,6 +353,9 @@ function PedidoCard({
               #{pedido.id.slice(0, 8).toUpperCase()}
             </span>
           </Link>
+          {pedido.tienda && panelBase === "/admin" ? (
+            <p className="truncate text-xs font-medium text-primary">{pedido.tienda}</p>
+          ) : null}
           {/* Email */}
           {s?.email && (
             <p className="truncate text-xs text-muted-foreground mt-0.5">{s.email}</p>
@@ -481,6 +486,7 @@ function PedidosTableView({
   onView: (p: Pedido) => void;
   onDelete?: (p: Pedido) => void;
 }) {
+  const panelBase = usePanelBase();
   const selectAllRef = useRef<HTMLInputElement>(null);
   const allChecked = pedidos.length > 0 && pedidos.every((p) => selectedIds.has(p.id));
   const someChecked = selectedIds.size > 0;
@@ -543,7 +549,7 @@ function PedidosTableView({
                 </td>
                 <td className="px-4 py-3">
                   <Link
-                    href={`/admin/pedidos/${p.id}`}
+                    href={`${panelBase}/pedidos/${p.id}`}
                     className="font-medium text-foreground hover:text-primary"
                   >
                     {p.cliente}{" "}
@@ -660,6 +666,7 @@ export function PedidosTable({
   onMarkCompletado,
   onDelete,
 }: PedidosTableProps) {
+  const panelBase = usePanelBase();
   const [searchQuery, setSearchQuery] = useState("");
   const [filterEstado, setFilterEstado] = useState<FilterEstado>("todos");
   const [showEstadoPanel, setShowEstadoPanel] = useState(false);
@@ -667,8 +674,8 @@ export function PedidosTable({
   const [view, setView] = useState<"cards" | "table">("cards");
   const router = useRouter();
   const openDetail = useCallback(
-    (p: Pedido) => router.push(`/admin/pedidos/${p.id}`),
-    [router],
+    (p: Pedido) => router.push(`${panelBase}/pedidos/${p.id}`),
+    [router, panelBase],
   );
   const [confirmState, setConfirmState] = useState<ConfirmDialogState | null>(null);
 

@@ -29,6 +29,8 @@ export interface PedidoLineItem {
 export interface Pedido {
   id: string;
   cliente: string;
+  /** Tienda del marketplace que atiende el pedido. */
+  tienda?: string | null;
   items: number;
   /** Detalle de productos del pedido (nombre + foto) para el admin. */
   lineItems: PedidoLineItem[];
@@ -58,6 +60,11 @@ export type OrderPaymentStatus = "pending" | "paid" | "declined";
 /** Detalle de un pedido para consulta pública por ID (estado del pedido). */
 export interface OrderStatusDetail {
   id: string;
+  /** Número corto del pedido (#XXXXXXXX). */
+  orderNumber?: string;
+  /** Tienda que atiende el pedido (marketplace). */
+  storeName?: string | null;
+  storeSlug?: string | null;
   status: PedidoEstado;
   totalCents: number;
   createdAt: string;

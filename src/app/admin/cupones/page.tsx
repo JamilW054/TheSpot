@@ -1,15 +1,6 @@
-import { PageLayout } from "@/components/layout";
-import { CuponesManager } from "@/features/admin/cupones-manager";
-import { couponsRepo } from "@/database/repositories/repositories";
+import { redirect } from "next/navigation";
 
-export default async function AdminCuponesPage() {
-  const rows = await couponsRepo.findMany();
-  return (
-    <PageLayout
-      title="Cupones"
-      description="Códigos de descuento: porcentaje o monto fijo, con límites y vigencia."
-    >
-      <CuponesManager initialRows={rows} />
-    </PageLayout>
-  );
+/** Se gestiona por tienda en /panel/cupones. */
+export default function Page() {
+  redirect("/panel/cupones");
 }

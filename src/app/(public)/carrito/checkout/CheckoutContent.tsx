@@ -2,27 +2,23 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { BankAccountCard } from "@/components/checkout/BankAccountCard";
-import { FreeShippingProgress } from "@/components/cart/FreeShippingProgress";
 import { citiesForProvince, DR_PROVINCES } from "@/config/dominican-republic";
 import {
   qualifiesForFreeShipping,
+  remainingForFreeShipping,
   resolveShippingCents,
 } from "@/config/shipping";
 import { useCart } from "@/contexts/cart-context";
-import { useStoreSettings } from "@/contexts/store-settings-context";
 import type { ShippingMethod } from "@/database/repositories";
-import type {
-  BankAccountSnapshot,
-  CheckoutPaymentOptions,
-  PaymentMethod,
-} from "@/database/repositories/payments";
+import type { CheckoutOrderResult } from "@/database/repositories/checkout";
+import type { CheckoutPaymentOptions, PaymentMethod } from "@/database/repositories/payments";
 import { checkoutAction } from "@/lib/actions/checkout";
 import { validateCouponAction } from "@/lib/actions/coupons";
 import { formatDOPFromCents } from "@/lib/format-currency";
 import { unitPriceForSelection } from "@/lib/variants";
-import type { CatalogProduct } from "@/types";
+import type { CartItem, CatalogProduct } from "@/types";
 
 function isExternalImage(src: string): boolean {
   return (
@@ -78,87 +74,98 @@ function saveContact(contact: SavedContact): void {
   }
 }
 
-interface OrderConfirmation {
-  orderNumber: string;
-  totalCents: number;
-  whatsappUrl: string | null;
-  paymentMethod: PaymentMethod;
-  paymentMethodLabel: string;
-  bankAccount: BankAccountSnapshot | null;
-  paymentNote: string;
+/** Datos públicos de cada tienda que el checkout necesita. */
+export interface CheckoutStoreInfo {
+  id: string;
+  name: string;
+  slug: string;
+  freeShippingMinCents: number;
 }
 
-function ConfirmationScreen({ order }: { order: OrderConfirmation }) {
+/** Elecciones del cliente para la parte de una tienda. */
+interface StoreChoice {
+  shippingId: string | null;
+  paymentMethod: PaymentMethod;
+  bankAccountId: string | null;
+  couponInput: string;
+  appliedCoupon: string | null;
+  discountCents: number;
+  couponError: string | null;
+  couponLoading: boolean;
+}
+
+interface Confirmation {
+  checkoutNumber: string;
+  totalCents: number;
+  orders: (CheckoutOrderResult & { paymentNote: string })[];
+}
+
+function ConfirmationScreen({ confirmation }: { confirmation: Confirmation }) {
+  const multi = confirmation.orders.length > 1;
   return (
-    <div className="mx-auto max-w-lg rounded-[14px] border border-border bg-card p-8 sm:p-10 text-center">
-      <div className="mx-auto flex size-14 items-center justify-center rounded-full bg-primary/10 text-primary">
-        <svg
-          className="size-7"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          aria-hidden
-        >
-          <path d="M20 6 9 17l-5-5" />
-        </svg>
-      </div>
-      <h2 className="mt-5 text-xl font-semibold text-foreground">
-        ¡Pedido recibido!
-      </h2>
-      <p className="mt-2 text-sm text-muted-foreground">
-        Tu número de pedido es{" "}
-        <span className="font-mono font-semibold text-foreground">
-          #{order.orderNumber}
-        </span>
-        . Total: {formatDOPFromCents(order.totalCents)}.
-      </p>
-      <p className="mt-1 text-sm text-muted-foreground">
-        Método de pago:{" "}
-        <span className="font-medium text-foreground">
-          {order.paymentMethodLabel}
-        </span>
-        .
-      </p>
-      {order.paymentMethod === "bank_transfer" && order.bankAccount ? (
-        <div className="mt-5 space-y-2">
-          <p className="text-sm font-semibold text-foreground">
-            Datos para transferir
-          </p>
-          <BankAccountCard
-            account={order.bankAccount}
-            amountLabel={formatDOPFromCents(order.totalCents)}
-          />
-          <p className="text-xs text-muted-foreground">
-            Usa <span className="font-mono">#{order.orderNumber}</span> como
-            concepto. {order.paymentNote}
-          </p>
+    <div className="mx-auto max-w-2xl space-y-5">
+      <div className="rounded-[14px] border border-border bg-card p-8 text-center">
+        <div className="mx-auto flex size-14 items-center justify-center rounded-full bg-primary/10 text-primary">
+          <svg className="size-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <path d="M20 6 9 17l-5-5" />
+          </svg>
         </div>
-      ) : (
-        <p className="mt-3 text-sm text-muted-foreground">
-          {order.paymentNote} Te contactaremos para coordinar la entrega.
+        <h2 className="mt-5 text-xl font-semibold text-foreground">¡Compra recibida!</h2>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Número de compra{" "}
+          <span className="font-mono font-semibold text-foreground">#{confirmation.checkoutNumber}</span>. Total:{" "}
+          {formatDOPFromCents(confirmation.totalCents)}.
         </p>
-      )}
-      {order.whatsappUrl && (
-        <a
-          href={order.whatsappUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-6 inline-flex h-11 items-center justify-center rounded-full bg-[#25D366] px-6 text-sm font-semibold text-white transition-opacity hover:opacity-90"
-        >
-          Confirmar pedido por WhatsApp
-        </a>
-      )}
-      <div className="mt-4">
+        {multi ? (
+          <p className="mt-1 text-sm text-muted-foreground">
+            Tu compra se dividió en {confirmation.orders.length} pedidos: cada tienda te envía y te cobra lo suyo.
+          </p>
+        ) : null}
         <Link
-          href={`/estado-pedido?pedido=${order.orderNumber}`}
-          className="text-sm font-medium text-primary hover:underline"
+          href={`/estado-pedido?pedido=${confirmation.checkoutNumber}`}
+          className="mt-4 inline-block text-sm font-medium text-primary hover:underline"
         >
-          Consultar estado del pedido más tarde
+          Consultar el estado más tarde
         </Link>
       </div>
+
+      {confirmation.orders.map((o) => (
+        <div key={o.orderId} className="rounded-[14px] border border-border bg-card p-6">
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <p className="font-semibold text-foreground">
+              {o.storeName}{" "}
+              <span className="font-mono text-sm font-normal text-muted-foreground">· Pedido #{o.orderNumber}</span>
+            </p>
+            <p className="font-mono font-semibold tabular-nums">{formatDOPFromCents(o.totalCents)}</p>
+          </div>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Pago: <span className="font-medium text-foreground">{o.paymentMethodLabel}</span>
+          </p>
+          {o.paymentMethod === "bank_transfer" && o.bankAccount ? (
+            <div className="mt-4 space-y-2">
+              <p className="text-sm font-semibold text-foreground">Transfiere a {o.storeName}</p>
+              <BankAccountCard account={o.bankAccount} amountLabel={formatDOPFromCents(o.totalCents)} />
+              <p className="text-xs text-muted-foreground">
+                Usa <span className="font-mono">#{o.orderNumber}</span> como concepto. {o.paymentNote}
+              </p>
+            </div>
+          ) : (
+            <p className="mt-2 text-sm text-muted-foreground">
+              {o.paymentNote} {o.storeName} te contactará para coordinar la entrega.
+            </p>
+          )}
+          {o.whatsappUrl ? (
+            <a
+              href={o.whatsappUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-4 inline-flex h-10 items-center justify-center rounded-full bg-[#25D366] px-5 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+            >
+              Confirmar con {o.storeName} por WhatsApp
+            </a>
+          ) : null}
+        </div>
+      ))}
     </div>
   );
 }
@@ -166,27 +173,18 @@ function ConfirmationScreen({ order }: { order: OrderConfirmation }) {
 export function CheckoutContent({
   products,
   shippingMethods,
-  paymentOptions,
+  paymentOptionsByStore,
+  stores,
 }: {
   products: CatalogProduct[];
   shippingMethods: ShippingMethod[];
-  paymentOptions: CheckoutPaymentOptions;
+  paymentOptionsByStore: Record<string, CheckoutPaymentOptions>;
+  stores: CheckoutStoreInfo[];
 }) {
-  const { freeShippingMinCents } = useStoreSettings();
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(
-    paymentOptions.methods[0]?.method ?? "cash_on_delivery",
-  );
-  const [bankAccountId, setBankAccountId] = useState<string | null>(
-    paymentOptions.bankAccounts.length === 1
-      ? paymentOptions.bankAccounts[0].id
-      : null,
-  );
-  const selectedBank =
-    paymentOptions.bankAccounts.find((b) => b.id === bankAccountId) ?? null;
   const { items, clearCart } = useCart();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [order, setOrder] = useState<OrderConfirmation | null>(null);
+  const [confirmation, setConfirmation] = useState<Confirmation | null>(null);
 
   const [province, setProvince] = useState("");
   const [city, setCity] = useState("");
@@ -200,10 +198,7 @@ export function CheckoutContent({
     const saved = loadSavedContact();
     if (!saved) return;
     for (const [key, id] of REMEMBERED_FIELDS) {
-      const el = document.getElementById(id) as
-        | HTMLInputElement
-        | HTMLTextAreaElement
-        | null;
+      const el = document.getElementById(id) as HTMLInputElement | HTMLTextAreaElement | null;
       if (el && !el.value && saved[key]) el.value = saved[key];
     }
     if (saved.province && DR_PROVINCES.some((p) => p.name === saved.province)) {
@@ -219,53 +214,84 @@ export function CheckoutContent({
     }
   }, [items.length > 0]);
 
-  const [selectedShippingId, setSelectedShippingId] = useState<string | null>(
-    shippingMethods[0]?.id ?? null,
-  );
+  const productMap = useMemo(() => new Map(products.map((p) => [p.id, p])), [products]);
+  const storeMap = useMemo(() => new Map(stores.map((s) => [s.id, s])), [stores]);
 
-  const [couponCode, setCouponCode] = useState("");
-  const [couponDiscount, setCouponDiscount] = useState(0);
-  const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
-  const [couponError, setCouponError] = useState<string | null>(null);
-  const [couponLoading, setCouponLoading] = useState(false);
+  // Partes del carrito por tienda.
+  const groups = useMemo(() => {
+    const map = new Map<string, { storeId: string; items: CartItem[]; subtotalCents: number }>();
+    for (const item of items) {
+      const p = productMap.get(item.productId);
+      if (!p?.storeId) continue;
+      const g = map.get(p.storeId) ?? { storeId: p.storeId, items: [], subtotalCents: 0 };
+      g.items.push(item);
+      g.subtotalCents += unitPriceForSelection(p, item.size, item.color) * item.quantity;
+      map.set(p.storeId, g);
+    }
+    return [...map.values()];
+  }, [items, productMap]);
 
-  const productMap = new Map(products.map((p) => [p.id, p]));
-  let subtotalCents = 0;
-  items.forEach((item) => {
-    const p = productMap.get(item.productId);
-    if (p)
-      subtotalCents +=
-        unitPriceForSelection(p, item.size, item.color) * item.quantity;
+  const [choices, setChoices] = useState<Record<string, StoreChoice>>({});
+  const choiceFor = (storeId: string): StoreChoice => {
+    const existing = choices[storeId];
+    if (existing) return existing;
+    const options = paymentOptionsByStore[storeId];
+    const methods = shippingMethods.filter((m) => m.storeId === storeId);
+    return {
+      shippingId: methods[0]?.id ?? null,
+      paymentMethod: options?.methods[0]?.method ?? "cash_on_delivery",
+      bankAccountId: options?.bankAccounts.length === 1 ? options.bankAccounts[0].id : null,
+      couponInput: "",
+      appliedCoupon: null,
+      discountCents: 0,
+      couponError: null,
+      couponLoading: false,
+    };
+  };
+  const updateChoice = (storeId: string, patch: Partial<StoreChoice>) =>
+    setChoices((prev) => ({ ...prev, [storeId]: { ...choiceFor(storeId), ...prev[storeId], ...patch } }));
+
+  const parts = groups.map((g) => {
+    const c = choiceFor(g.storeId);
+    const store = storeMap.get(g.storeId);
+    const methods = shippingMethods.filter((m) => m.storeId === g.storeId);
+    const selected = methods.find((m) => m.id === c.shippingId) ?? null;
+    const freeMin = store?.freeShippingMinCents ?? 0;
+    const shippingCents = resolveShippingCents(g.subtotalCents, selected?.priceCents ?? 0, freeMin);
+    const discountCents = c.appliedCoupon ? Math.min(c.discountCents, g.subtotalCents) : 0;
+    return {
+      ...g,
+      store,
+      choice: c,
+      methods,
+      freeMin,
+      freeShipping: qualifiesForFreeShipping(g.subtotalCents, freeMin),
+      shippingCents,
+      discountCents,
+      totalCents: Math.max(0, g.subtotalCents - discountCents + shippingCents),
+      options: paymentOptionsByStore[g.storeId],
+    };
   });
+  const grandTotal = parts.reduce((a, p) => a + p.totalCents, 0);
 
-  const selectedShipping =
-    shippingMethods.find((m) => m.id === selectedShippingId) ?? null;
-  const freeShipping = qualifiesForFreeShipping(
-    subtotalCents,
-    freeShippingMinCents,
-  );
-  const shippingCents = resolveShippingCents(
-    subtotalCents,
-    selectedShipping?.priceCents ?? 0,
-    freeShippingMinCents,
-  );
-  const discountCents = appliedCoupon ? couponDiscount : 0;
-  const totalCents = Math.max(0, subtotalCents - discountCents + shippingCents);
-
-  const handleApplyCoupon = async () => {
-    setCouponError(null);
-    const code = couponCode.trim();
+  const applyCoupon = async (storeId: string, subtotalCents: number) => {
+    const code = choiceFor(storeId).couponInput.trim();
     if (!code) return;
-    setCouponLoading(true);
-    const res = await validateCouponAction(code, subtotalCents);
-    setCouponLoading(false);
+    updateChoice(storeId, { couponLoading: true, couponError: null });
+    const res = await validateCouponAction(code, subtotalCents, storeId);
     if (res.valid) {
-      setAppliedCoupon(res.code ?? code);
-      setCouponDiscount(res.discountCents ?? 0);
+      updateChoice(storeId, {
+        couponLoading: false,
+        appliedCoupon: res.code ?? code,
+        discountCents: res.discountCents ?? 0,
+      });
     } else {
-      setAppliedCoupon(null);
-      setCouponDiscount(0);
-      setCouponError(res.reason ?? "Cupón no válido.");
+      updateChoice(storeId, {
+        couponLoading: false,
+        appliedCoupon: null,
+        discountCents: 0,
+        couponError: res.reason ?? "Cupón no válido.",
+      });
     }
   };
 
@@ -276,22 +302,21 @@ export function CheckoutContent({
       setError("Elige tu provincia y ciudad.");
       return;
     }
-    if (paymentMethod === "bank_transfer" && !bankAccountId) {
-      setError("Elige el banco al que vas a transferir.");
-      return;
+    for (const p of parts) {
+      if (!p.store) {
+        setError("Una de las tiendas de tu carrito ya no está disponible. Quita sus productos para continuar.");
+        return;
+      }
+      if (p.choice.paymentMethod === "bank_transfer" && !p.choice.bankAccountId) {
+        setError(`${p.store.name}: elige el banco al que vas a transferir.`);
+        return;
+      }
     }
     setLoading(true);
 
     const form = e.currentTarget;
     const value = (id: string) =>
-      (
-        (
-          form.querySelector(`#${id}`) as
-            | HTMLInputElement
-            | HTMLTextAreaElement
-            | null
-        )?.value ?? ""
-      ).trim();
+      ((form.querySelector(`#${id}`) as HTMLInputElement | HTMLTextAreaElement | null)?.value ?? "").trim();
 
     const result = await checkoutAction({
       items: items.map((item) => ({
@@ -310,11 +335,14 @@ export function CheckoutContent({
         state: province || null,
         country: "DO",
       },
-      shippingMethodId: selectedShippingId,
-      couponCode: appliedCoupon,
       notes: value("checkout-notes") || null,
-      paymentMethod,
-      bankAccountId: paymentMethod === "bank_transfer" ? bankAccountId : null,
+      stores: parts.map((p) => ({
+        storeId: p.storeId,
+        shippingMethodId: p.choice.shippingId,
+        couponCode: p.choice.appliedCoupon,
+        paymentMethod: p.choice.paymentMethod,
+        bankAccountId: p.choice.paymentMethod === "bank_transfer" ? p.choice.bankAccountId : null,
+      })),
     });
 
     setLoading(false);
@@ -333,47 +361,22 @@ export function CheckoutContent({
       city: resolvedCity,
     });
     clearCart();
-    setOrder({
-      orderNumber: result.result.orderNumber,
+    setConfirmation({
+      checkoutNumber: result.result.checkoutNumber,
       totalCents: result.result.totalCents,
-      whatsappUrl: result.result.whatsappUrl,
-      paymentMethod: result.result.paymentMethod,
-      paymentMethodLabel: result.result.paymentMethodLabel,
-      bankAccount: result.result.bankAccount,
-      paymentNote:
-        paymentOptions.methods.find(
-          (m) => m.method === result.result.paymentMethod,
-        )?.note ?? "",
+      orders: result.result.orders.map((o) => ({
+        ...o,
+        paymentNote: paymentOptionsByStore[o.storeId]?.methods.find((m) => m.method === o.paymentMethod)?.note ?? "",
+      })),
     });
   };
 
-  if (order) {
-    return <ConfirmationScreen order={order} />;
-  }
+  if (confirmation) return <ConfirmationScreen confirmation={confirmation} />;
 
   if (items.length === 0) {
     return (
       <div className="rounded-[14px] border border-border bg-card p-12 sm:p-16 text-center">
-        <div className="mx-auto flex size-16 items-center justify-center rounded-full bg-muted/60 text-muted-foreground">
-          <svg
-            className="size-8"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-label="Carrito vacío"
-          >
-            <title>Carrito vacío</title>
-            <circle cx="9" cy="21" r="1" />
-            <circle cx="20" cy="21" r="1" />
-            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
-          </svg>
-        </div>
-        <h2 className="mt-6 text-xl font-semibold text-foreground">
-          No hay productos en el carrito
-        </h2>
+        <h2 className="text-xl font-semibold text-foreground">No hay productos en el carrito</h2>
         <p className="mt-2 text-sm text-muted-foreground max-w-sm mx-auto">
           Añade productos desde el catálogo y vuelve al checkout.
         </p>
@@ -388,16 +391,9 @@ export function CheckoutContent({
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="lg:grid lg:grid-cols-[1fr_380px] lg:gap-10 xl:gap-12"
-    >
-      {/* Datos de entrega */}
+    <form onSubmit={handleSubmit} className="lg:grid lg:grid-cols-[1fr_380px] lg:gap-10 xl:gap-12">
       <div className="lg:min-w-0">
-        <p className="mb-4 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-          Datos de entrega
-        </p>
-
+        <p className="mb-4 text-xs font-medium uppercase tracking-wider text-muted-foreground">Datos de entrega</p>
         <div className="rounded-[14px] border border-border bg-card p-4 sm:p-5 space-y-5">
           <div>
             <label htmlFor="checkout-name" className={labelClass}>
@@ -556,259 +552,222 @@ export function CheckoutContent({
           </div>
         </div>
 
-        {/* Método de pago */}
-        <p className="mb-4 mt-8 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-          Método de pago
-        </p>
-        <div className="space-y-3 rounded-[14px] border border-border bg-card p-4 sm:p-5">
-          {paymentOptions.methods.map((m) => (
-            <label
-              key={m.method}
-              className={`flex cursor-pointer items-start gap-3 rounded-[10px] border p-3 text-sm transition-colors ${
-                paymentMethod === m.method
-                  ? "border-primary/60 bg-primary/5"
-                  : "border-border hover:border-primary/30"
-              }`}
-            >
-              <input
-                type="radio"
-                name="payment_method"
-                value={m.method}
-                checked={paymentMethod === m.method}
-                onChange={() => setPaymentMethod(m.method)}
-                className="mt-0.5 accent-primary"
-              />
-              <span>
-                <span className="block font-medium text-foreground">
-                  {m.label}
-                </span>
-                <span className="block text-xs text-muted-foreground">
-                  {m.note}
-                </span>
-              </span>
-            </label>
-          ))}
-
-          {paymentMethod === "bank_transfer" && (
-            <div className="space-y-3 pt-1">
-              <p className="text-sm font-medium text-foreground">
-                ¿A qué banco vas a transferir?
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {paymentOptions.bankAccounts.map((b) => (
-                  <button
-                    key={b.id}
-                    type="button"
-                    onClick={() => setBankAccountId(b.id)}
-                    aria-pressed={bankAccountId === b.id}
-                    className={`rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
-                      bankAccountId === b.id
-                        ? "border-primary bg-primary text-primary-foreground"
-                        : "border-border bg-background text-foreground hover:border-primary/60"
-                    }`}
-                  >
-                    {b.bankName}
-                  </button>
-                ))}
-              </div>
-              {selectedBank ? (
-                <BankAccountCard
-                  account={selectedBank}
-                  amountLabel={formatDOPFromCents(totalCents)}
-                />
-              ) : (
-                <p className="text-xs text-muted-foreground">
-                  Elige un banco para ver los datos de la cuenta.
+        {/* Una sección por tienda: productos, envío, cupón y pago */}
+        <div className="mt-8 space-y-6">
+          {parts.map((p, idx) => (
+            <section key={p.storeId} className="rounded-[14px] border border-border bg-card overflow-hidden" aria-label={`Pedido de ${p.store?.name ?? "tienda"}`}>
+              <header className="flex flex-wrap items-baseline justify-between gap-2 border-b border-border bg-muted/30 px-4 py-3 sm:px-5">
+                <p className="text-sm font-semibold text-foreground">
+                  {parts.length > 1 ? `Pedido ${idx + 1} · ` : ""}Vendido por{" "}
+                  {p.store ? (
+                    <Link href={`/tiendas/${p.store.slug}`} className="text-primary hover:underline" target="_blank">
+                      {p.store.name}
+                    </Link>
+                  ) : (
+                    "tienda no disponible"
+                  )}
                 </p>
-              )}
-            </div>
-          )}
+                <p className="font-mono text-sm font-semibold tabular-nums">{formatDOPFromCents(p.totalCents)}</p>
+              </header>
+
+              <ul className="divide-y divide-border">
+                {p.items.map((item) => {
+                  const product = productMap.get(item.productId);
+                  if (!product) return null;
+                  const unitCents = unitPriceForSelection(product, item.size, item.color);
+                  return (
+                    <li key={`${item.productId}:${item.size ?? ""}:${item.color ?? ""}`} className="flex gap-3 px-4 py-3 sm:px-5">
+                      <div className="relative size-16 shrink-0 overflow-hidden rounded-[10px] bg-muted ring-1 ring-border/50">
+                        <Image src={product.coverImage} alt={product.name} fill className="object-cover" sizes="64px" unoptimized={isExternalImage(product.coverImage)} />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-semibold text-foreground">{product.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {[item.size, item.color].filter(Boolean).join(" · ")}
+                        </p>
+                        <p className="font-mono text-xs text-muted-foreground tabular-nums">
+                          {formatDOPFromCents(unitCents)} × {item.quantity}
+                        </p>
+                      </div>
+                      <p className="shrink-0 font-mono text-sm font-semibold tabular-nums">
+                        {formatDOPFromCents(unitCents * item.quantity)}
+                      </p>
+                    </li>
+                  );
+                })}
+              </ul>
+
+              <div className="space-y-5 border-t border-border p-4 sm:p-5">
+                {/* Envío */}
+                <div className="space-y-2">
+                  <p className="text-sm font-semibold text-foreground">Envío</p>
+                  {p.freeMin > 0 && !p.freeShipping ? (
+                    <p className="text-xs text-primary">
+                      Te faltan {formatDOPFromCents(remainingForFreeShipping(p.subtotalCents, p.freeMin))} en esta tienda para envío gratis.
+                    </p>
+                  ) : null}
+                  {p.methods.length === 0 ? (
+                    <p className="text-xs text-muted-foreground">La tienda coordinará el envío contigo.</p>
+                  ) : (
+                    p.methods.map((m) => (
+                      <label
+                        key={m.id}
+                        className={`flex cursor-pointer items-center justify-between gap-3 rounded-[10px] border p-3 text-sm transition-colors ${
+                          p.choice.shippingId === m.id ? "border-primary/60 bg-primary/5" : "border-border"
+                        }`}
+                      >
+                        <span className="flex items-center gap-2">
+                          <input
+                            type="radio"
+                            name={`shipping-${p.storeId}`}
+                            checked={p.choice.shippingId === m.id}
+                            onChange={() => updateChoice(p.storeId, { shippingId: m.id })}
+                            className="accent-primary"
+                          />
+                          <span>
+                            <span className="font-medium text-foreground">{m.name}</span>
+                            {(m.minDays != null || m.maxDays != null) && (
+                              <span className="ml-1 text-xs text-muted-foreground">
+                                ({m.minDays ?? "?"}-{m.maxDays ?? "?"} días)
+                              </span>
+                            )}
+                          </span>
+                        </span>
+                        <span className="font-mono tabular-nums">
+                          {p.freeShipping || m.priceCents === 0 ? "Gratis" : formatDOPFromCents(m.priceCents)}
+                        </span>
+                      </label>
+                    ))
+                  )}
+                </div>
+
+                {/* Pago */}
+                <div className="space-y-2">
+                  <p className="text-sm font-semibold text-foreground">Pago a {p.store?.name ?? "la tienda"}</p>
+                  {(p.options?.methods ?? []).map((m) => (
+                    <label
+                      key={m.method}
+                      className={`flex cursor-pointer items-start gap-3 rounded-[10px] border p-3 text-sm transition-colors ${
+                        p.choice.paymentMethod === m.method ? "border-primary/60 bg-primary/5" : "border-border"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name={`payment-${p.storeId}`}
+                        checked={p.choice.paymentMethod === m.method}
+                        onChange={() => updateChoice(p.storeId, { paymentMethod: m.method })}
+                        className="mt-0.5 accent-primary"
+                      />
+                      <span>
+                        <span className="block font-medium text-foreground">{m.label}</span>
+                        <span className="block text-xs text-muted-foreground">{m.note}</span>
+                      </span>
+                    </label>
+                  ))}
+                  {p.choice.paymentMethod === "bank_transfer" && p.options ? (
+                    <div className="space-y-3 pt-1">
+                      <div className="flex flex-wrap gap-2">
+                        {p.options.bankAccounts.map((b) => (
+                          <button
+                            key={b.id}
+                            type="button"
+                            onClick={() => updateChoice(p.storeId, { bankAccountId: b.id })}
+                            aria-pressed={p.choice.bankAccountId === b.id}
+                            className={`rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
+                              p.choice.bankAccountId === b.id
+                                ? "border-primary bg-primary text-primary-foreground"
+                                : "border-border bg-background hover:border-primary/60"
+                            }`}
+                          >
+                            {b.bankName}
+                          </button>
+                        ))}
+                      </div>
+                      {(() => {
+                        const bank = p.options.bankAccounts.find((b) => b.id === p.choice.bankAccountId);
+                        return bank ? (
+                          <BankAccountCard account={bank} amountLabel={formatDOPFromCents(p.totalCents)} />
+                        ) : (
+                          <p className="text-xs text-muted-foreground">Elige un banco para ver los datos de la cuenta.</p>
+                        );
+                      })()}
+                    </div>
+                  ) : null}
+                </div>
+
+                {/* Cupón de la tienda */}
+                <div className="space-y-2">
+                  <p className="text-sm font-semibold text-foreground">Cupón de {p.store?.name ?? "la tienda"}</p>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={p.choice.couponInput}
+                      onChange={(e) => updateChoice(p.storeId, { couponInput: e.target.value.toUpperCase() })}
+                      placeholder="CÓDIGO"
+                      aria-label={`Cupón de ${p.store?.name ?? "la tienda"}`}
+                      className="h-10 flex-1 rounded-[10px] border border-border bg-background px-3 text-sm uppercase placeholder:text-muted-foreground/50 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => applyCoupon(p.storeId, p.subtotalCents)}
+                      disabled={p.choice.couponLoading || !p.choice.couponInput.trim()}
+                      className="rounded-[10px] border border-border bg-muted/40 px-4 text-sm font-medium hover:bg-muted disabled:opacity-60"
+                    >
+                      {p.choice.couponLoading ? "…" : "Aplicar"}
+                    </button>
+                  </div>
+                  {p.choice.couponError ? <p className="text-xs text-destructive">{p.choice.couponError}</p> : null}
+                  {p.choice.appliedCoupon ? (
+                    <p className="text-xs font-medium text-primary">
+                      Cupón {p.choice.appliedCoupon} aplicado: −{formatDOPFromCents(p.discountCents)}
+                    </p>
+                  ) : null}
+                </div>
+              </div>
+            </section>
+          ))}
         </div>
       </div>
 
-      {/* Resumen del pedido */}
+      {/* Resumen */}
       <aside className="mt-8 lg:mt-0 lg:sticky lg:top-28 lg:self-start">
-        <p className="mb-4 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-          Resumen del pedido
-        </p>
-        <div className="rounded-[14px] border border-border bg-card overflow-hidden">
-          <ul className="divide-y divide-border">
-            {items.map((item) => {
-              const product = productMap.get(item.productId);
-              if (!product) return null;
-              const unitCents = unitPriceForSelection(
-                product,
-                item.size,
-                item.color,
-              );
-              const lineTotal = unitCents * item.quantity;
-              return (
-                <li
-                  key={`${item.productId}:${item.size ?? ""}:${item.color ?? ""}`}
-                  className="flex gap-4 p-4 sm:p-5"
-                >
-                  <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-[10px] bg-muted ring-1 ring-border/50">
-                    <Image
-                      src={product.coverImage}
-                      alt={product.name}
-                      fill
-                      className="object-cover"
-                      sizes="80px"
-                      unoptimized={isExternalImage(product.coverImage)}
-                    />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-foreground">
-                      {product.name}
-                    </p>
-                    {item.size && (
-                      <p className="text-xs text-muted-foreground">
-                        {item.size}
-                      </p>
-                    )}
-                    <p className="font-mono text-xs text-muted-foreground tabular-nums">
-                      {formatDOPFromCents(unitCents)} × {item.quantity}
-                    </p>
-                  </div>
-                  <p className="font-mono text-sm font-semibold tabular-nums text-foreground shrink-0">
-                    {formatDOPFromCents(lineTotal)}
-                  </p>
-                </li>
-              );
-            })}
-          </ul>
-          {/* Método de envío */}
-          {shippingMethods.length > 0 && (
-            <div className="border-t border-border p-5 sm:p-6 space-y-2">
-              <p className="text-sm font-semibold text-foreground">Envío</p>
-              <FreeShippingProgress
-                subtotalCents={subtotalCents}
-                className="mb-3"
-              />
-              {shippingMethods.map((m) => (
-                <label
-                  key={m.id}
-                  className={`flex cursor-pointer items-center justify-between gap-3 rounded-[10px] border p-3 text-sm transition-colors ${
-                    selectedShippingId === m.id
-                      ? "border-primary/60 bg-primary/5"
-                      : "border-border hover:border-border/70"
-                  }`}
-                >
-                  <span className="flex items-center gap-2">
-                    <input
-                      type="radio"
-                      name="shipping_method"
-                      checked={selectedShippingId === m.id}
-                      onChange={() => setSelectedShippingId(m.id)}
-                      className="accent-primary"
-                    />
-                    <span>
-                      <span className="font-medium text-foreground">
-                        {m.name}
-                      </span>
-                      {(m.minDays != null || m.maxDays != null) && (
-                        <span className="ml-1 text-xs text-muted-foreground">
-                          ({m.minDays ?? "?"}-{m.maxDays ?? "?"} días)
-                        </span>
-                      )}
-                    </span>
+        <p className="mb-4 text-xs font-medium uppercase tracking-wider text-muted-foreground">Resumen de la compra</p>
+        <div className="rounded-[14px] border border-border bg-card p-5 sm:p-6">
+          <dl className="mb-4 space-y-2 text-sm">
+            {parts.map((p) => (
+              <div key={p.storeId} className="flex justify-between gap-4">
+                <dt className="min-w-0 truncate text-muted-foreground">{p.store?.name ?? "Tienda"}</dt>
+                <dd className="font-mono tabular-nums">
+                  {formatDOPFromCents(p.totalCents)}
+                  <span className="block text-right text-[11px] text-muted-foreground">
+                    envío {p.shippingCents === 0 ? "gratis" : formatDOPFromCents(p.shippingCents)}
+                    {p.discountCents > 0 ? ` · −${formatDOPFromCents(p.discountCents)}` : ""}
                   </span>
-                  <span className="flex items-center gap-1.5 font-mono tabular-nums text-foreground">
-                    {freeShipping && m.priceCents > 0 && (
-                      <span className="text-xs text-muted-foreground line-through">
-                        {formatDOPFromCents(m.priceCents)}
-                      </span>
-                    )}
-                    <span>
-                      {freeShipping || m.priceCents === 0
-                        ? "Gratis"
-                        : formatDOPFromCents(m.priceCents)}
-                    </span>
-                  </span>
-                </label>
-              ))}
-            </div>
-          )}
-
-          {/* Cupón de descuento */}
-          <div className="border-t border-border p-5 sm:p-6 space-y-2">
-            <p className="text-sm font-semibold text-foreground">Cupón</p>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={couponCode}
-                onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                placeholder="CÓDIGO"
-                className="h-10 flex-1 rounded-[10px] border border-border bg-background px-3 text-sm uppercase text-foreground placeholder:text-muted-foreground/50 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-              />
-              <button
-                type="button"
-                onClick={handleApplyCoupon}
-                disabled={couponLoading || !couponCode.trim()}
-                className="rounded-[10px] border border-border bg-muted/40 px-4 text-sm font-medium text-foreground transition-colors hover:bg-muted disabled:opacity-60"
-              >
-                {couponLoading ? "…" : "Aplicar"}
-              </button>
-            </div>
-            {couponError && (
-              <p className="text-xs text-destructive">{couponError}</p>
-            )}
-            {appliedCoupon && (
-              <p className="text-xs font-medium text-primary">
-                Cupón {appliedCoupon} aplicado: −
-                {formatDOPFromCents(discountCents)}
-              </p>
-            )}
+                </dd>
+              </div>
+            ))}
+          </dl>
+          <div className="mb-4 flex items-baseline justify-between gap-4 border-t border-border pt-3">
+            <span className="text-sm text-muted-foreground">Total</span>
+            <span className="font-mono text-xl font-bold tabular-nums text-primary">{formatDOPFromCents(grandTotal)}</span>
           </div>
-
-          <div className="border-t border-border p-5 sm:p-6">
-            <dl className="mb-4 space-y-1.5 text-sm">
-              <div className="flex justify-between gap-4">
-                <dt className="text-muted-foreground">Subtotal</dt>
-                <dd className="font-mono tabular-nums text-foreground">
-                  {formatDOPFromCents(subtotalCents)}
-                </dd>
-              </div>
-              {discountCents > 0 && (
-                <div className="flex justify-between gap-4">
-                  <dt className="text-muted-foreground">Descuento</dt>
-                  <dd className="font-mono tabular-nums text-primary">
-                    −{formatDOPFromCents(discountCents)}
-                  </dd>
-                </div>
-              )}
-              <div className="flex justify-between gap-4">
-                <dt className="text-muted-foreground">Envío</dt>
-                <dd className="font-mono tabular-nums text-foreground">
-                  {shippingCents === 0
-                    ? "Gratis"
-                    : formatDOPFromCents(shippingCents)}
-                </dd>
-              </div>
-            </dl>
-            <div className="flex items-baseline justify-between gap-4 mb-4 border-t border-border pt-3">
-              <span className="text-sm text-muted-foreground">Total</span>
-              <span className="font-mono text-xl font-bold tabular-nums text-primary">
-                {formatDOPFromCents(totalCents)}
-              </span>
-            </div>
-            {error && (
-              <p className="mb-4 rounded-[10px] border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-                {error}
-              </p>
-            )}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full rounded-[10px] bg-primary py-3 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-60 disabled:pointer-events-none"
-            >
-              {loading ? "Enviando…" : "Confirmar pedido"}
-            </button>
-            <p className="mt-3 text-center text-xs text-muted-foreground">
-              Al confirmar recibirás tu número de pedido. Te contactaremos para
-              coordinar la entrega.
+          {error && (
+            <p className="mb-4 rounded-[10px] border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+              {error}
             </p>
-          </div>
+          )}
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full rounded-[10px] bg-primary py-3 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-60 disabled:pointer-events-none"
+          >
+            {loading ? "Enviando…" : parts.length > 1 ? `Confirmar ${parts.length} pedidos` : "Confirmar pedido"}
+          </button>
+          <p className="mt-3 text-center text-xs text-muted-foreground">
+            {parts.length > 1
+              ? "Cada tienda recibe su pedido, te cobra su parte y coordina la entrega contigo."
+              : "Al confirmar recibirás tu número de pedido. La tienda te contactará para coordinar la entrega."}
+          </p>
         </div>
       </aside>
     </form>

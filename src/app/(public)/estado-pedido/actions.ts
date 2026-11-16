@@ -1,10 +1,10 @@
 "use server";
 
-import { getOrderStatusById } from "@/database/repositories";
+import { getOrderStatusesByNumber } from "@/database/repositories";
 import type { OrderStatusDetail } from "@/types";
 
 export type OrderStatusResult =
-  | { ok: true; order: OrderStatusDetail }
+  | { ok: true; orders: OrderStatusDetail[] }
   | { ok: false; error: string };
 
 export async function getOrderStatusAction(
@@ -12,14 +12,14 @@ export async function getOrderStatusAction(
 ): Promise<OrderStatusResult> {
   const trimmed = orderId?.trim();
   if (!trimmed) {
-    return { ok: false, error: "Introduce el número de pedido." };
+    return { ok: false, error: "Introduce el número de pedido o de compra." };
   }
-  const order = await getOrderStatusById(trimmed);
-  if (!order) {
+  const orders = await getOrderStatusesByNumber(trimmed);
+  if (orders.length === 0) {
     return {
       ok: false,
       error: "No hemos encontrado ningún pedido con ese número.",
     };
   }
-  return { ok: true, order };
+  return { ok: true, orders };
 }
